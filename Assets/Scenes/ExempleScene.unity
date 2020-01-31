@@ -324,6 +324,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   myString: This is a string
+  myString2: This is another string
+  myPropertyField: 1
+  myInt: 2
 --- !u!4 &1304533682
 Transform:
   m_ObjectHideFlags: 0

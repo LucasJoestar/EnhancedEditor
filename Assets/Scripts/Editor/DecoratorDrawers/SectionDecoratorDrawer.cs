@@ -36,7 +36,7 @@ namespace EnhancedEditor.Editor
         public override float GetHeight()
         {
             SectionAttribute _attribute = (SectionAttribute)attribute;
-            return LabelStyle.CalcSize(new GUIContent(_attribute.Label)).y + EditorGUIUtility.singleLineHeight;
+            return LabelStyle.CalcSize(new GUIContent(_attribute.Label)).y + EditorGUIUtility.singleLineHeight + (_attribute.HeightSpace * 2);
         }
 
         // Make your own GUI for the decorator
@@ -50,7 +50,7 @@ namespace EnhancedEditor.Editor
             float _lineWidth = ((_sectionWidth - _labelSize.x) / 2f) - SpaceAroundLabel;
 
             // Set position at the middle of the area and line height
-            _position.y += (EditorGUIUtility.singleLineHeight / 2f) - 1;
+            _position.y += (EditorGUIUtility.singleLineHeight / 2f) + _attribute.HeightSpace - 1;
 
             // Draw horizontal line if enough space
             if (_lineWidth > 0)

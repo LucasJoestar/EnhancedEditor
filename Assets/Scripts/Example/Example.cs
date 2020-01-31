@@ -3,8 +3,12 @@ using UnityEngine;
 
 public class Example : MonoBehaviour
 {
+    /**************************
+     *******   FIELDS   *******
+     *************************/
+
     [HorizontalLine(1, order = 0)]
-    [Section("NEW SUPER SECTION MUCH TOO MUCH TOO MUCH TOO LONG", order = 1)]
+    [Section("NEW SUPER SECTION MUCH TOO MUCH TOO MUCH TOO LONG", 50, 0, order = 1)]
     [Space(order = 2)]
 
     [SerializeField]
@@ -17,11 +21,24 @@ public class Example : MonoBehaviour
 
     [HorizontalLine(2, SuperColor.Sapphire)]
 
-    [SerializeField]
-    private float myFloat = .75f;
+    [SerializeField, PropertyField]
+    private float myPropertyField = .75f;
 
     [HorizontalLine(2, SuperColor.Green)]
 
-    [SerializeField]
-    private float myInt = 3f;
+    [SerializeField, PropertyField("MyPropertyField")]
+    private int myInt = 3;
+
+
+    /**************************
+     *****   PROPERTIES   *****
+     *************************/
+
+    public float MyPropertyField
+    {
+        set
+        {
+            Debug.Log("Property Set");
+        }
+    }
 }
