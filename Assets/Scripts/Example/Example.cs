@@ -15,7 +15,6 @@ public class Example : MonoBehaviour
     private string myString = "This is a string";
 
     [HorizontalLine(2, SuperColor.Red)]
-
     [SerializeField]
     private string myString2 = "This is another string";
 
@@ -25,20 +24,38 @@ public class Example : MonoBehaviour
     private float myPropertyField = .75f;
 
     [HorizontalLine(2, SuperColor.Green)]
-
     [SerializeField, PropertyField("MyPropertyField")]
     private int myInt = 3;
+
+    [HorizontalLine(2, SuperColor.Chocolate)]
+    [SerializeField, PropertyField]
+    private bool myBool = false;
 
 
     /**************************
      *****   PROPERTIES   *****
      *************************/
 
+    public bool MyBool
+    {
+        get { return myBool; }
+        private set
+        {
+            Debug.Log("Set bool => " + value);
+
+            #if UNITY_EDITOR
+            if (!Application.isPlaying) return;
+            #endif
+
+            Debug.Log("Do it");
+        }
+    }
+
     public float MyPropertyField
     {
         set
         {
-            Debug.Log("Property Set");
+            Debug.Log("Property Set => " + value);
         }
     }
 }
