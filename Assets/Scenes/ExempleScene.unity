@@ -328,6 +328,7 @@ MonoBehaviour:
   myPropertyField: 7
   myInt: 4
   myBool: 0
+  mySprite: {fileID: 0}
 --- !u!4 &1304533682
 Transform:
   m_ObjectHideFlags: 0
@@ -376,6 +377,7 @@ MonoBehaviour:
   myPropertyField: 7
   myInt: 4
   myBool: 0
+  mySprite: {fileID: 0}
 --- !u!4 &1611631869
 Transform:
   m_ObjectHideFlags: 0

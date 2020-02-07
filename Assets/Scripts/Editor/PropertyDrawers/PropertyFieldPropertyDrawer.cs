@@ -11,10 +11,14 @@ namespace EnhancedEditor
     public class PropertyFieldPropertyDrawer : PropertyDrawer
     {
         #region Fields
+        /**************************
+         *******   FIELDS   *******
+         *************************/
+
         /// <summary>
         /// Used to indicate if editing field value changed during previous frame.
         /// </summary>
-        private bool _isChanged = false;
+        private bool isChanged = false;
         #endregion
 
         #region Methods
@@ -93,10 +97,10 @@ namespace EnhancedEditor
         public override void OnGUI(Rect _position, SerializedProperty _property, GUIContent _label)
         {
             // If value changed, set linked property
-            if (_isChanged)
+            if (isChanged)
             {
                 SetProperty(_property);
-                _isChanged = false;
+                isChanged = false;
             }
 
             // Draw property field and set boolean if value changed ;
@@ -106,7 +110,7 @@ namespace EnhancedEditor
             EditorGUI.BeginChangeCheck();
             EditorGUI.PropertyField(_position, _property, _label);
             
-            if (EditorGUI.EndChangeCheck()) _isChanged = true;
+            if (EditorGUI.EndChangeCheck()) isChanged = true;
         }
         #endregion
     }

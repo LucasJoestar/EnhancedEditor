@@ -1,6 +1,7 @@
 ﻿using EnhancedEditor;
 using UnityEngine;
 
+#pragma warning disable
 public class Example : MonoBehaviour
 {
     /**************************
@@ -27,9 +28,15 @@ public class Example : MonoBehaviour
     [SerializeField, PropertyField("MyPropertyField")]
     private int myInt = 3;
 
+    [HelpBox("This is a help box", HelpBoxType.Warning)]
+
     [HorizontalLine(2, SuperColor.Chocolate)]
-    [SerializeField, PropertyField]
+    [SerializeField, ReadOnly]
     private bool myBool = false;
+
+    [HorizontalLine(2, SuperColor.Lavender)]
+    [SerializeField, Required]
+    private Sprite mySprite = null;
 
 
     /**************************

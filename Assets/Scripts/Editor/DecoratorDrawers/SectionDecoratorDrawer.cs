@@ -7,9 +7,9 @@ namespace EnhancedEditor.Editor
     public class SectionDecoratorDrawer : DecoratorDrawer
     {
         #region Fields / Properties
-        /****************************
+        /*****************************
          *******   CONSTANTS   *******
-         ***************************/
+         ****************************/
 
         /// <summary>
         /// Space on each side of the label (in pixels).
