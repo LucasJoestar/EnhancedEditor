@@ -38,6 +38,12 @@ public class Example : MonoBehaviour
     [SerializeField, Required]
     private Sprite mySprite = null;
 
+    [HorizontalLine(2, SuperColor.HarvestGold)]
+    [SerializeField, ProgressBar("MAGIC", "maxValue", SuperColor.Crimson, 35, true)]
+    private float myProgressBar = 7;
+
+    private int maxValue = 30;
+
 
     /**************************
      *****   PROPERTIES   *****
@@ -58,11 +64,5 @@ public class Example : MonoBehaviour
         }
     }
 
-    public float MyPropertyField
-    {
-        set
-        {
-            Debug.Log("Property Set => " + value);
-        }
-    }
+    public float MyPropertyField { set { Debug.Log("Property Set => " + value); } }
 }

@@ -10,7 +10,8 @@ namespace EnhancedEditor
     {
         White,
         Silver,
-        Gray,
+        Grey,
+        SmokyBlack,
         Black,
         Maroon,
         Brown,
@@ -56,8 +57,11 @@ namespace EnhancedEditor
                 case SuperColor.Silver:
                     return new Color(.753f, .753f, .753f, _alpha);
 
-                case SuperColor.Gray:
+                case SuperColor.Grey:
                     return new Color(.502f, .502f, .502f, _alpha);
+
+                case SuperColor.SmokyBlack:
+                    return new Color(.063f, .047f, .031f, _alpha);
 
                 case SuperColor.Black:
                     return new Color(0f, 0f, 0f, _alpha);

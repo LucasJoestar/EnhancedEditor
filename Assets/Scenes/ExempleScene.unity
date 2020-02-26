@@ -325,10 +325,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   myString: This is a string
   myString2: This is another string
-  myPropertyField: 7
-  myInt: 4
+  myPropertyField: 0.75
+  myInt: 3
   myBool: 0
   mySprite: {fileID: 0}
+  myProgressBar: 22.373833
 --- !u!4 &1304533682
 Transform:
   m_ObjectHideFlags: 0
@@ -378,6 +379,7 @@ MonoBehaviour:
   myInt: 4
   myBool: 0
   mySprite: {fileID: 0}
+  myProgressBar: 23.288136
 --- !u!4 &1611631869
 Transform:
   m_ObjectHideFlags: 0

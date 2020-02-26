@@ -24,7 +24,7 @@ namespace EnhancedEditor
         /// <summary>
         /// Default line color.
         /// </summary>
-        public const SuperColor         DefaultColor =      SuperColor.Gray;
+        public const SuperColor         DefaultColor =      SuperColor.Grey;
 
 
         /**************************
@@ -37,7 +37,7 @@ namespace EnhancedEditor
         public readonly float           Height =            DefaultHeight;
 
         /// <summary>
-        /// This line height (in pixels) ; 0 is full width.
+        /// This line width (in pixels) ; 0 is full width.
         /// </summary>
         public readonly float           Width =             DefaultWidth;
 

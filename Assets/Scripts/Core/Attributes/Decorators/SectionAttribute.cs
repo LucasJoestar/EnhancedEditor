@@ -39,7 +39,7 @@ namespace EnhancedEditor
         /// <summary>
         /// Label of the section.
         /// </summary>
-        public readonly string          Label =                 string.Empty;
+        public readonly GUIContent      Label =                 null;
         #endregion
 
         #region Constructors
@@ -55,7 +55,7 @@ namespace EnhancedEditor
         /// <param name="_heightSpace">Space on top and bottom of the section (in pixels)</param>
         public SectionAttribute(string _label, float _lineWidth = DefaultLineWidth, float _heightSpace = DefaultHeightSpace)
         {
-            Label = _label;
+            Label = new GUIContent(_label);
             LineWidth = Mathf.Max(0, _lineWidth);
             HeightSpace = Mathf.Max(0, _heightSpace);
         }

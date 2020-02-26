@@ -26,15 +26,8 @@ namespace EnhancedEditor.Editor
             _position.y += (EditorGUIUtility.singleLineHeight / 2f) - 1;
             _position.height = _attribute.Height;
 
-            // Specify line width if needed
-            if ((_attribute.Width > 0) && (_attribute.Width < _position.width))
-            {
-                _position.x += (_position.width - _attribute.Width) / 2f;
-                _position.width = _attribute.Width;
-            }
-
-            // Draw rect at position of specified color
-            EditorGUI.DrawRect(_position, _attribute.Color.GetColor());
+            // Draw line at rect
+            EditorGUIEnhanced.HorizontalLine(_position, _attribute.Width, _attribute.Color.GetColor());
         }
         #endregion
     }

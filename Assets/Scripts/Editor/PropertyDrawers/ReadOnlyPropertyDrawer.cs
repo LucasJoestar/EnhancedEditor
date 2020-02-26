@@ -15,16 +15,7 @@ namespace EnhancedEditor.Editor
         public override void OnGUI(Rect _position, SerializedProperty _property, GUIContent _label)
         {
             ReadOnlyAttribute _attribute = (ReadOnlyAttribute)attribute;
-            GUI.enabled = false;
-
-            // Draw radio field if needed
-            if ((_property.propertyType == SerializedPropertyType.Boolean) && _attribute.UseRadioToggle)
-            {
-                EditorGUI.Toggle(_position, _label, _property.boolValue, EditorStyles.radioButton);
-            }
-            else EditorGUI.PropertyField(_position, _property, _label);
-
-            GUI.enabled = true;
+            EditorGUIEnhanced.ReadOnlyProperty(_position, _property, _label, _attribute.UseRadioToggle);
         }
         #endregion
     }

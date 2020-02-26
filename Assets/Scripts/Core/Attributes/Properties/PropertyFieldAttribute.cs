@@ -14,7 +14,7 @@ namespace EnhancedEditor
         /// <summary>
         /// Name of the property to set when changing field value.
         /// </summary>
-        public readonly string PropertyName = string.Empty;
+        public readonly string  PropertyName =  string.Empty;
         #endregion
 
         #region Constructors

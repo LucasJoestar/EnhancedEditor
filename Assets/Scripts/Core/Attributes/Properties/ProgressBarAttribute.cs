@@ -27,6 +27,11 @@ namespace EnhancedEditor
          *************************/
 
         /// <summary>
+        /// Should this progress bar be editable in inspector.
+        /// </summary>
+        public readonly bool            IsEditable =            false;
+
+        /// <summary>
         /// This progress bar height (in pixels).
         /// </summary>
         public readonly float           Height =                25;
@@ -62,10 +67,12 @@ namespace EnhancedEditor
         /// </summary>
         /// <param name="_color">Progress bar color.</param>
         /// <param name="_height">Progress bar height (in pixels).</param>
-        private ProgressBarAttribute(SuperColor _color, float _height)
+        /// <param name="_isEditable">Should this progress bar be editable in inspector.</param>
+        private ProgressBarAttribute(SuperColor _color, float _height, bool _isEditable = false)
         {
             Color = _color;
             Height = Mathf.Max(1, _height);
+            IsEditable = _isEditable;
         }
 
 
@@ -75,7 +82,8 @@ namespace EnhancedEditor
         /// <param name="_maxValue">Progress bar maximum value.</param>
         /// <param name="_color">Progress bar color.</param>
         /// <param name="_height">Progress bar height (in pixels).</param>
-        public ProgressBarAttribute(float _maxValue, SuperColor _color = DefaultColor, float _height = DefaultHeight) : this(_color, _height)
+        /// <param name="_isEditable">Should this progress bar be editable in inspector.</param>
+        public ProgressBarAttribute(float _maxValue, SuperColor _color = DefaultColor, float _height = DefaultHeight, bool _isEditable = false) : this(_color, _height, _isEditable)
         {
             MaxValue = Mathf.Max(.1f, _maxValue);
         }
@@ -87,7 +95,8 @@ namespace EnhancedEditor
         /// <param name="_maxValue">Progress bar maximum value.</param>
         /// <param name="_color">Progress bar color.</param>
         /// <param name="_height">Progress bar height (in pixels).</param>
-        public ProgressBarAttribute(string _label, float _maxValue, SuperColor _color = DefaultColor, float _height = DefaultHeight) : this(_maxValue, _color, _height)
+        /// <param name="_isEditable">Should this progress bar be editable in inspector.</param>
+        public ProgressBarAttribute(string _label, float _maxValue, SuperColor _color = DefaultColor, float _height = DefaultHeight, bool _isEditable = false) : this(_maxValue, _color, _height, _isEditable)
         {
             Label = _label;
         }
@@ -98,7 +107,8 @@ namespace EnhancedEditor
         /// <param name="_maxValueVariableName">Name of the variable acting as this progress bar maximum value.</param>
         /// <param name="_color">Progress bar color.</param>
         /// <param name="_height">Progress bar height (in pixels).</param>
-        public ProgressBarAttribute(string _maxValueVariableName, SuperColor _color = DefaultColor, float _height = DefaultHeight) : this(_color, _height)
+        /// <param name="_isEditable">Should this progress bar be editable in inspector.</param>
+        public ProgressBarAttribute(string _maxValueVariableName, SuperColor _color = DefaultColor, float _height = DefaultHeight, bool _isEditable = false) : this(_color, _height, _isEditable)
         {
             MaxValueVariableName = _maxValueVariableName;
         }
@@ -110,7 +120,8 @@ namespace EnhancedEditor
         /// <param name="_maxValueVariableName">Name of the variable acting as this progress bar maximum value.</param>
         /// <param name="_color">Progress bar color.</param>
         /// <param name="_height">Progress bar height (in pixels).</param>
-        public ProgressBarAttribute(string _label, string _maxValueVariableName, SuperColor _color = DefaultColor, float _height = DefaultHeight) : this(_maxValueVariableName, _color, _height)
+        /// <param name="_isEditable">Should this progress bar be editable in inspector.</param>
+        public ProgressBarAttribute(string _label, string _maxValueVariableName, SuperColor _color = DefaultColor, float _height = DefaultHeight, bool _isEditable = false) : this(_maxValueVariableName, _color, _height, _isEditable)
         {
             Label = _label;
         }

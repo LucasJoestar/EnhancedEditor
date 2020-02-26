@@ -7,12 +7,12 @@ namespace EnhancedEditor.Editor
     public class HelpBoxDecoratorDrawer : DecoratorDrawer
     {
         #region Fields
-        /**************************
-         *******   FIELDS   *******
-         *************************/
+        /*****************************
+         *******   CONSTANTS   *******
+         ****************************/
 
         /// <summary>
-        /// Substractor to line width due to help box left icon size.
+        /// Substractor to line width due to help box left icon size and margins.
         /// </summary>
         public const int    WidthSubtractor =   52;
         #endregion
