@@ -44,6 +44,10 @@ public class Example : MonoBehaviour
 
     private int maxValue = 30;
 
+    [HorizontalLine(2, SuperColor.Crimson)]
+    [SerializeField, AssetPreview]
+    private GameObject myAssetPreview = null;
+
 
     /**************************
      *****   PROPERTIES   *****

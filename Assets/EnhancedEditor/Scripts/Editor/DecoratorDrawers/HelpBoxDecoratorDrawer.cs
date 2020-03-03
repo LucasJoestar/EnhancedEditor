@@ -26,13 +26,13 @@ namespace EnhancedEditor.Editor
         public override float GetHeight()
         {
             HelpBoxAttribute _attribute = (HelpBoxAttribute)attribute;
-            return Mathf.Max(38, EditorStyles.helpBox.CalcHeight(new GUIContent(_attribute.Label), EditorGUIUtility.currentViewWidth - WidthSubtractor)) + 2;
+            return Mathf.Max(EditorGUIUtilityEnhanced.DefaultHelpBoxHeight, EditorStyles.helpBox.CalcHeight(new GUIContent(_attribute.Label), EditorGUIUtility.currentViewWidth - WidthSubtractor)) + EditorGUIUtility.standardVerticalSpacing;
         }
 
         // Make your own IMGUI based GUI for the property
         public override void OnGUI(Rect _position)
         {
-            _position.height -= 2;
+            _position.height -= EditorGUIUtility.standardVerticalSpacing;
 
             HelpBoxAttribute _attribute = (HelpBoxAttribute)attribute;
             EditorGUI.HelpBox(_position, _attribute.Label, (MessageType)(int)_attribute.Type);

@@ -10,15 +10,6 @@ namespace EnhancedEditor.Editor
     public static class EditorGUIEnhanced
     {
         #region Fields / Properties
-        /*****************************
-         *******   CONSTANTS   *******
-         ****************************/
-
-        /// <summary>
-        /// Space on each side of the sections label (in pixels).
-        /// </summary>
-        public const float      SpaceAroundSectionLabel =   5f;
-
         /**************************
          *******   FIELDS   *******
          *************************/
@@ -27,16 +18,6 @@ namespace EnhancedEditor.Editor
         /// Indicates if the user is currently dragging a progress bar.
         /// </summary>
         private static bool     isDraggingProgressBar =     false;
-
-
-        /****************************
-         *******   PROPERTY   *******
-         ***************************/
-
-        /// <summary>
-        /// GUIStyle used to draw section label.
-        /// </summary>
-        public static GUIStyle  SectionLabelStyle           { get { return EditorStyles.boldLabel; } }
         #endregion
 
         #region Methods
@@ -418,9 +399,9 @@ namespace EnhancedEditor.Editor
         public static void Section(Rect _position, GUIContent _label, float _lineWidth)
         {
             // Get label size, plus line and section width
-            Vector2 _labelSize = SectionLabelStyle.CalcSize(_label);
-            float _sectionWidth = Mathf.Min(_position.width, _labelSize.x + (SpaceAroundSectionLabel * 2) + (_lineWidth * 2));
-            _lineWidth = ((_sectionWidth - _labelSize.x) / 2f) - SpaceAroundSectionLabel;
+            Vector2 _labelSize = EditorGUIUtilityEnhanced.SectionLabelStyle.CalcSize(_label);
+            float _sectionWidth = Mathf.Min(_position.width, _labelSize.x + (EditorGUIUtilityEnhanced.SpaceAroundSectionLabel * 2) + (_lineWidth * 2));
+            _lineWidth = ((_sectionWidth - _labelSize.x) / 2f) - EditorGUIUtilityEnhanced.SpaceAroundSectionLabel;
 
             // Set position at the middle of the area
             _position.y += Mathf.Max(0, (_position.height - _labelSize.y) / 2f);
@@ -437,12 +418,12 @@ namespace EnhancedEditor.Editor
                 };
 
                 // Set label x position
-                _position.x = _lineRect.x + _lineWidth + SpaceAroundSectionLabel;
+                _position.x = _lineRect.x + _lineWidth + EditorGUIUtilityEnhanced.SpaceAroundSectionLabel;
 
                 // Draw lines around label
-                EditorGUI.DrawRect(_lineRect, SectionLabelStyle.normal.textColor);
-                _lineRect.x += _lineWidth + _labelSize.x + (SpaceAroundSectionLabel * 2);
-                EditorGUI.DrawRect(_lineRect, SectionLabelStyle.normal.textColor);
+                EditorGUI.DrawRect(_lineRect, EditorGUIUtilityEnhanced.SectionLabelStyle.normal.textColor);
+                _lineRect.x += _lineWidth + _labelSize.x + (EditorGUIUtilityEnhanced.SpaceAroundSectionLabel * 2);
+                EditorGUI.DrawRect(_lineRect, EditorGUIUtilityEnhanced.SectionLabelStyle.normal.textColor);
             }
             // Set maximum available space surrounding the label
             else if (_position.width > _labelSize.x)
@@ -451,7 +432,7 @@ namespace EnhancedEditor.Editor
             }
 
             // Draw label
-            EditorGUI.LabelField(_position, _label, SectionLabelStyle);
+            EditorGUI.LabelField(_position, _label, EditorGUIUtilityEnhanced.SectionLabelStyle);
         }
 
 

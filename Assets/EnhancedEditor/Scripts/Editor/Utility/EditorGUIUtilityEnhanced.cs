@@ -12,6 +12,31 @@ namespace EnhancedEditor.Editor
     /// </summary>
     public static class EditorGUIUtilityEnhanced
     {
+        #region Fields / Properties
+        /*****************************
+         *******   CONSTANTS   *******
+         ****************************/
+
+        /// <summary>
+        /// Default height used to draw help boxes.
+        /// </summary>
+        public const int            DefaultHelpBoxHeight =      38;
+
+        /// <summary>
+        /// Space on each side of the sections label (in pixels).
+        /// </summary>
+        public const int            SpaceAroundSectionLabel =   5;
+
+        /****************************
+         *******   PROPERTY   *******
+         ***************************/
+
+        /// <summary>
+        /// GUIStyle used to draw section label.
+        /// </summary>
+        public static GUIStyle      SectionLabelStyle           { get { return EditorStyles.boldLabel; } }
+        #endregion
+
         #region Methods
 
         #region Serialized Properties Value
