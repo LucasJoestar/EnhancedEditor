@@ -10,6 +10,36 @@ namespace EnhancedEditor.Editor
     {
         #region Property Drawers
 
+        #region Asset Preview
+        /*********************************
+         *******   ASSET PREVIEW   *******
+         ********************************/
+
+        /// <summary>
+        /// Draw an property field with an asset preview below it.
+        /// </summary>
+        /// <param name="_property">Property to display and draw asset preview.</param>
+        /// <param name="_foldout">The shown asset preview foldout state.</param>
+        /// <param name="_previewAspect">Aspect of the displayed asset preview.</param>
+        /// <returns>Returns new asset preview foldout state.</returns>
+        public static bool AssetPreviewField(SerializedProperty _property, bool _foldout, float _previewAspect) => AssetPreviewField(_property, new GUIContent(ObjectNames.NicifyVariableName(_property.name), _property.tooltip), _foldout, _previewAspect);
+
+        /// <summary>
+        /// Draw an property field with an asset preview below it.
+        /// </summary>
+        /// <param name="_property">Property to display and draw asset preview.</param>
+        /// <param name="_label">Displayed label.</param>
+        /// <param name="_foldout">The shown asset preview foldout state.</param>
+        /// <param name="_previewAspect">Aspect of the displayed asset preview.</param>
+        /// <returns>Returns new asset preview foldout state.</returns>
+        public static bool AssetPreviewField(SerializedProperty _property, GUIContent _label, bool _foldout, float _previewAspect)
+        {
+            Rect _rect = EditorGUILayout.GetControlRect(true, EditorGUIUtilityEnhanced.GetAssetPreviewPropertyHeight(_property, _foldout, _previewAspect));
+
+            return EditorGUIEnhanced.AssetPreviewField(_rect, _property, _label, _foldout);
+        }
+        #endregion
+
         #region Property Field
         /**********************************
          *******   PROPERTY FIELD   *******
@@ -147,6 +177,30 @@ namespace EnhancedEditor.Editor
         /// <param name="_color">Bar color.</param>
         /// <param name="_height">Progress bar height (in pixels).</param>
         public static void ProgressBar(GUIContent _label, float _value, float _maxValue, Color _color, float _height) => EditorGUIEnhanced.ProgressBar(EditorGUILayout.GetControlRect(false, _height), _label, _value, _maxValue, _color);
+        #endregion
+
+        #region Required
+        /****************************
+         *******   REQUIRED   *******
+         ***************************/
+
+        /// <summary>
+        /// Draw a required property field.
+        /// </summary>
+        /// <param name="_property">Property to draw and check validity.</param>
+        public static void RequiredProperty(SerializedProperty _property) => RequiredProperty(_property, new GUIContent(ObjectNames.NicifyVariableName(_property.name), _property.tooltip));
+
+        /// <summary>
+        /// Draw a required property field.
+        /// </summary>
+        /// <param name="_property">Property to draw and check validity.</param>
+        /// <param name="_label">Label to display before property.</param>
+        public static void RequiredProperty(SerializedProperty _property, GUIContent _label)
+        {
+            Rect _rect = EditorGUILayout.GetControlRect(true, EditorGUIUtilityEnhanced.GetRequiredPropertyHeight(_property));
+
+            EditorGUIEnhanced.RequiredProperty(_rect, _property, _label);
+        }
         #endregion
 
         #region Readonly

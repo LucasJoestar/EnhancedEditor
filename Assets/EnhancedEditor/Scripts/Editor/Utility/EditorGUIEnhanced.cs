@@ -24,6 +24,81 @@ namespace EnhancedEditor.Editor
 
         #region Property Drawers
 
+        #region Asset Preview
+        /*********************************
+         *******   ASSET PREVIEW   *******
+         ********************************/
+
+        /// <summary>
+        /// Draw an property field with an asset preview below it.
+        /// </summary>
+        /// <param name="_position">Rect to draw field in.</param>
+        /// <param name="_property">Property to display and draw asset preview.</param>
+        /// <param name="_foldout">The shown asset preview foldout state.</param>
+        /// <returns>Returns new asset preview foldout state.</returns>
+        public static bool AssetPreviewField(Rect _position, SerializedProperty _property, bool _foldout) => AssetPreviewField(_position, _property, new GUIContent(ObjectNames.NicifyVariableName(_property.name), _property.tooltip), _foldout);
+
+        /// <summary>
+        /// Draw an property field with an asset preview below it.
+        /// </summary>
+        /// <param name="_position">Rect to draw field in.</param>
+        /// <param name="_property">Property to display and draw asset preview.</param>
+        /// <param name="_label">Displayed label.</param>
+        /// <param name="_foldout">The shown asset preview foldout state.</param>
+        /// <returns>Returns new asset preview foldout state.</returns>
+        public static bool AssetPreviewField(Rect _position, SerializedProperty _property, GUIContent _label, bool _foldout)
+        {
+            Texture2D _texture = EditorGUIUtilityEnhanced.GetAssetPreview(_property);
+
+            // Display property field
+            Rect _rect = new Rect()
+            {
+                x = _position.x,
+                y = _position.y,
+                width = _position.width - (_texture ? 25 : 0),
+                height = EditorGUIUtility.singleLineHeight
+            };
+            EditorGUI.PropertyField(_rect, _property, _label);
+
+            // If no texture, draw nothing
+            if (!_texture)
+            {
+                // If property is not valid, display informative box
+                if (_property.propertyType != SerializedPropertyType.ObjectReference)
+                {
+                    _position.y += _rect.height + EditorGUIUtility.standardVerticalSpacing;
+                    _position.height = EditorGUIUtilityEnhanced.DefaultHelpBoxHeight;
+
+                    EditorGUI.HelpBox(_position, "Asset Preview attribute can only be used with object reference type fields !", MessageType.Error);
+                }
+                return false;
+            }
+
+            // Display foldout button next to property field
+            _rect.x += _position.width - 5;
+            _rect.width = _position.width - _rect.width;
+
+            _foldout = EditorGUI.Foldout(_rect, _foldout, GUIContent.none);
+
+            // If visible & assigned, display asset preview
+            if (_foldout)
+            {
+                float _space = _rect.height + EditorGUIUtility.standardVerticalSpacing;
+                float _aspect = _position.height - _space;
+
+                _position.x += _position.width - 25 - _aspect;
+                _position.y += _space;
+
+                _position.width = _aspect;
+                _position.height = _aspect;
+
+                EditorGUI.DrawPreviewTexture(_position, _texture);
+            }
+
+            return _foldout;
+        }
+        #endregion
+
         #region Property Field
         /**********************************
          *******   PROPERTY FIELD   *******
@@ -346,6 +421,38 @@ namespace EnhancedEditor.Editor
 
             // And finaly draw it in a shadow style
             EditorGUI.DropShadowLabel(_position, _label);
+        }
+        #endregion
+
+        #region Required
+        /****************************
+         *******   REQUIRED   *******
+         ***************************/
+
+        /// <summary>
+        /// Draw a required property field.
+        /// </summary>
+        /// <param name="_position">Rect to draw field in.</param>
+        /// <param name="_property">Property to draw and check validity.</param>
+        public static void RequiredProperty(Rect _position, SerializedProperty _property) => RequiredProperty(_position, _property, new GUIContent(ObjectNames.NicifyVariableName(_property.name), _property.tooltip));
+
+        /// <summary>
+        /// Draw a required property field.
+        /// </summary>
+        /// <param name="_position">Rect to draw field in.</param>
+        /// <param name="_property">Property to draw and check validity.</param>
+        /// <param name="_label">Label to display before property.</param>
+        public static void RequiredProperty(Rect _position, SerializedProperty _property, GUIContent _label)
+        {
+            Rect _rect = new Rect(_position.x, _position.y, _position.width, EditorGUIUtility.singleLineHeight);
+
+            EditorGUI.PropertyField(_rect, _property, _label);
+            if (!EditorGUIUtilityEnhanced.IsPropertyRequired(_property)) return;
+
+            _rect.y += _rect.height + EditorGUIUtility.standardVerticalSpacing;
+            _rect.height = EditorGUIUtilityEnhanced.DefaultHelpBoxHeight;
+
+            EditorGUI.HelpBox(_rect, "Keep in mind to set a reference to this field !", MessageType.Error);
         }
         #endregion
 

@@ -7,9 +7,9 @@ namespace EnhancedEditor.Editor
     public class PropertyFieldPropertyDrawer : PropertyDrawer
     {
         #region Methods
-        /*****************************
-         *****   UNITY METHODS   *****
-         ****************************/
+        /***************************
+         *******   METHODS   *******
+         **************************/
 
         // Make your own IMGUI based GUI for the property
         public override void OnGUI(Rect _position, SerializedProperty _property, GUIContent _label)

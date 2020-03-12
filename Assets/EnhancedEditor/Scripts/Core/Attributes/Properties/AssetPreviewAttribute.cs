@@ -12,14 +12,9 @@ namespace EnhancedEditor
          ****************************/
 
         /// <summary>
-        /// Default asset preview height (in pixels).
+        /// Default asset preview aspect (in pixels).
         /// </summary>
-        public const float      DefaultHeight =     75;
-
-        /// <summary>
-        /// Default asset preview width (in pixels).
-        /// </summary>
-        public const float      DefaultWidth =      75;
+        public const float      DefaultAspect =     75;
 
 
         /**************************
@@ -30,18 +25,13 @@ namespace EnhancedEditor
         /// Indicates if the asset preview is currently
         /// displayed in the editor or not.
         /// </summary>
-        public bool             IsVisible =         true;
+        public bool             Fodlout =         true;
 
 
         /// <summary>
-        /// Height of the asset preview displayed in the editor (in pixels).
+        /// Aspect of the asset preview displayed in the editor (in pixels).
         /// </summary>
-        public readonly float   Height =            DefaultHeight;
-
-        /// <summary>
-        /// Width of the asset preview displayed in the editor (in pixels).
-        /// </summary>
-        public readonly float   Width =             DefaultWidth;
+        public readonly float   Aspect =            DefaultAspect;
         #endregion
 
         #region Constructors
@@ -54,10 +44,9 @@ namespace EnhancedEditor
         /// </summary>
         /// <param name="_width">Asset preview width (in pixels).</param>
         /// <param name="_height">Asset preview height (in pixels).</param>
-        public AssetPreviewAttribute(float _width = DefaultWidth, float _height = DefaultHeight)
+        public AssetPreviewAttribute(float _aspect = DefaultAspect)
         {
-            Width = Mathf.Max(1, _width);
-            Height = Mathf.Max(1, _height);
+            Aspect = Mathf.Max(1, _aspect);
         }
         #endregion
     }

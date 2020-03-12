@@ -7,9 +7,9 @@ namespace EnhancedEditor.Editor
     public class ProgressBarPropertyDrawer : PropertyDrawer
     {
         #region Methods
-        /*****************************
-         *****   UNITY METHODS   *****
-         ****************************/
+        /***************************
+         *******   METHODS   *******
+         **************************/
 
         // Specify how tall the GUI for this decorator is in pixels
         public override float GetPropertyHeight(SerializedProperty _property, GUIContent _label)
