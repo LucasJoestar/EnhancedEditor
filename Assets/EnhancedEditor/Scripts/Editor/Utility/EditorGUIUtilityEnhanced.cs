@@ -20,12 +20,18 @@ namespace EnhancedEditor.Editor
         /// <summary>
         /// Default height used to draw help boxes.
         /// </summary>
-        public const int            DefaultHelpBoxHeight =      38;
+        public const int            DefaultHelpBoxHeight =          38;
 
         /// <summary>
         /// Space on each side of the sections label (in pixels).
         /// </summary>
-        public const int            SpaceAroundSectionLabel =   5;
+        public const int            SpaceAroundSectionLabel =       5;
+
+        /// <summary>
+        /// Separator width used for fields draw.
+        /// </summary>
+        public const int            StandardHorizontalSeparator =   5;
+
 
         /****************************
          *******   PROPERTY   *******
@@ -34,10 +40,19 @@ namespace EnhancedEditor.Editor
         /// <summary>
         /// GUIStyle used to draw section label.
         /// </summary>
-        public static GUIStyle      SectionLabelStyle           { get { return EditorStyles.boldLabel; } }
+        public static GUIStyle      SectionLabelStyle               { get { return EditorStyles.boldLabel; } }
         #endregion
 
         #region Methods
+
+        #region GUIContent
+        /// <summary>
+        /// Get appropriated GUIContent label from a serialized property.
+        /// </summary>
+        /// <param name="_property">Property to get label.</param>
+        /// <returns>Returns property associated GUIContent label.</returns>
+        public static GUIContent GetPropertyLabel(SerializedProperty _property) => new GUIContent(ObjectNames.NicifyVariableName(_property.name), _property.tooltip);
+        #endregion
 
         #region Serialized Properties Informations
         /*****************************************

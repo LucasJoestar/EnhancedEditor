@@ -22,7 +22,7 @@ namespace EnhancedEditor.Editor
         /// <param name="_foldout">The shown asset preview foldout state.</param>
         /// <param name="_previewAspect">Aspect of the displayed asset preview.</param>
         /// <returns>Returns new asset preview foldout state.</returns>
-        public static bool AssetPreviewField(SerializedProperty _property, bool _foldout, float _previewAspect) => AssetPreviewField(_property, new GUIContent(ObjectNames.NicifyVariableName(_property.name), _property.tooltip), _foldout, _previewAspect);
+        public static bool AssetPreviewField(SerializedProperty _property, bool _foldout, float _previewAspect) => AssetPreviewField(_property, EditorGUIUtilityEnhanced.GetPropertyLabel(_property), _foldout, _previewAspect);
 
         /// <summary>
         /// Draw an property field with an asset preview below it.
@@ -52,7 +52,7 @@ namespace EnhancedEditor.Editor
         /// </summary>
         /// <param name="_property">Serialized property to edit.</param>
         /// <param name="_propertyName">Name of the associated property (must be in the same script as the property field).</param>
-        public static void PropertyField(SerializedProperty _property, string _propertyName) => PropertyField(_property, new GUIContent(ObjectNames.NicifyVariableName(_property.name), _property.tooltip), _propertyName);
+        public static void PropertyField(SerializedProperty _property, string _propertyName) => PropertyField(_property, EditorGUIUtilityEnhanced.GetPropertyLabel(_property), _propertyName);
 
         /// <summary>
         /// Draw a serialized property field associated with another property ;
@@ -179,6 +179,84 @@ namespace EnhancedEditor.Editor
         public static void ProgressBar(GUIContent _label, float _value, float _maxValue, Color _color, float _height) => EditorGUIEnhanced.ProgressBar(EditorGUILayout.GetControlRect(false, _height), _label, _value, _maxValue, _color);
         #endregion
 
+        #region Min Max
+        /*****************************
+         ********   MIN MAX   ********
+         ****************************/
+
+        /// <summary>
+        /// Draw a min max slider field for a vector2.
+        /// </summary>
+        /// <param name="_property">Editing property.</param>
+        /// <param name="_minLimit">Min allowed limit value.</param>
+        /// <param name="_maxLimit">Max allowed limit value.</param>
+        public static void MinMaxField(SerializedProperty _property, float _minLimit, float _maxLimit) => EditorGUIEnhanced.MinMaxField(EditorGUILayout.GetControlRect(false), _property, _minLimit, _maxLimit);
+
+        /// <summary>
+        /// Draw a min max slider field for a vector2.
+        /// </summary>
+        /// <param name="_property">Editing property.</param>
+        /// <param name="_label">Displayed label.</param>
+        /// <param name="_minLimit">Min allowed limit value.</param>
+        /// <param name="_maxLimit">Max allowed limit value.</param>
+        public static void MinMaxField(SerializedProperty _property, GUIContent _label, float _minLimit, float _maxLimit) => EditorGUIEnhanced.MinMaxField(EditorGUILayout.GetControlRect(false), _property, _label, _minLimit, _maxLimit);
+
+        /// <summary>
+        /// Draw a min max slider field for a vector2.
+        /// </summary>
+        /// <param name="_label">Displayed label.</param>
+        /// <param name="_vector">Vector used to store min & max values in.</param>
+        /// <param name="_minLimit">Min allowed limit value.</param>
+        /// <param name="_maxLimit">Max allowed limit value.</param>
+        public static void MinMaxField(GUIContent _label, Vector2 _vector, float _minLimit, float _maxLimit) => EditorGUIEnhanced.MinMaxField(EditorGUILayout.GetControlRect(false), _label, _vector, _minLimit, _maxLimit);
+
+        /// <summary>
+        /// Draw a min max slider field for a vector2.
+        /// </summary>
+        /// <param name="_label">Displayed label.</param>
+        /// <param name="_vector">Vector used to store min & max values in.</param>
+        /// <param name="_minLimit">Min allowed limit value.</param>
+        /// <param name="_maxLimit">Max allowed limit value.</param>
+        public static void MinMaxField(GUIContent _label, Vector2Int _vector, float _minLimit, float _maxLimit) => EditorGUIEnhanced.MinMaxField(EditorGUILayout.GetControlRect(false), _label, _vector, _minLimit, _maxLimit);
+
+        /// <summary>
+        /// Draw a min max slider field.
+        /// </summary>
+        /// <param name="_label">Displayed label.</param>
+        /// <param name="_minValue">Editing minimum value.</param>
+        /// <param name="_maxValue">Editing maximum value.</param>
+        /// <param name="_minLimit">Min allowed limit value.</param>
+        /// <param name="_maxLimit">Max allowed limit value.</param>
+        public static void MinMaxField(GUIContent _label, ref float _minValue, ref float _maxValue, float _minLimit, float _maxLimit) => EditorGUIEnhanced.MinMaxField(EditorGUILayout.GetControlRect(false), _label, ref _minValue, ref _maxValue, _minLimit, _maxLimit);
+        #endregion
+
+        #region Max
+        /*****************************
+         **********   MAX   **********
+         ****************************/
+
+        /// <summary>
+        /// Restrain a property value to a maximum one.
+        /// </summary>
+        /// <param name="_property">Editing property.</param>
+        /// <param name="_label">Displayed label.</param>
+        /// <param name="_maxValue">Property max value.</param>
+        public static void MaxField(SerializedProperty _property, float _maxValue) => MaxField(_property, EditorGUIUtilityEnhanced.GetPropertyLabel(_property), _maxValue);
+
+        /// <summary>
+        /// Restrain a property value to a maximum one.
+        /// </summary>
+        /// <param name="_property">Editing property.</param>
+        /// <param name="_label">Displayed label.</param>
+        /// <param name="_maxValue">Property max value.</param>
+        public static void MaxField(SerializedProperty _property, GUIContent _label, float _maxValue)
+        {
+            Rect _rect = EditorGUILayout.GetControlRect(true);
+
+            EditorGUIEnhanced.MaxField(_rect, _property, _label, _maxValue);
+        }
+        #endregion
+
         #region Required
         /****************************
          *******   REQUIRED   *******
@@ -188,7 +266,7 @@ namespace EnhancedEditor.Editor
         /// Draw a required property field.
         /// </summary>
         /// <param name="_property">Property to draw and check validity.</param>
-        public static void RequiredProperty(SerializedProperty _property) => RequiredProperty(_property, new GUIContent(ObjectNames.NicifyVariableName(_property.name), _property.tooltip));
+        public static void RequiredProperty(SerializedProperty _property) => RequiredProperty(_property, EditorGUIUtilityEnhanced.GetPropertyLabel(_property));
 
         /// <summary>
         /// Draw a required property field.
@@ -213,7 +291,7 @@ namespace EnhancedEditor.Editor
         /// </summary>
         /// <param name="_position">Rect to draw field in</param>
         /// <param name="_property">Property to display</param>
-        public static void ReadOnlyProperty(SerializedProperty _property) => ReadOnlyProperty(_property, new GUIContent(ObjectNames.NicifyVariableName(_property.name), _property.tooltip), false);
+        public static void ReadOnlyProperty(SerializedProperty _property) => ReadOnlyProperty(_property, EditorGUIUtilityEnhanced.GetPropertyLabel(_property), false);
 
         /// <summary>
         /// Draw a readonly property field.

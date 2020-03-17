@@ -48,6 +48,21 @@ public class Example : MonoBehaviour
     [SerializeField, AssetPreview]
     private GameObject myAssetPreview = null;
 
+    [HorizontalLine(2, SuperColor.Indigo)]
+    [SerializeField]
+    private AnimationCurve myAnimationCurve = null;
+
+    [HorizontalLine(2, SuperColor.Brown)]
+    [SerializeField, Max(10)]
+    private float maxField = 0;
+
+    [HorizontalLine(2, SuperColor.SalmonPink)]
+    [SerializeField, MinMax(0, 100)]
+    private Vector2 minMaxVector2 = new Vector2();
+
+    [SerializeField, MinMax(0, 10)]
+    private Vector2Int minMaxVector2Int = new Vector2Int();
+
 
     /**************************
      *****   PROPERTIES   *****

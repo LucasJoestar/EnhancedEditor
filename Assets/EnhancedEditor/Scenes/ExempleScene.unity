@@ -423,6 +423,33 @@ MonoBehaviour:
   mySprite: {fileID: 0}
   myProgressBar: 22.373833
   myAssetPreview: {fileID: 1104913825}
+  myAnimationCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 5
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 136
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 10
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 136
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  maxField: 5
+  minMaxVector2: {x: 27.08345, y: 76.17221}
+  minMaxVector2Int: {x: 2, y: 8}
 --- !u!4 &1304533682
 Transform:
   m_ObjectHideFlags: 0
@@ -474,6 +501,15 @@ MonoBehaviour:
   mySprite: {fileID: 0}
   myProgressBar: 23.288136
   myAssetPreview: {fileID: 0}
+  myAnimationCurve:
+    serializedVersion: 2
+    m_Curve: []
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  maxField: 0
+  minMaxVector2: {x: 0, y: 0}
+  minMaxVector2Int: {x: 0, y: 0}
 --- !u!4 &1611631869
 Transform:
   m_ObjectHideFlags: 0

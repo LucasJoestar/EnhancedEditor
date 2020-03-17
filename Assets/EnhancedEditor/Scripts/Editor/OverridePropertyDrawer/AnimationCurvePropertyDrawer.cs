@@ -29,19 +29,30 @@ namespace EnhancedEditor.Editor
             Event _event = Event.current;
             if ((_event.type == EventType.MouseDown) && (_event.button == 1) && (_position.Contains(_event.mousePosition)))
             {
+                // Copy menu item
                 GenericMenu _menu = new GenericMenu();
                 GenericMenu.MenuFunction _copy = () => curveBuffer = _property.animationCurveValue;
-                GenericMenu.MenuFunction _paste = () =>
-                {
-                    if (curveBuffer == null) return;
-
-                    _property.animationCurveValue = curveBuffer;
-                    _property.serializedObject.ApplyModifiedProperties();
-                };
 
                 _menu.AddItem(new GUIContent("Copy", "Copy this animation curve properties"), false, _copy);
-                _menu.AddItem(new GUIContent("Paste", "Paste copied animation curve properties"), false, _paste);
 
+                // Paste menu item
+                GUIContent _pasteContent = new GUIContent("Paste", "Paste copied animation curve properties");
+
+                if (curveBuffer == null)
+                    _menu.AddDisabledItem(_pasteContent);
+                else
+                {
+                    GenericMenu.MenuFunction _paste = () =>
+                    {
+                        if (curveBuffer == null) return;
+
+                        _property.animationCurveValue = curveBuffer;
+                        _property.serializedObject.ApplyModifiedProperties();
+                    };
+                    _menu.AddItem(_pasteContent, false, _paste);
+                }
+
+                // Show menu
                 _menu.ShowAsContext();
                 _event.Use();
             }
