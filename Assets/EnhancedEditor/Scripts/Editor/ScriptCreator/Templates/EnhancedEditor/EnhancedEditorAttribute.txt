@@ -1,0 +1,18 @@
+// ===== Enhanced Editor - https://github.com/LucasJoestar/EnhancedEditor ===== //
+// 
+// Notes:
+//
+// ============================================================================ //
+
+using UnityEngine;
+
+namespace EnhancedEditor
+{
+	public class #SCRIPTNAME# : EnhancedPropertyAttribute
+    {
+        public #SCRIPTNAME#()
+        {
+            
+        }
+    }
+}

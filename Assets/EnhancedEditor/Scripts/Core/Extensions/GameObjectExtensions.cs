@@ -1,0 +1,33 @@
+// ===== Enhanced Editor - https://github.com/LucasJoestar/EnhancedEditor ===== //
+// 
+// Notes:
+//
+// ============================================================================ //
+
+using UnityEngine;
+
+namespace EnhancedEditor
+{
+    /// <summary>
+    /// Contains utility extension methods for <see cref="GameObject"/> from the <see cref="EnhancedEditor"/>.
+    /// </summary>
+	public static class GameObjectExtensions
+    {
+        #region Component
+        /// <summary>
+        /// Adds a specific component to the <see cref="GameObject"/>
+        /// if none of that type is attached to, and return it.
+        /// </summary>
+        /// <typeparam name="T">Component type to add.</typeparam>
+        /// <param name="_gameObject">GameObject to add component to.</param>
+        /// <returns>Newly added or already attached component to the GameObject.</returns>
+        public static T AddComponentIfNone<T>(this GameObject _gameObject) where T : Component
+        {
+            if (_gameObject.TryGetComponent(out T _component))
+                return _component;
+
+            return _gameObject.AddComponent<T>();
+        }
+        #endregion
+    }
+}

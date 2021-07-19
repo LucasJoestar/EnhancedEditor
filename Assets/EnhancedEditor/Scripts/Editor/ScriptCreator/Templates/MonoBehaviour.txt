@@ -1,0 +1,19 @@
+// ===== The Dreadful Show - https://github.com/LucasJoestar/The-Dreadful-Show ===== //
+//
+// Notes:
+//
+// ================================================================================= //
+
+using EnhancedEditor;
+using UnityEngine;
+
+namespace TheDreadfulShow
+{
+	public class #SCRIPTNAME# : MonoBehaviour
+    {
+        #region Global Members
+		//[Section("#SCRIPTNAME#")]
+		
+        #endregion
+    }
+}

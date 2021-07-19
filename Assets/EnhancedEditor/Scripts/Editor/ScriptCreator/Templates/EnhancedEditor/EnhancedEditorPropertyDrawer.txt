@@ -1,0 +1,45 @@
+// ===== Enhanced Editor - https://github.com/LucasJoestar/EnhancedEditor ===== //
+// 
+// Notes:
+//
+// ============================================================================ //
+
+using UnityEditor;
+using UnityEngine;
+
+namespace EnhancedEditor.Editor
+{
+    [CustomDrawer(typeof(???))]
+	public class #SCRIPTNAME# : EnhancedPropertyDrawer
+    {
+        /*public override void OnEnable(SerializedProperty _property)
+        {
+            base.OnEnable(_property);
+        }
+
+        public override bool OnBeforeGUI(Rect _position, SerializedProperty _property, GUIContent _label, out float _height)
+        {
+            return base.OnBeforeGUI(_position, _property, _label, out _height);
+        }
+
+        public override bool OnGUI(Rect _position, SerializedProperty _property, GUIContent _label, out float _height)
+        {
+            return base.OnGUI(_position, _property, _label, out _height);
+        }
+
+        public override void OnAfterGUI(Rect _position, SerializedProperty _property, GUIContent _label, out float _height)
+        {
+            base.OnAfterGUI(_position, _property, _label, out _height);
+        }
+
+        public override void OnValueChanged(SerializedProperty _property)
+        {
+            base.OnValueChanged(_property);
+        }
+
+        public override void OnContextMenu(GenericMenu _menu, SerializedProperty _property)
+        {
+            base.OnContextMenu(_menu, _property);
+        }*/
+    }
+}

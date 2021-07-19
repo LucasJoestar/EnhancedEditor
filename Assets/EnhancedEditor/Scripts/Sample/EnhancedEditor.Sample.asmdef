@@ -1,0 +1,16 @@
+{
+    "name": "EnhancedEditor.Sample",
+    "rootNamespace": "",
+    "references": [
+        "GUID:75799b8099ce2e54f8f796e3acc8e06f"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
