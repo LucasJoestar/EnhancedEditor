@@ -10,16 +10,16 @@ namespace EnhancedEditor.Editor
 {
     /// <summary>
     /// Allows you to draw your own extension controls on the main editor toolbar.
-    /// Extensions can be drawn on the left or on the right side of the play mode buttons.
+    /// <br/>Extensions can be drawn whether on the left or on the right side of the play mode buttons.
     /// <para/>
-    /// Method must be static and without argument.
+    /// The methods must be static and without any argument.
     /// </summary>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
     public abstract class EditorToolbarExtension : Attribute
     {
         #region Global Members
         /// <summary>
-        /// Order in which extensions are drawn.
+        /// Order in which the extensions should be drawn in.
         /// </summary>
         public int Order { get; set; } = 0;
         #endregion

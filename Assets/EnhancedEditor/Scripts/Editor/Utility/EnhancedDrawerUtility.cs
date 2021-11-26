@@ -7,113 +7,74 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using UnityEditor;
 
 namespace EnhancedEditor.Editor
 {
     /// <summary>
-    /// Multiple useful utility methods related to <see cref="EnhancedEditor"/> internal drawers behaviour.
+    /// Contains multiple <see cref="EnhancedEditor"/>-internal utility methods related to custom drawers.
     /// </summary>
 	internal static class EnhancedDrawerUtility
     {
-        #region Unity Object Drawers
+        #region Content
         /// <summary>
         /// <see cref="UnityObjectDrawer"/> as key, target class as value.
         /// </summary>
-        private static Dictionary<Type, Type> objectDrawers = new Dictionary<Type, Type>();
-        private static bool areObjectDrawersInitialized = false;
+        private static Dictionary<Type, Type> objectDrawers = null;
 
-        // -----------------------
-
-        public static Dictionary<Type, Type> GetCustomDrawers()
-        {
-            // Search for all unity object drawers among project.
-            if (!areObjectDrawersInitialized)
-            {
-                areObjectDrawersInitialized = true;
-                foreach (Assembly _assembly in AppDomain.CurrentDomain.GetAssemblies())
-                {
-                    foreach (Type _type in _assembly.GetTypes())
-                    {
-                        // Register drawer if having a target class.
-                        if (_type.IsSubclassOf(typeof(UnityObjectDrawer)) && !_type.IsAbstract)
-                        {
-                            CustomDrawerAttribute _drawer = _type.GetCustomAttribute<CustomDrawerAttribute>(true);
-                            if (_drawer != null)
-                                objectDrawers[_type] = _drawer.TargetType;
-                        }
-                    }
-                }
-            }
-
-            return objectDrawers;
-        }
-        #endregion
-
-        #region Property Drawers
         /// <summary>
         /// <see cref="EnhancedPropertyDrawer"/> as key, target class as value.
         /// </summary>
-        private static Dictionary<Type, Type> propertyDrawers = new Dictionary<Type, Type>();
-        private static bool arePropertyDrawersInitialized = false;
+        private static Dictionary<Type, Type> propertyDrawers = null;
+
+        /// <summary>
+        /// <see cref="MethodDrawer"/> as key, target class as value.
+        /// </summary>
+        private static Dictionary<Type, Type> methodDrawers = null;
 
         // -----------------------
+
+        public static Dictionary<Type, Type> GetObjectDrawers()
+        {
+            LoadDrawers(ref objectDrawers, typeof(UnityObjectDrawer));
+            return objectDrawers;
+        }
 
         public static Dictionary<Type, Type> GetPropertyDrawers()
         {
-            // Search for all property drawers among project.
-            if (!arePropertyDrawersInitialized)
-            {
-                arePropertyDrawersInitialized = true;
-                foreach (Assembly _assembly in AppDomain.CurrentDomain.GetAssemblies())
-                {
-                    foreach (Type _type in _assembly.GetTypes())
-                    {
-                        // Register drawer if having a target class.
-                        if (_type.IsSubclassOf(typeof(EnhancedPropertyDrawer)) && !_type.IsAbstract)
-                        {
-                            CustomDrawerAttribute _drawer = _type.GetCustomAttribute<CustomDrawerAttribute>(true);
-                            if (_drawer != null)
-                                propertyDrawers[_type] = _drawer.TargetType;
-                        }
-                    }
-                }
-            }
-
+            LoadDrawers(ref propertyDrawers, typeof(EnhancedPropertyDrawer));
             return propertyDrawers;
         }
-        #endregion
-
-        #region Method Drawers
-        /// <summary>
-        /// <see cref="EnhancedMethodAttribute"/> as key, target class as value.
-        /// </summary>
-        private static Dictionary<Type, Type> methodDrawers = new Dictionary<Type, Type>();
-        private static bool areMehodDrawersInitialized = false;
-
-        // -----------------------
 
         public static Dictionary<Type, Type> GetMethodDrawers()
         {
-            // Search for all method drawers among project.
-            if (!areMehodDrawersInitialized)
+            LoadDrawers(ref methodDrawers, typeof(MethodDrawer));
+            return methodDrawers;
+        }
+
+        // -----------------------
+
+        private static void LoadDrawers(ref Dictionary<Type, Type> _data, Type _drawer)
+        {
+            if (_data == null)
             {
-                areMehodDrawersInitialized = true;
-                foreach (Assembly _assembly in AppDomain.CurrentDomain.GetAssemblies())
+                _data = new Dictionary<Type, Type>();
+
+                // Search for all target drawers in the project.
+                var _types = TypeCache.GetTypesDerivedFrom(_drawer);
+                foreach (Type _type in _types)
                 {
-                    foreach (Type _type in _assembly.GetTypes())
+                    // Only register the drawer if it has a target class.
+                    if (!_type.IsAbstract)
                     {
-                        // Register drawer if having a target class.
-                        if (_type.IsSubclassOf(typeof(MethodDrawer)) && !_type.IsAbstract)
+                        var _customDrawer = _type.GetCustomAttribute<CustomDrawerAttribute>(true);
+                        if (_customDrawer != null)
                         {
-                            CustomDrawerAttribute _drawer = _type.GetCustomAttribute<CustomDrawerAttribute>(true);
-                            if (_drawer != null)
-                                methodDrawers[_type] = _drawer.TargetType;
+                            _data[_type] = _customDrawer.TargetType;
                         }
                     }
                 }
             }
-
-            return methodDrawers;
         }
         #endregion
     }

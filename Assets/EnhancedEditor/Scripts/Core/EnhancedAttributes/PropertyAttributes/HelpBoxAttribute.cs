@@ -14,20 +14,31 @@ namespace EnhancedEditor
     public class HelpBoxAttribute : EnhancedPropertyAttribute
     {
         #region Global Members
-        public readonly bool IsAbove = true;
-        public readonly MessageType Type = MessageType.Info;
+        /// <summary>
+        /// Label displayed in the help box.
+        /// </summary>
         public readonly GUIContent Label = null;
+
+        /// <summary>
+        /// Help box message type.
+        /// </summary>
+        public readonly MessageType MessageType = MessageType.Info;
+
+        /// <summary>
+        /// Should the help box be drawn above or below this field?
+        /// </summary>
+        public readonly bool IsAbove = true;
 
         // -----------------------
 
+        /// <param name="_label"><inheritdoc cref="Label" path="/summary"/></param>
+        /// <param name="_messageType"><inheritdoc cref="MessageType" path="/summary"/></param>
+        /// <param name="_isAbove"><inheritdoc cref="IsAbove" path="/summary"/></param>
         /// <inheritdoc cref="HelpBoxAttribute"/>
-        /// <param name="_label">Label displayed in the help box.</param>
-        /// <param name="_type">Help box type.</param>
-        /// <param name="_isAbove">Should the help box be drawn above or below the associated field?</param>
-        public HelpBoxAttribute(string _label, MessageType _type, bool _isAbove = true)
+        public HelpBoxAttribute(string _label, MessageType _messageType, bool _isAbove = true)
         {
             Label = new GUIContent(_label);
-            Type = _type;
+            MessageType = _messageType;
             IsAbove = _isAbove;
         }
         #endregion

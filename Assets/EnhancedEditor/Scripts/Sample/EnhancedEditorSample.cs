@@ -9,19 +9,80 @@ using UnityEngine;
 namespace EnhancedEditor.Sample
 {
     #pragma warning disable 0414
-    public class EnhancedEditorSample : MonoBehaviour
+    public class EnhancedEditorSample : MonoBehaviour, ISerilizable
     {
+        [System.Serializable]
+        public class Sample
+        {
+            [Required] public GameObject DoYouSeeMe = null;
+        }
+
         [Section("SAMPLE SCRIPT")]
 
-        [SerializeField, BeginFoldout("GLOBAL", order = 0), Required(order = 1)] private Transform required = null;
+        [EndFoldout]
+        [BeginFoldout("Small Group"), BeginFoldout("Wrapper")]
+
+        [AssetPreview] public GameObject AssetPreview = null;
+
+        [EndFoldout, EndFoldout] public GameObject Ender = null;
+
+        [BeginFoldout("Large Group")]
+
+        [Block, DisplayName("This is a Block", "Yes it is")] public EnhancedEditorAdvancedSample.SampleClass BlockClass = null;
+        [Block] public Sample MySample = null;
+
+        public bool Boolean = true;
+
+        [ShowIf("Boolean", ConditionType.False), HelpBox("This is a help box. My content is very long, so make sure my width is supported for dynamic height.", MessageType.Info, true)]
+        public int HelpBox = 0;
+
+        [Inline] public Sample Inline = null;
+        [Min(0f), Max(100f)] public float MinMax = 500f;
+        [MinMax(0f, 100f)] public Vector2 MinMaxField = new Vector2(3, 50);
+
+        [ColorPalette(order = 0), EndFoldout(order = 1)]
+        public Color MyColor = Color.red;
+
+        [Required, Picker(typeof(Transform))] public GameObject Picker = null;
+        [PrecisionSlider(0f, 100f, .5f)] public float Precision = 50f;
+        [ProgressBar(100f, 25f, SuperColor.Chocolate, true)] public float ProgressBar = 10f;
+        [ValidationMember("ValidationProperty", ActivationMode.Editor)] public float ValidationField = 10f;
+        [ReadOnly(true)] public bool Readonly = true;
+
+        [EnhancedCurve(0f, 0f, 1f, 1f, SuperColor.Crimson)] public AnimationCurve MyCurve = new AnimationCurve();
+        [EnhancedTextArea] public string TextArea = "This is a text area.";
+
+        [EnhancedBounds] public Bounds MyBounds = new Bounds();
+        public string EndOfTheLine = "End of the Line";
+
+        public float MaxProperty => 100f;
+
+        public float ValidationProperty
+        {
+            set
+            {
+                Debug.Log("Value => " + ValidationField);
+            }
+        }
+
+        public SerializedInterface<ISerilizable> Interface = null;
+
+        [Button(SuperColor.Green)]
+        public void InterfaceTest()
+        {
+            var _interface = Interface.Interface;
+            Debug.LogError("Interface => " + (_interface != null));
+        }
+
+        /*[SerializeField, BeginFoldout("GLOBAL", order = 0), Required(order = 1)] private Transform required = null;
         [SerializeField, Required, AssetPreview] private GameObject preview = null;
         [SerializeField, Min(0), Max(100)] private float percent = 100f;
-        [SerializeField, ProgressBar("Exemple", 100f, SuperColor.Crimson, 25, true)] private float progressBar = 25f;
-        [SerializeField, PropertyField] private int property = 0;
+        [SerializeField, ProgressBar(100f, SuperColor.Crimson, true)] private float progressBar = 25f;
+        [SerializeField, ValidationMember("Property")] private int property = 0;
         [SerializeField, ReadOnly] private float readonlyBool = 0;
-        [SerializeField, EnhancedCurve(SuperColor.Sapphire, 0, 0, 1, 1)] private AnimationCurve myCurve = new AnimationCurve();
+        [SerializeField, EnhancedCurve(0, 0, 1, 1)] private AnimationCurve myCurve = new AnimationCurve();
 
-        [SerializeField, EnhancedRange(0f, 100f)] private float _precision = 0f;
+        [SerializeField, PrecisionSlider(0f, 100f)] private float _precision = 0f;
 
         [SerializeField] private bool showCondition = false;
         [SerializeField, ShowIf("showCondition", ConditionType.False)] private GameObject hiddenObject = null;
@@ -31,9 +92,9 @@ namespace EnhancedEditor.Sample
         [SerializeField, EndFoldout()] private int endTest = 5;
         [SerializeField, BeginFoldout("Foldout", SuperColor.Crimson, order = 0), Required(order = 1)] private GameObject withinFoldout = null;
         [SerializeField] private string inFoldout = "Foldout String";
-        [SerializeField, BeginFoldout("#2 Foldout", SuperColor.Pumpkin, order = 0), HorizontalLine(2, SuperColor.Black, order = 1)] private float secondFoldout = 10f;
-        [SerializeField, EndFoldout()] private GameObject withinFoldout2 = null;
-        [SerializeField, EndFoldout()] private string endFoldout = "End Foldout String";
+        [SerializeField, BeginFoldout("#2 Foldout", SuperColor.Pumpkin, order = 0), HorizontalLine(SuperColor.Black, 2f, order = 1)] private float secondFoldout = 10f;
+        [SerializeField, EndFoldout(), EndFoldout()] private GameObject withinFoldout2 = null;
+        [SerializeField] private string endFoldout = "End Foldout String";
         [SerializeField] private string inBetweenFoldout = "Foldout??";
         [SerializeField, BeginFoldout("#3rd", SuperColor.Indigo), EndFoldout()] private string finalFoldout = "Final Foldout String";
 
@@ -50,18 +111,18 @@ namespace EnhancedEditor.Sample
         }
 
         public bool ShowProperty => showCondition;
-        public bool ShowMethod() => showCondition;
+        public bool ShowMethod() => showCondition;*/
 
-        [Button(ActivationMode.Editor, "ShowProperty", ConditionType.False, SuperColor.Aquamarine)]
+        /*[Button(ActivationMode.Editor, "ShowProperty", ConditionType.False, SuperColor.Aquamarine)]
         public void ButtonMethod()
         {
-            this.LogError("Call Method");
+            this.LogError("Call Method => " + (Interface.Interface != null));
         }
 
         [Button(ActivationMode.Always, SuperColor.Raspberry)]
         public void ButtonMethodWithParameters(Transform _reference, string _message = "Message")
         {
             _reference.LogError($"Call Method => {_message}");
-        }
+        }*/
     }
 }

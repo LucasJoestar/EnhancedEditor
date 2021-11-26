@@ -1,0 +1,20 @@
+// ===== The Dreadful Show - https://github.com/LucasJoestar/The-Dreadful-Show ===== //
+//
+// Notes:
+//
+// ================================================================================= //
+
+using EnhancedEditor;
+using UnityEngine;
+
+namespace TheDreadfulShow
+{
+    [CreateAssetMenu(fileName = "DAT_#SCRIPTNAME#", menuName = "Data/#SCRIPTNAME#", order = 150)]
+	public class #SCRIPTNAME# : ScriptableObject
+    {
+        #region Content
+		//[Section("#SCRIPTNAME#")
+
+		#endregion
+    }
+}

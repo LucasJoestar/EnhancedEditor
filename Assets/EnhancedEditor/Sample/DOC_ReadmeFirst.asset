@@ -1,0 +1,72 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a8af76d847d699c4aa02b51064a60c84, type: 3}
+  m_Name: DOC_ReadmeFirst
+  m_EditorClassIdentifier: 
+  Title: Readme First - The Dreadful Show
+  Icon: {fileID: 2800000, guid: 7db3c001bdf39ca46ab6bb3bbfe58d00, type: 3}
+  Sections:
+  - Name: 
+    Spacing: 0
+    Header: 
+    Text: 
+    InfoText: 
+    Image: {fileID: 2800000, guid: a300a01fe7867b14da66d1ef0f75fabe, type: 3}
+    LinkText: 
+    URL: 
+  - Name: 
+    Spacing: 0
+    Header: The Dreadful Show
+    Text: 'The Dreadful Show is a cooperative beat''em up playable up to 4 players.
+
+
+      All
+      the game documents are centered in its associated Google Drive folder, which
+      can be accesed by the follow link:'
+    InfoText: This is a test info.
+    Image: {fileID: 0}
+    LinkText: Google Drive
+    URL: https://drive.google.com/drive/folders/15Hue8ksvpKWcKK3U-hM8ynThVKPrNDMM?usp=sharing
+  - Name: 
+    Spacing: 0
+    Header: 
+    Text: 'Here you will find the Game Design Document (GDD) and the global production
+      planning:'
+    InfoText: 
+    Image: {fileID: 0}
+    LinkText: GDD
+    URL: https://docs.google.com/document/d/1cxilDgktaDwkTXSe7MqrYK8ayj4cKE3YOYUH8RQb-jE/edit?usp=sharing
+  - Name: 
+    Spacing: 0
+    Header: 
+    Text: 
+    InfoText: 
+    Image: {fileID: 0}
+    LinkText: Planning
+    URL: https://docs.google.com/spreadsheets/d/1_6qOuet2BgYlcRjS_Ek_Vk4Myyve-CFN02mTimYbHCc/edit?usp=sharing
+  - Name: 
+    Spacing: 0
+    Header: 
+    Text: If you need any more informations or don't have the rights to access these
+      files, feel free to contact one of us directly.
+    InfoText: 
+    Image: {fileID: 0}
+    LinkText: 
+    URL: 
+  - Name: 
+    Spacing: 0
+    Header: 
+    Text: 
+    InfoText: 
+    Image: {fileID: 0}
+    LinkText: Project GitHub
+    URL: https://github.com/LucasJoestar/The-Dreadful-Show

@@ -9,16 +9,34 @@ using UnityEngine;
 namespace EnhancedEditor
 {
     /// <summary>
-    /// Displays the associated method as a button in the object inspector.
+    /// Displays this method as a button in the inspector.
     /// </summary>
     public class ButtonAttribute : EnhancedMethodAttribute
     {
         #region Global Members
         public const SuperColor DefaultColor = SuperColor.White;
 
-        public readonly string ConditionMemberName = string.Empty;
-        public readonly ConditionType ConditionType = ConditionType.True;
+        /// <summary>
+        /// When should this button be active and enabled?
+        /// </summary>
         public readonly ActivationMode Mode = ActivationMode.Always;
+
+        /// <summary>
+        /// Defines how this button condition value is considered as fulfilled.
+        /// </summary>
+        public readonly ConditionType ConditionType = ConditionType.True;
+
+        /// <summary>
+        /// Name of the class member to get value from,
+        /// used as a condition to know if the button should be active and enabled.
+        /// <para/>
+        /// Can either be a field, a property or a method, but its value must be convertible to <see cref="bool"/>.
+        /// </summary>
+        public readonly MemberValue<bool> ConditionMember = default;
+
+        /// <summary>
+        /// Button color.
+        /// </summary>
         public readonly Color Color = default;
         #endregion
 
@@ -36,21 +54,20 @@ namespace EnhancedEditor
         }
 
         /// <inheritdoc cref="ButtonAttribute(ActivationMode, string, ConditionType, SuperColor)"/>
-        public ButtonAttribute(string _conditionMemberName, ConditionType _type = ConditionType.True,
+        public ButtonAttribute(string _conditionMember, ConditionType _type = ConditionType.True,
                                SuperColor _color = DefaultColor) : this(_color)
         {
-            ConditionMemberName = _conditionMemberName;
+            ConditionMember = _conditionMember;
             ConditionType = _type;
         }
 
+        /// <param name="_mode"><inheritdoc cref="Mode" path="/summary"/></param>
+        /// <param name="_conditionMember"><inheritdoc cref="ConditionMember" path="/summary"/></param>
+        /// <param name="_type"><inheritdoc cref="ConditionType" path="/summary"/></param>
+        /// <param name="_color"><inheritdoc cref="Color" path="/summary"/></param>
         /// <inheritdoc cref="ButtonAttribute"/>
-        /// <param name="_mode">When should this button be active?</param>
-        /// <param name="_conditionMemberName">Name of the class member to get a value from,
-        /// used as a condition to know if the button should be enabled or not.</param>
-        /// <param name="_type">Defines how the condition is considered as fulfilled.</param>
-        /// <param name="_color">Button color.</param>
-        public ButtonAttribute(ActivationMode _mode, string _conditionMemberName, ConditionType _type = ConditionType.True,
-                               SuperColor _color = DefaultColor) : this(_conditionMemberName, _type, _color)
+        public ButtonAttribute(ActivationMode _mode, string _conditionMember, ConditionType _type = ConditionType.True,
+                               SuperColor _color = DefaultColor) : this(_conditionMember, _type, _color)
         {
             Mode = _mode;
         }

@@ -2,6 +2,18 @@
 // 
 // Notes:
 //
+//  https://github.com/Unity-Technologies/UnityCsReference
+//
+//  https://github.com/Unity-Technologies/UnityCsReference/blob/master/Editor/Mono/GUI/EditorToolbar.cs
+//  https://github.com/Unity-Technologies/UnityCsReference/blob/master/Modules/UIServiceEditor/UnityMainToolbar.cs
+//
+//  https://github.com/Unity-Technologies/UnityCsReference/blob/master/Editor/Mono/GUI/Toolbar.cs
+//  https://github.com/Unity-Technologies/UnityCsReference/blob/master/Editor/Mono/GUIView.cs
+//
+//  https://github.com/Unity-Technologies/UnityCsReference/blob/master/Editor/Mono/WindowBackendManager.cs
+//  https://github.com/Unity-Technologies/UnityCsReference/blob/master/External/MirroredPackageSources/com.unity.ui/Core/IMGUIContainer.cs
+//  https://github.com/Unity-Technologies/UnityCsReference/blob/master/External/MirroredPackageSources/com.unity.ui/Core/VisualElement.cs
+//
 // ============================================================================ //
 
 using System;
@@ -14,23 +26,26 @@ using UnityEngine.UIElements;
 namespace EnhancedEditor.Editor
 {
     /// <summary>
-    /// Extends the editor toolbar to add custom controls in it.
+    /// Extends the main editor toolbar to add custom controls in it.
     /// <para/>
-    /// You can create your own custom controls with the <see cref="EditorToolbarLeftExtension"/> and <see cref="EditorToolbarRightExtension"/> attributes.
+    /// You can create your own custom controls using the <see cref="EditorToolbarLeftExtension"/>
+    /// and <see cref="EditorToolbarRightExtension"/> attributes on your methods.
     /// </summary>
     [InitializeOnLoad]
     public static class EnhancedEditorToolbar
     {
         #region Global Members
         private static readonly BindingFlags reflectionFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
+        private static readonly Assembly editorAssembly = typeof(UnityEditor.Editor).Assembly;
 
-        private static readonly Type guiViewType = typeof(UnityEditor.Editor).Assembly.GetType("UnityEditor.GUIView");
-        private static readonly Type toolbarType = typeof(UnityEditor.Editor).Assembly.GetType("UnityEditor.Toolbar");
-        private static readonly Type iWindowBackendType = typeof(UnityEditor.Editor).Assembly.GetType("UnityEditor.IWindowBackend");
+        private static readonly Type toolbarType = editorAssembly.GetType("UnityEditor.Toolbar");
+        private static readonly Type guiViewType = editorAssembly.GetType("UnityEditor.GUIView");
+        private static readonly Type iWindowBackendType = editorAssembly.GetType("UnityEditor.IWindowBackend");
 
         private static readonly PropertyInfo windowBackendInfo = guiViewType.GetProperty("windowBackend", reflectionFlags);
         private static readonly PropertyInfo visualTreeInfo = iWindowBackendType.GetProperty("visualTree", reflectionFlags);
         private static readonly FieldInfo onGUIHandlerInfo = typeof(IMGUIContainer).GetField("m_OnGUIHandler", reflectionFlags);
+        private static readonly MethodInfo repaintInfo = typeof(VisualElement).GetMethod("MarkDirtyRepaint");
 
         private static readonly FieldInfo toolCountInfo = toolbarType.GetField("k_ToolCount", reflectionFlags);
         private static readonly int toolCount = 7;
@@ -38,10 +53,8 @@ namespace EnhancedEditor.Editor
         private static readonly Action[] toolbarLeftExtensions = new Action[] { };
         private static readonly Action[] toolbarRightExtensions = new Action[] { };
 
-        private static VisualElement visualTree = null;
-        private static Action repaintDelegate = null;
-
         private static ScriptableObject toolbar = null;
+        private static Action repaintDelegate = null;
 
         // -----------------------
 
@@ -59,29 +72,31 @@ namespace EnhancedEditor.Editor
             toolbarLeftExtensions = GetExtensions<EditorToolbarLeftExtension>(false);
             toolbarRightExtensions = GetExtensions<EditorToolbarRightExtension>(true);
 
-            // ----- Local Method ----- //
+            // ----- Local Method ----- \\
+
             Action[] GetExtensions<T>(bool _sortAscending) where T : EditorToolbarExtension
             {
-                // Get matching methods.
-                var _attributes = TypeCache.GetMethodsWithAttribute<T>();
+                // Get matching extension methods.
+                var _methods = TypeCache.GetMethodsWithAttribute<T>();
                 List<MethodInfo> _extensions = new List<MethodInfo>();
 
-                for (int _i = 0; _i < _attributes.Count; _i++)
+                foreach (var _method in _methods)
                 {
-                    MethodInfo _method = _attributes[_i];
                     if (_method.IsStatic && (_method.GetParameters().Length == 0))
                         _extensions.Add(_method);
                 }
 
-                // Sort extensions by their order.
+                // Sort all extensions by their order.
                 _extensions.Sort((a, b) =>
                 {
-                    var _aAttribute = a.GetCustomAttribute<EditorToolbarLeftExtension>();
-                    var _bAttribute = b.GetCustomAttribute<EditorToolbarLeftExtension>();
+                    var _aAttribute = a.GetCustomAttribute<T>();
+                    var _bAttribute = b.GetCustomAttribute<T>();
 
-                    return _sortAscending
-                            ? _aAttribute.Order.CompareTo(_bAttribute.Order)
-                            : _bAttribute.Order.CompareTo(_aAttribute.Order);
+                    int _comparison = _sortAscending
+                                    ? _aAttribute.Order.CompareTo(_bAttribute.Order)
+                                    : _bAttribute.Order.CompareTo(_aAttribute.Order);
+
+                    return _comparison;
                 });
 
                 // Then store their delegate.
@@ -96,20 +111,21 @@ namespace EnhancedEditor.Editor
         #region Update
         private static void Update()
         {
-            // Subscribe toolbar GUI callback everytime its refrence is lost. 
-            if (toolbar == null)
+            // Subscribe the toolbar GUI callback every time its reference gets lost.
+            // Cannot be done on initialization as some editor elements may not be initialized yet.
+            if (!toolbar)
             {
                 var _toolbars = Resources.FindObjectsOfTypeAll(toolbarType);
                 if (_toolbars.Length == 0)
                     return;
 
                 // Load the main toolbar and get its gui handler callback.
-                // Could use the onGUIHandler delegate from its IWindowModel interface if it wasn't readonly.
+                // Could use the onGUIHandler delegate from its IWindowModel interface, if it wasn't readonly.
                 toolbar = _toolbars[0] as ScriptableObject;
 
                 object _windowBackend = windowBackendInfo.GetValue(toolbar);
-                visualTree = visualTreeInfo.GetValue(_windowBackend) as VisualElement;
-                IMGUIContainer _container = visualTree[0] as IMGUIContainer;
+                VisualElement _visualTree = visualTreeInfo.GetValue(_windowBackend) as VisualElement;
+                IMGUIContainer _container = _visualTree[0] as IMGUIContainer;
                 Action _handler = onGUIHandlerInfo.GetValue(_container) as Action;
 
                 _handler -= OnGUI;
@@ -119,7 +135,7 @@ namespace EnhancedEditor.Editor
                 onGUIHandlerInfo.SetValue(_container, _handler);
 
                 // Get toolbar repaint delegate.
-                repaintDelegate = typeof(VisualElement).GetMethod("MarkDirtyRepaint").CreateDelegate(typeof(Action), visualTree) as Action;
+                repaintDelegate = repaintInfo.CreateDelegate(typeof(Action), _visualTree) as Action;
             }
         }
         #endregion
@@ -139,7 +155,7 @@ namespace EnhancedEditor.Editor
 
         private static void OnGUI()
         {
-            // Calculate all rects.
+            // Position calculs.
             float _playModePos = Mathf.RoundToInt((Screen.width - PlayPauseStopWidth) * .5f);
 
             Rect _leftPosition = new Rect()
@@ -147,7 +163,7 @@ namespace EnhancedEditor.Editor
                 x = Space + (StandardButtonWidth * toolCount) + Space + PivotButtonsWidth + Space + StandardButtonWidth + 3f,
                 xMax = _playModePos - Space,
                 y = VerticalPadding,
-                height = ControlHeight,
+                height = ControlHeight
             };
 
             Rect _rightPosition = new Rect()
@@ -161,74 +177,53 @@ namespace EnhancedEditor.Editor
             // Left side extensions.
             if (_leftPosition.width > 0f)
             {
-                GUILayout.BeginArea(_leftPosition);
-                GUILayout.BeginHorizontal();
-                GUILayout.FlexibleSpace();
-
-                foreach (var _extension in toolbarLeftExtensions)
+                using (var _scope = new GUILayout.AreaScope(_leftPosition))
+                using (var _horizontalScope = new GUILayout.HorizontalScope())
                 {
-                    GUILayout.Space(5f);
-                    _extension();
+                    GUILayout.FlexibleSpace();
+                    foreach (var _extension in toolbarLeftExtensions)
+                    {
+                        GUILayout.Space(5f);
+                        _extension();
+                    }
                 }
-
-                GUILayout.EndHorizontal();
-                GUILayout.EndArea();
             }
 
             // Right side extensions.
             if (_rightPosition.width > 0f)
             {
-                GUILayout.BeginArea(_rightPosition);
-                GUILayout.BeginHorizontal();
-
-                foreach (var _extension in toolbarRightExtensions)
+                using (var _scope = new GUILayout.AreaScope(_rightPosition))
+                using (var _horizontalScope = new GUILayout.HorizontalScope())
                 {
-                    _extension();
-                    GUILayout.Space(5f);
+                    foreach (var _extension in toolbarRightExtensions)
+                    {
+                        _extension();
+                        GUILayout.Space(5f);
+                    }
                 }
-
-                GUILayout.EndHorizontal();
-                GUILayout.EndArea();
             }
-        }
-
-        // -----------------------
-
-        //[ToolbarLeftExtension]
-        public static void LeftExtension()
-        {
-            Button(new GUIContent("Left Space"), GUILayout.ExpandWidth(true));
-        }
-
-        //[ToolbarRightExtension]
-        public static void Rightxtension()
-        {
-            Button(new GUIContent("Right Space"), GUILayout.ExpandWidth(true));
         }
         #endregion
 
         #region GUI Utility
         /// <summary>
-        /// Draws a toolbar like button. Use this to draw buttons for the editor toolbar in your own extensions.
+        /// Draws a toolbar-like button. Use this to draw buttons on the editor toolbar in your own extensions.
         /// </summary>
-        /// <param name="_content">Content to display.</param>
+        /// <param name="_label">Text, image and tooltip to be displayed.</param>
         /// <param name="_options">An optional list of layout options that specify extra layout properties.</param>
         /// <returns>True when the users clicks the button, false otherwise.</returns>
-        public static bool Button(GUIContent _content, params GUILayoutOption[] _options)
+        public static bool Button(GUIContent _label, params GUILayoutOption[] _options)
         {
-            // First, draw the button background as the appropriate style cannot display any label.
+            // First, draw the button background as the toolbar appropriate style cannot display any label.
             Rect _position = EditorGUILayout.GetControlRect(_options);
             bool _result = GUI.Button(_position, GUIContent.none, EnhancedEditorStyles.ToolbarControl);
 
-            // Then, draw toolbar label above.
+            // Then, draw the label over it.
             GUIStyle _labelStyle = EnhancedEditorStyles.ToolbarLabel;
-            EnhancedEditorGUIUtility.PushAnchor(_labelStyle, TextAnchor.MiddleCenter);
-
-            // Somehow label is not automatically aligned with the toolbar, so increment vertical position.
-            _position.y += 2f;
-            GUI.Label(_position, _content, _labelStyle);
-
-            EnhancedEditorGUIUtility.PopAnchor(_labelStyle);
+            using (var _scope = EnhancedGUI.GUIStyleAlignment.Scope(_labelStyle, TextAnchor.MiddleCenter))
+            {
+                GUI.Label(_position, _label, _labelStyle);
+            }
 
             return _result;
         }
@@ -236,40 +231,36 @@ namespace EnhancedEditor.Editor
         /// <summary>
         /// Draws a group of buttons together, like the ones in the editor toolbar.
         /// </summary>
-        /// <param name="_contents">Contents to display on buttons.</param>
-        /// <param name="_options">An optional list of layout options that specify extra layout properties.</param>
+        /// <param name="_labels">Texts, images and tooltips to be displayed</param>
+        /// <param name="_options"><inheritdoc cref="Button(GUIContent, GUILayoutOption[])" path="/param[@name='_options']"/></param>
         /// <returns>Index of the button the users clicked on if any, -1 otherwise.</returns>
-        public static int ButtonGroup(GUIContent[] _contents, params GUILayoutOption[] _options)
+        public static int ButtonGroup(GUIContent[] _labels, params GUILayoutOption[] _options)
         {
+            GUIStyle _labelStyle = EnhancedEditorStyles.ToolbarLabel;
             int _result = -1;
 
             Rect _position = EditorGUILayout.GetControlRect(_options);
-            _position.width = Mathf.Round(_position.width / _contents.Length);
+            _position.width = Mathf.Round(_position.width / _labels.Length);
 
-            GUIStyle _labelStyle = EnhancedEditorStyles.ToolbarLabel;
-            EnhancedEditorGUIUtility.PushAnchor(_labelStyle, TextAnchor.MiddleCenter);
-
-            for (int _i = 0; _i < _contents.Length; _i++)
+            using (var _scope = EnhancedGUI.GUIStyleAlignment.Scope(_labelStyle, TextAnchor.MiddleCenter))
             {
-                // Select appropriate background style depending on position.
-                GUIContent _content = _contents[_i];
-                GUIStyle _style = (_i == 0) ? EnhancedEditorStyles.ToolbarCommandLeft
-                                            : ((_i == (_contents.Length - 1)) ? EnhancedEditorStyles.ToolbarCommandRight
-                                                                              : EnhancedEditorStyles.ToolbarCommandMid);
+                for (int _i = 0; _i < _labels.Length; _i++)
+                {
+                    // Select the appropriate background style depending on the button position.
+                    GUIContent _content = _labels[_i];
+                    GUIStyle _style = (_i == 0)
+                                    ? EnhancedEditorStyles.ToolbarCommandLeft
+                                    : ((_i == (_labels.Length - 1)) ? EnhancedEditorStyles.ToolbarCommandRight
+                                                                    : EnhancedEditorStyles.ToolbarCommandMid);
 
-                if (GUI.Button(_position, GUIContent.none, _style))
-                    _result = _i;
+                    if (GUI.Button(_position, GUIContent.none, _style))
+                        _result = _i;
 
-                // Draw label over background.
-                _position.y += 2f;
-                GUI.Label(_position, _content, _labelStyle);
-
-                // Increment position for next button.
-                _position.x += _position.width;
-                _position.y -= 2f;
+                    // Draw the label over the background.
+                    GUI.Label(_position, _content, _labelStyle);
+                    _position.x += _position.width;
+                }
             }
-
-            EnhancedEditorGUIUtility.PopAnchor(_labelStyle);
 
             return _result;
         }

@@ -11,7 +11,7 @@ using UnityEngine;
 namespace EnhancedEditor
 {
     /// <summary>
-    /// Base class to derive custom property attributes from.
+    /// Base class to derive all custom property attributes from.
     /// Use this to create and assign multiple custom attributes to your script variables.
     /// <para/>
     /// A custom attribute can be hooked up with a custom drawer

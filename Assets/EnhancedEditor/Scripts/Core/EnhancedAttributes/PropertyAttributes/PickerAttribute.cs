@@ -5,18 +5,21 @@
 // ============================================================================ //
 
 using System;
-using System.Linq;
 using UnityEngine;
 
 namespace EnhancedEditor
 {
     /// <summary>
-    /// Enhanced <see cref="GameObject"/> / <see cref="Component"/> picker,
-    /// restricting selection to objects with specific component(s) and / or interface(s).
+    /// Makes this field a <see cref="GameObject"/> / <see cref="Component"/> object picker,
+    /// constraining this value to objects with specific components and / or interfaces.
     /// </summary>
-	public class PickerAttribute : EnhancedPropertyAttribute
+    public class PickerAttribute : EnhancedPropertyAttribute
     {
         #region Global Members
+        /// <summary>
+        /// Only the objects possessing all of these required components will be assignable
+        /// (must either be a component or an interface).
+        /// </summary>
         public readonly Type[] RequiredTypes = new Type[] { };
 
         // -----------------------
@@ -24,11 +27,11 @@ namespace EnhancedEditor
         /// <inheritdoc cref="PickerAttribute(Type[])"/>
         public PickerAttribute() { }
 
+        /// <param name="_requiredComponents"><inheritdoc cref="RequiredTypes" path="/summary"/></param>
         /// <inheritdoc cref="PickerAttribute"/>
-        /// <param name="_requiredComponents">Required component and / or interface types.</param>
         public PickerAttribute(params Type[] _requiredComponents) 
         {
-            RequiredTypes = _requiredComponents.Where(t => t.IsSubclassOf(typeof(Component)) || t.IsInterface).ToArray();
+            RequiredTypes = _requiredComponents;
         }
         #endregion
     }

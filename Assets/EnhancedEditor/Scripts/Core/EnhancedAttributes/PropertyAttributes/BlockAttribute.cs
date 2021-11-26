@@ -7,8 +7,7 @@
 namespace EnhancedEditor
 {
     /// <summary>
-    /// Displays a struct or a serializable class field
-    /// within a single block, without any foldout.
+    /// Displays a struct or a serializable class within a single block, without any foldout.
     /// </summary>
     public class BlockAttribute : EnhancedPropertyAttribute { }
 }

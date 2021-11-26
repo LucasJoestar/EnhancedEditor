@@ -4,35 +4,27 @@
 //
 // ============================================================================ //
 
-using UnityEngine;
 using UnityEditor;
+using UnityEngine;
 
 namespace EnhancedEditor.Editor
 {
     /// <summary>
-    /// Special drawer (inheriting from <see cref="UnityObjectDrawer"/>) for classes with attribute <see cref="NonEditableAttribute"/>.
+    /// Special drawer for classes with the attribute <see cref="NonEditableAttribute"/> (inherit from <see cref="UnityObjectDrawer"/>).
     /// </summary>
     [CustomDrawer(typeof(NonEditableAttribute))]
     public class NonEditableObjectDrawer : UnityObjectDrawer
     {
         #region Drawer Content
-        private GUIContent labelGUI = GUIContent.none;
-        private bool isInitialized = false;
-
-        // -----------------------
-
         public override bool OnInspectorGUI()
         {
-            if (!isInitialized)
-            {
-                labelGUI = (Attribute as NonEditableAttribute).Label;
-                isInitialized = true;
-            }
+            var _attribute = Attribute as NonEditableAttribute;
 
-            Rect _position = EditorGUILayout.GetControlRect(true, Screen.height * .5f);
-            EditorGUI.LabelField(_position, labelGUI, EnhancedEditorStyles.BigWordWrappedCenteredLabel);
+            GUILayout.Space(100f);
+            EditorGUILayout.LabelField(_attribute.Label, EnhancedEditorStyles.BigWordWrappedCenteredLabel);
 
-            return false;
+            GUILayout.Space(50f);
+            return true;
         }
         #endregion
     }

@@ -6,104 +6,125 @@
 
 using System.Collections.Generic;
 using UnityEditor;
+using UnityEditor.AnimatedValues;
 using UnityEngine;
 
 namespace EnhancedEditor.Editor
 {
     /// <summary>
-    /// Special drawer (inheriting from <see cref="EnhancedPropertyDrawer"/>) for classes with attribute <see cref="BeginFoldoutAttribute"/>.
+    /// Special drawer for fields with the attribute <see cref="BeginFoldoutAttribute"/> (inherit from <see cref="EnhancedPropertyDrawer"/>).
     /// </summary>
     [CustomDrawer(typeof(BeginFoldoutAttribute))]
 	public class BeginFoldoutPropertyDrawer : EnhancedPropertyDrawer
     {
         #region Drawer Content
-        private static BeginFoldoutPropertyDrawer[] availableFoldouts = new BeginFoldoutPropertyDrawer[] { };
+        private static List<BeginFoldoutPropertyDrawer> availableFoldouts = new List<BeginFoldoutPropertyDrawer>();
         private static readonly List<Color> colorBuffer = new List<Color>();
 
-        public string PropertyName { get; private set; }
+        private readonly AnimBool foldout = new AnimBool();
+        internal string id = string.Empty;
 
-        private float beginHeight = 0f;
-        private float endHeight = 0f;
+        private float beginPos = 0f;
+        private float endPos = 0f;
+        private float height = 0f;
+        private float colorPos = 0f;
 
-        private float lerpHeight = 0f;
-        private float colorHeight = 0f;
-
-        private bool foldout = false;
+        private bool isBoxGroup = false;
 
         // -----------------------
 
-        public override void OnEnable(SerializedProperty _property)
+        public override void OnEnable()
         {
-            BeginFoldoutAttribute _attribute = (BeginFoldoutAttribute)Attribute;
-            _attribute.Foldout = SessionState.GetBool(_property.name, false);
+            BeginFoldoutAttribute _attribute = Attribute as BeginFoldoutAttribute;
+            id = SerializedProperty.name + _attribute.Label.text + _attribute.Color.ToString();
 
-            foldout = _attribute.Foldout;
-            PropertyName = _property.name;
+            _attribute.foldout = foldout.value
+                               = SessionState.GetBool(id, false);
 
-            // Try to recover foldout, for some properties can be recreated while
-            // already existing (like ObjectReference field properties).
-            if (!EndFoldoutPropertyDrawer.RecoverFoldout(this, _property.name))
-                UnityEditor.ArrayUtility.Add(ref availableFoldouts, this);
+            // Try to reconnect this foldout, as some properties can be recreated while
+            // already existing (like the ObjectReference type properties).
+            if (EndFoldoutPropertyDrawer.ReconnectFoldout(this, id))
+            {
+                EnhancedEditorGUIUtility.Repaint(SerializedProperty.serializedObject);
+            }
+            else
+            {
+                availableFoldouts.Add(this);
+            }
         }
 
         public override bool OnBeforeGUI(Rect _position, SerializedProperty _property, GUIContent _label, out float _height)
         {
-            BeginFoldoutAttribute _attribute = (BeginFoldoutAttribute)Attribute;
+            // Check if this begin group is connected to an end to avoid any GUI trouble.
+            if (!EndFoldoutPropertyDrawer.IsConnected(this))
+            {
+                _height = 0f;
+                return false;
+            }
 
+            BeginFoldoutAttribute _attribute = Attribute as BeginFoldoutAttribute;
             Event _event = Event.current;
+
             if (_attribute.HasColor && (_event.type == EventType.Repaint))
             {
-                // Use colorHeight as previous repaint value
-                // to avoid offset with EndFoldout height update.
-                Rect _colorRect = EditorGUI.IndentedRect(_position);
-				EditorGUI.DrawRect(new Rect(_colorRect.x + EnhancedEditorGUIUtility.BoxLeftOffset,
-											_position.y + 1f,
-											_colorRect.width + EnhancedEditorGUIUtility.BoxRightOffset,
-											(endHeight - colorHeight) + lerpHeight),
-								   _attribute.Color);
+                // Use the previous Repaint event position to avoid any offset with the EndFoldout position update.
+                Rect _temp = EditorGUI.IndentedRect(_position);
+                _temp = new Rect(_temp.x - EnhancedEditorGUIUtility.FoldoutWidth,
+                                 _temp.y + 1f,
+                                 _temp.width + EnhancedEditorGUIUtility.FoldoutWidth + 2f,
+                                 (endPos - colorPos) + height);
 
-				// Draw an outline all around the color box.
-				// Use GUI instead of EditorGUI (and so with indented rect)
-				// to do not take over following properties hot control.
-				GUI.Label(new Rect(_colorRect.x + EnhancedEditorGUIUtility.BoxLeftOffset - 1f,
-                                   _position.y,
-								   _colorRect.width + EnhancedEditorGUIUtility.BoxRightOffset + 2f,
-                                   endHeight - colorHeight + lerpHeight + 2f),
-                          GUIContent.none, EditorStyles.helpBox);
+                EditorGUI.DrawRect(_temp, _attribute.Color);
 
-				colorHeight = _position.y;
+                // Draw an outline all around the color box.
+                // Use the GUI class instead of EditorGUI to do not take over the following properties hot control.
+                _temp = new Rect(_temp.x - 1f,
+                                 _position.y,
+                                 _temp.width + 2f,
+                                 _temp.height + 2f);
+
+                GUI.Label(_temp, GUIContent.none, EditorStyles.helpBox);
+
+				colorPos = _position.y;
             }
 
-            // Update foldout value in next event to avoid glitches
-            // for a smoother draw.
-            if (foldout != _attribute.Foldout)
+            // Update the foldout value during the next event to avoid glitches and for a smoother draw.
+            if (foldout.target != _attribute.foldout)
             {
-                _attribute.Foldout = foldout;
-                SessionState.SetBool(_property.name, foldout);
+                _attribute.foldout = foldout.target;
+                SessionState.SetBool(id, _attribute.foldout);
             }
 
-            _height = EditorGUIUtility.singleLineHeight;
-            _position.height = _height;
+            _position.height = _height
+                             = EditorGUIUtility.singleLineHeight;
 
-            foldout = EditorGUI.Foldout(_position, _attribute.Foldout, _attribute.Label, true);
+            foldout.target = EditorGUI.Foldout(_position, foldout.target, _attribute.Label, true);
             EditorGUI.indentLevel++;
 
-            // Register begin height only on Repaint event,
-            // as Layout event do not calculate rects and mess with everything.
+            // Only register the begin height on Repaint event,
+            // as the Layout event always have uncalculated rects.
             if (_event.type == EventType.Repaint)
             {
-                beginHeight = _position.yMax;
+                beginPos = _position.yMax;
 
-                // Use color buffer for russian-dolls-like foldouts repaint.
+                // Use a color buffer for russian-dolls-like foldouts repaint.
                 if (_attribute.HasColor)
+                {
                     colorBuffer.Add(_attribute.Color);
+                }
             }
             else if (colorBuffer.Count > 0)
             {
-                // Clear to avoid not popped out colors, when something
-                // prevent associated EndFoldout from being called
-                // (like ObjectReference field properties).
+                // Clear to avoid stacking unpopped out colors, which can occur when something
+                // prevent the associated EndFoldout from being called (like with ObjectReference type properties).
                 colorBuffer.Clear();
+            }
+
+            // When this group is folded, disable all the following controls by encapsulting them within a zero rect group.
+            isBoxGroup = foldout.faded == 0f;
+            if (isBoxGroup)
+            {
+                GUI.BeginGroup(Rect.zero);
             }
 
             return false;
@@ -111,42 +132,67 @@ namespace EnhancedEditor.Editor
         #endregion
 
         #region Utility
-        internal static BeginFoldoutPropertyDrawer GetFoldout()
+        internal static bool GetFoldout(out BeginFoldoutPropertyDrawer _foldout)
         {
-            int _index = availableFoldouts.Length - 1;
-            BeginFoldoutPropertyDrawer _drawer = availableFoldouts[_index];
-            UnityEditor.ArrayUtility.RemoveAt(ref availableFoldouts, _index);
+            // Pop out last inserted entry if any.
+            int _index = availableFoldouts.Count - 1;
+            if (_index < 0)
+            {
+                _foldout = null;
+                return false;
+            }
 
-            return _drawer;
+            _foldout = availableFoldouts[_index];
+            availableFoldouts.RemoveAt(_index);
+
+            return true;
+        }
+
+        internal bool PopFoldout(float _endPos, float _height, out float _beginPos, out float _fade, out bool _hasColor)
+        {
+            BeginFoldoutAttribute _attribute = Attribute as BeginFoldoutAttribute;
+            EditorGUI.indentLevel--;
+
+            // Once again, only update positions on Repaint event.
+            if (Event.current.type == EventType.Repaint)
+            {
+                endPos = _endPos;
+
+                // Remove this foldout color from the buffer.
+                if (_attribute.HasColor)
+                {
+                    colorBuffer.RemoveAt(colorBuffer.Count - 1);
+                }
+            }
+
+            // Get the current end position of the group, used to properly draw its color box.
+            height = _height;
+
+            _beginPos = beginPos;
+            _fade = foldout.faded;
+            _hasColor = _attribute.HasColor;
+
+            // Enable back the next controls by exiting from the zero rect group.
+            if (isBoxGroup)
+            {
+                GUI.EndGroup();
+                isBoxGroup = false;
+            }
+
+            // Repaint while animating.
+            if (foldout.isAnimating)
+                EnhancedEditorGUIUtility.Repaint(SerializedProperty.serializedObject);
+
+            return _attribute.foldout;
         }
 
         internal static Color PopColor()
         {
-            return (colorBuffer.Count == 0) ?
-                        EnhancedEditorGUIUtility.GetGUIBackgroundColor() :
-                        colorBuffer[colorBuffer.Count - 1];
-        }
+            Color _color = (colorBuffer.Count == 0)
+                         ? EnhancedEditorGUIUtility.GUIThemeBackgroundColor
+                         : colorBuffer[colorBuffer.Count - 1];
 
-        internal bool PopFoldout(float _position, float _lerpHeight, out float _height)
-        {
-            BeginFoldoutAttribute _attribute = (BeginFoldoutAttribute)Attribute;
-            if (Event.current.type == EventType.Repaint)
-            {
-                endHeight = _position;
-
-                // Update color buffer on pop.
-                if (_attribute.HasColor)
-                    colorBuffer.RemoveAt(colorBuffer.Count - 1);
-            }
-
-            // Get actual foldout lerp height,
-            // used to properly draw color box.
-            lerpHeight = _lerpHeight;
-
-			EditorGUI.indentLevel--;
-            _height = beginHeight;
-
-            return _attribute.Foldout;
+            return _color;
         }
         #endregion
     }

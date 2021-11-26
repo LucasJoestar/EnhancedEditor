@@ -7,17 +7,20 @@
 namespace EnhancedEditor
 {
     /// <summary>
-    /// Displays this field as readonly (non editable).
+    /// Displays this value as a readonly (non editable) field.
     /// </summary>
     public class ReadOnlyAttribute : EnhancedPropertyAttribute
     {
         #region Global Members
+        /// <summary>
+        /// If this field is a boolean, defines if using a classic or a radio-style toggle.
+        /// </summary>
         public readonly bool UseRadioToggle = false;
 
         // -----------------------
 
+        /// <param name="_useRadioToggle"><inheritdoc cref="UseRadioToggle" path="/summary"/></param>
         /// <inheritdoc cref="ReadOnlyAttribute"/>
-        /// <param name="_useRadioToggle">If this field is a boolean, defines if using a classic or a radio toggle.</param>
         public ReadOnlyAttribute(bool _useRadioToggle = false)
         {
             UseRadioToggle = _useRadioToggle;

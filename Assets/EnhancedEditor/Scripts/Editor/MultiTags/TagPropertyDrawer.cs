@@ -9,20 +9,17 @@ using UnityEngine;
 
 namespace EnhancedEditor.Editor
 {
+    /// <summary>
+    /// Custom <see cref="Tag"/> drawer.
+    /// </summary>
     [CustomPropertyDrawer(typeof(Tag), true)]
 	public class TagPropertyDrawer : PropertyDrawer
     {
-        public override float GetPropertyHeight(SerializedProperty _property, GUIContent _label)
-        {
-            return EnhancedEditorGUIUtility.TagHeight;
-        }
-
+        #region Drawer Content
         public override void OnGUI(Rect _position, SerializedProperty _property, GUIContent _label)
         {
             EnhancedEditorGUI.TagField(_position, _property, _label);
-
-            // Repaint to accurately display color changes.
-            EnhancedEditorGUIUtility.Repaint(_property.serializedObject);
         }
+        #endregion
     }
 }

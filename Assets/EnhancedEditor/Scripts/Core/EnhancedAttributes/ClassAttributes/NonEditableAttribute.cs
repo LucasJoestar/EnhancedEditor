@@ -9,28 +9,30 @@ using UnityEngine;
 namespace EnhancedEditor
 {
     /// <summary>
-    /// Avoid default inspector of target objects from being drawn.
-    /// <para/>
-    /// A custom label will be displayed instead.
+    /// Replaces the default inspector of all of this class instances
+    /// by a simple customizable label.
     /// </summary>
 	public class NonEditableAttribute : EnhancedClassAttribute
     {
         #region Global Members
-        public const string DefaultLabel = "Edition of this object is not allowed.\nThese datas may be sensitives.";
+        public const string DefaultLabel = "Edition of this object is not allowed.\nThese data may be sensitive.";
 
+        /// <summary>
+        /// Label displayed in the inspector, instead of its original content.
+        /// </summary>
         public readonly GUIContent Label = null;
 
         // -----------------------
 
+        /// <inheritdoc cref="NonEditableAttribute(string)"/>
+        public NonEditableAttribute() : this(DefaultLabel) { }
+
+        /// <param name="_label"><inheritdoc cref="Label" path="/summary"/></param>
         /// <inheritdoc cref="NonEditableAttribute"/>
-        /// <param name="_label">Label displayed instead of the usual inspector.</param>
         public NonEditableAttribute(string _label)
         {
             Label = new GUIContent(_label);
         }
-
-        /// <inheritdoc cref="NonEditableAttribute(string)"/>
-        public NonEditableAttribute() : this(DefaultLabel) { }
         #endregion
     }
 }

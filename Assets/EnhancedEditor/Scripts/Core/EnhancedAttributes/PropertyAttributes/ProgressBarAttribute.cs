@@ -9,7 +9,7 @@ using UnityEngine;
 namespace EnhancedEditor
 {
     /// <summary>
-    /// Displays this field as a progress bar.
+    /// Displays this value as a progress bar.
     /// </summary>
     public class ProgressBarAttribute : EnhancedPropertyAttribute
     {
@@ -17,57 +17,65 @@ namespace EnhancedEditor
         public const SuperColor DefaultColor = SuperColor.Sapphire;
         public const float DefaultHeight = 25f;
 
-        public readonly float Height = DefaultHeight;
+        /// <summary>
+        /// Maximum bar value, used to determine its filled amount. Minimum value is always 0.
+        /// </summary>
         public readonly float MaxValue = 0f;
-        public readonly string MaxValueVariableName = string.Empty;
-        public readonly Color Color = default;
-        public readonly GUIContent Label = new GUIContent();
 
+        /// <summary>
+        /// Name of the class member to get value from,
+        /// acting as this bar maximum value and used to determine its filled amount. Minimum value is always 0.
+        /// <para/>
+        /// Can either be a field, a property or a method, but its value must be convertible to <see cref="float"/>.
+        /// </summary>
+        public readonly MemberValue<float>? MaxMember = null;
+
+        /// <summary>
+        /// Height of the progress bar (in pixels).
+        /// </summary>
+        public readonly float Height = DefaultHeight;
+
+        /// <summary>
+        /// Progress bar color.
+        /// </summary>
+        public readonly Color Color = default;
+
+        /// <summary>
+        /// Is this progress bar value editable (draggable) by users?
+        /// </summary>
         public readonly bool IsEditable = false;
         #endregion
 
         #region Constructors
-        /// <inheritdoc cref="ProgressBarAttribute(string, string, SuperColor, float, bool)"/>
-        private ProgressBarAttribute(SuperColor _color, float _height, bool _isEditable = false)
-        {
-            Color = _color.Get();
-            Height = Mathf.Max(1f, _height);
+        /// <inheritdoc cref="ProgressBarAttribute(float, float, SuperColor, bool)"/>
+        public ProgressBarAttribute(float _maxValue, SuperColor _color = DefaultColor, bool _isEditable = false) : this(_maxValue, DefaultHeight, _color, _isEditable) { }
 
-            IsEditable = _isEditable;
+        /// <param name="_maxValue"><inheritdoc cref="MaxValue" path="/summary"/></param>
+        /// <inheritdoc cref="ProgressBarAttribute(SuperColor, float, bool)"/>
+        public ProgressBarAttribute(float _maxValue, float _height, SuperColor _color = DefaultColor, bool _isEditable = false) : this(_color, _height, _isEditable)
+        {
+            MaxValue = Mathf.Max(.0001f, _maxValue);
         }
 
-        /// <inheritdoc cref="ProgressBarAttribute(string, float, SuperColor, float, bool)"/>
-        public ProgressBarAttribute(float _maxValue, SuperColor _color = DefaultColor, float _height = DefaultHeight, bool _isEditable = false) :
-                                    this(_color, _height, _isEditable)
+        /// <inheritdoc cref="ProgressBarAttribute(string, float, SuperColor, bool)"/>
+        public ProgressBarAttribute(string _maxMember, SuperColor _color = DefaultColor, bool _isEditable = false) : this(_maxMember, DefaultHeight, _color, _isEditable) { }
+
+        /// <param name="_maxMember"><inheritdoc cref="MaxMember" path="/summary"/></param>
+        /// <inheritdoc cref="ProgressBarAttribute(SuperColor, float, bool)"/>
+        public ProgressBarAttribute(string _maxMember, float _height, SuperColor _color = DefaultColor, bool _isEditable = false) : this(_color, _height, _isEditable)
         {
-            MaxValue = Mathf.Max(.1f, _maxValue);
+            MaxMember = _maxMember;
         }
 
-        /// <inheritdoc cref="ProgressBarAttribute(string, string, SuperColor, float, bool)"/>
-        /// <param name="_maxValue">Progress bar maximum value.</param>
-        public ProgressBarAttribute(string _label, float _maxValue, SuperColor _color = DefaultColor, float _height = DefaultHeight, bool _isEditable = false) :
-                                    this(_maxValue, _color, _height, _isEditable)
-        {
-            Label.text = _label;
-        }
-
-        /// <inheritdoc cref="ProgressBarAttribute(string, string, SuperColor, float, bool)"/>
-        public ProgressBarAttribute(string _maxValueVariableName, SuperColor _color = DefaultColor, float _height = DefaultHeight, bool _isEditable = false) :
-                                    this(_color, _height, _isEditable)
-        {
-            MaxValueVariableName = _maxValueVariableName;
-        }
-
+        /// <param name="_color"><inheritdoc cref="Color" path="/summary"/></param>
+        /// <param name="_height"><inheritdoc cref="Height" path="/summary"/></param>
+        /// <param name="_isEditable"><inheritdoc cref="IsEditable" path="/summary"/></param>
         /// <inheritdoc cref="ProgressBarAttribute"/>
-        /// <param name="_label">Label displayed in the middle of the progress bar.</param>
-        /// <param name="_maxValueVariableName">Name of the class variable to get value from, acting as this progress bar maximum value.</param>
-        /// <param name="_color">Progress bar color.</param>
-        /// <param name="_height">Progress bar height (in pixels).</param>
-        /// <param name="_isEditable">Can the user edit this progress bar value?</param>
-        public ProgressBarAttribute(string _label, string _maxValueVariableName, SuperColor _color = DefaultColor, float _height = DefaultHeight, bool _isEditable = false) :
-                                    this(_maxValueVariableName, _color, _height, _isEditable)
+        private ProgressBarAttribute(SuperColor _color, float _height, bool _isEditable)
         {
-            Label.text = _label;
+            Height = Mathf.Max(1f, _height);
+            Color = _color.Get();
+            IsEditable = _isEditable;
         }
         #endregion
     }

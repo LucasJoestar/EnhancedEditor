@@ -10,7 +10,7 @@ using UnityEngine;
 namespace EnhancedEditor.Editor
 {
     /// <summary>
-    /// Special drawer (inheriting from <see cref="EnhancedPropertyDrawer"/>) for classes with attribute <see cref="AssetPreviewAttribute"/>.
+    /// Special drawer for fields with the attribute <see cref="AssetPreviewAttribute"/> (inherit from <see cref="EnhancedPropertyDrawer"/>).
     /// </summary>
     [CustomDrawer(typeof(AssetPreviewAttribute))]
     public class AssetPreviewPropertyDrawer : EnhancedPropertyDrawer
@@ -18,9 +18,10 @@ namespace EnhancedEditor.Editor
         #region Drawer Content
         public override bool OnGUI(Rect _position, SerializedProperty _property, GUIContent _label, out float _height)
         {
-            AssetPreviewAttribute _attribute = (AssetPreviewAttribute)Attribute;
-            _attribute.Foldout = EnhancedEditorGUI.AssetPreviewField(_position, _property, _label, _attribute.Size, _attribute.Foldout, out _height);
+            AssetPreviewAttribute _attribute = Attribute as AssetPreviewAttribute;
+            EnhancedEditorGUI.AssetPreviewField(_position, _property, _label, out _height, _attribute.Size);
 
+            _height += _position.height;
             return true;
         }
         #endregion

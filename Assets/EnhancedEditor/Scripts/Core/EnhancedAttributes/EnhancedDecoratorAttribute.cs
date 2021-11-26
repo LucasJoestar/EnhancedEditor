@@ -11,9 +11,9 @@ using UnityEngine;
 namespace EnhancedEditor
 {
     /// <summary>
-    /// Base class to derive custom decorator attributes from.
+    /// Base class to derive all custom decorator attributes from.
     /// <para/>
-    /// Decorators are used to draw purely decorative elements around variables in inspector.
+    /// Decorators are used to draw purely decorative elements around variables in the inspector.
     /// </summary>
     [Conditional("UNITY_EDITOR")]
     [AttributeUsage(AttributeTargets.Field, AllowMultiple = true, Inherited = true)]

@@ -10,21 +10,23 @@ using UnityEngine;
 namespace EnhancedEditor.Editor
 {
     /// <summary>
-    /// Special <see cref="DecoratorDrawer"/> for fields with attribute <see cref="SectionAttribute"/>.
+    /// Special <see cref="DecoratorDrawer"/> for fields with the attribute <see cref="SectionAttribute"/>.
     /// </summary>
-    [CustomPropertyDrawer(typeof(SectionAttribute))]
+    [CustomPropertyDrawer(typeof(SectionAttribute), true)]
     public class SectionDecoratorDrawer : DecoratorDrawer
     {
         #region Decorator Content
         public override float GetHeight()
         {
-            SectionAttribute _attribute = (SectionAttribute)attribute;
-            return (EditorGUIUtility.singleLineHeight + _attribute.Margins) * 2f;
+            SectionAttribute _attribute = attribute as SectionAttribute;
+            return EditorGUIUtility.singleLineHeight + (_attribute.Margins * 2f) + EditorGUIUtility.standardVerticalSpacing;
         }
 
         public override void OnGUI(Rect _position)
         {
-            SectionAttribute _attribute = (SectionAttribute)attribute;
+            SectionAttribute _attribute = attribute as SectionAttribute;
+            _position.height -= EditorGUIUtility.standardVerticalSpacing;
+
             EnhancedEditorGUI.Section(_position, _attribute.Label, _attribute.LineWidth);
         }
         #endregion

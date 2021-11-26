@@ -7,25 +7,35 @@
 namespace EnhancedEditor
 {
     /// <summary>
-    /// Only displays this field in the inspector when a specific condition is fulfilled.
+    /// Only shows this field in the inspector when a specific condition is fulfilled.
     /// <para/>
-    /// Condition can be whether a field, a property or a method.
+    /// This condition value can be either be a field, a property or a method.
     /// </summary>
 	public class ShowIfAttribute : EnhancedPropertyAttribute
     {
         #region Global Members
-        public readonly string ConditionMemberName = string.Empty;
-        public readonly ConditionType Type = ConditionType.True;
+        /// <summary>
+        /// Name of the class member to get value from,
+        /// used as a condition to know if this field should be visible or not.
+        /// <para/>
+        /// Can either be a field, a property or a method, but its value must be convertible to <see cref="bool"/>.
+        /// </summary>
+        public readonly MemberValue<bool> ConditionMember = default;
+
+        /// <summary>
+        /// Defines how this field condition value is considered as fulfilled.
+        /// </summary>
+        public readonly ConditionType ConditionType = ConditionType.True;
 
         // -----------------------
 
+        /// <param name="_conditionMember"><inheritdoc cref="ConditionMember" path="/summary"/></param>
+        /// <param name="_conditionType"><inheritdoc cref="ConditionType" path="/summary"/></param>
         /// <inheritdoc cref="ShowIfAttribute"/>
-        /// <param name="_conditionMemberName">Name of the class member to get value from, acting as condition validator.</param>
-        /// <param name="_type">Defines how the condition is considered as fulfilled.</param>
-        public ShowIfAttribute(string _conditionMemberName, ConditionType _type = ConditionType.True)
+        public ShowIfAttribute(string _conditionMember, ConditionType _conditionType = ConditionType.True)
         {
-            ConditionMemberName = _conditionMemberName;
-            Type = _type;
+            ConditionMember = _conditionMember;
+            ConditionType = _conditionType;
         }
         #endregion
     }

@@ -10,10 +10,10 @@ using System.Diagnostics;
 namespace EnhancedEditor
 {
     /// <summary>
-    /// Base class to derive custom method attributes from.
+    /// Base class to derive all custom method attributes from.
     /// <para/>
     /// A custom attribute can be hooked up with a custom drawer
-    /// to get callbacks when the target script editor is being drawn in the inspector.
+    /// to get callbacks when the target editor script is being drawn in the inspector.
     /// </summary>
     [Conditional("UNITY_EDITOR")]
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
@@ -26,8 +26,10 @@ namespace EnhancedEditor
         public int Order { get; set; } = 0;
 
         /// <summary>
-        /// Determines if associated drawer call should be performed before or after
-        /// drawing target script editor (default is true).
+        /// Determines if the associated drawer should be called before or after
+        /// drawing the target editor script inspector.
+        /// <para/>
+        /// True by default.
         /// </summary>
         public bool IsDrawnOnTop { get; set; } = true;
 

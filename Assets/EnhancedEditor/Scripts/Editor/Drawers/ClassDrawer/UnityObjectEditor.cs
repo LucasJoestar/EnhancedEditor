@@ -2,6 +2,8 @@
 // 
 // Notes:
 //
+//      • Check if the PrefabUtility class exist in older versions.
+//
 // ============================================================================ //
 
 using System;
@@ -24,53 +26,45 @@ namespace EnhancedEditor.Editor
         private class MethodDrawerGroup
         {
             public MethodDrawer[] MethodDrawers = new MethodDrawer[] { };
-            public MethodInfo MethodInfo = null;
 
             // -----------------------
 
-            public void DrawMethodDrawers(bool _isTop)
+            public void DrawMethodDrawers(bool _isOnTop)
             {
-                Rect _position = EditorGUILayout.GetControlRect(false, -2f);
+                Rect _position = EditorGUILayout.GetControlRect(false, -EditorGUIUtility.standardVerticalSpacing);
 
                 // Pre GUI callback.
-                for (int _i = 0; _i < MethodDrawers.Length; _i++)
+                foreach (MethodDrawer _drawer in MethodDrawers)
                 {
-                    MethodDrawer _drawer = MethodDrawers[_i];
-                    if ((_isTop == _drawer.Attribute.IsDrawnOnTop) && _drawer.OnBeforeGUI(_drawer.Label))
+                    if ((_isOnTop == _drawer.Attribute.IsDrawnOnTop) && _drawer.OnBeforeGUI())
                         return;
                 }
 
                 // Method GUI.
-                for (int _i = 0; _i < MethodDrawers.Length; _i++)
+                foreach (MethodDrawer _drawer in MethodDrawers)
                 {
-                    MethodDrawer _drawer = MethodDrawers[_i];
-                    if ((_isTop == _drawer.Attribute.IsDrawnOnTop) && _drawer.OnGUI(MethodInfo, _drawer.Label))
+                    if ((_isOnTop == _drawer.Attribute.IsDrawnOnTop) && _drawer.OnGUI())
                         break;
                 }
 
                 // Post GUI callback.
-                for (int _i = 0; _i < MethodDrawers.Length; _i++)
+                foreach (MethodDrawer _drawer in MethodDrawers)
                 {
-                    MethodDrawer _drawer = MethodDrawers[_i];
-                    if (_isTop == _drawer.Attribute.IsDrawnOnTop)
-                        _drawer.OnAfterGUI(_drawer.Label);
+                    if (_isOnTop == _drawer.Attribute.IsDrawnOnTop)
+                        _drawer.OnAfterGUI();
                 }
 
                 // Context click menu. 
-                Event _event = Event.current;
                 _position.height = GUILayoutUtility.GetLastRect().yMax - _position.y;
 
-                if ((_event.type == EventType.MouseDown) && (_event.button == 1) && _position.Contains(_event.mousePosition))
+                if (EnhancedEditorGUIUtility.ContextClick(_position))
                 {
                     GenericMenu _menu = new GenericMenu();
-                    for (int _i = 0; _i < MethodDrawers.Length; _i++)
-                        MethodDrawers[_i].OnContextMenu(_menu, MethodInfo);
+                    foreach (MethodDrawer _drawer in MethodDrawers)
+                        _drawer.OnContextMenu(_menu);
 
                     if (_menu.GetItemCount() > 0)
-                    {
                         _menu.ShowAsContext();
-                        _event.Use();
-                    }
                 }
             }
         }
@@ -84,38 +78,11 @@ namespace EnhancedEditor.Editor
 
         // -----------------------
 
-        public override void OnInspectorGUI()
-        {
-            // Draw inspector while authorized.
-            for (int _i = 0; _i < objectDrawers.Length; _i++)
-            {
-                UnityObjectDrawer _drawer = objectDrawers[_i];
-                if (!_drawer.OnInspectorGUI())
-                    return;
-            }
-
-            // Draw top method drawers.
-            for (int _i = 0; _i < methodDrawerGroups.Length; _i++)
-            {
-                MethodDrawerGroup _group = methodDrawerGroups[_i];
-                _group.DrawMethodDrawers(true);
-            }
-
-            base.OnInspectorGUI();
-
-            // Bottom method drawers.
-            for (int _i = 0; _i < methodDrawerGroups.Length; _i++)
-            {
-                MethodDrawerGroup _group = methodDrawerGroups[_i];
-                _group.DrawMethodDrawers(false);
-            }
-        }
-
         protected virtual void OnEnable()
         {
             try
             {
-                if (serializedObject.targetObject == null)
+                if (!serializedObject.targetObject)
                 {
                     DestroyImmediate(this);
                     return;
@@ -132,17 +99,14 @@ namespace EnhancedEditor.Editor
             {
                 var _attributes = _type.GetCustomAttributes(typeof(EnhancedClassAttribute), true) as EnhancedClassAttribute[];
 
-                objectDrawers = new UnityObjectDrawer[] { };
-                foreach (KeyValuePair<Type, Type> _pair in EnhancedDrawerUtility.GetCustomDrawers())
+                foreach (KeyValuePair<Type, Type> _pair in EnhancedDrawerUtility.GetObjectDrawers())
                 {
                     foreach (EnhancedClassAttribute _attribute in _attributes)
                     {
                         if (_pair.Value == _attribute.GetType())
                         {
                             UnityObjectDrawer _customDrawer = UnityObjectDrawer.CreateInstance(_pair.Key, serializedObject, _attribute);
-                            _customDrawer.OnEnable();
-
-                            UnityEditor.ArrayUtility.Add(ref objectDrawers, _customDrawer);
+                            ArrayUtility.Add(ref objectDrawers, _customDrawer);
                         }
                     }
                 }
@@ -151,55 +115,90 @@ namespace EnhancedEditor.Editor
             // Do the same for method attributes.
             {
                 MethodInfo[] _allMethods = _type.GetMethods(methodInfoFlags);
-                foreach (KeyValuePair<Type, Type> _pair in EnhancedDrawerUtility.GetMethodDrawers())
+                var _methodDrawers = EnhancedDrawerUtility.GetMethodDrawers();
+
+                foreach (MethodInfo _method in _allMethods)
                 {
-                    foreach (MethodInfo _method in _allMethods)
+                    var _attributes = _method.GetCustomAttributes(typeof(EnhancedMethodAttribute), true) as EnhancedMethodAttribute[];
+
+                    // Skip methods without any desired attribute.
+                    if (_attributes.Length == 0)
+                        continue;
+
+                    MethodDrawerGroup _group = new MethodDrawerGroup();
+
+                    foreach (KeyValuePair<Type, Type> _pair in _methodDrawers)
                     {
-                        var _attributes = _method.GetCustomAttributes(typeof(EnhancedMethodAttribute), true) as EnhancedMethodAttribute[];
-
-                        // Skip methods without any desired attribute.
-                        if (_attributes.Length == 0)
-                            continue;
-
-                        MethodDrawerGroup _group = new MethodDrawerGroup()
-                        {
-                            MethodInfo = _method
-                        };
-
                         foreach (EnhancedMethodAttribute _attribute in _attributes)
                         {
                             if (_pair.Value == _attribute.GetType())
                             {
                                 MethodDrawer _customDrawer = MethodDrawer.CreateInstance(_pair.Key, serializedObject, _attribute, _method);
-                                _customDrawer.OnEnable();
-
-                                UnityEditor.ArrayUtility.Add(ref _group.MethodDrawers, _customDrawer);
+                                ArrayUtility.Add(ref _group.MethodDrawers, _customDrawer);
                             }
-                        }
-
-                        Array.Sort(_group.MethodDrawers, (a, b) => a.Attribute.Order.CompareTo(b.Attribute.Order));
-                        UnityEditor.ArrayUtility.Add(ref methodDrawerGroups, _group);
+                        } 
                     }
+
+                    Array.Sort(_group.MethodDrawers, (a, b) => a.Attribute.Order.CompareTo(b.Attribute.Order));
+                    ArrayUtility.Add(ref methodDrawerGroups, _group);
                 }
             }
 
-            // Add GameObject-extended component if none is attached.
-            foreach (var _object in serializedObject.targetObjects)
+            // Add the EnhancedEditor GameObject-extending component if none is attached.
+            if (!Application.isPlaying)
             {
-                if (_object is Component _component)
+                foreach (var _object in serializedObject.targetObjects)
                 {
-                    var _behaviour = _component.gameObject.AddComponentIfNone<EnhancedBehaviour>();
+                    // If this object is a prefab, only add the component to the origin asset to avoid troubles with the prefab override system.
+                    if (PrefabUtility.IsPartOfPrefabInstance(_object) || PrefabUtility.IsAddedComponentOverride(_object))
+                        continue;
 
-                    do { }
-                    while (ComponentUtility.MoveComponentUp(_behaviour));
+                    if (_object is Component _component)
+                    {
+                        var _behaviour = _component.gameObject.AddComponentIfNone<EnhancedBehaviour>();
+
+                        do { }
+                        while (ComponentUtility.MoveComponentUp(_behaviour));
+                    }
                 }
+            }
+        }
+
+        public override void OnInspectorGUI()
+        {
+            // Top method drawers.
+            foreach (MethodDrawerGroup _group in methodDrawerGroups)
+            {
+                _group.DrawMethodDrawers(true);
+            }
+
+            // Inspector.
+            bool _drawInspector = true;
+            foreach (UnityObjectDrawer _drawer in objectDrawers)
+            {
+                if (_drawer.OnInspectorGUI())
+                {
+                    _drawInspector = false;
+                    break;
+                }
+            }
+
+            if (_drawInspector)
+                base.OnInspectorGUI();
+
+            GUILayout.Space(10f);
+
+            // Bottom method drawers.
+            foreach (MethodDrawerGroup _group in methodDrawerGroups)
+            {
+                _group.DrawMethodDrawers(false);
             }
         }
 
         protected virtual void OnDisable()
         {
-            for (int _i = 0; _i < objectDrawers.Length; _i++)
-                objectDrawers[_i].OnDisable();
+            foreach (var _drawer in objectDrawers)
+                _drawer.OnDisable();
         }
         #endregion
     }

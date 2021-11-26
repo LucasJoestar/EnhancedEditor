@@ -9,35 +9,41 @@ using UnityEngine;
 namespace EnhancedEditor
 {
     /// <summary>
-    /// Draws a horizontal line above this field in the inspector.
+    /// Draws a horizontal line above this field.
     /// </summary>
     public class HorizontalLineAttribute : EnhancedDecoratorAttribute
     {
         #region Global Members
-        public const float DefaultWidth = 1f;
-        public const float DefaultHeight = 2f;
         public const SuperColor DefaultColor = SuperColor.Grey;
+        public const float DefaultHeight = 2f;
+        public const float DefaultMargins = 1f;
 
-        public readonly float Width = DefaultWidth;
-        public readonly float Height = DefaultHeight;
+        /// <summary>
+        /// Line color.
+        /// </summary>
         public readonly Color Color = default;
+
+        /// <summary>
+        /// Line height (in pixels).
+        /// </summary>
+        public readonly float Height = DefaultHeight;
+
+        /// <summary>
+        /// Margins on both sides of the line (in pixels)
+        /// </summary>
+        public readonly float Margins = DefaultMargins;
 
         // -----------------------
 
-        /// <inheritdoc cref="HorizontalLineAttribute(float, float, SuperColor)"/>
-        public HorizontalLineAttribute(float _height = DefaultHeight, SuperColor _color = DefaultColor)
-        {
-            Height = Mathf.Max(1f, _height);
-            Color = _color.Get();
-        }
-
+        /// <param name="_color"><inheritdoc cref="Color" path="/summary"/></param>
+        /// <param name="_height"><inheritdoc cref="Height" path="/summary"/></param>
+        /// <param name="_margins"><inheritdoc cref="Margins" path="/summary"/></param>
         /// <inheritdoc cref="HorizontalLineAttribute"/>
-        /// <param name="_height">Line height (in pixels).</param>
-        /// <param name="_width">Line width, in percent (from 0 to 1).</param>
-        /// <param name="_color">Line color.</param>
-        public HorizontalLineAttribute(float _height, float _width, SuperColor _color = DefaultColor) : this(_height, _color)
+        public HorizontalLineAttribute(SuperColor _color = DefaultColor, float _height = DefaultHeight, float _margins = DefaultMargins)
         {
-            Width = Mathf.Clamp(_width, 0f, 1f);
+            Color = _color.Get();
+            Height = Mathf.Max(1f, _height);
+            Margins = Mathf.Max(0f, _margins);
         }
         #endregion
     }

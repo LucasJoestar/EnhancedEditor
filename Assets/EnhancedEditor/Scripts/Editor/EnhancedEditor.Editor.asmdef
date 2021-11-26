@@ -2,8 +2,7 @@
     "name": "EnhancedEditor.Editor",
     "rootNamespace": "",
     "references": [
-        "EnhancedEditor",
-        "Unity.EditorCoroutines.Editor"
+        "EnhancedEditor"
     ],
     "includePlatforms": [
         "Editor"

@@ -9,7 +9,7 @@ using UnityEngine;
 namespace EnhancedEditor
 {
     /// <summary>
-    /// Used to define when a tool or a specific system should be used.
+    /// Used to define when a specific tool or system is active.
     /// </summary>
     public enum ActivationMode
     {
@@ -18,13 +18,16 @@ namespace EnhancedEditor
         Always
     }
 
+    /// <summary>
+    /// Contains multiple <see cref="ActivationMode"/>-related extension methods.
+    /// </summary>
     public static class ActivationModeExtensions
     {
         /// <summary>
-        /// Is this mode active?
+        /// Is this mode currently active?
         /// </summary>
-        /// <param name="_mode">Mode to check activation.</param>
-        /// <returns>True if the mode is active indeed, false otherwise.</returns>
+        /// <param name="_mode">Mode to check active state.</param>
+        /// <returns>True if the mode is actually active, false otherwise.</returns>
         public static bool IsActive(this ActivationMode _mode)
         {
             switch (_mode)

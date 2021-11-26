@@ -11,7 +11,8 @@ namespace EnhancedEditor
 {
     /// <summary>
     /// Base interface to derive all your serializable interfaces from.
-    /// Should be used within a <see cref="SerializedInterface{T}"/> instance.
+    /// <para/>
+    /// Must be implemented in a <see cref="MonoBehaviour"/> class and used with a <see cref="SerializedInterface{T}"/> instance.
     /// </summary>
     public interface ISerilizable { }
 
@@ -20,46 +21,59 @@ namespace EnhancedEditor
     /// Should NEVER be used directly, always use <see cref="SerializedInterface{T}"/>
     /// instead.
     /// <para/>
-    /// This class only exist to use a custom property drawer for the derived class.
+    /// This class only exist to allow the use of a custom property drawer for the derived class,
+    /// as generic classes cannot have a custom drawer.
     /// </summary>
     [Serializable]
     public abstract class SerializedInterface
     {
         #region Content
         /// <summary>
-        /// Serialized object the associated <see cref="ISerilizable"/> is attached to.
+        /// The <see cref="GameObject"/> the associated <see cref="ISerilizable"/> interface is attached to.
         /// </summary>
-        public GameObject Object = null;
+        [SerializeField] protected GameObject gameObject = null;
         #endregion
     }
 
     /// <summary>
-    /// Interface wrapper, serializing a <see cref="GameObject"/> reference
-    /// with a <see cref="ISerilizable"/> interface attached to it.
-    /// <para/>
-    /// Must be initialized with <see cref="Initialize"/> on start
-    /// to properly load its interface reference.
+    /// Interface wrapper, used to serialize an <see cref="ISerilizable"/> interface with the help
+    /// of the <see cref="UnityEngine.GameObject"/> it is attached to.
     /// </summary>
     /// <typeparam name="T">Interface type to serialize.
     /// Must inherit from <see cref="ISerilizable"/>.</typeparam>
     [Serializable]
+    #pragma warning disable UNT0014
     public class SerializedInterface<T> : SerializedInterface where T : ISerilizable
     {
         #region Content
-        /// <summary>
-        /// Associated serialized reference
-        /// (should call <see cref="Initialize"/> to properly load it before any use).
-        /// </summary>
-        public T Interface = default;
-
-        // -----------------------
+        private T interfaceInstance = default;
 
         /// <summary>
-        /// Initializes this object interface reference.
+        /// The <see cref="ISerilizable"/> interface attached to the serialized <see cref="UnityEngine.GameObject"/>.
         /// </summary>
-        public void Initialize()
+        public T Interface
         {
-            Interface = Object.GetComponent<T>();
+            get
+            {
+                // Get interface if not yet loaded.
+                if ((interfaceInstance == null) && gameObject)
+                {
+                    interfaceInstance = gameObject.GetComponent<T>();
+                }
+
+                return interfaceInstance;
+            }
+        }
+
+        /// <inheritdoc cref="SerializedInterface.gameObject"/>
+        public GameObject GameObject
+        {
+            get => gameObject;
+            set
+            {
+                interfaceInstance = default;
+                gameObject = value;
+            }
         }
         #endregion
     }

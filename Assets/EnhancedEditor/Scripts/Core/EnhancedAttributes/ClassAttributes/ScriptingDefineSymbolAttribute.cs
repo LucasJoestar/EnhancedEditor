@@ -16,17 +16,26 @@ namespace EnhancedEditor
     public class ScriptingDefineSymbolAttribute : EnhancedClassAttribute
     {
         #region Global Members
+        /// <summary>
+        /// Scripting define symbol to manage activation.
+        /// <para/>
+        /// Exemple: <c>UNITY_EDITOR</c>
+        /// </summary>
         public readonly string Symbol = string.Empty;
+
+        /// <summary>
+        /// Short desctiption of this symbol (will be displayed next to it on the BuildPipeline window).
+        /// </summary>
         public readonly string Description = string.Empty;
 
         // -----------------------
 
+        /// <param name="_symbol"><inheritdoc cref="Symbol" path="/summary"/></param>
+        /// <param name="_description"><inheritdoc cref="Description" path="/summary"/></param>
         /// <inheritdoc cref="ScriptingDefineSymbolAttribute"/>
-        /// <param name="_symbol">Scripting define symbol to manage activation.</param>
-        /// <param name="_description">Description to be displayed in front of the symbol management.</param>
         public ScriptingDefineSymbolAttribute(string _symbol, string _description)
         {
-            Symbol = _symbol;
+            Symbol = _symbol.Replace(' ', '_');
             Description = _description;
         }
         #endregion

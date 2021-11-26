@@ -15,123 +15,91 @@ using Object = UnityEngine.Object;
 namespace EnhancedEditor.Editor
 {
     /// <summary>
-    /// Special drawer (inheriting from <see cref="MethodDrawer"/>) for methods with attribute <see cref="ButtonAttribute"/>.
+    /// Special drawer for methods with the attribute <see cref="ButtonAttribute"/> (inherit from <see cref="MethodDrawer"/>).
     /// </summary>
     [CustomDrawer(typeof(ButtonAttribute))]
 	public class ButtonDrawer : MethodDrawer
     {
         #region Drawer Content
-        public const float ButtonHeight = 25f;
+        private const float LabelWidthCoef = .33f;
+        private const float ButtonHeight = 25f;
 
-        /// <summary>
-        /// <see cref="ParameterInfo"/> of the associated method.
-        /// </summary>
-        public ParameterInfo[] Parameters { get; private set; } = null;
+        private ParameterInfo[] parameters = null;
+        private GUIContent[] parametersGUI = null;
+        private object[] parameterValues = null;
 
-        /// <summary>
-        /// <see cref="GUIContent"/> of associated method parameters.
-        /// </summary>
-        public GUIContent[] ParametersGUI { get; protected set; } = null;
-
-        /// <summary>
-        /// Parameter values used to invoke associated method.
-        /// </summary>
-        public object[] ParameterValues { get; protected set; } = null;
-
-        /// <summary>
-        /// Condition member to be validated to enable this button.
-        /// </summary>
-        public MemberInfo ConditionMember { get; private set; } = null;
-
-        /// <summary>
-        /// Does this button require a condition to be validated?
-        /// </summary>
-        public bool UseCondition { get; private set; } = false;
+        private bool useCondition = false;
 
         // -----------------------
 
         public override void OnEnable()
         {
-            Parameters = MethodInfo.GetParameters();
-            ParameterValues = new object[Parameters.Length];
-            ParametersGUI = new GUIContent[Parameters.Length];
+            // Parameter informations.
+            parameters = MethodInfo.GetParameters();
+            parameterValues = new object[parameters.Length];
+            parametersGUI = new GUIContent[parameters.Length];
 
-            for (int _i = 0; _i < Parameters.Length; _i++)
+            for (int _i = 0; _i < parameters.Length; _i++)
             {
-                ParameterInfo _parameter = Parameters[_i];
-                ParametersGUI[_i] = new GUIContent(ObjectNames.NicifyVariableName(_parameter.Name));
+                ParameterInfo _parameter = parameters[_i];
+                parametersGUI[_i] = new GUIContent(ObjectNames.NicifyVariableName(_parameter.Name));
 
                 Type _type = _parameter.ParameterType;
                 if (_parameter.HasDefaultValue)
                 {
-                    ParameterValues[_i] = _parameter.DefaultValue;
+                    parameterValues[_i] = _parameter.DefaultValue;
                 }
                 else if (_type.IsValueType)
                 {
-                    ParameterValues[_i] = Activator.CreateInstance(_type);
+                    parameterValues[_i] = Activator.CreateInstance(_type);
                 }
             }
                 
-            // Get condition member if using one.
+            // Condition member.
             ButtonAttribute _attribute = Attribute as ButtonAttribute;
-            if (!string.IsNullOrEmpty(_attribute.ConditionMemberName))
-            {
-                UseCondition = EnhancedEditorGUIUtility.GetConditionMember(SerializedObject.targetObject.GetType(), _attribute.ConditionMemberName, out MemberInfo _condition);
-                ConditionMember = _condition;
-            }
+            useCondition = !string.IsNullOrEmpty(_attribute.ConditionMember.Name) && _attribute.ConditionMember.GetValue(SerializedObject, out _);
         }
 
-        public override bool OnGUI(MethodInfo _methodInfo, GUIContent _label)
+        public override bool OnGUI()
         {
             ButtonAttribute _attribute = Attribute as ButtonAttribute;
             bool _isEnable = _attribute.Mode.IsActive() &&
-                            (!UseCondition || EnhancedEditorGUIUtility.IsConditionFulfilled(ConditionMember, SerializedObject.targetObject, _attribute.ConditionType));
+                            (!useCondition || (_attribute.ConditionMember.GetValue(SerializedObject, out bool _value) && (_value == _attribute.ConditionType.Get())));
 
-            EditorGUILayout.BeginHorizontal();
-            GUILayout.FlexibleSpace();
-
-            // Begin a box vertical group with adjusted width according to label size.
-            float _size = Mathf.Max(EditorStyles.label.CalcSize(Label).x + 20f, Screen.width - 250f);
-            EditorGUILayout.BeginVertical(EditorStyles.helpBox, GUILayout.Width(_size));
-
-            EnhancedEditorGUIUtility.PushGUIColor(_attribute.Color);
-            EnhancedEditorGUIUtility.PushEnable(_isEnable);
-
-            if (GUILayout.Button(Label, GUILayout.Height(ButtonHeight)))
+            using (var _scope = new GUILayout.HorizontalScope())
             {
-                foreach (Object _target in SerializedObject.targetObjects)
+                GUILayout.FlexibleSpace();
+
+                // Pack all button GUI controls within a nice box group.
+                float _size = Mathf.Max(EditorStyles.label.CalcSize(Label).x + 20f, Screen.width - 250f);
+                using (var _verticalScope = new GUILayout.VerticalScope(EditorStyles.helpBox, GUILayout.Width(_size)))
                 {
-                    MethodInfo.Invoke(_target, ParameterValues);
+                    using (EnhancedGUI.GUIEnabled.Scope(_isEnable))
+                    using (EnhancedGUI.GUIColor.Scope(_attribute.Color))
+                    {
+                        if (GUILayout.Button(Label, GUILayout.Height(ButtonHeight)))
+                        {
+                            foreach (Object _target in SerializedObject.targetObjects)
+                            {
+                                MethodInfo.Invoke(_target, parameterValues);
+                            }
+                        }
+                    }
+
+                    // Adjust the label width according to the size of the button.
+                    using (var _labelScope = EnhancedEditorGUI.GUILabelWidth.Scope(_size * LabelWidthCoef))
+                    {
+                        for (int _i = 0; _i < parameters.Length; _i++)
+                            DrawParameterField(_i);
+                    }
                 }
+
+                GUILayout.FlexibleSpace();
             }
 
-            EnhancedEditorGUIUtility.PopEnable();
-            EnhancedEditorGUIUtility.PopGUIColor();
-
-            // Adjust paramter fields label width according to button width.
-            EnhancedEditorGUIUtility.PushLabelWidth(_size * .33f);
-
-            for (int _i = 0; _i < Parameters.Length; _i++)
-                DrawParameterField(_i);
-
-            EnhancedEditorGUIUtility.PopLabelWidth();
-
-            EditorGUILayout.EndVertical();
-            GUILayout.FlexibleSpace();
-            EditorGUILayout.EndHorizontal();
-
-            EditorGUILayout.Space(3f);
+            GUILayout.Space(3f);
             return true;
         }
-        #endregion
-
-        #region Extra Callbacks
-        /// <summary>
-        /// Called whenever an associated parameter value has changed.
-        /// </summary>
-        /// <param name="_parameterValue">New parameter value.</param>
-        /// <param name="_type">Parameter type.</param>
-        public virtual void OnParameterValueChanged(ref object _parameterValue, Type _type) { }
         #endregion
 
         #region Parameter Utility
@@ -160,9 +128,9 @@ namespace EnhancedEditor.Editor
 
         private void DrawParameterField(int _index)
         {
-            ParameterInfo _parameter = Parameters[_index];
-            GUIContent _name = ParametersGUI[_index];
-            object _value = ParameterValues[_index];
+            ParameterInfo _parameter = parameters[_index];
+            GUIContent _name = parametersGUI[_index];
+            ref object _value = ref parameterValues[_index];
 
             Type _type = _parameter.ParameterType;
             if (parameterTypes.ContainsKey(_parameter.ParameterType))
@@ -215,7 +183,7 @@ namespace EnhancedEditor.Editor
 
                     // Vector4.
                     case 9:
-                        _value = EditorGUILayout.Vector3Field(_name, (Vector4)_value);
+                        _value = EditorGUILayout.Vector4Field(_name, (Vector4)_value);
                         break;
 
                     // Rect.
@@ -275,13 +243,6 @@ namespace EnhancedEditor.Editor
             else
             {
                 EditorGUILayout.HelpBox($"Cannot draw parameter of type \"{_type}\"!", UnityEditor.MessageType.Error);
-            }
-
-            // Invoke callback on parameter value change.
-            if (_value != ParameterValues[_index])
-            {
-                ParameterValues[_index] = _value;
-                OnParameterValueChanged(ref ParameterValues[_index], _type);
             }
         }
         #endregion

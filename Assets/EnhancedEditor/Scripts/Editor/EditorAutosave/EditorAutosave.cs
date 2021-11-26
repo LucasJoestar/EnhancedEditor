@@ -6,24 +6,24 @@
 
 using System;
 using UnityEditor;
-using UnityEditorInternal;
 using UnityEditor.SceneManagement;
+using UnityEditorInternal;
 using UnityEngine;
 
 namespace EnhancedEditor.Editor
 {
     /// <summary>
-    /// Editor toolbar extension automatically saving assets and open scene(s) at regular interval.
+    /// Editor toolbar extension that automatically saves assets and open scene(s) at regular intervals.
     /// </summary>
     public static class EditorAutosave
     {
         #region Global Members
         private const float ButtonEnabledWidth = 60f;
         private const float ButtonDisabledWidth = 32f;
-        private const float SaveInterval = 300.5f;
-        private const double MaxInterval = .5f;
+        private const float MinSaveInterval = 5f;
+        private const double UpdateMaxInterval = .5f;
 
-        private const string EnableKey = "AutosaveEnabled";
+        private const string EnabledKey = "AutosaveEnabled";
         private const string RemainingTimeKey = "AutosaveRemainingTime";
 
         private const string EnableTooltip = "Toggle Assets & Open Scene(s) Autosave\n\nCurrently enabled (next save in less than {0} seconds).";
@@ -31,10 +31,10 @@ namespace EnhancedEditor.Editor
         private static readonly GUIContent enableGUI = new GUIContent(string.Empty, EnableTooltip);
         private static readonly GUIContent disableGUI = new GUIContent(string.Empty, "Toggle Assets & Open Scene(s) Autosave\n\nCurrently disabled.");
 
-        private static bool isEnabled = false;
-
+        private static float saveInterval = 0f;
         private static float saveRemainingTime = 0f;
         private static double lastTimeCheckup = 0f;
+        private static bool isEnabled = false;
 
         // -----------------------
 
@@ -46,20 +46,33 @@ namespace EnhancedEditor.Editor
             enableGUI.image = EditorGUIUtility.FindTexture("Record On");
             disableGUI.image = EditorGUIUtility.FindTexture("SaveAs");
 
-            // Loads saved values.
-            isEnabled = SessionState.GetBool(EnableKey, isEnabled);
+            saveInterval = EnhancedEditorSettings.Settings.UserSettings.AutosaveInterval + .5f;
+
+            // Loads session values.
+            isEnabled = SessionState.GetBool(EnabledKey, isEnabled);
             saveRemainingTime = SessionState.GetFloat(RemainingTimeKey, saveRemainingTime);
         }
         #endregion
 
-        #region Update
+        #region Behaviour
+        /// <summary>
+        /// Set the time interval between two autosave.
+        /// </summary>
+        /// <param name="_saveInterval">New autosave time interval (in seconds).</param>
+        public static void SetSaveInterval(float _saveInterval)
+        {
+            _saveInterval = Mathf.Max(MinSaveInterval, _saveInterval);
+            saveInterval = saveRemainingTime
+                         = _saveInterval + .5f;
+        }
+
         private static void Update()
         {
             // Do not save in play mode, as it wouldn't be any useful.
             if (isEnabled && !EditorApplication.isPlaying && InternalEditorUtility.isApplicationActive)
             {
                 double _timeSinceStartup = EditorApplication.timeSinceStartup;
-                float _ellipse = (float)Math.Min(MaxInterval, _timeSinceStartup - lastTimeCheckup);
+                float _ellipse = (float)Math.Min(UpdateMaxInterval, _timeSinceStartup - lastTimeCheckup);
                 lastTimeCheckup = _timeSinceStartup;
 
                 saveRemainingTime -= _ellipse;
@@ -68,22 +81,22 @@ namespace EnhancedEditor.Editor
                     EditorSceneManager.SaveOpenScenes();
                     AssetDatabase.SaveAssets();
 
-                    saveRemainingTime = SaveInterval;
+                    saveRemainingTime = saveInterval;
                 }
 
-                // Save value to keep it between recompilations.
+                // Save this time value to keep it between recompilations.
                 SessionState.SetFloat(RemainingTimeKey, saveRemainingTime);
             }
         }
         #endregion
 
-        #region GUI
+        #region GUI Draw
         [EditorToolbarLeftExtension(Order = -25)]
         #pragma warning disable IDE0051
         private static void OnGUI()
         {
-            // Select appropriate content depending on activation state.
-            GUIContent _content;
+            // Select the appropriate options depending on the activation state.
+            GUIContent _label;
             GUILayoutOption _width;
 
             if (isEnabled)
@@ -92,34 +105,30 @@ namespace EnhancedEditor.Editor
                 enableGUI.text = EditorApplication.isPlaying ? string.Empty : $" {_time}s";
                 enableGUI.tooltip = string.Format(EnableTooltip, _time);
 
-                _content = enableGUI;
+                _label = enableGUI;
                 _width = GUILayout.Width(ButtonEnabledWidth);
 
-                // Repaint to properly display remaining time.
+                // Constantly repaint to properly display the remaining time.
                 EnhancedEditorToolbar.Repaint();
             }
             else
             {
-                _content = disableGUI;
+                _label = disableGUI;
                 _width = GUILayout.Width(ButtonDisabledWidth);
             }
 
-            // Disable button while application is playing, as no save would be perform.
-            bool _isPlaying = Application.isPlaying;
-            if (_isPlaying)
-                EnhancedEditorGUIUtility.PushEnable(false);
-
-            // Enable / disable autosave and save its value.
-            if (EnhancedEditorToolbar.Button(_content, _width))
+            // Disable this button while the application is playing, as no save would be performed.
+            using (var _scope = EnhancedGUI.GUIEnabled.Scope(!Application.isPlaying))
             {
-                isEnabled = !isEnabled;
-                SessionState.SetBool(EnableKey, isEnabled);
+                // Enable / disable autosave and save its value.
+                if (EnhancedEditorToolbar.Button(_label, _width))
+                {
+                    isEnabled = !isEnabled;
+                    SessionState.SetBool(EnabledKey, isEnabled);
+                }
             }
 
-            if (_isPlaying)
-                EnhancedEditorGUIUtility.PopEnable();
-
-            GUILayout.Space(25f);
+            GUILayout.Space(20f);
         }
         #endregion
     }

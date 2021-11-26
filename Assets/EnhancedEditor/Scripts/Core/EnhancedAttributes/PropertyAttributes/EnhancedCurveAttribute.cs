@@ -9,30 +9,38 @@ using UnityEngine;
 namespace EnhancedEditor
 {
     /// <summary>
-    /// <see cref="AnimationCurve"/> field drawer with extra configurable options.
+    /// Displays this <see cref="AnimationCurve"/> with some extra configurable options.
     /// </summary>
 	public class EnhancedCurveAttribute : EnhancedPropertyAttribute
     {
         #region Global Members
+        public const SuperColor DefaultColor = SuperColor.Sapphire;
+
+        /// <summary>
+        /// Curve color.
+        /// </summary>
         public readonly Color Color = default;
-        public readonly Rect Rect = new Rect(0f, 0f, 0f, 0f);
+
+        /// <summary>
+        /// Rectangle the curve is restrained within.
+        /// </summary>
+        public readonly Rect Rect = Rect.zero;
 
         // -----------------------
 
-        /// <inheritdoc cref="EnhancedCurveAttribute(SuperColor, float, float, float, float)"/>
-        /// <param name="_color">Curve color.</param>
-        public EnhancedCurveAttribute(SuperColor _color)
+        /// <inheritdoc cref="EnhancedCurveAttribute(float, float, float, float, SuperColor)"/>
+        public EnhancedCurveAttribute(SuperColor _color = DefaultColor)
         {
             Color = _color.Get();
         }
 
+        /// <param name="_minX">Minimum curve restrained X-axis oriented value.</param>
+        /// <param name="_minY">Minimum curve restrained Y-axis oriented value.</param>
+        /// <param name="_maxX">Maximum curve restrained X-axis oriented value.</param>
+        /// <param name="_maxY">Maximum curve restrained Y-axis oriented value.</param>
+        /// <param name="_color"><inheritdoc cref="Color" path="/summary"/></param>
         /// <inheritdoc cref="EnhancedCurveAttribute"/>
-        /// <param name="_color">Curve color.</param>
-        /// <param name="_minX">Minimum X-axis oriented value.</param>
-        /// <param name="_minY">Minimum Y-axis oriented value.</param>
-        /// <param name="_maxX">Maximum X-axis oriented value.</param>
-        /// <param name="_maxY">Maximum Y-axis oriented value.</param>
-        public EnhancedCurveAttribute(SuperColor _color, float _minX, float _minY, float _maxX, float _maxY) : this(_color)
+        public EnhancedCurveAttribute(float _minX, float _minY, float _maxX, float _maxY, SuperColor _color = DefaultColor) : this(_color)
         {
             Rect = new Rect(_minX, _minY, _maxX - _minX, _maxY - _minY);
         }

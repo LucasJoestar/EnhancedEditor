@@ -6,789 +6,789 @@
 
 using System;
 using System.Collections.Generic;
-using System.Reflection;
-using UnityEngine;
 using UnityEditor;
-
-using Object = UnityEngine.Object;
+using UnityEngine;
 
 namespace EnhancedEditor.Editor
 {
     /// <summary>
-    /// Multiple GUI utility methods and fields related to the <see cref="EnhancedEditor"/> plugin.
+    /// Contains multiple editor-related GUI utility methods, variables and properties.
     /// </summary>
     public static class EnhancedEditorGUIUtility
     {
-        #region Global Members
+        #region Global Editor Variables
         /// <summary>
-        /// Width of the foldout displayed at the right of the asset preview fields.
+        /// Default size (for both width and height) used to draw an asset preview (in pixels).
         /// </summary>
-        public const float AssetPreviewFoldoutWidth = 25f;
-
-        /// <summary>
-        /// Default height used to draw help boxes.
-        /// </summary>
-        public const float DefaultHelpBoxHeight = 38f;
+        public const float AssetPreviewDefaultSize = 64f;
 
         /// <summary>
-        /// Space on each side of the Sections between label and horizontal lines (in pixels).
+        /// Width used to draw foldout buttons (in pixels).
         /// </summary>
-        public const float SpaceAroundSectionLabel = 5f;
+        public const float FoldoutWidth = 15f;
 
         /// <summary>
-        /// Separator width used for fields draw.
+        /// Width used to draw various icons (in pixels).
         /// </summary>
-        public const float StandardHorizontalSeparator = 5f;
+        public const float IconWidth = 20f;
 
         /// <summary>
-        /// Height used to draw tags. Equivalent to <see cref="EnhancedEditorStyles.CNCountBadge"/> height.
+        /// Default width of the lines surrounding the label of a section (in pixels).
         /// </summary>
-        public const float TagHeight = 16f;
+        public const float SectionDefaultLineWidth = 50f;
 
         /// <summary>
-        /// Size (height and width) of the icon drawn using <see cref="EnhancedEditorStyles.OlMinus"/>.
-        /// Equivalent to the size of <see cref="EnhancedEditorStyles.OlPlus"/>.
+        /// Space on both sides of a section between its label and the horizontal lines (in pixels).
         /// </summary>
-        public const float OlMinusSize = 17f;
+        public const float SectionLabelMargins = 5f;
 
-        public const float BoxLeftOffset = -13;
-        public const float BoxRightOffset = 15;
+        /// <summary>
+        /// Size of scroll bars drawn in GUI.
+        /// </summary>
+        public const float ScrollSize = 13f;
 
-        public static readonly Color GUIBackgroundProColor = new Color32(56, 56, 56, 255);
-        public static readonly Color GUIBackgroundStandardColor = new Color32(194, 194, 194, 255);
-
-        public static readonly Color GUIOddColor = new Color(.195f, .195f, .195f);
-        public static readonly Color GUISelectedColor = new Color(0f, .5f, 1f, .25f);
-
-        public static readonly Color GUILinkColor = new Color(.25f, .5f, 1f);
+        /// <summary>
+        /// Size (both width and height) of the icons drawn using the styles
+        /// <see cref="EnhancedEditorStyles.OlMinus"/> and <see cref="EnhancedEditorStyles.OlPlus"/>.
+        /// </summary>
+        public const float OlStyleSize = 16f;
         #endregion
-
-        #region GUI Contents
-        /// <summary>
-        /// Browse icon, looking like a magnifying glass.
-        /// </summary>
-        public static GUIContent BrowseIcon => GetContent(browseIcon);
-        private static GUIContent browseIcon = null;
-
-        private static bool areContentInitialized = false;
-
-        // -----------------------
-
-        private static GUIContent GetContent(GUIContent _content)
-        {
-            if (!areContentInitialized)
-            {
-                browseIcon = EditorGUIUtility.IconContent("BrowseIcon.png");
-
-                areContentInitialized = true;
-            }
-
-            return _content;
-        }
-        #endregion
-
-        #region GUI Shortcuts
 
         #region Color
-        private static List<Color> guiColors = new List<Color>();
-        private static List<Color> guiBackgroundColors = new List<Color>();
-        private static List<Color> guiContentColors = new List<Color>();
+        /// <summary>
+        /// Color used to draw peer background lines.
+        /// </summary>
+        public static readonly EditorColor GUIPeerLineColor = new EditorColor(new Color(.75f, .75f, .75f),
+                                                                              new Color(.195f, .195f, .195f));
+
+        /// <summary>
+        /// Color used for various selected GUI controls.
+        /// </summary>
+        public static readonly EditorColor GUISelectedColor = new EditorColor(new Color(0f, .5f, 1f, .28f),
+                                                                              new Color(0f, .5f, 1f, .25f));
+
+        /// <summary>
+        /// Color used for link labels, when the mouse is not hover.
+        /// </summary>
+        public static readonly EditorColor LinkLabelNormalColor = new EditorColor(new Color(0f, .235f, .533f, 1f),
+                                                                                  new Color(.506f, .706f, 1f, 1f));
+        /// <summary>
+        /// Color used for link labels, when the mouse is hover.
+        /// </summary>
+        public static readonly EditorColor LinkLabelActiveColor = new EditorColor(new Color(.12f, .53f, 1f, 1f),
+                                                                                  new Color(.9f, .9f, .9f, 1f));
+
+        /// <summary>
+        /// Editor GUI background color used in dark theme.
+        /// </summary>
+        public static readonly Color DarkThemeGUIBackgroundColor = new Color32(56, 56, 56, 255);
+
+        /// <summary>
+        /// Editor GUI background color used in light theme.
+        /// </summary>
+        public static readonly Color LightThemeGUIBackgroundColor = new Color32(194, 194, 194, 255);
+
+        /// <summary>
+        /// Current editor GUI background color, depending on whether currently using the light theme or the dark theme.
+        /// </summary>
+        public static Color GUIThemeBackgroundColor
+        {
+            get
+            {
+                Color _color = EditorGUIUtility.isProSkin
+                                ? DarkThemeGUIBackgroundColor
+                                : LightThemeGUIBackgroundColor;
+
+                return _color;
+            }
+        }
+        #endregion
+
+        #region GUI Content
+        private static readonly GUIContent propertylabelGUI = new GUIContent(GUIContent.none);
+        private static readonly GUIContent labelGUI = new GUIContent(GUIContent.none);
+        private static readonly GUIContent helpBoxGUI = new GUIContent();
 
         // -----------------------
 
         /// <summary>
-        /// Push the current <see cref="GUI.color"/> to the buffer and set its new value.
+        /// Get the <see cref="GUIContent"/> label associated with a specific <see cref="SerializedProperty"/>.
         /// </summary>
-        /// <param name="_color">New GUI color.</param>
-        public static void PushGUIColor(Color _color)
-        {
-            guiColors.Add(GUI.color);
-            GUI.color = _color;
-        }
-
-        /// <summary>
-        /// Push the current <see cref="GUI.backgroundColor"/> to the buffer and set its new value.
-        /// </summary>
-        /// <param name="_color">New GUI background color.</param>
-        public static void PushGUIBackgroundColor(Color _color)
-        {
-            guiBackgroundColors.Add(GUI.color);
-            GUI.backgroundColor = _color;
-        }
-
-        /// <summary>
-        /// Push the current <see cref="GUI.contentColor"/> to the buffer and set its new value.
-        /// </summary>
-        /// <param name="_color">New GUI content color.</param>
-        public static void PushGUIContentColor(Color _color)
-        {
-            guiContentColors.Add(GUI.color);
-            GUI.contentColor = _color;
-        }
-
-        /// <summary>
-        /// Revert <see cref="GUI.color"/> to the previous pushed-in-buffer value.
-        /// </summary>
-        public static void PopGUIColor()
-        {
-            if (guiColors.Count > 0)
-            {
-                int _index = guiColors.Count - 1;
-                GUI.color = guiColors[_index];
-                guiColors.RemoveAt(_index);
-            }
-            else
-                Debug.LogError("You are popping more GUI color than you are pushing!");
-        }
-
-        /// <summary>
-        /// Revert <see cref="GUI.backgroundColor"/> to the previous pushed-in-buffer value.
-        /// </summary>
-        public static void PopGUIBackgroundColor()
-        {
-            if (guiBackgroundColors.Count > 0)
-            {
-                int _index = guiBackgroundColors.Count - 1;
-                GUI.backgroundColor = guiBackgroundColors[_index];
-                guiBackgroundColors.RemoveAt(_index);
-            }
-            else
-                Debug.LogError("You are popping more GUI background color than you are pushing!");
-        }
-
-        /// <summary>
-        /// Revert <see cref="GUI.contentColor"/> to the previous pushed-in-buffer value.
-        /// </summary>
-        public static void PopGUIContentColor()
-        {
-            if (guiContentColors.Count > 0)
-            {
-                int _index = guiContentColors.Count - 1;
-                GUI.contentColor = guiContentColors[_index];
-                guiContentColors.RemoveAt(_index);
-            }
-            else
-                Debug.LogError("You are popping more GUI content color than you are pushing!");
-        }
-
-        /// <summary>
-        /// Get the editor GUI background color.
-        /// </summary>
-        /// <returns>GUI Background color, depending if using pro skin or not.</returns>
-        public static Color GetGUIBackgroundColor()
-        {
-            return EditorGUIUtility.isProSkin ? GUIBackgroundProColor : GUIBackgroundStandardColor;
-        }
-        #endregion
-
-        #region Handles Color
-        private static List<Color> handlesColors = new List<Color>();
-
-        // -----------------------
-
-        /// <summary>
-        /// Push the current <see cref="Handles.color"/> to the buffer and set its new value.
-        /// </summary>
-        /// <param name="_color">New Handles color.</param>
-        public static void PushHandlesColor(Color _color)
-        {
-            handlesColors.Add(Handles.color);
-            Handles.color = _color;
-        }
-
-        /// <summary>
-        /// Revert <see cref="GUI.color"/> to the previous pushed-in-buffer value.
-        /// </summary>
-        public static void PopHandlesColor()
-        {
-            if (handlesColors.Count > 0)
-            {
-                int _index = handlesColors.Count - 1;
-                Handles.color = handlesColors[_index];
-                handlesColors.RemoveAt(_index);
-            }
-            else
-                Debug.LogError("You are popping more Handles color than you are pushing!");
-        }
-        #endregion
-
-        #region Styles
-        private static Dictionary<GUIStyle, List<TextAnchor>> styleAnchors = new Dictionary<GUIStyle, List<TextAnchor>>();
-
-        // -----------------------
-
-        /// <summary>
-        /// Push the current style anchor to the buffer and set its new value.
-        /// </summary>
-        /// <param name="_style">Style to set anchor.</param>
-        /// <param name="_anchor">New style anchor.</param>
-        public static void PushAnchor(GUIStyle _style, TextAnchor _anchor)
-        {
-            if (!styleAnchors.ContainsKey(_style))
-                styleAnchors.Add(_style, new List<TextAnchor>());
-
-            styleAnchors[_style].Add(_style.alignment);
-            _style.alignment = _anchor;
-        }
-
-        /// <summary>
-        /// Revert a style anchor to the previous pushed-in-buffer one.
-        /// </summary>
-        /// <param name="_style">Style to revert anchor.</param>
-        public static void PopAnchor(GUIStyle _style)
-        {
-            if (!styleAnchors.ContainsKey(_style))
-            {
-                Debug.LogError($"You are popping more anchor than you are pushing! ({_style.name})");
-                return;
-            }
-
-            List<TextAnchor> _anchors = styleAnchors[_style];
-            int _index = _anchors.Count - 1;
-
-            _style.alignment = _anchors[_index];
-            _anchors.RemoveAt(_index);
-
-            if (_index == 0)
-                styleAnchors.Remove(_style);
-        }
-        #endregion
-
-        #region Enable State
-        private static List<bool> guiEnableStates = new List<bool>();
-
-        // -----------------------
-
-        /// <summary>
-        /// Push the current <see cref="GUI.enabled"/> state to the buffer and set its new value.
-        /// </summary>
-        /// <param name="_color">Should GUI be enabled?.</param>
-        public static void PushEnable(bool _isEnable)
-        {
-            guiEnableStates.Add(GUI.enabled);
-            GUI.enabled = _isEnable;
-        }
-
-        /// <summary>
-        /// Revert <see cref="GUI.enabled"/> state to the previous pushed-in-buffer value.
-        /// </summary>
-        public static void PopEnable()
-        {
-            if (guiEnableStates.Count > 0)
-            {
-                int _index = guiEnableStates.Count - 1;
-                GUI.enabled = guiEnableStates[_index];
-                guiEnableStates.RemoveAt(_index);
-            }
-            else
-                Debug.LogError("You are popping more GUI enabling than you are pushing!");
-        }
-        #endregion
-
-        #region Label Width
-        private static List<float> labelWidths = new List<float>();
-
-        // -----------------------
-
-        /// <summary>
-        /// Push the current <see cref="EditorGUIUtility.labelWidth"/> to the buffer and set its new value.
-        /// </summary>
-        /// <param name="_width">New label width.</param>
-        public static void PushLabelWidth(float _width)
-        {
-            labelWidths.Add(EditorGUIUtility.labelWidth);
-            EditorGUIUtility.labelWidth = _width;
-        }
-
-        /// <summary>
-        /// Revert <see cref="EditorGUIUtility.labelWidth"/> to the previous pushed-in-buffer value.
-        /// </summary>
-        public static void PopLabelWidth()
-        {
-            if (labelWidths.Count > 0)
-            {
-                int _index = labelWidths.Count - 1;
-                EditorGUIUtility.labelWidth = labelWidths[_index];
-                labelWidths.RemoveAt(_index);
-            }
-            else
-                Debug.LogError("You are popping more label width than you are pushing!");
-        }
-        #endregion
-
-        #endregion
-
-        #region GUIContent
-        /// <summary>
-        /// Get appropriated GUIContent label from a serialized property.
-        /// </summary>
-        /// <param name="_property">Property to get label from.</param>
+        /// <param name="_property"><see cref="SerializedProperty"/> to get label from.</param>
         /// <returns>Label associated with the property.</returns>
         public static GUIContent GetPropertyLabel(SerializedProperty _property)
         {
-            return new GUIContent(ObjectNames.NicifyVariableName(_property.name), _property.tooltip);
+            string _name = ObjectNames.NicifyVariableName(_property.name);
+
+            propertylabelGUI.text = _name;
+            propertylabelGUI.tooltip = _property.tooltip;
+
+            return propertylabelGUI;
         }
-        #endregion
 
-        #region Serialized Property
-
-        #region Ceil / Floor Value
-        /// <summary>
-        /// Ceils a <see cref="SerializedProperty"/> value.
-        /// </summary>
-        /// <param name="_property">Property to ceil value.</param>
-        /// <param name="_maxValue">Maximum allowed value.</param>
-        public static void CeilValue(SerializedProperty _property, float _maxValue)
+        /// <inheritdoc cref="GetLabelGUI(string, string)"/>
+        public static GUIContent GetLabelGUI(string _label)
         {
-            switch (_property.propertyType)
-            {
-                case SerializedPropertyType.Integer:
-                    _property.intValue = (int)Mathf.Min(_property.intValue, _maxValue);
-                    break;
-
-                case SerializedPropertyType.Float:
-                    _property.floatValue = Mathf.Min(_property.floatValue, _maxValue);
-                    break;
-
-                case SerializedPropertyType.Enum:
-                    _property.enumValueIndex = (int)Mathf.Min(_property.enumValueIndex, _maxValue);
-                    break;
-
-                // Do nothing.
-                default:
-                    break;
-            }
+            return GetLabelGUI(_label, string.Empty);
         }
 
         /// <summary>
-        /// Floor a <see cref="SerializedProperty"/> value.
+        /// Get a cached <see cref="GUIContent"/> for a specific label.
         /// </summary>
-        /// <param name="_property">Property to floor value.</param>
-        /// <param name="_minValue">Minimum allowed value.</param>
-        public static void FloorValue(SerializedProperty _property, float _minValue)
+        /// <param name="_label"><see cref="GUIContent"/> text label.</param>
+        /// <param name="_tooltip"><see cref="GUIContent"/> tooltip.</param>
+        /// <returns><see cref="GUIContent"/> to use.</returns>
+        public static GUIContent GetLabelGUI(string _label, string _tooltip)
         {
-            switch (_property.propertyType)
-            {
-                case SerializedPropertyType.Integer:
-                    _property.intValue = (int)Mathf.Max(_property.intValue, _minValue);
-                    break;
+            labelGUI.text = _label;
+            labelGUI.tooltip = _tooltip;
 
-                case SerializedPropertyType.Float:
-                    _property.floatValue = Mathf.Max(_property.floatValue, _minValue);
-                    break;
-
-                case SerializedPropertyType.Enum:
-                    _property.enumValueIndex = (int)Mathf.Max(_property.enumValueIndex, _minValue);
-                    break;
-
-                // Do nothing.
-                default:
-                    break;
-            }
+            return labelGUI;
         }
-        #endregion
 
-        #region Get Single Value
         /// <summary>
-        /// Get a property value as single.
+        /// Get the height to use to draw a help box with a specific message, type and width.
         /// </summary>
-        /// <param name="_property">Property to get value from.</param>
-        /// <param name="_value">Property value (0 if property type is not compatible).</param>
-        /// <returns>False if property value cannot be converted as single, true otherwise.</returns>
-        public static bool GetPropertyValueAsSingle(SerializedProperty _property, out float _value)
+        /// <param name="_message">The message text.</param>
+        /// <param name="_messageType">The type of message.</param>
+        /// <param name="_width">The total width to use to draw the help box.</param>
+        /// <returns>Total height that will be used to draw this help box.</returns>
+        public static float GetHelpBoxHeight(string _message, UnityEditor.MessageType _messageType, float _width)
         {
-            // Get property value if can be converted as single.
-            switch (_property.propertyType)
+            GUIContent _label;
+            if (_messageType != UnityEditor.MessageType.None)
             {
-                case SerializedPropertyType.Enum:
-                    _value = _property.enumValueIndex;
-                    break;
+                _label = helpBoxGUI;
+                _label.text = _message;
 
-                case SerializedPropertyType.Integer:
-                    _value = _property.intValue;
-                    break;
-
-                case SerializedPropertyType.Float:
-                    _value = _property.floatValue;
-                    break;
-
-                // Not matching type.
-                default:
-                    _value = 0;
-                    return false;
+                // Load an icon that will help calculate the help box height.
+                if (_label.image == null)
+                    _label.image = EditorGUIUtility.FindTexture("console.infoicon");
+            }
+            else
+            {
+                _label = GetLabelGUI(_message);
             }
 
-            return true;
+            float _height = EditorStyles.helpBox.CalcHeight(_label, _width);
+            return _height;
         }
         #endregion
 
+        #region Rect and Position
+        /// <summary>
+        /// Get this view default rect for an Editor control.
+        /// <br/>
+        /// Note that its y position is always equal to 0.
+        /// </summary>
+        /// <returns>The default rect to use for an Editor control on this view.</returns>
+        public static Rect GetViewControlRect()
+        {
+            // Left offset is equal to 18 pixels, and right offset to 5.
+            Rect _position = new Rect()
+            {
+                x = 18f,
+                y = 0f,
+                width = EditorGUIUtility.currentViewWidth - 18f - 5f,
+                height = EditorGUIUtility.singleLineHeight
+            };
+
+            return _position;
+        }
+
+        /// <summary>
+        /// Moves a scroll to focus on a specific position in view.
+        /// </summary>
+        /// <param name="_scroll">The current position of the scroll.</param>
+        /// <param name="_position">Position on screen to focus.</param>
+        /// <param name="_scrollAreaSize">The size of the scroll area on screen.</param>
+        /// <returns>Focused scroll value on position.</returns>
+        public static Vector2 FocusScrollOnPosition(Vector2 _scroll, Rect _position, Vector2 _scrollAreaSize)
+        {
+            // Horizontal focus.
+            if (_scroll.x > _position.x)
+            {
+                _scroll.x = _position.x;
+            }
+            else if ((_scroll.x + _scrollAreaSize.x) < _position.xMax)
+            {
+                _scroll.x = _position.xMax - _scrollAreaSize.x;
+            }
+
+            // Vertical focus.
+            if (_scroll.y > _position.y)
+            {
+                _scroll.y = _position.y;
+            }
+            else if ((_scroll.y + _scrollAreaSize.y) < _position.yMax)
+            {
+                _scroll.y = _position.yMax - _scrollAreaSize.y;
+            }
+
+            return _scroll;
+        }
         #endregion
 
-        #region Conditions
-        private static readonly BindingFlags getMemberFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance
-                                                            | BindingFlags.GetField | BindingFlags.GetProperty | BindingFlags.InvokeMethod;
+        #region Control ID
+        private static readonly List<int> controlsID = new List<int>();
+
+        private static int controldIDIndex = -1;
+        private static int activeIDCount = 0;
+
+        // -----------------------
+
+        /// <inheritdoc cref="GetControlID(GUIContent, FocusType, Rect)"/>
+        public static int GetControlID(FocusType _focusType)
+        {
+            GUIContent _label = GUIContent.none;
+            return GetControlID(_label, _focusType);
+        }
+
+        /// <inheritdoc cref="GetControlID(GUIContent, FocusType, Rect)"/>
+        public static int GetControlID(FocusType _focusType, Rect _position)
+        {
+            GUIContent _label = GUIContent.none;
+            return GetControlID(_label, _focusType, _position); ;
+        }
+
+        /// <inheritdoc cref="GetControlID(GUIContent, FocusType, Rect)"/>
+        public static int GetControlID(GUIContent _label, FocusType _focusType)
+        {
+            Rect _position = Rect.zero;
+            return GetControlID(_label, _focusType, _position);
+        }
+
+        /// <summary>
+        /// Works pretty much like <see cref="GUIUtility.GetControlID(GUIContent, FocusType, Rect)"/>,
+        /// except that the ID is guaranteed to never equal -1.
+        /// <para/>
+        /// <inheritdoc cref="GUIUtility.GetControlID(GUIContent, FocusType, Rect)" path="/summary"/>
+        /// </summary>
+        /// <param name="_label">Label acting as a hint to ensure correct matching of IDs to controls.</param>
+        /// <param name="_focusType">Control <see cref="FocusType"/>.</param>
+        /// <param name="_position">Rectangle on the screen where the control is drawn.</param>
+        /// <returns>Guaranteed not equal to -1 control ID.</returns>
+        public static int GetControlID(GUIContent _label, FocusType _focusType, Rect _position)
+        {
+            int _id = GUIUtility.GetControlID(_label, _focusType, _position);
+            return DoControlID(_id);
+        }
+
+        /// <inheritdoc cref="GetControlID(int, FocusType, Rect)"/>
+        public static int GetControlID(int _hint, FocusType _focusType)
+        {
+            Rect _position = Rect.zero;
+            return GetControlID(_hint, _focusType, _position);
+        }
+
+        /// <summary>
+        /// Works pretty much like <see cref="GUIUtility.GetControlID(int, FocusType, Rect)"/>,
+        /// except that the ID is guaranteed to never equal -1.
+        /// <para/>
+        /// <inheritdoc cref="GUIUtility.GetControlID(int, FocusType, Rect)" path="/summary"/>
+        /// </summary>
+        /// <param name="_hint">Hint to help ensure correct matching of IDs to controls.</param>
+        /// <inheritdoc cref="GetControlID(GUIContent, FocusType, Rect)"/>
+        public static int GetControlID(int _hint, FocusType _focusType, Rect _position)
+        {
+            int _id = GUIUtility.GetControlID(_hint, _focusType, _position);
+            return DoControlID(_id);
+        }
+
+        // -----------------------
+
+        private static int DoControlID(int _id)
+        {
+            /* Sometimes, with some special events (like EventType.Used), the returned id may be equal to -1.
+             * However, this unwanted behaviour breaks many enhanced controls (like dynamic height ones),
+             * as all following ids are then also equal to -1, and their associated registered value cannot be properly retrieved.
+             * 
+             * So let's store all previous event ids, and replace undesired values with them.
+             * (You can reactivate the following debugs if you want to understand the default behaviour).
+            */
+
+            //Debug.Log("ID => " + _id + " | " + Event.current.type);
+
+            if (_id == -1)
+            {
+                // Unregistered id.
+                if (controlsID.Count == 0)
+                    return -1;
+
+                // Invalid.
+                controldIDIndex = (controldIDIndex < activeIDCount)
+                                ? (controldIDIndex + 1)
+                                : 0;
+
+                _id = controlsID[controldIDIndex];
+            }
+            else if ((controldIDIndex != -1) && (_id < controlsID[controldIDIndex]))
+            {
+                // Restart.
+                activeIDCount = controldIDIndex;
+
+                controldIDIndex = 0;
+                controlsID[controldIDIndex] = _id;
+            }
+            else
+            {
+                // Increment.
+                controldIDIndex++;
+                if (controldIDIndex == controlsID.Count)
+                {
+                    controlsID.Add(_id);
+                }
+                else
+                {
+                    controlsID[controldIDIndex] = _id;
+                }
+            }
+
+            //Debug.LogWarning("ID => " + _id + " | " + Event.current.type);
+
+            return _id;
+        }
+        #endregion
+
+        #region Event and Clicks
+        private static Vector2 mouseDownPosition = new Vector2();
 
         // -----------------------
 
         /// <summary>
-        /// Get the <see cref="MemberInfo"/> to use as condition from a given type.
-        /// <para/>
-        /// Note that for a member to be used as a condition, it must be or a boolean
-        /// (whether a field or a proeprty), or a method returning a boolean without any parameter.
+        /// Did the user just performed a context click on this position?
         /// </summary>
-        /// <param name="_type">Type to get member from.</param>
-        /// <param name="_memberName">Name of the member to find.</param>
-        /// <param name="_member">Matching found member in type.</param>
-        /// <returns>True if successfully found matching member, false otherwise.</returns>
-        public static bool GetConditionMember(Type _type, string _memberName, out MemberInfo _member)
+        /// <param name="_position"><inheritdoc cref="DocumentationMethod(Rect)" path="/param[@name='_position']"/></param>
+        /// <returns>True if the user performed a context click here, false otherwise.</returns>
+        public static bool ContextClick(Rect _position)
         {
-            MemberInfo[] _members = _type.GetMember(_memberName, getMemberFlags);
-
-            // Get matching member of boolean return type.
-            for (int _i = 0; _i < _members.Length; _i++)
+            if (_position.Event(out Event _event) == EventType.ContextClick)
             {
-                _member = _members[_i];
-                switch (_member.MemberType)
+                _event.Use();
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Did the user just pressed a mouse button on this position?
+        /// </summary>
+        /// <param name="_position"><inheritdoc cref="DocumentationMethod(Rect)" path="/param[@name='_position']"/></param>
+        /// <returns>True if the user clicked here, false otherwise.</returns>
+        public static bool MouseDown(Rect _position)
+        {
+            if (_position.Event(out Event _event) == EventType.MouseDown)
+            {
+                _event.Use();
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Did the user just released the main mouse button on this position?
+        /// </summary>
+        /// <param name="_position"><inheritdoc cref="DocumentationMethod(Rect)" path="/param[@name='_position']"/></param>
+        /// <returns>True if the user released this mouse button here, false otherwise.</returns>
+        public static bool MainMouseUp(Rect _position)
+        {
+            if ((_position.Event(out Event _event) == EventType.MouseUp) && (_event.button == 0))
+            {
+                _event.Use();
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Did the user just performed a click to deselect element(s) on this position?
+        /// </summary>
+        /// <param name="_position"><inheritdoc cref="DocumentationMethod(Rect)" path="/param[@name='_position']"/></param>
+        /// <returns>True if the user performed a deselection click here, false otherwise.</returns>
+        public static bool DeselectionClick(Rect _position)
+        {
+            if ((_position.Event(out Event _event) == EventType.MouseDown) && !_event.control && !_event.shift && (_event.button == 0))
+            {
+                _event.Use();
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Did the user just pressed a vertical key on the keyboard?
+        /// <br/> Works with up and down arrows.
+        /// </summary>
+        /// <returns>-1 for up, 1 for down, 0 otherwise.</returns>
+        public static int VerticalKeys()
+        {
+            Event _event = Event.current;
+
+            if (_event.type == EventType.KeyDown)
+            {
+                switch (_event.keyCode)
                 {
-                    case MemberTypes.Field:
-                        FieldInfo _field = (FieldInfo)_member;
-                        if (_field.FieldType == typeof(bool))
-                        {
-                            return true;
-                        }
-                        break;
+                    case KeyCode.UpArrow:
+                        _event.Use();
+                        return -1;
 
-                    case MemberTypes.Method:
-                        MethodInfo _method = (MethodInfo)_member;
-                        if ((_method.ReturnType == typeof(bool)) && (_method.GetParameters().Length == 0))
-                        {
-                            return true;
-                        }
-                        break;
-
-                    case MemberTypes.Property:
-                        PropertyInfo _property = (PropertyInfo)_member;
-                        if (_property.PropertyType == typeof(bool))
-                        {
-                            return true;
-                        }
-                        break;
+                    case KeyCode.DownArrow:
+                        _event.Use();
+                        return 1;
 
                     default:
                         break;
                 }
             }
 
-            _member = null;
-            return false;
+            return 0;
         }
 
         /// <summary>
-        /// Get a given condition is fulfilled.
-        /// Should be used with <see cref="GetConditionMember(Type, string, out MemberInfo, out MemberTypes)"/>.
+        /// Did the user just pressed a horizontal key on the keyboard?
+        /// <br/> Works with left and right arrows.
         /// </summary>
-        /// <param name="_member">Member to check condition.</param>
-        /// <param name="_target">Type object to get member value.</param>
-        /// <param name="_condition">Condition type to use.</param>
-        /// <returns>True if the condition is fulfilled, false otherwise.</returns>
-        public static bool IsConditionFulfilled(MemberInfo _member, Object _target, ConditionType _condition)
+        /// <returns>-1 for left, 1 for right, 0 otherwise.</returns>
+        public static int HorizontalSelectionKeys()
         {
-            bool _isValid = false;
-            if (_member is FieldInfo _field)
-            {
-                _isValid = (bool)_field.GetValue(_target);
-            }
-            else if (_member is MethodInfo _method)
-            {
-                _isValid = (bool)_method.Invoke(_target, null);
-            }
-            else if (_member is PropertyInfo _property)
-            {
-                _isValid = (bool)_property.GetValue(_target);
-            }
+            Event _event = Event.current;
 
-            // Interpret condition validation.
-            switch (_condition)
+            if (_event.type == EventType.KeyDown)
             {
-                case ConditionType.True:
-                    return _isValid;
-
-                case ConditionType.False:
-                    return !_isValid;
-
-                default:
-                    return _isValid;
-            }
-        }
-        #endregion
-
-        #region Reflection
-
-        #region Get Value
-        /// <summary>
-        /// Get a <see cref="SerializedObject"/> field or property value as single.
-        /// </summary>
-        /// <param name="_object">Object to get value from.</param>
-        /// <param name="_memberName">Name of the member to get value (must be a field or a property).</param>
-        /// <param name="_value">Member value.</param>
-        /// <returns>False if member value cannot be converted as single, true otherwise.</returns>
-        public static bool GetFieldOrPropertyValueAsSingle(SerializedObject _object, string _memberName, out float _value)
-        {
-            if (GetFieldOrPropertyValue(_object, _memberName, out object _memberValue))
-            {
-                // Catch non single value exception.
-                try
+                switch (_event.keyCode)
                 {
-                    _value = Convert.ToSingle(_memberValue);
-                    return true;
-                }
-                catch (Exception _exception)
-                {
-                    if (!(_exception is FormatException) && !(_exception is InvalidCastException))
-                        throw _exception;
+                    case KeyCode.LeftArrow:
+                        _event.Use();
+                        return -1;
+
+                    case KeyCode.RightArrow:
+                        _event.Use();
+                        return 1;
+
+                    default:
+                        break;
                 }
             }
 
-            _value = 0;
-            return false;
+            return 0;
         }
 
         /// <summary>
-        /// Get a <see cref="SerializedObject"/> field or property value.
+        /// Selects multiple elements of an array according to the user's mouse inputs.
         /// </summary>
-        /// <param name="_object">Object to get value from.</param>
-        /// <param name="_memberName">Name of the member to get value (must be a field or a property).</param>
-        /// <param name="_value">Member value.</param>
-        /// <returns>True is member was found, false otherwise.</returns>
-        public static bool GetFieldOrPropertyValue(SerializedObject _object, string _memberName, out object _value)
+        /// <param name="_position"><inheritdoc cref="DocumentationMethod(Rect, Array, Predicate{int}, Action{int, bool})" path="/param[@name='_position']"/></param>
+        /// <param name="_array"><inheritdoc cref="DocumentationMethod(Rect, Array, Predicate{int}, Action{int, bool})" path="/param[@name='_array']"/></param>
+        /// <param name="_index">Index of the current array element.</param>
+        /// <param name="_isSelected"><inheritdoc cref="DocumentationMethod(Rect, Array, Predicate{int}, Action{int, bool})" path="/param[@name='_isSelected']"/></param>
+        /// <param name="_onSelect"><inheritdoc cref="DocumentationMethod(Rect, Array, Predicate{int}, Action{int, bool})" path="/param[@name='_onSelect']"/></param>
+        /// <returns>True if the user performed a click to select element(s) here, false otherwise.</returns>
+        public static bool MultiSelectionClick(Rect _position, Array _array, int _index, Predicate<int> _isSelected, Action<int, bool> _onSelect)
         {
-            // Field value.
-            if (FindSerializedObjectField(_object, _memberName, out FieldInfo _field))
+            // Only select on mouse down or on selected element mouse up.
+            bool _isMouseUpSelection = false;
+            if (_position.Event(out Event _event) != EventType.MouseDown)
             {
-                _value = _field.GetValue(_object.targetObject);
-                return true;
-            }
-
-            // Property value.
-            if (FindSerializedObjectProperty(_object, _memberName, out PropertyInfo _property))
-            {
-                _value = _property.GetValue(_object.targetObject);
-                return true;
-            }
-
-            _value = 0;
-            return false;
-        }
-
-        /// <summary>
-        /// Get a <see cref="SerializedObject"/> field or property values.
-        /// </summary>
-        /// <param name="_object">Object to get values from.</param>
-        /// <param name="_memberName">Name of the member to get values (must be a field or a property).</param>
-        /// <param name="_values">Member values.</param>
-        /// <returns>True is member was found, false otherwise.</returns>
-        public static bool GetFieldOrPropertyValues(SerializedObject _object, string _memberName, out object[] _values)
-        {
-            // Field value.
-            if (FindSerializedObjectField(_object, _memberName, out FieldInfo _field))
-            {
-                _values = new object[_object.targetObjects.Length];
-                for (int _i = 0; _i < _values.Length; _i++)
+                if ((_position.Event() != EventType.MouseUp) || (_event.button != 0) || (_event.mousePosition != mouseDownPosition))
                 {
-                    Object _target = _object.targetObjects[_i];
-                    _values[_i] = _field.GetValue(_target);
-                }
-                
-                return true;
-            }
+                    if (_event.type == EventType.MouseDrag)
+                        mouseDownPosition = Vector2.zero;
 
-            // Property value.
-            if (FindSerializedObjectProperty(_object, _memberName, out PropertyInfo _property))
-            {
-                _values = new object[_object.targetObjects.Length];
-                for (int _i = 0; _i < _values.Length; _i++)
-                {
-                    Object _target = _object.targetObjects[_i];
-                    _values[_i] = _property.GetValue(_target);
-                }
-
-                return true;
-            }
-
-            _values = null;
-            return false;
-        }
-        #endregion
-
-        #region Find Member
-        /// <summary>
-        /// Retrieves a field from a given serialized object.
-        /// </summary>
-        /// <param name="_object">Object to get field from.</param>
-        /// <param name="_fieldPath">Path of the field to find.</param>
-        /// <param name="_field">Found <see cref="FieldInfo"/></param>
-        /// <returns>True if successfully found <see cref="FieldInfo"/>, false otherwise.</returns>
-        public static bool FindSerializedObjectField(SerializedObject _object, string _fieldPath, out FieldInfo _field)
-        {
-            Type _type = _object.targetObject.GetType();
-            _field = null;
-
-            string[] _fields = _fieldPath.Split('.');
-            for (int _i = 0; _i < _fields.Length; _i++)
-            {
-                _field = _type.GetField(_fields[_i],
-                              BindingFlags.GetField | BindingFlags.Instance |
-                              BindingFlags.Public | BindingFlags.NonPublic |
-                              BindingFlags.Static);
-
-                if (_field == null)
                     return false;
-
-                // there are only two container field type that can be serialized:
-                // Array and List<T>
-                if (_field.FieldType.IsArray)
-                {
-                    _type = _field.FieldType.GetElementType();
-                    _i += 2;
-                    continue;
                 }
 
-                if (_field.FieldType.IsGenericType)
-                {
-                    _type = _field.FieldType.GetGenericArguments()[0];
-                    _i += 2;
-                    continue;
-                }
-
-                _type = _field.FieldType;
+                _isMouseUpSelection = true;
             }
 
+            // Mouse up helper update.
+            if (!_isMouseUpSelection && _isSelected(_index))
+            {
+                mouseDownPosition = _event.mousePosition;
+                return true;
+            }
+            else
+                mouseDownPosition = Vector2.zero;
+
+            if (_event.shift)
+            {
+                int _firstIndex = -1;
+                int _lastIndex = -1;
+
+                // Find first index.
+                for (int _i = 0; _i < _array.Length; _i++)
+                {
+                    if (_isSelected(_i) || (_i == _index))
+                    {
+                        _firstIndex = _i;
+                        break;
+                    }
+                }
+
+                // Find last index.
+                for (int _i = _array.Length; _i-- > 0;)
+                {
+                    if (_isSelected(_i) || (_i == _index))
+                    {
+                        _lastIndex = _i + 1;
+                        break;
+                    }
+                }
+
+                // Select all elements between indexes.
+                if (_index == _firstIndex)
+                {
+                    for (int _i = _lastIndex; _i-- > _firstIndex;)
+                    {
+                        _onSelect(_i, true);
+                    }
+                }
+                else
+                {
+                    for (int _i = _firstIndex; _i < _lastIndex; _i++)
+                    {
+                        _onSelect(_i, true);
+                    }
+                }
+            }
+            else if (_event.control)
+            {
+                // Inverse selected state.
+                bool _selected = _isSelected(_index);
+                _onSelect(_index, !_selected);
+            }
+            else if (!_isSelected(_index) || (_event.button == 0))
+            {
+                // Unselect every element except this one.
+                for (int _i = 0; _i < _array.Length; _i++)
+                {
+                    bool _selected = _i == _index;
+                    _onSelect(_i, _selected);
+                }
+            }
+
+            _event.Use();
             return true;
         }
 
         /// <summary>
-        /// Retrieves a field from a given serialized object.
+        /// Selects multiple elements of an array according to the user's vertical inputs.
         /// </summary>
-        /// <param name="_object">Object to get field from.</param>
-        /// <param name="_propertyName">Name of the property to find.</param>
-        /// <param name="_property">Found <see cref="PropertyInfo"/>.</param>
-        /// <returns>True if successfully found <see cref="PropertyInfo"/>, false otherwise.</returns>
-        public static bool FindSerializedObjectProperty(SerializedObject _object, string _propertyName, out PropertyInfo _property)
+        /// <param name="_array"><inheritdoc cref="DocumentationMethod(Rect, Array, Predicate{int}, Action{int, bool})" path="/param[@name='_array']"/></param>
+        /// <param name="_isSelected"><inheritdoc cref="DocumentationMethod(Rect, Array, Predicate{int}, Action{int, bool})" path="/param[@name='_isSelected']"/></param>
+        /// <param name="_canBeSelected">Used to know if a specific element can be selected.</param>
+        /// <param name="_onSelect"><inheritdoc cref="DocumentationMethod(Rect, Array, Predicate{int}, Action{int, bool})" path="/param[@name='_onSelect']"/></param>
+        /// <param name="_lastSelectedIndex">Index of the last selected element. Use -1 if no element is currently selected.</param>
+        /// <returns>True if the user pressed a key to select element(s), from otherwise.</returns>
+        public static bool VerticalMultiSelectionKeys(Array _array, Predicate<int> _isSelected, Predicate<int> _canBeSelected, Action<int, bool> _onSelect, int _lastSelectedIndex)
         {
-            Type _type = _object.targetObject.GetType();
-            _property = null;
+            // Do not select anything on an empty array.
+            if (_array.Length == 0)
+                return false;
 
-            while (_type != null)
+            if ((_lastSelectedIndex > -1) && ((_lastSelectedIndex >= _array.Length) || !_canBeSelected(_lastSelectedIndex)))
+                _lastSelectedIndex = -1;
+
+            // Get selection value.
+            int _switch = VerticalKeys();
+            switch (_switch)
             {
-                _property = _type.GetProperty(_propertyName,
-                              BindingFlags.GetProperty | BindingFlags.Instance |
-                              BindingFlags.Public | BindingFlags.NonPublic |
-                              BindingFlags.Static);
-
-                if (_property != null)
-                    return true;
-
-                _type = _type.BaseType;
-            }
-
-            return false;
-        }
-        #endregion
-
-        #region Type
-        /// <summary>
-        /// Get the object type of a given property.
-        /// </summary>
-        /// <param name="_property">Property to get type.</param>
-        /// <returns>Property object type.</returns>
-        public static Type GetPropertyType(SerializedProperty _property)
-        {
-            if (FindSerializedObjectField(_property.serializedObject, _property.propertyPath, out FieldInfo _field))
-            {
-                return GetFieldInfoType(_field);
-            }
-
-            return null;
-        }
-
-        /// <summary>
-        /// Get the real type of a given <see cref="FieldInfo"/>.
-        /// </summary>
-        /// <param name="_field">Field to get type from.</param>
-        /// <returns>Field related type.</returns>
-        public static Type GetFieldInfoType(FieldInfo _field)
-        {
-            Type _type = _field.FieldType;
-            if (_type.IsArray)
-            {
-                _type = _type.GetElementType();
-            }
-            else if (_type.IsGenericType)
-            {
-                _type = _type.GetGenericArguments()[0];
-            }
-
-            return _type;
-        }
-        #endregion
-
-        #region Set Property Value
-        /// <summary>
-        /// Set the value of a property (not a field) from a serialized object.
-        /// </summary>
-        /// <param name="_property"><see cref="SerializedProperty"/> to get value used
-        /// to set property value.</param>
-        /// <param name="_propertyName">Name of the property to set.</param>
-        public static void SetPropertyValue(SerializedProperty _property, string _propertyName)
-        {
-            if (GetFieldOrPropertyValue(_property.serializedObject, _property.name, out object _value))
-                SetPropertyValue(_property.serializedObject, _propertyName, _value);
-        }
-
-        /// <summary>
-        /// Set the value of a property (not a field) from a serialized object.
-        /// </summary>
-        /// <param name="_object"><see cref="SerializedObject"/> to set property value.</param>
-        /// <param name="_propertyName">Name of the property to set.</param>
-        /// <param name="_value">Property value.</param>
-        public static void SetPropertyValue(SerializedObject _object, string _propertyName, object _value)
-        {
-            if (FindSerializedObjectProperty(_object, _propertyName, out PropertyInfo _propertyInfo))
-            {
-                foreach (Object _target in _object.targetObjects)
+                case -1:
                 {
-                    // Catch mismatching type exception.
-                    try
+                    // Find first selected element if none.
+                    if (_lastSelectedIndex > -1)
+                        break;
+
+                    for (int _i = 0; _i < _array.Length; _i++)
                     {
-                        _propertyInfo.SetValue(_target, _value);
+                        if (_isSelected(_i))
+                        {
+                            _lastSelectedIndex = _i;
+                            break;
+                        }
                     }
-                    catch (ArgumentException)
+                }
+                break;
+
+                case 1:
+                {
+                    // Find last selected element if none.
+                    if (_lastSelectedIndex > -1)
+                        break;
+
+                    for (int _i = _array.Length; _i-- > 0;)
                     {
-                        Debug.LogWarning($"Value \"{_value}\" could not be assigned to property \"{_propertyName}\" on \"{_target.GetType()}\" script from \"{_target.name}\".");
+                        if (_isSelected(_i))
+                        {
+                            _lastSelectedIndex = _i;
+                            break;
+                        }
+                    }
+                }
+                break;
+
+                default:
+                    return false;
+            }
+
+            // If no element is selected, then simply selected one.
+            if (_lastSelectedIndex < 0)
+            {
+                int _index, _limit;
+                if (_switch == 1)
+                {
+                    _index = _array.Length - 1;
+                    _limit = -1;
+                }
+                else
+                {
+                    _index = 0;
+                    _limit = _array.Length;
+                }
+
+                for (int _i = _index; _i != _limit; _i -= _switch)
+                {
+                    if (_canBeSelected(_i))
+                    {
+                        _onSelect(_index, true);
+                        break;
                     }
                 }
 
+                return true;
+            }
+
+            Event _event = Event.current;
+            if (_event.shift || _event.control)
+            {
+                // Multi-selection.
+                int _firstIndex = -1;
+                int _lastIndex = -1;
+
+                // Find first index.
+                for (int _i = 0; _i < _array.Length; _i++)
+                {
+                    if (_isSelected(_i))
+                    {
+                        _firstIndex = _i;
+                        break;
+                    }
+                }
+
+                // Find last index.
+                for (int _i = _array.Length; _i-- > 0;)
+                {
+                    if (_isSelected(_i))
+                    {
+                        _lastIndex = _i + 1;
+                        break;
+                    }
+                }
+
+                // Select elements.
+                if (_switch == -1)
+                {
+                    bool _increase = _lastSelectedIndex == _firstIndex;
+                    if (_increase)
+                    {
+                        int _index = GetNewSelectedIndex();
+                        for (int _i = _lastIndex; _i-- > _index;)
+                            _onSelect(_i, true);
+                    }
+                    else
+                    {
+                        for (int _i = _firstIndex; _i < _lastSelectedIndex; _i++)
+                            _onSelect(_i, true);
+
+                        for (int _i = _lastSelectedIndex; _i < _lastIndex; _i++)
+                            _onSelect(_i, false);
+                    }
+                }
+                else
+                {
+                    bool _increase = _lastSelectedIndex == (_lastIndex - 1);
+                    if (_increase)
+                    {
+                        int _index = GetNewSelectedIndex() + 1;
+                        for (int _i = _firstIndex; _i < _index; _i++)
+                            _onSelect(_i, true);
+                    }
+                    else
+                    {
+                        for (int _i = _firstIndex; _i < (_lastSelectedIndex + 1); _i++)
+                            _onSelect(_i, false);
+
+                        for (int _i = _lastIndex; _i-- > (_lastSelectedIndex + 1);)
+                            _onSelect(_i, true);
+                    }
+                }
             }
             else
-                Debug.LogWarning($"Property \"{_propertyName}\" could not be found in the \"{_object.targetObject.GetType()}\" script from \"{_object.targetObject.name}\".");
-        }
-        #endregion
-
-        #endregion
-
-        #region GUI Utility
-        /// <summary>
-        /// Repaints all editors of a given <see cref="SerializedObject"/>.
-        /// </summary>
-        /// <param name="_object">Object to repaint associated editor(s).</param>
-        public static void Repaint(SerializedObject _object)
-        {
-            foreach (UnityEditor.Editor _editor in ActiveEditorTracker.sharedTracker.activeEditors)
             {
-                if (_editor.serializedObject == _object)
-                    _editor.Repaint();
+                // Select this element only.
+                int _index = GetNewSelectedIndex();
+
+                for (int _i = 0; _i < _array.Length; _i++)
+                {
+                    bool _selected = _i == _index;
+                    _onSelect(_i, _selected);
+                }
+            }
+
+            return true;
+
+            // ----- Local Method ----- \\
+
+            int GetNewSelectedIndex()
+            {
+                int _index = _lastSelectedIndex;
+                while (true)
+                {
+                    _index += _switch;
+                    if ((_index == -1) || (_index == _array.Length))
+                    {
+                        _index = _lastSelectedIndex;
+                        break;
+                    }
+
+                    if (_canBeSelected(_index))
+                        break;
+                }
+
+                return _index;
             }
         }
+        #endregion
+
+        #region Utility
+        /// <summary>
+        /// Repaints all editors associated with a specific <see cref="SerializedObject"/>.
+        /// </summary>
+        /// <param name="_object"><see cref="SerializedObject"/> to repaint associated editor(s).</param>
+        public static void Repaint(SerializedObject _object)
+        {
+            UnityEditor.Editor[] _editors = ActiveEditorTracker.sharedTracker.activeEditors;
+            foreach (UnityEditor.Editor _editor in _editors)
+            {
+                if (_editor.serializedObject == _object)
+                {
+                    _editor.Repaint();
+                }
+            }
+        }
+        #endregion
+
+        #region Documentation
+        /// <summary>
+        /// This method is for documentation only, used by inheriting its parameters documentation to centralize it in one place.
+        /// </summary>
+        /// <param name="_position">Rectangle on the screen where to check for user actions.</param>
+        /// <param name="_array">Array of all selectable elements.</param>
+        /// <param name="_isSelected">Used to know if a specific element is selected.</param>
+        /// <param name="_onSelect">Callback when selecting an element.</param>
+        internal static void DocumentationMethod(Rect _position, Array _array, Predicate<int> _isSelected, Action<int, bool> _onSelect) { }
         #endregion
     }
 }

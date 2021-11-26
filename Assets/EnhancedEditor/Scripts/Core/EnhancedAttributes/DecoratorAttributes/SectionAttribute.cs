@@ -19,16 +19,27 @@ namespace EnhancedEditor
         public const float DefaultLineWidth = 50f;
         public const float DefaultMargins = 5f;
 
+        /// <summary>
+        /// Label displayed as this section header.
+        /// </summary>
         public readonly GUIContent Label = null;
+
+        /// <summary>
+        /// Width of the lines surrounding the label (in pixels).
+        /// </summary>
         public readonly float LineWidth = DefaultLineWidth;
+
+        /// <summary>
+        /// Space on top and bottom of the section (in pixels).
+        /// </summary>
         public readonly float Margins = DefaultMargins;
 
         // -----------------------
 
+        /// <param name="_label"><inheritdoc cref="Label" path="/summary"/></param>
+        /// <param name="_lineWidth"><inheritdoc cref="LineWidth" path="/summary"/></param>
+        /// <param name="_margins"><inheritdoc cref="Margins" path="/summary"/></param>
         /// <inheritdoc cref="SectionAttribute"/>
-        /// <param name="_label">Label displayed in the middle of the section.</param>
-        /// <param name="_lineWidth">Width of the lines surrounding the label (in pixels).</param>
-        /// <param name="_margins">Space on top and bottom of the section (in pixels).</param>
         public SectionAttribute(string _label, float _lineWidth = DefaultLineWidth, float _margins = DefaultMargins)
         {
             Label = new GUIContent(_label);

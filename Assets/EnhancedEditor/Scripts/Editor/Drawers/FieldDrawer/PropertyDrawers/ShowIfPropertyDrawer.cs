@@ -4,50 +4,25 @@
 //
 // ============================================================================ //
 
-using System;
-using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 
 namespace EnhancedEditor.Editor
 {
     /// <summary>
-    /// Special drawer (inheriting from <see cref="EnhancedPropertyDrawer"/>) for classes with attribute <see cref="ShowIfAttribute"/>.
+    /// Special drawer for fields with the attribute <see cref="ShowIfAttribute"/> (inherit from <see cref="EnhancedPropertyDrawer"/>).
     /// </summary>
     [CustomDrawer(typeof(ShowIfAttribute))]
 	public class ShowIfPropertyDrawer : EnhancedPropertyDrawer
     {
         #region Drawer Content
-        private bool isValid = false;
-
-        private MemberInfo member = null;
-        private ConditionType conditionType = 0;
-
-        // -----------------------
-
-        public override void OnEnable(SerializedProperty _property)
+        public override bool OnBeforeGUI(Rect _position, SerializedProperty _property, GUIContent _label, out float _height)
         {
-            ShowIfAttribute _attribute = (ShowIfAttribute)Attribute;
-            conditionType = _attribute.Type;
-
-            Type _type = _property.serializedObject.targetObject.GetType();
-            isValid = EnhancedEditorGUIUtility.GetConditionMember(_type, _attribute.ConditionMemberName, out member);
-        }
-
-        public override bool OnGUI(Rect _position, SerializedProperty _property, GUIContent _label, out float _height)
-        {
-            if (!isValid)
-            {
-                _position.height = _height = EnhancedEditorGUIUtility.DefaultHelpBoxHeight;
-                _position = EditorGUI.IndentedRect(_position);
-
-                EditorGUI.HelpBox(_position, $"\"{_label.text}\" show specified condition cannot be found! " +
-                                             $"Please specify a valid member returning a boolean.", UnityEditor.MessageType.Error);
-                return false;
-            }
+            ShowIfAttribute _attribute = Attribute as ShowIfAttribute;
+            bool _hide = _attribute.ConditionMember.GetValue(_property.serializedObject, out bool _value) && (_value != _attribute.ConditionType.Get());
 
             _height = 0f;
-            return !EnhancedEditorGUIUtility.IsConditionFulfilled(member, _property.serializedObject.targetObject, conditionType);
+            return _hide;
         }
         #endregion
     }

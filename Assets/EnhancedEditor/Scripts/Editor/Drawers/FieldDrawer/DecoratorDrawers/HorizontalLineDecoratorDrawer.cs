@@ -10,27 +10,24 @@ using UnityEngine;
 namespace EnhancedEditor.Editor
 {
     /// <summary>
-    /// Special <see cref="DecoratorDrawer"/> for fields with attribute <see cref="HorizontalLineAttribute"/>.
+    /// Special <see cref="DecoratorDrawer"/> for fields with the attribute <see cref="HorizontalLineAttribute"/>.
     /// </summary>
-    [CustomPropertyDrawer(typeof(HorizontalLineAttribute))]
+    [CustomPropertyDrawer(typeof(HorizontalLineAttribute), true)]
     public class HorizontalLineDecoratorDrawer : DecoratorDrawer
     {
         #region Decorator Content
         public override float GetHeight()
         {
-            HorizontalLineAttribute _attribute = (HorizontalLineAttribute)attribute;
-            return EditorGUIUtility.singleLineHeight + _attribute.Height;
+            HorizontalLineAttribute _attribute = attribute as HorizontalLineAttribute;
+            return _attribute.Height + EditorGUIUtility.standardVerticalSpacing;
         }
 
         public override void OnGUI(Rect _position)
         {
-            HorizontalLineAttribute _attribute = (HorizontalLineAttribute)attribute;
+            HorizontalLineAttribute _attribute = attribute as HorizontalLineAttribute;
+            _position.height -= EditorGUIUtility.standardVerticalSpacing;
 
-            // Set position at the middle of the area.
-            _position.y += (EditorGUIUtility.singleLineHeight / 2f) - 1f;
-            _position.height = _attribute.Height;
-
-            EnhancedEditorGUI.HorizontalLine(_position, _attribute.Width, _attribute.Color);
+            EnhancedEditorGUI.HorizontalLine(_position, _attribute.Color);
         }
         #endregion
     }

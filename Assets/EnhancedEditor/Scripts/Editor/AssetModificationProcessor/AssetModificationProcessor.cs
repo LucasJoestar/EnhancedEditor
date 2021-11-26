@@ -12,13 +12,13 @@ namespace EnhancedEditor.Editor
 {
     /// <summary>
     /// <see cref="EnhancedEditor"/>-related <see cref="UnityEditor.AssetModificationProcessor"/>,
-    /// especially used to update the last time a <see cref="GameObject"/> was edited in its <see cref="EnhancedBehaviour"/> component. 
+    /// especially used to update the last time a <see cref="GameObject"/> was modified in its <see cref="EnhancedBehaviour"/> component. 
     /// </summary>
     [InitializeOnLoad]
     public class AssetModificationProcessor : UnityEditor.AssetModificationProcessor
     {
         #region Global Members
-        public const string ModifiedObjectKey = "ModifiedObjects";
+        private const string ModifiedObjectKey = "ModifiedObjects";
 
         [SerializeField] private static List<int> modifiedObjects = new List<int>();
 
@@ -35,19 +35,20 @@ namespace EnhancedEditor.Editor
         #endregion
 
         #region Asset Modifications
-        public static string[] OnWillSaveAssets(string[] _paths)
+        #pragma warning disable IDE0051
+        private static string[] OnWillSaveAssets(string[] _paths)
         {
             int[] _ids = GetModifiedObjects();
             if (_ids != null)
             {
                 foreach (var _id in _ids)
                 {
-                    // Retrieve modified objects and update their last modified state.
+                    // Retrieve all modified objects and update their last modified state.
                     Object _object = EditorUtility.InstanceIDToObject(_id);
 
                     if (EditorUtility.IsDirty(_object)
                         && (((_object is Component _component) && _component.TryGetComponent(out EnhancedBehaviour _behaviour))
-                         || ((_object is GameObject _gameObject) && _gameObject.TryGetComponent(out _behaviour))))
+                           || ((_object is GameObject _gameObject) && _gameObject.TryGetComponent(out _behaviour))))
                     {
                         _behaviour.UpdateLastModifiedState();
                         EditorUtility.SetDirty(_behaviour);
@@ -70,7 +71,7 @@ namespace EnhancedEditor.Editor
                 Object _object = _property.currentValue.target;
                 if ((_object is Component) || (_object is GameObject))
                 {
-                    // Save modified objects id as one string to keep value between compilations & play modes.
+                    // Save modified object(s) id as one string to keep their value between compilations & play modes.
                     int _id = _object.GetInstanceID();
                     if (!modifiedObjects.Contains(_id))
                     {
@@ -78,7 +79,7 @@ namespace EnhancedEditor.Editor
                         SetModifiedObjects();                        
                     }
                 }
-            }   
+            }
 
             return _propertyModifications;
         }
@@ -87,7 +88,7 @@ namespace EnhancedEditor.Editor
         {
             if (_state == PlayModeStateChange.ExitingEditMode)
             {
-                // Save dirty objects on exit edit mode.
+                // Save dirty objects when exiting edit mode.
                 modifiedObjects = new List<int>(GetModifiedObjects());
                 foreach (var _id in modifiedObjects)
                 {
@@ -99,7 +100,7 @@ namespace EnhancedEditor.Editor
             }
             else if (_state == PlayModeStateChange.EnteredEditMode)
             {
-                // When re-entering edit mode, set registered objects dirty
+                // When re-entering edit mode, set registered objects as dirty
                 // as they are no longer in this state after play mode.
                 modifiedObjects = new List<int>(GetModifiedObjects());
                 foreach (var _id in modifiedObjects)
@@ -111,6 +112,10 @@ namespace EnhancedEditor.Editor
         #endregion
 
         #region Utility
+        private static readonly int[] defaultModifiedObjects = new int[0];
+
+        // -----------------------
+
         private static void SetModifiedObjects()
         {
             SessionState.SetIntArray(ModifiedObjectKey, modifiedObjects.ToArray());
@@ -118,7 +123,7 @@ namespace EnhancedEditor.Editor
 
         private static int[] GetModifiedObjects()
         {
-            return SessionState.GetIntArray(ModifiedObjectKey, null);
+            return SessionState.GetIntArray(ModifiedObjectKey, defaultModifiedObjects);
         }
         #endregion
     }

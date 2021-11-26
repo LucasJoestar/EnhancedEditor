@@ -12,92 +12,87 @@ using UnityEngine;
 namespace EnhancedEditor.Editor
 {
     /// <summary>
-    /// Base class to derive any custom property drawer from (instead of <see cref="PropertyDrawer"/>),
-    /// performing additional operations related to the <see cref="EnhancedEditor"/> plugin.
+    /// Base class to derive any custom <see cref="EnhancedPropertyAttribute"/> drawer from (instead of <see cref="PropertyDrawer"/>).
+    /// <para/>
+    /// Use this to create custom drawers for field attributes inheriting from <see cref="EnhancedPropertyAttribute"/>.
     /// </summary>
     public abstract class EnhancedPropertyDrawer
     {
         #region Internal Behaviour
         /// <summary>
-        /// Creates a new instance of a <see cref="EnhancedPropertyDrawer"/>
+        /// Creates a new instance of a <see cref="EnhancedPropertyDrawer"/>,
         /// with a specific <see cref="EnhancedPropertyAttribute"/> target.
         /// </summary>
-        /// <param name="_type">Class type to create. Must inherit from <see cref="EnhancedPropertyDrawer"/>!</param>.
-        /// <param name="_property">Target editing property associated with the attribute.</param>.
-        /// <param name="_attribute">Attribute to create a drawer for.</param>.
-        /// <param name="_fieldInfo">The reflection <see cref="System.Reflection.FieldInfo"/> for the member the associated property represents.</param>.
+        /// <param name="_type">Drawer class type to create (must inherit from <see cref="EnhancedPropertyDrawer"/>).</param>.
+        /// <param name="_property"><inheritdoc cref="SerializedProperty" path="/summary"/></param>.
+        /// <param name="_attribute"><inheritdoc cref="Attribute" path="/summary"/></param>.
+        /// <param name="_fieldInfo"><inheritdoc cref="FieldInfo" path="/summary"/>.</param>.
         /// <returns>Newly created <see cref="EnhancedPropertyDrawer"/> instance.</returns>
         internal static EnhancedPropertyDrawer CreateInstance(Type _type, SerializedProperty _property, EnhancedPropertyAttribute _attribute, FieldInfo _fieldInfo)
         {
-            EnhancedPropertyDrawer _drawer = (EnhancedPropertyDrawer)Activator.CreateInstance(_type);
+            EnhancedPropertyDrawer _drawer = Activator.CreateInstance(_type) as EnhancedPropertyDrawer;
             _drawer.Attribute = _attribute;
-            _drawer.Property = _property;
+            _drawer.SerializedProperty = _property;
             _drawer.FieldInfo = _fieldInfo;
 
-            _drawer.OnEnable(_property);
+            _drawer.OnEnable();
 
-            SceneView.duringSceneGui -= _drawer.OnSceneGUI;
-            SceneView.duringSceneGui += _drawer.OnSceneGUI;
+            SceneView.duringSceneGui -= _drawer.DuringSceneGUI;
+            SceneView.duringSceneGui += _drawer.DuringSceneGUI;
 
             return _drawer;
         }
 
         // -----------------------
 
-        private void OnSceneGUI(SceneView _scene)
+        private void DuringSceneGUI(SceneView _scene)
         {
             foreach (UnityEditor.Editor _editor in ActiveEditorTracker.sharedTracker.activeEditors)
             {
-                if (_editor.serializedObject == Property.serializedObject)
+                if (_editor.serializedObject == SerializedProperty.serializedObject)
                 {
-                    OnSceneGUI(Property, _scene);
+                    OnSceneGUI(_scene);
                     return;
                 }
             }
 
-            // Remove callback if no active editor match target object.
-            SceneView.duringSceneGui -= OnSceneGUI;
+            // Unsubscribe from the event if no active editor could match the target object.
+            SceneView.duringSceneGui -= DuringSceneGUI;
         }
         #endregion
 
         #region Drawer Content
         /// <summary>
-        /// <see cref="EnhancedPropertyAttribute"/> associated with this drawer.
+        /// A <see cref="UnityEditor.SerializedProperty"/> representing the property associated with this drawer.
+        /// </summary>
+        public SerializedProperty SerializedProperty { get; private set; } = null;
+
+        /// <summary>
+        /// The <see cref="EnhancedPropertyAttribute"/> associated with this drawer.
         /// </summary>
         public EnhancedPropertyAttribute Attribute { get; private set; } = null;
 
         /// <summary>
-        /// <see cref="SerializedProperty"/> associated with this drawer.
-        /// </summary>
-        public SerializedProperty Property { get; private set; } = null;
-
-        /// <summary>
-        /// The reflection <see cref="System.Reflection.FieldInfo"/> for the member the associated property represents.
+        /// The reflection <see cref="System.Reflection.FieldInfo"/> for the member this property represents.
         /// </summary>
         public FieldInfo FieldInfo { get; private set; } = null;
 
         // -----------------------
 
         /// <summary>
-        /// Called when this drawer is created and initialized.
+        /// Called when this object is created and initialized.
         /// </summary>
-        public virtual void OnEnable(SerializedProperty _property) { }
+        public virtual void OnEnable() { }
 
         /// <summary>
         /// Called before this property field is drawn.
-        /// <para/>
-        /// Use this to draw additional GUI element(s) above this property field
-        /// (like a specific message or a feedback).
+        /// <br/>Use this to draw additional GUI element(s) above, like a specific message or a feedback.
         /// </summary>
-        /// <param name="_position">Rect to draw within.
-        /// Note that height is set to <see cref="EditorGUIUtility.singleLineHeight"/>
-        /// and can be modified as desired.</param>
-        /// <param name="_property">Property to draw above.</param>
-        /// <param name="_label">Label of the property.</param>
-        /// <param name="_height">Total height of the drawn GUI elements.
-        /// Indicated value will be used to extend property height.</param>
-        /// <returns>True if the property drawer should be stopped
-        /// (this will prevent associated property field from being drawn), false otherwise.</returns>
+        /// <param name="_position"><inheritdoc cref="DocumentationMethod(Rect, SerializedProperty, GUIContent, out float)" path="/param[@name='_position']"/></param>
+        /// <param name="_property"><inheritdoc cref="DocumentationMethod(Rect, SerializedProperty, GUIContent, out float)" path="/param[@name='_property']"/></param>
+        /// <param name="_label"><inheritdoc cref="DocumentationMethod(Rect, SerializedProperty, GUIContent, out float)" path="/param[@name='_label']"/></param>
+        /// <param name="_height"><inheritdoc cref="DocumentationMethod(Rect, SerializedProperty, GUIContent, out float)" path="/param[@name='_height']"/></param>
+        /// <returns>True to stop drawing this property and prevent its associated field from being drawn, false otherwise.</returns>
         public virtual bool OnBeforeGUI(Rect _position, SerializedProperty _property, GUIContent _label, out float _height)
         {
             _height = 0f;
@@ -105,17 +100,13 @@ namespace EnhancedEditor.Editor
         }
 
         /// <summary>
-        /// Use this to override the way the property will be drawn.
+        /// Use this to override the way this property is drawn.
         /// </summary>
-        /// <param name="_position">Rect to draw within.
-        /// Note that height is set to <see cref="EditorGUIUtility.singleLineHeight"/>
-        /// and can be modified as desired.</param>
-        /// <param name="_property">Property to draw.</param>
-        /// <param name="_label">Label of the property.</param>
-        /// <param name="_height">Total height of the drawn GUI elements.
-        /// Indicated value will be used to extend property height.</param>
-        /// <returns>True if the property has been drawn
-        /// (should always be true when override), false otherwise.</returns>
+        /// <param name="_position"><inheritdoc cref="DocumentationMethod(Rect, SerializedProperty, GUIContent, out float)" path="/param[@name='_position']"/></param>
+        /// <param name="_property"><inheritdoc cref="DocumentationMethod(Rect, SerializedProperty, GUIContent, out float)" path="/param[@name='_property']"/></param>
+        /// <param name="_label"><inheritdoc cref="DocumentationMethod(Rect, SerializedProperty, GUIContent, out float)" path="/param[@name='_label']"/></param>
+        /// <param name="_height"><inheritdoc cref="DocumentationMethod(Rect, SerializedProperty, GUIContent, out float)" path="/param[@name='_height']"/></param>
+        /// <returns>True to prevent any other property field of this property from being drawn, false otherwise.</returns>
         public virtual bool OnGUI(Rect _position, SerializedProperty _property, GUIContent _label, out float _height)
         {
             _height = 0f;
@@ -123,42 +114,46 @@ namespace EnhancedEditor.Editor
         }
 
         /// <summary>
-        /// Use this to draw additional GUI element(s) in the <see cref="SceneView"/> and to use <see cref="Handles"/>.
-        /// </summary>
-        /// <param name="_property">Associated property.</param>
-        /// <param name="_scene">Scene to draw in.</param>
-        public virtual void OnSceneGUI(SerializedProperty _property, SceneView _scene) { }
-
-        /// <summary>
         /// Called after this property field has been drawn.
-        /// <para/>
-        /// Use this to draw additional GUI element(s) below this property field
-        /// (like a specific message or a feedback).
+        /// <br/>Use this to draw additional GUI element(s) below, like a specific message or a feedback.
         /// </summary>
-        /// <param name="_position">Rect to draw within.
-        /// Note that height is set to <see cref="EditorGUIUtility.singleLineHeight"/>
-        /// and can be modified as desired.</param>
-        /// <param name="_property">Property to draw below.</param>
-        /// <param name="_label">Label of the property.</param>
-        /// <param name="_height">Total height of the drawn GUI elements.
-        /// Indicated value will be used to extend property height.</param>
+        /// <param name="_position"><inheritdoc cref="DocumentationMethod(Rect, SerializedProperty, GUIContent, out float)" path="/param[@name='_position']"/></param>
+        /// <param name="_property"><inheritdoc cref="DocumentationMethod(Rect, SerializedProperty, GUIContent, out float)" path="/param[@name='_property']"/></param>
+        /// <param name="_label"><inheritdoc cref="DocumentationMethod(Rect, SerializedProperty, GUIContent, out float)" path="/param[@name='_label']"/></param>
+        /// <param name="_height"><inheritdoc cref="DocumentationMethod(Rect, SerializedProperty, GUIContent, out float)" path="/param[@name='_height']"/></param>
         public virtual void OnAfterGUI(Rect _position, SerializedProperty _property, GUIContent _label, out float _height)
         {
             _height = 0f;
         }
 
         /// <summary>
-        /// Called whenever the property value has been changed.
+        /// Called whenever this property value is changed in the inspector.
         /// </summary>
-        /// <param name="_property">Changed property.</param>
-        public virtual void OnValueChanged(SerializedProperty _property) { }
+        public virtual void OnValueChanged() { }
 
         /// <summary>
-        /// Use this to add item(s) to the menu displayed on field context click.
+        /// Allows you to add new item(s) to the <see cref="GenericMenu"/> displayed on this field context click.
         /// </summary>
         /// <param name="_menu">Menu to add item(s) to.</param>
-        /// <param name="_property">Associated property.</param>
-        public virtual void OnContextMenu(GenericMenu _menu, SerializedProperty _property) { }
+        public virtual void OnContextMenu(GenericMenu _menu) { }
+
+        /// <summary>
+        /// Use this to draw additional GUI element(s) in the <see cref="SceneView"/> (and allows you to use <see cref="Handles"/>).
+        /// </summary>
+        /// <param name="_scene">Scene to draw in.</param>
+        public virtual void OnSceneGUI(SceneView _scene) { }
+        #endregion
+
+        #region Documentation
+        /// <summary>
+        /// This method is for documentation only, used by inheriting its parameters documentation to centralize it in one place.
+        /// </summary>
+        /// <param name="_position">Rectangle on the screen to draw within.
+        /// <br/>Note that the height is set to <see cref="EditorGUIUtility.singleLineHeight"/>, and can be modified as desired.</param>
+        /// <param name="_property"><inheritdoc cref="SerializedProperty" path="/summary"/></param>
+        /// <param name="_label">Label to be displayed in front of this property field.</param>
+        /// <param name="_height">The total height used to draw your GUI controls. This will be used to increment the current GUI position.</param>
+        private static void DocumentationMethod(Rect _position, SerializedProperty _property, GUIContent _label, out float _height) => _height = 0f;
         #endregion
     }
 }

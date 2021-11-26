@@ -4,55 +4,36 @@
 //
 // ============================================================================ //
 
-using System;
 using UnityEditor;
 using UnityEngine;
 
 namespace EnhancedEditor.Editor
 {
     /// <summary>
-    /// Special drawer (inheriting from <see cref="EnhancedPropertyDrawer"/>) for classes with attribute <see cref="PickerAttribute"/>.
+    /// Special drawer for fields with the attribute <see cref="PickerAttribute"/> (inherit from <see cref="EnhancedPropertyDrawer"/>).
     /// </summary>
     [CustomDrawer(typeof(PickerAttribute))]
 	public class PickerPropertyDrawer : EnhancedPropertyDrawer
     {
         #region Drawer Content
-        private Type[] requiredTypes = new Type[] { };
-        private bool isValid = true;
-
-        // -----------------------
-
-        public override void OnEnable(SerializedProperty _property)
-        {
-            PickerAttribute _attribute = Attribute as PickerAttribute;
-            requiredTypes = _attribute.RequiredTypes;
-
-            Type _propertyType = EnhancedEditorGUIUtility.GetFieldInfoType(FieldInfo);
-
-            if (_propertyType.IsSubclassOf(typeof(Component)))
-            {
-                UnityEditor.ArrayUtility.Add(ref requiredTypes, _propertyType);
-            }
-            else if (_propertyType != typeof(GameObject))
-            {
-                isValid = false;
-            }
-        }
-
         public override bool OnGUI(Rect _position, SerializedProperty _property, GUIContent _label, out float _height)
         {
-            // Draw nothing if property is not valid.
-            if (!isValid)
-            {
-                _height = 0f;
-                return false;
-            }
-
+            PickerAttribute _attribute = Attribute as PickerAttribute;
             _position.height = _height
                              = EditorGUIUtility.singleLineHeight;
 
-            EnhancedEditorGUI.PickerField(_position, _property, _label, requiredTypes);
+            EnhancedEditorGUI.PickerField(_position, _property, _label, _attribute.RequiredTypes);
             return true;
+        }
+
+        public override void OnValueChanged()
+        {
+            // Reset object value if it does not match.
+            if ((SerializedProperty.propertyType == SerializedPropertyType.ObjectReference)
+             && EnhancedEditorGUI.ResetPickerObjectIfDontMatch(SerializedProperty.objectReferenceValue, (Attribute as PickerAttribute).RequiredTypes))
+            {
+                SerializedProperty.objectReferenceValue = null;
+            }
         }
         #endregion
     }

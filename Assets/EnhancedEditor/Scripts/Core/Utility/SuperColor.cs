@@ -9,8 +9,10 @@ using UnityEngine;
 namespace EnhancedEditor
 {
     /// <summary>
-    /// Super color: use <see cref="SuperColorExtensions.Get(SuperColor, float)"/>
+    /// Super color: use the extension method <see cref="SuperColorExtensions.Get(SuperColor, float)"/>
     /// to get associated color value.
+    /// <para/>
+    /// Example: <c>myColor.Get(<see cref="float"/>)</c>
     /// </summary>
     public enum SuperColor
     {
@@ -45,15 +47,18 @@ namespace EnhancedEditor
         SalmonPink
     }
 
+    /// <summary>
+    /// Contains multiple <see cref="SuperColor"/>-related extension methods.
+    /// </summary>
     public static class SuperColorExtensions
     {
         /// <summary>
-        /// Get associated <see cref="Color"/> value.
+        /// Get the associated <see cref="Color"/> value.
         /// </summary>
-        /// <param name="_superColor">Value to get color from.</param>
-        /// <param name="_alpha">Color alpha value (from 0 to 1).</param>
-        /// <returns>Returns the <see cref="Color"/> associated with this enum value.</returns>
-        public static Color Get(this SuperColor _superColor, float _alpha = 1)
+        /// <param name="_superColor">Enum value to get color from.</param>
+        /// <param name="_alpha"><see cref="Color"/> alpha value (from 0 to 1).</param>
+        /// <returns>New <see cref="Color"/> associated with this <see cref="SuperColor"/>.</returns>
+        public static Color Get(this SuperColor _superColor, float _alpha = 1f)
         {
             switch (_superColor)
             {
@@ -152,7 +157,7 @@ namespace EnhancedEditor
 
                 // Return white as default color
                 default:
-                    return new Color(1, 1, 1, _alpha);
+                    return new Color(1f, 1f, 1f, _alpha);
             }
         }
     }

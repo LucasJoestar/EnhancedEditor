@@ -10,15 +10,16 @@ using UnityEngine;
 namespace EnhancedEditor.Editor
 {
     /// <summary>
-    /// Custom <see cref="Document"/> editor, used to nicely display its content.
+    /// Custom <see cref="Document"/> editor, used to switch between edit and display mode.
     /// </summary>
     [CustomEditor(typeof(Document), true)]
-    public class DocumentEditor : UnityEditor.Editor
+    public class DocumentEditor : UnityObjectEditor
     {
         #region Global Members
         private const float IconSize = 128f;
         private const int TitleSize = 26;
         private const int HeaderSize = 18;
+        private const int LabelSize = 14;
 
         private static readonly GUIContent editGUI = new GUIContent("Edit", "Edit this Document.");
         private static readonly GUIContent displayGUI = new GUIContent("Display", "Display this Document.");
@@ -28,6 +29,7 @@ namespace EnhancedEditor.Editor
         private GUIStyle BigTitleStyle = null;
         private GUIStyle TitleStyle = null;
         private GUIStyle HeaderStyle = null;
+        private GUIStyle LabelStyle = null;
         private bool areStylesInitialized = false;
 
         private Document document = null;
@@ -35,64 +37,128 @@ namespace EnhancedEditor.Editor
         #endregion
 
         #region Document Drawer
-        private void OnEnable()
+        protected override void OnEnable()
         {
+            base.OnEnable();
             document = target as Document;
         }
 
         protected override void OnHeaderGUI()
         {
+            // Styles initialization.
             if (!areStylesInitialized)
                 InitializeStyles();
 
+            // Header.
             float _size = Mathf.Min(IconSize, (EditorGUIUtility.currentViewWidth * .5f) - 50f);
-
-            GUILayout.BeginHorizontal(BigTitleStyle);
+            using (var _scope = new EditorGUILayout.HorizontalScope(BigTitleStyle))
             {
-                GUILayout.Label(document.Icon, GUILayout.Width(_size), GUILayout.Height(_size));
-                GUILayout.Label(document.Title, TitleStyle);
+                GUILayout.Label(document.Icon, EnhancedEditorStyles.CenteredLabel, GUILayout.Width(_size), GUILayout.Height(_size));
+
+                using (var _verticalScope = new EditorGUILayout.VerticalScope())
+                {
+                    GUILayout.Label(document.Title, TitleStyle);
+                    GUILayout.FlexibleSpace();
+
+                    // Edit / Display button.
+                    using (var _colorScope = EnhancedGUI.GUIColor.Scope(SuperColor.Green.Get()))
+                    {
+                        Rect _position = EditorGUILayout.GetControlRect(true, 25f);
+                        _position.xMin = _position.xMax - 75f;
+
+                        GUIContent _gui = isEditing
+                                        ? displayGUI
+                                        : editGUI;
+
+                        if (GUI.Button(_position, _gui))
+                        {
+                            isEditing = !isEditing;
+                        }
+                    }
+                }
             }
-            GUILayout.EndHorizontal();
         }
 
         public override void OnInspectorGUI()
         {
-            EditorGUILayout.BeginVertical(GUILayout.Height(Screen.height - 240f));
-            scroll = EditorGUILayout.BeginScrollView(scroll);
-
-            GUIContent _buttonGUI;
-            if (isEditing)
+            using (var _scope = new GUILayout.ScrollViewScope(scroll))
             {
-                _buttonGUI = displayGUI;
-                base.OnInspectorGUI();
+                scroll = _scope.scrollPosition;
+                if (isEditing)
+                {
+                    base.OnInspectorGUI();
+                }
+                else
+                {
+                    DrawDocument();
+                }
             }
-            else
-            {
-                _buttonGUI = editGUI;
-                DrawDocument();
-            }
-
-            EditorGUILayout.EndScrollView();
-            EditorGUILayout.EndVertical();
-
-            // Edit button.
-            EditorGUILayout.Space(10f);
-
-            Rect _buttonPosition = EditorGUILayout.GetControlRect(true, 25f);
-            _buttonPosition.xMin = _buttonPosition.xMax - 75f;
-
-            EnhancedEditorGUIUtility.PushGUIColor(SuperColor.Green.Get());
-
-            if (GUI.Button(_buttonPosition, _buttonGUI))
-            {
-                isEditing = !isEditing;
-            }
-
-            EnhancedEditorGUIUtility.PopGUIColor();
         }
 
         // -----------------------
 
+        private void DrawDocument()
+        {
+            foreach (var _section in document.Sections)
+            {
+                GUILayout.Space(_section.Spacing);
+                GUIContent _label;
+
+                // Header.
+                if (!string.IsNullOrEmpty(_section.Header))
+                {
+                    _label = EnhancedEditorGUIUtility.GetLabelGUI(_section.Header);
+                    EnhancedEditorGUILayout.UnderlinedLabel(_label, HeaderStyle);
+
+                    GUILayout.Space(5f);
+                }
+
+                // Text.
+                if (!string.IsNullOrEmpty(_section.Text))
+                {
+                    _label = EnhancedEditorGUIUtility.GetLabelGUI(_section.Text);
+                    EditorGUILayout.LabelField(_label, LabelStyle);
+                }
+
+                // Content.
+                if (!string.IsNullOrEmpty(_section.InfoText))
+                {
+                    GUILayout.Space(5f);
+                    using (var _scope = new GUILayout.HorizontalScope())
+                    {
+                        GUILayout.FlexibleSpace();
+
+                        float _width = EditorGUIUtility.currentViewWidth - 50f;
+                        using (var _verticalScope = new GUILayout.HorizontalScope(EditorStyles.helpBox, GUILayout.Width(_width)))
+                        {
+                            _label = EnhancedEditorGUIUtility.GetLabelGUI(_section.InfoText);
+                            EditorGUILayout.LabelField(_label, LabelStyle);
+                        }
+                    }
+                }
+
+                // Image.
+                if (_section.Image)
+                {
+                    EnhancedEditorGUILayout.Texture(_section.Image);
+                }
+
+                // Link.
+                if (!string.IsNullOrEmpty(_section.LinkText))
+                {
+                    using (var _scope = EnhancedGUI.GUIStyleFontSize.Scope(EnhancedEditorStyles.LinkLabel, LabelSize))
+                    {
+                        _label = EnhancedEditorGUIUtility.GetLabelGUI(_section.LinkText);
+                        EnhancedEditorGUILayout.LinkLabel(_label, _section.URL);
+                    }
+                }
+
+                GUILayout.Space(5f);
+            }
+        }
+        #endregion
+
+        #region Utility
         private void InitializeStyles()
         {
             BigTitleStyle = new GUIStyle("In BigTitle");
@@ -106,64 +172,12 @@ namespace EnhancedEditor.Editor
                 fontSize = HeaderSize
             };
 
-            areStylesInitialized = true;
-        }
-
-        private void DrawDocument()
-        {
-            for (int _i = 0; _i < document.Sections.Length; _i++)
+            LabelStyle = new GUIStyle(EnhancedEditorStyles.WordWrappedRichText)
             {
-                Document.Section _section = document.Sections[_i];
-                EditorGUILayout.Space(_section.Space);
+                fontSize = LabelSize
+            };
 
-                // Header.
-                if (!string.IsNullOrEmpty(_section.Header))
-                {
-                    EnhancedEditorGUILayout.UnderlinedLabel(new GUIContent(_section.Header), HeaderStyle);
-                    EditorGUILayout.Space(5f);
-                }
-
-                // Text.
-                if (!string.IsNullOrEmpty(_section.Text))
-                {
-                    EditorGUILayout.LabelField(_section.Text, EnhancedEditorStyles.WordWrappedRichText);
-                }
-
-                // Content.
-                if (!string.IsNullOrEmpty(_section.ContextText))
-                {
-                    EditorGUILayout.BeginHorizontal();
-                    GUILayout.FlexibleSpace();
-
-                    float _width = EditorGUIUtility.currentViewWidth - 50f;
-                    EditorGUILayout.BeginVertical(EditorStyles.helpBox, GUILayout.Width(_width));
-
-                    EditorGUILayout.LabelField(_section.ContextText, EnhancedEditorStyles.WordWrappedRichText);
-
-                    EditorGUILayout.EndVertical();
-                    EditorGUILayout.EndHorizontal();
-
-                }
-
-                // Image.
-                if (_section.Image)
-                {
-                    Rect _position = EditorGUILayout.GetControlRect(false, 0f);
-                    _position.xMin = 5f;
-
-                    float _height = EnhancedEditorGUI.Texture(_position, _section.Image);
-                    EditorGUILayout.GetControlRect(false, _height);
-                }
-
-                // Link.
-                if (!string.IsNullOrEmpty(_section.LinkText))
-                {
-                    EnhancedEditorGUILayout.LinkLabel(new GUIContent(_section.LinkText), _section.URL);
-                }
-            }
-
-            // Repaint to correctly display link labels.
-            Repaint();
+            areStylesInitialized = true;
         }
         #endregion
     }

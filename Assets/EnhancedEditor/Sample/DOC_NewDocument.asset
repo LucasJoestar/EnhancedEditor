@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a8af76d847d699c4aa02b51064a60c84, type: 3}
+  m_Name: DOC_NewDocument
+  m_EditorClassIdentifier: 
+  Title: Keep it Short
+  Icon: {fileID: 2800000, guid: 5dd744731cfaada408c3080834b3a956, type: 3}
+  Sections:
+  - Name: PPP
+    Spacing: 0
+    Header: 
+    Text: 
+    InfoText: 
+    Image: {fileID: 0}
+    LinkText: This is a test
+    URL: https://www.google.com/

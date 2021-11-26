@@ -7,10 +7,10 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace EnhancedEditor
+namespace EnhancedEditor.Editor
 {
     /// <summary>
-    /// Enhanced <see cref="GUIStyle"/>s to be used for <see cref="EditorGUI"/> controls.
+    /// Contains multiple <see cref="GUIStyle"/> to be used for <see cref="GUI"/> controls.
     /// </summary>
 	public static class EnhancedEditorStyles
     {
@@ -22,13 +22,19 @@ namespace EnhancedEditor
         private static GUIStyle button = null;
 
         /// <summary>
-        /// Simple label style with enabled rich text.
+        /// Simple button style with no padding.
+        /// </summary>
+        public static GUIStyle FullSizeButton => GetStyle(fullSizeButton);
+        private static GUIStyle fullSizeButton = null;
+
+        /// <summary>
+        /// Simple label style with rich text enabled.
         /// </summary>
         public static GUIStyle RichText => GetStyle(richText);
         private static GUIStyle richText = null;
 
         /// <summary>
-        /// Bold label style with enabled rich text.
+        /// Bold label style with rich text enabled.
         /// </summary>
         public static GUIStyle BoldRichText => GetStyle(boldRichText);
         private static GUIStyle boldRichText = null;
@@ -46,63 +52,93 @@ namespace EnhancedEditor
         private static GUIStyle boldCenteredLabel = null;
 
         /// <summary>
-        /// Simple label style with enabled word wrapped (auto line break).
+        /// Simple label style with word wrapped enabled (auto line break).
         /// </summary>
         public static GUIStyle WordWrappedLabel => GetStyle(wordWrappedLabel);
         private static GUIStyle wordWrappedLabel = null;
 
         /// <summary>
-        /// Bold label style with enabled word wrapped (auto line break).
+        /// Bold label style with word wrapped enabled (auto line break).
         /// </summary>
         public static GUIStyle BoldWordWrappedLabel => GetStyle(boldWordWrappedLabel);
         private static GUIStyle boldWordWrappedLabel = null;
 
         /// <summary>
-        /// Simple label style with enabled rich text and word wrapped (auto line break).
+        /// Simple label style with rich text and word wrapped enabled (auto line break).
         /// </summary>
         public static GUIStyle WordWrappedRichText => GetStyle(wordWrappedRichText);
         private static GUIStyle wordWrappedRichText = null;
 
         /// <summary>
-        /// Bold label style with enabled rich text and word wrapped (auto line break).
+        /// Bold label style with rich text and word wrapped enabled (auto line break).
         /// </summary>
         public static GUIStyle BoldWordWrappedRichText => GetStyle(boldWordWrappedRichText);
         private static GUIStyle boldWordWrappedRichText = null;
 
         /// <summary>
-        /// TextArea-like style with enabled rich text and word wrapped (auto line break).
+        /// TextArea-like style with rich text and word wrapped enabled (auto line break).
         /// </summary>
         public static GUIStyle TextArea => GetStyle(textArea);
         private static GUIStyle textArea = null;
 
         /// <summary>
-        /// Big label style in size 24 with middle-center alignment and enabled word wrapped (auto line break).
+        /// Big label style in size 24 with middle-center alignment and word wrapped enabled (auto line break).
         /// </summary>
         public static GUIStyle BigWordWrappedCenteredLabel => GetStyle(bigWordWrappedCenteredLabel);
         private static GUIStyle bigWordWrappedCenteredLabel = null;
 
         /// <summary>
-        /// Toolbar button with middle-left alignment.
+        /// Toolbar button style with middle-left alignment.
         /// </summary>
         public static GUIStyle LeftAlignedToolbarButton => GetStyle(leftAlignedToolbarButton);
         private static GUIStyle leftAlignedToolbarButton = null;
+
+        /// <summary>
+        /// Cancel button style used in toolbar search fields.
+        /// </summary>
+        public static GUIStyle ToolbarSearchFieldCancel => GetStyle(toolbarSearchFieldCancel);
+        private static GUIStyle toolbarSearchFieldCancel = null;
+
+        /// <summary>
+        /// Drop shadow label style.
+        /// </summary>
+        public static GUIStyle DropShadowLabel => GetStyle(dropShadowLabel);
+        private static GUIStyle dropShadowLabel = null;
+
+        /// <summary>
+        /// Drop shadow label style with middle-center alignment.
+        /// </summary>
+        public static GUIStyle DropShadowCenteredLabel => GetStyle(dropShadowCenteredLabel);
+        private static GUIStyle dropShadowCenteredLabel = null;
+
+        /// <summary>
+        /// Link label style.
+        /// </summary>
+        public static GUIStyle LinkLabel => GetStyle(linkLabel);
+        private static GUIStyle linkLabel = null;
+
+        /// <summary>
+        /// Popup style with non fixed-height and middle-center alignement.
+        /// </summary>
+        public static GUIStyle CenteredPopup => GetStyle(centeredPopup);
+        private static GUIStyle centeredPopup = null;
         #endregion
 
         #region Multi Tags Styles
         /// <summary>
-        /// Style mainly used as background for the <see cref="Tag"/> fields.
+        /// Style used to draw a <see cref="Tag"/>.
         /// </summary>
         public static GUIStyle CNCountBadge => GetStyle(cnCountBadge);
         private static GUIStyle cnCountBadge = null;
 
         /// <summary>
-        /// Round minus button like style.
+        /// Round minus button style.
         /// </summary>
         public static GUIStyle OlMinus => GetStyle(olMinus);
         private static GUIStyle olMinus = null;
 
         /// <summary>
-        /// Round plus button like style.
+        /// Round plus button style.
         /// </summary>
         public static GUIStyle OlPlus => GetStyle(olPlus);
         private static GUIStyle olPlus = null;
@@ -110,49 +146,49 @@ namespace EnhancedEditor
 
         #region Toolbar Styles
         /// <summary>
-        /// Main editor toolbar control (cannot display any label).
+        /// Main editor toolbar control style (cannot display any label).
         /// </summary>
         public static GUIStyle ToolbarControl => GetStyle(toolbarControl);
         private static GUIStyle toolbarControl = null;
 
         /// <summary>
-        /// Toolbar left button (should be used together with <see cref="ToolbarButtonRight"/>).
+        /// Toolbar left button style (should be used together with <see cref="ToolbarButtonRight"/>).
         /// </summary>
         public static GUIStyle ToolbarButtonLeft => GetStyle(toolbarButtonLeft);
         private static GUIStyle toolbarButtonLeft = null;
 
         /// <summary>
-        /// Toolbar right button (should be used together with <see cref="ToolbarButtonLeft"/>).
+        /// Toolbar right button style (should be used together with <see cref="ToolbarButtonLeft"/>).
         /// </summary>
         public static GUIStyle ToolbarButtonRight => GetStyle(toolbarButtonRight);
         private static GUIStyle toolbarButtonRight = null;
 
         /// <summary>
-        /// Toolbar left command (can be used together with <see cref="ToolbarCommandMid"/> and <see cref="ToolbarCommandRight"/>).
+        /// Toolbar left command style (can be used together with <see cref="ToolbarCommandMid"/> and <see cref="ToolbarCommandRight"/>).
         /// </summary>
         public static GUIStyle ToolbarCommandLeft => GetStyle(toolbarCommandLeft);
         private static GUIStyle toolbarCommandLeft = null;
 
         /// <summary>
-        /// Toolbar mid command (can be used together with <see cref="ToolbarButtonLeft"/> and <see cref="ToolbarCommandRight"/>).
+        /// Toolbar middle command style (can be used together with <see cref="ToolbarButtonLeft"/> and <see cref="ToolbarCommandRight"/>).
         /// </summary>
         public static GUIStyle ToolbarCommandMid => GetStyle(toolbarCommandMid);
         private static GUIStyle toolbarCommandMid = null;
 
         /// <summary>
-        /// Toolbar right command (can be used together with <see cref="ToolbarButtonLeft"/> and <see cref="ToolbarCommandMid"/>).
+        /// Toolbar right command style (can be used together with <see cref="ToolbarButtonLeft"/> and <see cref="ToolbarCommandMid"/>).
         /// </summary>
         public static GUIStyle ToolbarCommandRight => GetStyle(toolbarCommandRight);
         private static GUIStyle toolbarCommandRight = null;
 
         /// <summary>
-        /// Toolbar dropdown.
+        /// Toolbar dropdown style.
         /// </summary>
         public static GUIStyle ToolbarDropdown => GetStyle(toolbarDropdown);
         private static GUIStyle toolbarDropdown = null;
 
         /// <summary>
-        /// Toolbar-like label.
+        /// Toolbar-like label style.
         /// </summary>
         public static GUIStyle ToolbarLabel => GetStyle(toolbarLabel);
         private static GUIStyle toolbarLabel = null;
@@ -170,6 +206,12 @@ namespace EnhancedEditor
                 #region Common
                 // Button.
                 button = new GUIStyle("Button");
+
+                // Full size button.
+                fullSizeButton = new GUIStyle("Button")
+                {
+                    padding = new RectOffset(),
+                };
 
                 // Rich text.
                 richText = new GUIStyle(EditorStyles.label)
@@ -241,11 +283,41 @@ namespace EnhancedEditor
                 {
                     alignment = TextAnchor.MiddleLeft
                 };
+
+                // Toolbar search field cancel.
+                toolbarSearchFieldCancel = new GUIStyle("ToolbarSeachCancelButton");
+
+                // Drop shadow label.
+                dropShadowLabel = new GUIStyle("PreOverlayLabel");
+
+                // Drop shaow centered label.
+                dropShadowCenteredLabel = new GUIStyle(dropShadowLabel)
+                {
+                    alignment = TextAnchor.MiddleCenter
+                };
+
+                // Link label.
+                linkLabel = new GUIStyle(EditorStyles.whiteLabel)
+                {
+                    fontStyle = FontStyle.Bold
+                };
+
+                // Centered Popup.
+                centeredPopup = new GUIStyle(EditorStyles.popup)
+                {
+                    alignment = TextAnchor.MiddleCenter,
+                    fixedHeight = 0,
+                    stretchWidth = false
+                };
                 #endregion
 
                 #region Multi Tags
                 // Multi-Tags related styles.
-                cnCountBadge = GUI.skin.GetStyle("CN CountBadge");
+                cnCountBadge = new GUIStyle("CN CountBadge")
+                {
+                    fontStyle = FontStyle.Bold,
+                };
+
                 olMinus = new GUIStyle("OL Minus");
                 olPlus = new GUIStyle("OL Plus");
                 #endregion
@@ -291,8 +363,11 @@ namespace EnhancedEditor
                 toolbarLabel.onHover.textColor =    toolbarButtonLeft.onHover.textColor;
                 toolbarLabel.normal.textColor =     toolbarButtonLeft.normal.textColor;
                 toolbarLabel.onNormal.textColor =   toolbarButtonLeft.onNormal.textColor;
+
+                toolbarLabel.fixedHeight = toolbarControl.fixedHeight;
                 #endregion
 
+                // Return a simple label style on initialization as other styles will only be ready on the next repaint.
                 isInitialized = true;
                 return EditorStyles.label;
             }

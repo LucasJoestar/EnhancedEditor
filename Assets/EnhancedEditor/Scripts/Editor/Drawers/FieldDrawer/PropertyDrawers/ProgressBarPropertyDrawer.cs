@@ -10,7 +10,7 @@ using UnityEngine;
 namespace EnhancedEditor.Editor
 {
     /// <summary>
-    /// Special drawer (inheriting from <see cref="EnhancedPropertyDrawer"/>) for classes with attribute <see cref="ProgressBarAttribute"/>.
+    /// Special drawer for fields with the attribute <see cref="ProgressBarAttribute"/> (inherit from <see cref="EnhancedPropertyDrawer"/>).
     /// </summary>
     [CustomDrawer(typeof(ProgressBarAttribute))]
     public class ProgressBarPropertyDrawer : EnhancedPropertyDrawer
@@ -19,31 +19,16 @@ namespace EnhancedEditor.Editor
         public override bool OnGUI(Rect _position, SerializedProperty _property, GUIContent _label, out float _height)
         {
             ProgressBarAttribute _attribute = (ProgressBarAttribute)Attribute;
-            _height = _attribute.Height;
-            _position.height = _height;
+            _position.height = _height
+                             = _attribute.Height;
 
-            if (!string.IsNullOrEmpty(_attribute.Label.text))
-                _label.text = _attribute.Label.text;
-
-            // Draw progress bar.
-            if (_attribute.IsEditable)
+            if (_attribute.MaxMember == null)
             {
-                if (string.IsNullOrEmpty(_attribute.MaxValueVariableName))
-                {
-                    EnhancedEditorGUI.EditableProgressBar(_position, _property, _label, _attribute.MaxValue, _attribute.Color);
-                }
-                else
-                {
-                    EnhancedEditorGUI.EditableProgressBar(_position, _property, _label, _attribute.MaxValueVariableName, _attribute.Color);
-                }
-            }
-            else if (string.IsNullOrEmpty(_attribute.MaxValueVariableName))
-            {
-                EnhancedEditorGUI.ProgressBar(_position, _property, _label, _attribute.MaxValue, _attribute.Color);
+                EnhancedEditorGUI.ProgressBar(_position, _property, _attribute.MaxValue, _attribute.Color, _attribute.IsEditable);
             }
             else
             {
-                EnhancedEditorGUI.ProgressBar(_position, _property, _label, _attribute.MaxValueVariableName, _attribute.Color);
+                EnhancedEditorGUI.ProgressBar(_position, _property, _attribute.MaxMember.Value, _attribute.Color, _attribute.IsEditable);
             }
 
             return true;

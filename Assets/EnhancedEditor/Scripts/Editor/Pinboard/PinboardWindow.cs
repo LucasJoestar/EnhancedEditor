@@ -10,25 +10,148 @@ using UnityEditor;
 using UnityEngine;
 
 using Object = UnityEngine.Object;
-
 using PinObject = EnhancedEditor.Editor.Pinboard.PinObject;
-using Folder = EnhancedEditor.Editor.Pinboard.Folder;
-using Asset = EnhancedEditor.Editor.Pinboard.Asset;
 
 namespace EnhancedEditor.Editor
 {
     /// <summary>
-    /// The pinboard window can be used to store and give quick access to your favorite assets and folders in project.
+    /// The pinboard window can be used to store and give quick access to your favorite assets and folders in the project.
     /// </summary>
 	public class PinboardWindow : EditorWindow
     {
+        #region Indent Level
+        private struct IndentLevel
+        {
+            public int Indent;
+            public Vector2 StartPosition;
+            public float YMax;
+            public bool IsDrawn;
+
+            // -----------------------
+
+            public IndentLevel(int _indent)
+            {
+                Indent = _indent;
+                StartPosition = new Vector2(0f, Mathf.Infinity);
+                YMax = StartPosition.y;
+                IsDrawn = true;
+            }
+
+            public IndentLevel(int _indent, Vector2 _startPosition, float _yMax)
+            {
+                Indent = _indent;
+                StartPosition = _startPosition;
+                YMax = _yMax;
+                IsDrawn = false;
+            }
+
+            public IndentLevel(int _indent, Vector2 _startPosition) : this(_indent, _startPosition, _startPosition.y) { }
+        }
+        #endregion
+
+        #region Sorting Structs
+        private struct SortLevel
+        {
+            public int Index;
+            public int Indent;
+
+            public List<SortFolder> Folders;
+
+            // -----------------------
+
+            public SortLevel(int _index, int _indent)
+            {
+                Index = _index;
+                Indent = _indent;
+
+                Folders = new List<SortFolder>();
+            }
+        }
+
+        private struct SortFolder
+        {
+            public PinObject Object;
+            public int ChildCount;
+
+            // -----------------------
+
+            public SortFolder(PinObject _object)
+            {
+                Object = _object;
+                ChildCount = 0;
+            }
+        }
+        #endregion
+
+        #region Comparers
+        private abstract class PinObjectComparer : IComparer<PinObject>
+        {
+            public static bool DoSortAscending = true;
+
+            // -----------------------
+
+            public int Compare(PinObject _a, PinObject _b)
+            {
+                int _compare = GetCompareValue(_a, _b);
+
+                return DoSortAscending
+                       ? _compare
+                       : -_compare;
+            }
+
+            public abstract int GetCompareValue(PinObject _a, PinObject _b);
+        }
+
+        private class TypeComparer : PinObjectComparer
+        {
+            public static readonly TypeComparer Comparer = new TypeComparer();
+
+            // -----------------------
+
+            public override int GetCompareValue(PinObject _a, PinObject _b)
+            {
+                int _compare = (_a.Type != _b.Type)
+                             ? _a.Type.CompareTo(_b.Type)
+                             : NameComparer.Comparer.GetCompareValue(_a, _b);
+
+                return _compare;
+            }
+        }
+
+        private class NameComparer : PinObjectComparer
+        {
+            public static readonly NameComparer Comparer = new NameComparer();
+
+            // -----------------------
+
+            public override int GetCompareValue(PinObject _a, PinObject _b)
+            {
+                int _compare = _a.Asset.name.CompareTo(_b.Asset.name);
+                return _compare;
+            }
+        }
+
+        private class PathComparer : PinObjectComparer
+        {
+            public static readonly PathComparer Comparer = new PathComparer();
+
+            // -----------------------
+
+            public override int GetCompareValue(PinObject _a, PinObject _b)
+            {
+                int _compare = AssetDatabase.GetAssetPath(_a.Asset).CompareTo(AssetDatabase.GetAssetPath(_b.Asset));
+                return _compare;
+            }
+        }
+        #endregion
+
         #region Window GUI
         /// <summary>
         /// Returns the first <see cref="PinboardWindow"/> currently on screen.
-        /// <para/>
-        /// Creates and shows a new instance if there is none.
+        /// <br/> Creates and shows a new instance if there is none.
         /// </summary>
-        [MenuItem("Enhanced Editor/Pinboard", false, 20)]
+        /// <returns><see cref="PinboardWindow"/> instance on screen.</returns>
+        [MenuItem(InternalUtility.MenuItemPath + "Pinboard", false, 20)]
         public static PinboardWindow GetWindow()
         {
             PinboardWindow _window = GetWindow<PinboardWindow>("Pinboard");
@@ -41,57 +164,42 @@ namespace EnhancedEditor.Editor
         // Window GUI
         // -------------------------------------------
 
-        private const float FoldoutWidth = 15f;
-        private const float IconWidth = 20f;
-        private const float AssetPathWidth = .35f;
-        private const float AssetPathShortCoef = .15f;
+        private const float CreateButtonWidth = 105f;
+        private const float SortOptionsWidth = 120f;
+        private const float AssetPathWidthCoef = .35f;
         private const float SeparatorHeight = 3f;
-        private const float Space = 10f;
 
+        private const string UndoRecordTitle = "Pinboard Change";
         private const string RenameControlName = "RenameFolder";
-        private const string UndoName = "Pinboard Update";
+        private const string StartDragTitle = "Dragging PinObject(s)";
+        private const string PinObjectDataType = "PinObject";
 
-        private const string FolderDataType = "Folder";
-        private const string AssetDataType = "Asset";
-        private const string DragTitle = "Dragging PinObject(s)";
+        private static readonly AutoManagedResource<Pinboard> resource = new AutoManagedResource<Pinboard>();
 
-        private readonly GUIContent createFolderGUI = new GUIContent(" Create Folder", "Create a new folder at the root of the pinboard.");
-        private readonly GUIContent sortAscendingGUI = new GUIContent("↑", "Sort in ascending order.");
-        private readonly GUIContent sortDescendingGUI = new GUIContent("↓", "Sort in descending order.");
+        private readonly GUIContent createFolderGUI = new GUIContent(" Create Folder", "Creates a new folder at the root of the pinboard.");
         private readonly GUIContent[] sortOptionsGUI = new GUIContent[]
                                                             {
-                                                                new GUIContent("Sort by type", "Sort assets by their type."),
-                                                                new GUIContent("Sort by name", "Sort assets by their name."),
-                                                                new GUIContent("Sort by path", "Sort assets by their path.")
+                                                                new GUIContent("Sort by type", "Sort the assets by their type."),
+                                                                new GUIContent("Sort by name", "Sort the assets by their name."),
+                                                                new GUIContent("Sort by path", "Sort the assets by their path.")
                                                             };
 
-        private readonly GUIContent pathGUI = new GUIContent();
-
-        private readonly Color oddColor = EnhancedEditorGUIUtility.GUIOddColor;
-        private readonly Color selectedColor = EnhancedEditorGUIUtility.GUISelectedColor;
-        private readonly Color highlightColor = new Color(.5f, .5f, .5f, .25f);
-        private readonly Color separatorColor = Color.blue;
+        private readonly EditorColor highlightColor = new EditorColor(new Color(.4f, .4f, .4f, .23f), new Color(.5f, .5f, .5f, .25f));
+        private readonly EditorColor separatorColor = new EditorColor(new Color(0f, .5f, 1f, .55f), new Color(0f, .3f, 1f, .65f));
         private readonly Color indentColor = Color.grey;
 
-        private readonly AutoManagedResource<Pinboard> resource = new AutoManagedResource<Pinboard>();
-
         /// <summary>
-        /// Pinboard related <see cref="ScriptableObject"/>, used to store all datas.
+        /// Pinboard related <see cref="ScriptableObject"/>, used to store all data.
         /// </summary>
         public Pinboard Pinboard => resource.GetResource();
 
-        private List<PinObject> selectedObjects = new List<PinObject>();
-        private List<PinObject> filteredObjects = new List<PinObject>();
+        [SerializeField] private string searchFilter = string.Empty;
+        [SerializeField] private int selectedSortOption = 0;
+        [SerializeField] private bool doSortAscending = true;
+
+        private int lastSelectedPinObject = -1;
+
         private GenericMenu contextMenu = null;
-        private int renameFolderState = 0;
-        private int renameFocusCount = 0;
-
-        private string searchFilter = string.Empty;
-        private bool useSearchFilter = false;
-        
-        private int selectedSortOption = 0;
-        private bool doSortAscending = true;
-
         private Vector2 scroll = new Vector2();
 
         // -----------------------
@@ -101,39 +209,77 @@ namespace EnhancedEditor.Editor
             createFolderGUI.image = EditorGUIUtility.FindTexture("CreateAddNew");
 
             contextMenu = new GenericMenu();
-            contextMenu.AddItem(new GUIContent("Remove", "Remove these element(s) from the pinboard."), false, RemoveSelection);
+            contextMenu.AddItem(new GUIContent("Remove", "Remove the selected element(s) from the pinboard."), false, RemoveSelectedObjects);
         }
 
         private void OnGUI()
         {
-            Undo.RecordObject(Pinboard, UndoName);
+            Undo.RecordObject(this, UndoRecordTitle);
+            Undo.RecordObject(Pinboard, UndoRecordTitle);
+
+            // Toolbar.
             DrawToolbar();
 
-            scroll = EditorGUILayout.BeginScrollView(scroll);
+            // Pinned Objects.
+            Rect _origin = EditorGUILayout.GetControlRect(false, -EditorGUIUtility.standardVerticalSpacing);
+            using (var _scope = new GUILayout.ScrollViewScope(scroll))
+            {
+                scroll = _scope.scrollPosition;
+                DrawPinObjects(_origin);
 
-            // Use the height specified when getting control as the padding at the bottom of the window.
-            Rect _position = EditorGUILayout.GetControlRect(true, Space);
-            _position.xMax += _position.xMin;
-            _position.height = EditorGUIUtility.singleLineHeight;
+                // Empty area operations.
+                Rect _position = EditorGUILayout.GetControlRect(false, 5f);
+                _position.y -= SeparatorHeight;
+                _position.yMax = Mathf.Max(_position.yMax, position.height);
 
-            // Draw each folders.
-            int _index = 0;
-            Rect _finalPosition = DrawFolder(_position, Pinboard.PinnedAssets, ref _index);
+                EventOperations(_position, _position, null, -1, 0);
+                if (EnhancedEditorGUIUtility.DeselectionClick(_position))
+                {
+                    foreach (PinObject _object in Pinboard.PinObjects)
+                        _object.IsSelected = false;
 
-            _finalPosition.x = 0f;
-            _finalPosition.y -= SeparatorHeight;
-            _finalPosition.yMax = position.yMax;
-
-            // Empty space operations.
-            EventOperations(_finalPosition, null, Pinboard.PinnedAssets, false);
-            EditorGUILayout.EndScrollView();
+                    lastSelectedPinObject = -1;
+                }
+            }
 
             // Indicate that a drag and drop operation is available inside the window.
             Event _event = Event.current;
-            if ((_event.type == EventType.DragUpdated) && (_event.mousePosition.y > _position.y))
+            if ((_event.type == EventType.DragUpdated) && (_event.mousePosition.y > _origin.y))
             {
-                DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
+                DragAndDrop.visualMode = ((DragAndDrop.objectReferences.Length == 0) || AssetDatabase.Contains(DragAndDrop.objectReferences[0]))
+                                       ? DragAndDropVisualMode.Copy
+                                       : DragAndDropVisualMode.None;
+
                 _event.Use();
+            }
+            else if (_event.type == EventType.KeyDown)
+            {
+                switch (_event.keyCode)
+                {
+                    // Remove object
+                    case KeyCode.Delete:
+                    {
+                        RemoveSelectedObjects();
+                        _event.Use();
+                    }
+                    break;
+
+                    // Ping object.
+                    case KeyCode.Return:
+                    {
+                        foreach (PinObject _object in Pinboard.PinObjects)
+                        {
+                            if (_object.IsSelected)
+                            {
+                                PingObject(_object);
+                                _event.Use();
+
+                                break;
+                            }
+                        }
+                    }
+                    break;
+                }
             }
 
             // Constantly repaint to correctly display mouse hover feedback.
@@ -141,737 +287,872 @@ namespace EnhancedEditor.Editor
         }
         #endregion
 
-        #region GUI Drawers
+        #region GUI Draw
+        private readonly List<IndentLevel> indentLevels = new List<IndentLevel>();
+
+        private int pinboardControlID = -1;
+        private int renameFolderState = 0;
+        private bool doFocusSelection = false;
+
+        // -----------------------
+
         private void DrawToolbar()
         {
-            EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
-            GUIStyle _buttonStyle = EnhancedEditorStyles.LeftAlignedToolbarButton;
-
-            // Create folder button.
-            if (GUILayout.Button(createFolderGUI, _buttonStyle, GUILayout.Width(125f)))
+            using (var _scope = new GUILayout.HorizontalScope(EditorStyles.toolbar))
             {
-                Folder _newFolder = new Folder();
-                ArrayExtensions.Add(ref Pinboard.PinnedAssets.Folders, _newFolder);
-
-                selectedObjects.Clear();
-                selectedObjects.Add(_newFolder);
-
-                EnterRenameMode(3);
-            }
-
-            // Search pattern.
-            string _searchFilter = EnhancedEditorGUILayout.ToolbarSearchField(searchFilter);
-            if (_searchFilter != searchFilter)
-            {
-                searchFilter = _searchFilter;
-                FilterObjects();
-            }
-
-            // Sorting options.
-            if (EnhancedEditorGUILayout.ToolbarSortOptions(ref selectedSortOption, ref doSortAscending, sortOptionsGUI, GUILayout.Width(130f)))
-            {
-                SortObjects();
-            }
-
-           /* int _sortOption = EditorGUILayout.Popup(selectedSortOption, sortOptionsGUI, EditorStyles.toolbarDropDown, GUILayout.Width(110f));
-            if (_sortOption != selectedSortOption)
-            {
-                selectedSortOption = _sortOption;
-                SortObjects();
-            }
-            
-            if (GUILayout.Button(doSortAscending ? sortAscendingGUI : sortDescendingGUI, EditorStyles.toolbarButton, GUILayout.Width(20f)))
-            {
-                doSortAscending = !doSortAscending;
-                SortObjects();
-            }*/
-
-            EditorGUILayout.EndHorizontal();
-        }
-
-        private Rect DrawFolder(Rect _position, Folder _folder, ref int _index)
-        {
-            // Subfolders.
-            float _xOrigin = _position.x;
-            float _yOrigin = _position.y;
-            float _yIndent = _position.y;
-
-            for (int _i = 0; _i < _folder.Folders.Length; _i++)
-            {
-                Folder _subfolder = _folder.Folders[_i];
-
-                // Only draw filtered folders.
-                if (useSearchFilter && !filteredObjects.Contains(_subfolder))
+                // Button to create a new folder.
+                if (GUILayout.Button(createFolderGUI, EditorStyles.toolbarButton, GUILayout.Width(CreateButtonWidth)))
                 {
-                    if (_subfolder.Foldout)
-                        _position = DrawFolder(_position, _subfolder, ref _index);
+                    foreach (PinObject _object in Pinboard.PinObjects)
+                        _object.IsSelected = false;
 
-                    continue;
+                    PinObject _folder = new PinObject();
+                    ArrayUtility.Add(ref Pinboard.PinObjects, _folder);
+
+                    Select(Pinboard.PinObjects.Length - 1, true);
+                    renameFolderState = 2;
                 }
 
-                // Separator operations.
-                Rect _separator = new Rect(_position.x, _position.y - SeparatorHeight, _position.width, SeparatorHeight * 2f);
-                EventOperations(_separator, null, _folder, false);
-
-                // Background.
-                DrawBackground(_position, _subfolder, _index, true);
-
-                // Foldout.
-                Rect _drawPosition = new Rect(_position.x, _position.y, FoldoutWidth, _position.height);
-                _subfolder.Foldout = EditorGUI.Foldout(_drawPosition, _subfolder.Foldout, GUIContent.none);
-
-                _drawPosition.x = _drawPosition.xMax;
-                _drawPosition.xMax = _position.xMax;
-
-                // Editable folder name.
-                if (selectedObjects.Contains(_subfolder) && (renameFolderState == 2))
+                // Search filter.
+                string _searchFilter = EnhancedEditorGUILayout.ToolbarSearchField(searchFilter, GUILayout.MinWidth(50f));
+                if (_searchFilter != searchFilter)
                 {
-                    GUI.SetNextControlName(RenameControlName);
-                    _subfolder.Name = EditorGUI.TextField(_drawPosition, _subfolder.Name);
+                    searchFilter = _searchFilter;
+                    FilterPinboard();
+                }
 
-                    // Use multiple focus as not all text is selected on first one.
-                    if (renameFocusCount > 0)
+                // Sorting options.
+                using (var _changeCheck = new EditorGUI.ChangeCheckScope())
+                {
+                    EnhancedEditorGUILayout.ToolbarSortOptions(ref selectedSortOption, ref doSortAscending, sortOptionsGUI, GUILayout.Width(SortOptionsWidth));
+                    if (_changeCheck.changed)
                     {
-                        EditorGUI.FocusTextInControl(RenameControlName);
-                        renameFocusCount--;
-                        
+                        SortPinboard();
                     }
-                    else if (!EditorGUIUtility.editingTextField)
+                }
+            }
+        }
+
+        private void DrawPinObjects(Rect _origin)
+        {
+            // Multi-selection keys.
+            pinboardControlID = EnhancedEditorGUIUtility.GetControlID(916, FocusType.Keyboard);
+            if (GUIUtility.keyboardControl == pinboardControlID)
+            {
+                EnhancedEditorGUIUtility.VerticalMultiSelectionKeys(Pinboard.PinObjects, IsSelected, CanBeSelected, Select, lastSelectedPinObject);
+            }
+
+            int _index = 0;
+            bool _useIndent = string.IsNullOrEmpty(searchFilter);
+
+            for (int _i = 0; _i < Pinboard.PinObjects.Length; _i++)
+            {
+                PinObject _object = Pinboard.PinObjects[_i];
+
+                // Skip non visible objects.
+                if (!_object.IsVisible)
+                    continue;
+
+                // Position calculs.
+                Rect _position = new Rect(EditorGUILayout.GetControlRect(true, EditorGUIUtility.singleLineHeight - EditorGUIUtility.standardVerticalSpacing))
+                {
+                    height = EditorGUIUtility.singleLineHeight
+                };
+
+                Rect _temp = new Rect(_position)
+                {
+                    x = 0f,
+                    width = position.width
+                };
+
+                Rect _linePos = new Rect(_temp);
+                Rect _dragPosition = new Rect(_temp);
+                if (_object.IsFolder)
+                {
+                    _dragPosition.yMin += SeparatorHeight;
+                    _dragPosition.yMax -= SeparatorHeight;
+                }
+                else
+                {
+                    _dragPosition.y -= SeparatorHeight;
+                }
+
+                // Background color.
+                bool _isHover = false;
+                if (!_object.IsSelected)
+                {
+                    // Only display hover feedback when the user is not performing a drag and drop operation
+                    // or when selecting a folder and no separator is being drawn.
+                    Event _event = Event.current;
+                    _isHover = _temp.Contains(_event.mousePosition) &&
+                               ((DragAndDrop.visualMode != DragAndDropVisualMode.Copy) || (_object.IsFolder && _dragPosition.Contains(_event.mousePosition)));
+                }
+                else if (doFocusSelection && (_i == lastSelectedPinObject) && (Event.current.type == EventType.Repaint))
+                {
+                    // Scroll focus.
+                    Vector2 _areaSize = new Vector2(position.width, position.height - _origin.y);
+                    scroll = EnhancedEditorGUIUtility.FocusScrollOnPosition(scroll, _position, _areaSize);
+
+                    doFocusSelection = false;
+                }
+
+                if (_isHover)
+                {
+                    EditorGUI.DrawRect(_temp, highlightColor);
+                }
+                else
+                {
+                    EnhancedEditorGUI.BackgroundLine(_temp, _object.IsSelected, _index);
+                }
+
+                _index++;
+
+                // Get and set indent level.
+                int _indent = _useIndent
+                            ? _object.Indent
+                            : 0;
+
+                EditorGUI.indentLevel = _indent * 2;
+                _position = EditorGUI.IndentedRect(_position);
+                EditorGUI.indentLevel = 0;
+
+                // Indent visual representation.
+                if ((_indent != 0) && (Event.current.type == EventType.Repaint))
+                {
+                    // Horizontal indent line.
+                    _temp = new Rect()
                     {
-                        ExitRenameMode();
+                        x = _position.x - 23f,
+                        y = _position.y + 8f,
+                        width = 21f,
+                        height = 2f
+                    };
+
+                    EditorGUI.DrawRect(_temp, indentColor);
+
+                    // Indent update.
+                    int _indentIndex = indentLevels.FindIndex(i => i.Indent == _indent);
+                    if (_indentIndex == -1)
+                    {
+                        indentLevels.Add(new IndentLevel(_indent, _position.position));
+                    }
+                    else if (indentLevels[_indentIndex].IsDrawn)
+                    {
+                        indentLevels[_indentIndex] = new IndentLevel(_indent, _position.position);
+                    }
+                    else
+                    {
+                        Vector2 _startPos = indentLevels[_indentIndex].StartPosition;
+                        indentLevels[_indentIndex] = new IndentLevel(_indent, _startPos, _position.y);
+                    }
+
+                    // Next indent.
+                    int _nextIndex = _i + 1;
+                    while ((_nextIndex < Pinboard.PinObjects.Length) && !Pinboard.PinObjects[_nextIndex].IsVisible)
+                        _nextIndex++;
+
+                    int _nextIndent = (_nextIndex != Pinboard.PinObjects.Length)
+                                    ? Pinboard.PinObjects[_nextIndex].Indent
+                                    : 0;
+
+                    if (_nextIndent < _indent)
+                    {
+                        for (int _j = 0; _j < indentLevels.Count; _j++)
+                        {
+                            IndentLevel _indentLevel = indentLevels[_j];
+                            if ((_indentLevel.Indent <= _nextIndent) || _indentLevel.IsDrawn)
+                                continue;
+
+                            // Vertical indent line.
+                            _temp = new Rect()
+                            {
+                                x = _indentLevel.StartPosition.x - 23f,
+                                y = _indentLevel.StartPosition.y,
+                                width = 2f,
+                                yMax = _indentLevel.YMax + 8f + 2f
+                            };
+
+                            EditorGUI.DrawRect(_temp, indentColor);
+                            indentLevels[_j] = new IndentLevel(_indentLevel.Indent);
+                        }
+                    }
+                }
+
+                if (_object.IsFolder)
+                {
+                    // Separator operation.
+                    Rect _separator = new Rect(_position)
+                    {
+                        x = _position.x,
+                        y = _position.y - SeparatorHeight,
+                        height = SeparatorHeight * 2f
+                    };
+
+                    EventOperations(_position, _separator, null, _i, _object.Indent);
+
+                    // Foldout.
+                    _temp = new Rect(_position)
+                    {
+                        width = EnhancedEditorGUIUtility.FoldoutWidth
+                    };
+
+                    bool _foldout = EditorGUI.Foldout(_temp, _object.Foldout, GUIContent.none);
+                    if (_object.Foldout != _foldout)
+                    {
+                        _object.Foldout = _foldout;
+
+                        // Only filter when not using a search filter.
+                        if (_useIndent)
+                            FilterPinboard();
+                    }
+
+                    _temp.x += _temp.width;
+                    _temp.xMax = _position.xMax;
+
+                    // Folder name.
+                    if (_object.IsSelected && (renameFolderState > 1))
+                    {
+                        // Rename folder.
+                        GUI.SetNextControlName(RenameControlName);
+                        _object.FolderName = EditorGUI.TextField(_temp, _object.FolderName);
+
+                        if (renameFolderState == 2)
+                        {
+                            if (Event.current.type == EventType.Repaint)
+                            {
+                                EditorGUI.FocusTextInControl(RenameControlName);
+                                renameFolderState = 3;
+                            }
+                        }
+                        else if (!EditorGUIUtility.editingTextField)
+                        {
+                            ExitRenameMode();
+                        }
+                    }
+                    else
+                    {
+                        // Display folder name.
+                        GUIContent _label = EnhancedEditorGUIUtility.GetLabelGUI(_object.FolderName);
+                        EditorGUI.LabelField(_temp, _label);
                     }
                 }
                 else
                 {
-                    EditorGUI.LabelField(_drawPosition, _subfolder.Name);
+                    // Remove null entries.
+                    if (!_object.Asset)
+                    {
+                        ArrayUtility.RemoveAt(ref Pinboard.PinObjects, _i);
+                        _i--;
+
+                        continue;
+                    }
+
+                    // Icon.
+                    string _path = AssetDatabase.GetAssetPath(_object.Asset);
+                    _temp = new Rect(_position)
+                    {
+                        width = EnhancedEditorGUIUtility.IconWidth
+                    };
+
+                    GUI.DrawTexture(_temp, AssetDatabase.GetCachedIcon(_path), ScaleMode.ScaleToFit);
+
+                    // Name.
+                    GUIContent _label = EnhancedEditorGUIUtility.GetLabelGUI(_object.Asset.name);
+
+                    _temp.x += _temp.width + 5f;
+                    _temp.width = EditorStyles.label.CalcSize(_label).x;
+
+                    EditorGUI.LabelField(_temp, _label);
+
+                    // Path.
+                    if ((_temp.xMax + 20) < _position.xMax)
+                    {
+                        _temp.x = Mathf.Max(_temp.xMax + 20, _position.xMax - (_linePos.width * (1f - AssetPathWidthCoef)));
+                        _temp.xMax = _position.xMax;
+
+                        _label = EnhancedEditorGUIUtility.GetLabelGUI(_path, $"Path: {_path}");
+
+                        if (_temp.width < EditorStyles.label.CalcSize(_label).x)
+                        {
+                            EditorGUI.LabelField(_temp, "...");
+                            _temp.xMin += 12f;
+                        }
+
+                        using (var _scope = EnhancedGUI.GUIStyleAlignment.Scope(EditorStyles.label, TextAnchor.MiddleRight))
+                        {
+                            EditorGUI.LabelField(_temp, _label);
+                        }
+                    }
                 }
 
-                // Reserve layout for scroller.
-                GUILayoutUtility.GetRect(_drawPosition.xMin + EditorStyles.label.CalcSize(new GUIContent(_subfolder.Name)).x + Space, _drawPosition.height);
-
-                // Perform folder operations after label draw to use dedicated events.
-                EventOperations(_position, _subfolder, _subfolder, true);
-
-                // Indent horizontal visualization.
-                _yIndent = DrawHorizontalIndent(_drawPosition, _xOrigin);
-
-                // Draw subfolder content.
-                _position.xMin += IconWidth + Space;
-                _position.y += EditorGUIUtility.singleLineHeight;
-                _index++;
-                
-                if (_subfolder.Foldout)
-                {
-                    _position = DrawFolder(_position, _subfolder, ref _index);
-                }
-                
-                _position.xMin = _xOrigin;
+                // Special event operations.
+                EventOperations(_position, _dragPosition, _object, _i, _object.Indent);
+                EnhancedEditorGUIUtility.MultiSelectionClick(_linePos, Pinboard.PinObjects, _i, IsSelected, Select);
             }
-
-            // Root objects.
-            for (int _i = 0; _i < _folder.Assets.Length; _i++)
-            {
-                Asset _asset = _folder.Assets[_i];
-
-                // Remove null entries.
-                if (_asset.Object == null)
-                {
-                    ArrayUtility.Remove(ref _folder.Assets, _asset);
-                    continue;
-                }
-
-                // Only draw filtered assets.
-                if (useSearchFilter && !filteredObjects.Contains(_asset))
-                    continue;
-
-                // Background.
-                DrawBackground(_position, _asset, _index, false);
-
-                // Asset operations.
-                Event _event = Event.current;
-                Rect _eventPosition = new Rect(_position.x, _position.y - SeparatorHeight, _position.width, _position.height);
-                bool _click = EventOperations(_eventPosition, _asset, _folder, false);
-
-                // Ping object on double click.
-                if (_click && (_event.clickCount == 2))
-                {
-                    Object _object = _asset.Object;
-                    Selection.activeObject = _object;
-                    EditorGUIUtility.PingObject(_object);
-
-                    _event.clickCount = 0;
-                }
-
-                // Type icon.
-                string _path = AssetDatabase.GetAssetPath(_asset.Object);
-                Rect _drawPosition = new Rect(_position.x, _position.y, IconWidth, _position.height);
-
-                GUI.DrawTexture(_drawPosition, AssetDatabase.GetCachedIcon(_path), ScaleMode.ScaleToFit);
-
-                // Name.
-                _drawPosition.x = _drawPosition.xMax + Space;
-                _drawPosition.xMax = _position.xMax;
-
-                GUIContent _name = new GUIContent(_asset.Object.name);
-                EditorGUI.LabelField(_drawPosition, _name);
-
-                // Reserve layout for scroller.
-                float _width = _drawPosition.xMin + EditorStyles.label.CalcSize(_name).x + Space;
-                GUILayoutUtility.GetRect(_width, _drawPosition.height);
-
-                // Path.
-                _drawPosition.x = Mathf.Max(_width + Space, _position.xMax * (1f - AssetPathWidth));
-                _drawPosition.xMax = _position.xMax;
-
-                if (_drawPosition.width > 0f)
-                {
-                    // Shorten the path if it is too long to be fully displayed.
-                    string _shortPath = _path;
-                    if (_path.Length > (_drawPosition.width * AssetPathShortCoef))
-                        _shortPath = $"...{_path.Remove(0, (int)(_path.Length - (_drawPosition.width * AssetPathShortCoef)))}";
-
-                    pathGUI.text = _shortPath;
-                    pathGUI.tooltip = $"Path: {_path}";
-                    EditorGUI.LabelField(_drawPosition, pathGUI);
-                }
-
-                // Indent horizontal visualization.
-                _yIndent = DrawHorizontalIndent(_drawPosition, _xOrigin);
-
-                // Increment position.
-                _position.y += _position.height;
-                _index++;
-            }
-
-            // Indent vertical visualization.
-            DrawVerticalIndent(_xOrigin, _yOrigin, _yIndent);
-
-            return _position;
         }
 
-        private bool DrawBackground(Rect _position, PinObject _object, int _index, bool _isFolder)
+        // -----------------------
+
+        private bool IsSelected(int _index)
         {
-            _position.xMin = 0f;
-
-            // Only draw hover feedback when the user is not performing a drag and drop or when selecting a folder and no separator is drawn.
-            Event _event = Event.current;
-            bool _isHover = _position.Contains(_event.mousePosition) &&
-                            ((DragAndDrop.visualMode != DragAndDropVisualMode.Copy) ||
-                            (_isFolder && (_event.mousePosition.y >= (_position.y + SeparatorHeight)) && (_event.mousePosition.y < (_position.yMax - SeparatorHeight))));
-
-            // Background color.
-            if (selectedObjects.Contains(_object))
-            {
-                EditorGUI.DrawRect(_position, selectedColor);
-            }
-            else if (_isHover)
-            {
-                EditorGUI.DrawRect(_position, highlightColor);
-            }
-            else if ((_index % 2) == 0)
-            {
-                EditorGUI.DrawRect(_position, oddColor);
-            }
-
-            return _isHover;
+            PinObject _object = Pinboard.PinObjects[_index];
+            return _object.IsSelected;
         }
 
-        private float DrawHorizontalIndent(Rect _position, float _xOrigin)
+        private bool CanBeSelected(int _index)
         {
-            _position.x = _xOrigin - IconWidth - 4f;
-            _position.y += 7.5f;
-            _position.width = IconWidth;
-            _position.height = 2f;
-
-            EditorGUI.DrawRect(_position, indentColor);
-            return _position.y;
+            PinObject _object = Pinboard.PinObjects[_index];
+            return _object.IsVisible;
         }
 
-        private void DrawVerticalIndent(float _xOrigin, float _yOrigin, float _yMax)
+        private void Select(int _index, bool _isSelected)
         {
-            Rect _position = new Rect(_xOrigin - IconWidth - 4f, _yOrigin + 2f, 2f, _yMax - _yOrigin);
+            PinObject _object = Pinboard.PinObjects[_index];
+            _object.IsSelected = _isSelected;
 
-            if (_position.height > 0f)
-                EditorGUI.DrawRect(_position, indentColor);
+            // Selection update.
+            if (_isSelected)
+            {
+                lastSelectedPinObject = _index;
+                doFocusSelection = true;
+
+                GUIUtility.keyboardControl = pinboardControlID;
+            }
+            else if (!Array.Exists(Pinboard.PinObjects, (s) => s.IsSelected))
+            {
+                lastSelectedPinObject = -1;
+            }
         }
         #endregion
 
         #region Utility
-        private bool EventOperations(Rect _position, PinObject _object, Folder _destination, bool _isFolder)
+        private void EventOperations(Rect _position, Rect _dragPosition, PinObject _object, int _index, int _indent)
         {
             Event _event = Event.current;
-            Rect _mouseRect = new Rect(0f, _position.y, _position.xMax, _position.height);
+            Rect _mousePos = ((DragAndDrop.visualMode == DragAndDropVisualMode.Copy) || _event.type == EventType.DragPerform)
+                           ? _dragPosition
+                           : _position;
 
-            if (!_mouseRect.Contains(_event.mousePosition))
-                return false;
+            _mousePos.xMin = 0f;
+            if (!_mousePos.Contains(_event.mousePosition))
+                return;
 
             // Drag and drop mode.
             if (DragAndDrop.visualMode == DragAndDropVisualMode.Copy)
             {
                 // Separator indicating a drag and drop destination.
-                if (!_isFolder)
+                if ((_object == null) || !_object.IsFolder)
                 {
-                    _position.xMin -= 2f;
-                    _position.y += SeparatorHeight - 1f;
-                    _position.height = 1f;
+                    Rect _temp = new Rect()
+                    {
+                        x = _position.x,
+                        xMax = position.width,
+                        y = _dragPosition.y + SeparatorHeight,
+                        height = 2f
+                    };
 
-                    EditorGUI.DrawRect(_position, separatorColor);
+                    EditorGUI.DrawRect(_temp, separatorColor);
                 }
 
-                return false;
+                return;
             }
 
             // Special events.
             if (_event.type == EventType.DragPerform)
             {
-                // Folders.
-                if (DragAndDrop.GetGenericData(FolderDataType) is Folder[] _folders)
+                // Get destination index and indent.
+                int _moveIndex = _index;
+                if ((_index == -1) || ((_indent == 0) && ((_object == null) || !_object.IsFolder)))
                 {
-                    // Perform an inverse loop do avoid duplicating objects in folders.
-                    for (int _i = _folders.Length; _i-- > 0;)
-                    {
-                        Folder _data = _folders[_i];
-
-                        // Prevent from moving a folder into itself.
-                        if (_data == _destination)
-                        {
-                            ArrayExtensions.Remove(ref _folders, _data);
-                        }
-                        else if (FindParent(Pinboard.PinnedAssets, _data, out Folder _parent))
-                        {
-                            // When moving parent folder into one of its children.
-                            if (FindParent(_data, _destination, out Folder _childParent))
-                            {
-                                ArrayExtensions.Remove(ref _childParent.Folders, _destination);
-                                ArrayExtensions.Add(ref _parent.Folders, _destination);
-                            }
-
-                            ArrayExtensions.Remove(ref _parent.Folders, _data);
-                        }
-                    }
-
-                    ArrayExtensions.Add(ref _destination.Folders, _folders);
-                }
-
-                // Assets.
-                if (DragAndDrop.GetGenericData(AssetDataType) is Asset[] _assets)
-                {
-                    foreach (Asset _data in _assets)
-                    {
-                        if (FindParent(Pinboard.PinnedAssets, _data, out Folder _parent))
-                        {
-                            ArrayExtensions.Remove(ref _parent.Assets, _data);
-                        }
-                    }
-
-                    ArrayExtensions.Add(ref _destination.Assets, _assets);
-
-                    // ----- Local Method ----- //
-                    bool FindParent(Folder _folder, Asset _data, out Folder _parent)
-                    {
-                        foreach (Asset _asset in _folder.Assets)
-                        {
-                            if (_asset == _data)
-                            {
-                                _parent = _folder;
-                                return true;
-                            }
-                        }
-
-                        foreach (Folder _subfolder in _folder.Folders)
-                        {
-                            if (FindParent(_subfolder, _data, out _parent))
-                                return true;
-                        }
-
-                        _parent = null;
-                        return false;
-                    }
-                }
-
-                // Objects.
-                Object[] _objects = DragAndDrop.objectReferences;
-                if (_objects != null)
-                {
-                    RemoveObsoleteObjects(Pinboard.PinnedAssets, ref _objects);
-                    foreach (Object _data in _objects)
-                    {
-                        Asset _asset = new Asset(_data);
-                        ArrayExtensions.Add(ref _destination.Assets, _asset);
-                    }
-
-                    // ----- Local Method ----- //
-                    void RemoveObsoleteObjects(Folder _folder, ref Object[] _objects)
-                    {
-                        foreach (var _subfolder in _folder.Folders)
-                        {
-                            RemoveObsoleteObjects(_subfolder, ref _objects);
-                        }
-
-                        for (int _i = _objects.Length; _i-- > 0;)
-                        {
-                            Object _object = _objects[_i];
-                            if (Array.Exists(_folder.Assets, (a) => a.Object == _object))
-                            {
-                                ArrayExtensions.RemoveAt(ref _objects, _i);
-                            }
-                        }
-                    }
-                }
-
-                DragAndDrop.AcceptDrag();
-                SortObjects(_destination);
-                SetPinboardDirty();
-
-                _event.Use();
-            }
-            else if (_event.type == EventType.MouseDown)
-            {
-                ExitRenameMode();
-
-                // Select / unselect objects.
-                if (_event.control)
-                {
-                    // Do not unselect on empty click when control is pressed.
-                    if (_object == null)
-                        return true;
-
-                    if (!selectedObjects.Contains(_object))
-                    {
-                        selectedObjects.Add(_object);
-                    }
-                    else if (_event.button == 0)
-                    {
-                        selectedObjects.Remove(_object);
-                    }
-                }
-                else if (_event.shift)
-                {
-                    // Do not unselect either when shift is pressed.
-                    if (_object == null)
-                        return true;
-
-                    if (selectedObjects.Count > 0)
-                    {
-                        PinObject _a = _object;
-                        PinObject _b = selectedObjects[selectedObjects.Count - 1];
-                        bool _doSelect = false;
-
-                        SelectIntermediateObjects(Pinboard.PinnedAssets);
-
-                        // ----- Local Methods ----- //
-                        bool SelectIntermediateObjects(Folder _folder)
-                        {
-                            for (int _i = 0; _i < _folder.Folders.Length; _i++)
-                            {
-                                Folder _subfolder = _folder.Folders[_i];
-                                if (SelectObject(_subfolder))
-                                    return true;
-
-                                if (_subfolder.Foldout && SelectIntermediateObjects(_subfolder))
-                                    return true;
-                            }
-
-                            for (int _i = 0; _i < _folder.Assets.Length; _i++)
-                            {
-                                Asset _asset = _folder.Assets[_i];
-                                if (SelectObject(_asset))
-                                    return true;
-                            }
-
-                            return false;
-                        }
-
-                        bool SelectObject(PinObject _object)
-                        {
-                            // When both objects have been selected, stop selection.
-                            bool _found = (_object == _a) || (_object == _b);
-                            bool _end = _found && _doSelect;
-
-                            if (_found && !_doSelect)
-                                _doSelect = true;
-
-                            // Select object if not already selected.
-                            if (_doSelect && !selectedObjects.Contains(_object))
-                                selectedObjects.Add(_object);
-
-                            return _end;
-                        }
-                    }
-                    else
-                    {
-                        selectedObjects.Add(_object);
-                    }
-                }
-                else if (_object != null)
-                {
-                    // Rename folder on left click if already selected.
-                    if (selectedObjects.Contains(_object) && (_event.button == 0))
-                    {
-                        renameFolderState = 1;
-                    }
-                    else if ((_event.button == 0) || !selectedObjects.Contains(_object))
-                    {
-                        // Keep multiple selection on context click.
-                        selectedObjects.Clear();
-                        selectedObjects.Add(_object);
-                    }
+                    _index = 0;
+                    _moveIndex = Pinboard.PinObjects.Length;
                 }
                 else
                 {
-                    selectedObjects.Clear();
+                    // Get destination folder parent.
+                    if ((_object == null) || !_object.IsFolder)
+                    {
+                        _object = Pinboard.PinObjects[_index];
+                        _indent--;
+
+                        while (!_object.IsFolder || (_object.Indent != _indent))
+                        {
+                            _index--;
+                            _object = Pinboard.PinObjects[_index];
+                        }
+                    }
+
+                    // Get folder and asset destination indexes.
+                    _indent = _object.Indent + 1;
+                    _moveIndex = _index
+                               = _index + 1;
+
+                    int _folderIndent = _object.Indent;
+                    for (int _i = _moveIndex; _i < Pinboard.PinObjects.Length; _i++)
+                    {
+                        PinObject _pinObject = Pinboard.PinObjects[_i];
+                        if (_pinObject.Indent < _indent)
+                            break;
+
+                        _moveIndex++;
+                    }
+                }
+
+                // Pin Objects.
+                if (DragAndDrop.GetGenericData(PinObjectDataType) is PinObject[] _pinObjects)
+                {
+                    // If moving a folder into one of its child folder,
+                    // move this child and all its content on top of it.
+                    if (IsMovingInChild(out int _parentIndex, out int _childIndex))
+                    {
+                        PinObject _parent = _pinObjects[_parentIndex];
+                        _object = _pinObjects[_childIndex];
+
+                        _moveIndex = Array.IndexOf(Pinboard.PinObjects, _parent);
+                        _indent = _object.Indent + 1;
+
+                        ArrayUtility.RemoveAt(ref _pinObjects, _childIndex);
+                        ArrayUtility.Move(Pinboard.PinObjects, _object, _moveIndex);
+
+                        int _indentDifference = _object.Indent - _parent.Indent;
+                        _index = _moveIndex
+                               = _moveIndex + 1;
+
+                        for (int _i = _childIndex; _i < _pinObjects.Length;)
+                        {
+                            PinObject _temp = _pinObjects[_i];
+                            if (_temp.Indent < _indent)
+                                break;
+
+                            ArrayUtility.RemoveAt(ref _pinObjects, _i);
+                            ArrayUtility.Move(Pinboard.PinObjects, _temp, _moveIndex);
+                            _temp.Indent -= _indentDifference;
+
+                            _moveIndex++;
+                        }
+
+                        _object.Indent -= _indentDifference;
+                        _indent -= _indentDifference;
+                    }
+
+                    // Move all objects.
+                    List<int> _indentHelper = new List<int>();
+                    List<int> _childHelper = new List<int>();
+                    int _childCounter = 0;
+
+                    for (int _i = 0; _i < _pinObjects.Length; _i++)
+                    {
+                        PinObject _pinObject = _pinObjects[_i];
+
+                        int _indexOf = Array.IndexOf(Pinboard.PinObjects, _pinObject);
+                        int _objectIndent = _pinObject.Indent;
+
+                        // Indent helper update.
+                        while (_indentHelper.Last(out int _lastIndent) && (_objectIndent <= _lastIndent))
+                        {
+                            if (_indentHelper.Count == 1)
+                            {
+                                _childCounter = 0;
+                            }
+                            else
+                            {
+                                _childCounter += _childHelper.Last() + 1;
+                            }
+
+                            _indentHelper.RemoveLast();
+                            _childHelper.RemoveLast();
+                        }
+
+                        // Selected folders go on top.
+                        if (_pinObject.IsFolder && _pinObject.IsSelected)
+                        {
+                            _indentHelper.Add(_pinObject.Indent);
+                            _childHelper.Add(0);
+
+                            int _destIndex = (_indexOf < _index)
+                                           ? (_index - 1)
+                                           : _index;
+
+                            ArrayUtility.Move(Pinboard.PinObjects, _pinObject, _destIndex);
+                            _pinObject.Indent = _indent;
+
+                            if (_indexOf >= _index)
+                                _index++;
+                        }
+                        else if (_indentHelper.Last(out int _lastIndent) && !_pinObject.IsSelected)
+                        {
+                            // Unselected children go below selected folder.
+                            _childHelper[_childHelper.Count - 1] = _childHelper.Last() + 1;
+
+                            int _destIndex = (_indexOf < _index)
+                                           ? (_index - 1)
+                                           : _index;
+
+                            ArrayUtility.Move(Pinboard.PinObjects, _pinObject, _destIndex - _childCounter);
+                            _pinObject.Indent = _indent + (_pinObject.Indent - _lastIndent);
+
+                            if (_indexOf >= _index)
+                                _index++;
+                        }
+                        else
+                        {
+                            // Selected assets go on folder bottom.
+                            int _destIndex;
+                            if (_indexOf < _moveIndex)
+                            {
+                                _destIndex = _moveIndex - 1;
+
+                                if (_indexOf < _index)
+                                    _index--;
+                            }
+                            else
+                            {
+                                _destIndex = _moveIndex;
+                            }
+
+                            ArrayUtility.Move(Pinboard.PinObjects, _pinObject, _destIndex);
+                            _pinObject.Indent = _indent;
+                        }
+
+                        // Destination index increment.
+                        if (_indexOf >= _moveIndex)
+                            _moveIndex++;
+                    }
+
+                    // ----- Local Methods ----- \\
+
+                    bool IsMovingInChild(out int _parentIndex, out int _childIndex)
+                    {
+                        _parentIndex = -1;
+                        _childIndex = -1;
+
+                        if (_index == Pinboard.PinObjects.Length)
+                            return false;
+
+                        List<PinObject> _childFolders = new List<PinObject>();
+                        PinObject _indexObject = Pinboard.PinObjects[_index];
+
+                        if (_indexObject.IsFolder && (_index > 0))
+                        {
+                            _indexObject = Pinboard.PinObjects[_index - 1];
+                        }
+
+                        for (int _i = 0; _i < _pinObjects.Length; _i++)
+                        {
+                            PinObject _parent = _pinObjects[_i];
+                            if (!_parent.IsFolder || !_parent.IsSelected)
+                                continue;
+
+                            // Moving a folder into itself ; cancel operation.
+                            if (_parent == _indexObject)
+                            {
+                                CancelParentDrag(_i);
+                                return false;
+                            }
+
+                            // Reset folder counter.
+                            _childFolders.Clear();
+                            _childFolders.Add(_parent);
+
+                            for (int _j = _i + 1; _j < _pinObjects.Length; _j++)
+                            {
+                                PinObject _child = _pinObjects[_j];
+                                if (_child.Indent <= _parent.Indent)
+                                    break;
+
+                                // Ignore non-parent folders.
+                                while (_childFolders.Last().Indent >= _child.Indent)
+                                    _childFolders.RemoveLast();
+
+                                if (_child.IsFolder)
+                                    _childFolders.Add(_child);
+
+                                if (_child == _indexObject)
+                                {
+                                    // Moving a folder into itself ; cancel operation.
+                                    var _last = _childFolders.Last();
+                                    if (_last == _parent)
+                                    {
+                                        CancelParentDrag(_i);
+                                        return false;
+                                    }
+
+                                    // Get informations.
+                                    _parentIndex = _i;
+                                    _childIndex = Array.IndexOf(_pinObjects, _last);
+
+                                    return true;
+                                }
+                            }
+                        }
+
+                        return false;
+                    }
+
+                    void CancelParentDrag(int _index)
+                    {
+                        PinObject _parent = _pinObjects[_index];
+                        ArrayUtility.RemoveAt(ref _pinObjects, _index);
+
+                        for (int _i = _index; _i < _pinObjects.Length; _i++)
+                        {
+                            PinObject _child = _pinObjects[_i];
+                            if (_child.Indent <= _parent.Indent)
+                                break;
+
+                            if (!_child.IsSelected)
+                            {
+                                ArrayUtility.RemoveAt(ref _pinObjects, _i);
+                                _i--;
+                            }
+                        }
+                    }
+                }
+
+                // Assets.
+                Object[] _objects = DragAndDrop.objectReferences;
+                if (_objects != null)
+                {
+                    foreach (Object _asset in _objects)
+                    {
+                        if (Array.Exists(Pinboard.PinObjects, o => !o.IsFolder && (o.Asset == _asset)) || !AssetDatabase.Contains(_asset))
+                            continue;
+
+                        PinObject _pinObject = new PinObject(_asset, _indent);
+                        ArrayUtility.Insert(ref Pinboard.PinObjects, _moveIndex, _pinObject);
+                    }
                 }
 
                 _event.Use();
-                return true;
+
+                DragAndDrop.AcceptDrag();
+                SortPinboard();
             }
-            else if ((_event.type == EventType.ContextClick) && (selectedObjects.Count > 0))
+            else if ((_event.type == EventType.MouseDown) && (_object != null))
             {
-                // Display context menu on context click if at least one object is selected.
-                contextMenu.ShowAsContext();
-                _event.Use();
-            }
-            else if (_event.type == EventType.MouseUp)
-            {
-                if (renameFolderState == 1)
+                if (!_event.shift && !_event.control && _object.IsSelected && _object.IsFolder && (_event.button == 0) && (_event.clickCount == 2) && (renameFolderState == 0))
                 {
-                    if (selectedObjects.Count > 1)
+                    // Enter rename folder mode.
+                    renameFolderState = 1;
+                }
+                else if (!_object.IsFolder && (_event.clickCount == 2))
+                {
+                    // Ping object.
+                    PingObject(_object);
+                }
+                else if ((renameFolderState != 0) && !_object.IsSelected)
+                    ExitRenameMode();
+            }
+            else if (EnhancedEditorGUIUtility.ContextClick(_mousePos) && Array.Exists(Pinboard.PinObjects, o => o.IsSelected))
+            {
+                contextMenu.ShowAsContext();
+            }
+            else if ((_event.type == EventType.MouseUp) && (renameFolderState == 1))
+            {
+                renameFolderState = 2;
+            }
+            else if ((_event.type == EventType.MouseDrag) && (_event.button == 0) && (renameFolderState < 2))
+            {
+                // Stop renaming.
+                ExitRenameMode();
+
+                // When drag begin, set drag and drop data on selected objects.
+                List<PinObject> _objects = new List<PinObject>();
+                int _selectIndent = 99999;
+
+                foreach (var _pinObject in Pinboard.PinObjects)
+                {
+                    if (_pinObject.Indent > _selectIndent)
                     {
-                        // Adjust selection to one object.
-                        selectedObjects.Clear();
-                        selectedObjects.Add(_object);
+                        _objects.Add(_pinObject);
                     }
-                    else if (_isFolder)
+                    else if (_pinObject.IsSelected)
                     {
-                        // Rename folder on mouse up after second click.
-                        EnterRenameMode();
+                        _selectIndent = _pinObject.Indent;
+                        _objects.Add(_pinObject);
                     }
                     else
                     {
-                        ExitRenameMode();
-                    }
-                    
-                    _event.Use();
-                }
-            }
-            else if ((_event.type == EventType.MouseDrag) && (_event.button == 0) && (selectedObjects.Count > 0))
-            {
-                // When drag begin, set drag and drop data on selected objects (and stop renaming operation).
-                ExitRenameMode();
-
-                List<Folder> _folders = new List<Folder>();
-                List<Asset> _assets = new List<Asset>();
-
-                foreach (var selection in selectedObjects)
-                {
-                    if (selection is Folder _folder)
-                    {
-                        _folders.Add(_folder);
-                    }
-                    else if (selection is Asset _asset)
-                    {
-                        _assets.Add(_asset);
+                        _selectIndent = 99999;
                     }
                 }
 
                 DragAndDrop.PrepareStartDrag();
-                DragAndDrop.SetGenericData(FolderDataType, _folders.ToArray());
-                DragAndDrop.SetGenericData(AssetDataType, _assets.ToArray());
-
-                DragAndDrop.StartDrag(DragTitle);
+                DragAndDrop.SetGenericData(PinObjectDataType, _objects.ToArray());
+                DragAndDrop.StartDrag(StartDragTitle);
 
                 _event.Use();
             }
-            else if ((_event.type == EventType.KeyDown) && (_event.keyCode == KeyCode.Delete))
-            {
-                // Remove selection on delete key down.
-                RemoveSelection();
-            }
-
-            return false;
-        }
-
-        private void EnterRenameMode(int _focusCount = 2)
-        {
-            renameFolderState = 2;
-            renameFocusCount = _focusCount;
         }
 
         private void ExitRenameMode()
         {
-            if ((renameFolderState == 2) && (selectedObjects.Count == 1) && (selectedObjects[0] is Folder _folder)
-                && FindParent(Pinboard.PinnedAssets, _folder, out Folder _parent))
-            {
-                SortObjects(_parent);
-                SetPinboardDirty();
-            }
+            if (renameFolderState > 1)
+                SortPinboard();
 
             renameFolderState = 0;
         }
 
-        private bool FindParent(Folder _searchFolder, Folder _child, out Folder _parent)
+        private void PingObject(PinObject _object)
         {
-            foreach (Folder _subfolder in _searchFolder.Folders)
-            {
-                if (_subfolder == _child)
-                {
-                    _parent = _searchFolder;
-                    return true;
-                }
-
-                if (FindParent(_subfolder, _child, out _parent))
-                    return true;
-            }
-
-            _parent = null;
-            return false;
+            EditorGUIUtility.PingObject(_object.Asset);
+            Selection.activeObject = _object.Asset;
         }
 
-        private void SortObjects()
+        private void RemoveSelectedObjects()
         {
-            SortFolder(Pinboard.PinnedAssets);
-            SetPinboardDirty();
-
-            // ----- Local Method ----- //
-            void SortFolder(Folder _folder)
+            int _selectIndent = 99999;
+            for (int _i = 0; _i < Pinboard.PinObjects.Length; _i++)
             {
-                SortObjects(_folder);
-                foreach (Folder _subfolder in _folder.Folders)
+                PinObject _object = Pinboard.PinObjects[_i];
+                if (_object.Indent > _selectIndent)
                 {
-                    SortFolder(_subfolder);
+                    RemoveObject();
+                }
+                else if (_object.IsSelected)
+                {
+                    _selectIndent = _object.Indent;
+                    RemoveObject();
+                }
+                else
+                {
+                    _selectIndent = 99999;
+                }
+
+                // ----- Local Methods ----- \\
+
+                void RemoveObject()
+                {
+                    ArrayUtility.RemoveAt(ref Pinboard.PinObjects, _i);
+                    _i--;
                 }
             }
         }
 
-        private void SortObjects(Folder _folder)
+        private void FilterPinboard()
         {
-            // Always sort folders the same way: by their name.
-            Array.Sort(_folder.Folders, (a, b) =>
+            // When not using a search filter, hide objects in folded folders.
+            if (string.IsNullOrEmpty(searchFilter))
             {
-                return a.Name.CompareTo(b.Name);
-            });
+                int _hiddenIndent = 999999;
+
+                foreach (PinObject _object in Pinboard.PinObjects)
+                {
+                    if (_object.Indent <= _hiddenIndent)
+                    {
+                        _object.IsVisible = true;
+                        _hiddenIndent = (_object.IsFolder && !_object.Foldout)
+                                      ? _object.Indent
+                                      : 999999;
+                    }
+                    else
+                        _object.IsVisible = false;
+                }
+
+                return;
+            }
+
+            string _searchFilter = searchFilter.ToLower();
+            foreach (PinObject _object in Pinboard.PinObjects)
+            {
+                bool _isVisible = _object.IsFolder
+                                ? _object.FolderName.ToLower().Contains(_searchFilter)
+                                : _object.Asset.name.ToLower().Contains(_searchFilter);
+
+                _object.IsVisible = _isVisible;
+            }
+        }
+
+        private void SortPinboard()
+        {
+            PinObjectComparer.DoSortAscending = doSortAscending;
+            IComparer<PinObject> _comparer;
 
             switch (selectedSortOption)
             {
                 // Type.
                 case 0:
-                    Array.Sort(_folder.Assets, (a, b) =>
-                    {
-                        return a.Type.CompareTo(b.Type);
-                    });
+                    _comparer = TypeComparer.Comparer;
                     break;
 
                 // Name.
                 case 1:
-                    Array.Sort(_folder.Assets, (a, b) =>
-                    {
-                        return a.Object.name.CompareTo(b.Object.name);
-                    });
+                    _comparer = NameComparer.Comparer;
                     break;
 
                 // Path.
                 case 2:
-                    Array.Sort(_folder.Assets, (a, b) =>
-                    {
-                        return AssetDatabase.GetAssetPath(a.Object).CompareTo(AssetDatabase.GetAssetPath(b.Object));
-                    });
+                    _comparer = PathComparer.Comparer;
                     break;
 
                 default:
-                    break;
+                    return;
             }
 
-            if (!doSortAscending)
-                Array.Reverse(_folder.Assets);
-        }
+            List<SortLevel> _order = new List<SortLevel>() { new SortLevel(0, 0) };
+            int _indent = 0;
 
-        private void FilterObjects()
-        {
-            filteredObjects.Clear();
-            if (searchFilter == string.Empty)
+            for (int _i = 0; _i < Pinboard.PinObjects.Length;)
             {
-                useSearchFilter = false;
-                return;
-            }
+                PinObject _temp = Pinboard.PinObjects[_i];
 
-            string _filter = searchFilter.ToLower();
-            FilterFolder(Pinboard.PinnedAssets);
-            useSearchFilter = true;
-
-            // ----- Local Method ----- //
-            bool FilterFolder(Folder _folder)
-            {
-                // Used to unfold path to filtered objects.
-                bool _foldout = false;
-
-                for (int _i = 0; _i < _folder.Folders.Length; _i++)
+                // New indent level.
+                if (_temp.Indent > _indent)
                 {
-                    Folder _subfolder = _folder.Folders[_i];
-                    if (_subfolder.Name.ToLower().Contains(_filter))
-                    {
-                        filteredObjects.Add(_subfolder);
-                        _foldout = true;
-                    }
-
-                    if (FilterFolder(_subfolder))
-                    {
-                        _subfolder.Foldout = true;
-                        _foldout = true;
-                    }
+                    _indent = _temp.Indent;
+                    _order.Add(new SortLevel(_i, _indent));
                 }
 
-                for (int _i = 0; _i < _folder.Assets.Length; _i++)
+                // New folder.
+                if (_temp.IsFolder)
                 {
-                    Asset _asset = _folder.Assets[_i];
-                    if (_asset.Object.name.ToLower().Contains(_filter))
-                    {
-                        filteredObjects.Add(_asset);
-                        _foldout = true;
-                    }
+                    var _folder = new SortFolder(_temp);
+                    _order[_order.Count - 1].Folders.Add(_folder);
                 }
 
-                return _foldout;
-            }
-        }
-
-        private void RemoveSelection()
-        {
-            CleanFolder(Pinboard.PinnedAssets);
-            SetPinboardDirty();
-
-            // ----- Local Method ----- //
-            void CleanFolder(Folder _folder)
-            {
-                for (int _i = _folder.Folders.Length; _i-- > 0;)
+                // Child count update.
+                for (int _j = 0; _j < _order.Count - 1; _j++)
                 {
-                    Folder _subfolder = _folder.Folders[_i];
-                    int _index = selectedObjects.IndexOf(_subfolder);
-                    if (_index > -1)
-                    {
-                        ArrayUtility.RemoveAt(ref _folder.Folders, _i);
-                        selectedObjects.RemoveAt(_index);
-                    }
-                    else
-                    {
-                        CleanFolder(_subfolder);
-                    }
+                    SortFolder _folder = _order[_j].Folders.Last();
+                    _folder.ChildCount++;
+
+                    _order[_j].Folders[_order[_j].Folders.Count - 1] = _folder;
                 }
 
-                for (int _i = _folder.Assets.Length; _i-- > 0;)
+                _i++;
+
+                // Sort all ended indent level assets and folders.
+                while ((_i == Pinboard.PinObjects.Length) || (Pinboard.PinObjects[_i].Indent < _order.Last().Indent))
                 {
-                    Asset _asset = _folder.Assets[_i];
-                    int _index = selectedObjects.IndexOf(_asset);
-                    if (_index > -1)
+                    SortLevel _last = _order.Last();
+                    _order.RemoveLast();
+                    _indent--;
+
+                    int _objectIndex = _last.Index;
+                    _last.Folders.Sort((a, b) => a.Object.FolderName.CompareTo(b.Object.FolderName));
+
+                    for (int _j = _last.Folders.Count; _j-- > 0;)
                     {
-                        ArrayUtility.RemoveAt(ref _folder.Assets, _i);
-                        selectedObjects.RemoveAt(_index);
+                        var _ord = _last.Folders[_j];
+                        int _index = Array.IndexOf(Pinboard.PinObjects, _ord.Object) + _ord.ChildCount;
+
+                        for (int _k = _ord.ChildCount + 1; _k-- > 0;)
+                        {
+                            ArrayUtility.Move(Pinboard.PinObjects, _index, _last.Index);
+                            _objectIndex++;
+                        }
                     }
+
+                    int _length = _i - _objectIndex;
+                    Array.Sort(Pinboard.PinObjects, _objectIndex, _length, _comparer);
+
+                    // Break.
+                    if (_order.Count == 0)
+                        break;
                 }
             }
-        }
 
-        private void SetPinboardDirty()
-        {
+            // Save changes.
             EditorUtility.SetDirty(Pinboard);
         }
         #endregion

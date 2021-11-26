@@ -1,0 +1,105 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a8af76d847d699c4aa02b51064a60c84, type: 3}
+  m_Name: DOC_ProjectHierarchy
+  m_EditorClassIdentifier: 
+  Title: Project Hierarchy
+  Icon: {fileID: 0}
+  Sections:
+  - Name: 000 Game
+    Spacing: 0
+    Header: Project Hierarchy
+    Text: "\u2022 000 Game\r"
+    InfoText: 
+    Image: {fileID: 0}
+    LinkText: 
+    URL: 
+  - Name: 001 Graphs
+    Spacing: 0
+    Header: 
+    Text: "\u2022 100 Graph\r"
+    InfoText: 
+    Image: {fileID: 0}
+    LinkText: 
+    URL: 
+  - Name: 002 Shaders/VFX
+    Spacing: 0
+    Header: 
+    Text: "\u2022 200 Shaders/VFX\r"
+    InfoText: 
+    Image: {fileID: 0}
+    LinkText: 
+    URL: 
+  - Name: 300 Animations
+    Spacing: 0
+    Header: 
+    Text: "\u2022 300 Animations\r"
+    InfoText: 
+    Image: {fileID: 0}
+    LinkText: 
+    URL: 
+  - Name: 400 Sounds
+    Spacing: 0
+    Header: 
+    Text: "\u2022 400 Sound\r"
+    InfoText: 
+    Image: {fileID: 0}
+    LinkText: 
+    URL: 
+  - Name: 500 UI
+    Spacing: 0
+    Header: 
+    Text: "\u2022 500 UI\r"
+    InfoText: 
+    Image: {fileID: 0}
+    LinkText: 
+    URL: 
+  - Name: 600 Technical
+    Spacing: 0
+    Header: 
+    Text: "\u2022 600 Technical\r"
+    InfoText: 
+    Image: {fileID: 0}
+    LinkText: 
+    URL: 
+  - Name: 700 Tools
+    Spacing: 0
+    Header: 
+    Text: "\u2022 700 Tools\r"
+    InfoText: 
+    Image: {fileID: 0}
+    LinkText: 
+    URL: 
+  - Name: 800 Scenes
+    Spacing: 0
+    Header: 
+    Text: "\u2022 800 Scenes\r"
+    InfoText: 
+    Image: {fileID: 0}
+    LinkText: 
+    URL: 
+  - Name: 900 Prototypes
+    Spacing: 0
+    Header: 
+    Text: "\u2022 900 Prototype\r"
+    InfoText: 
+    Image: {fileID: 0}
+    LinkText: 
+    URL: 
+  - Name: XXX Trash
+    Spacing: 0
+    Header: 
+    Text: "\u2022 XXX Trash\r"
+    InfoText: 
+    Image: {fileID: 0}
+    LinkText: 
+    URL: 

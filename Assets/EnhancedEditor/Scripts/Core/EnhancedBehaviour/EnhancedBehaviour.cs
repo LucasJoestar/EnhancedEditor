@@ -6,12 +6,14 @@
 
 using System;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
+[assembly: InternalsVisibleTo("EnhancedEditor.Editor")]
 namespace EnhancedEditor
 {
     /// <summary>
-    /// GameObject-extended class containing multiple editor notes and runtime features.
+    /// <see cref="GameObject"/>-extending class containing multiple editor notes and runtime features.
     /// </summary>
     #pragma warning disable IDE0052
     public class EnhancedBehaviour : MonoBehaviour
@@ -21,6 +23,9 @@ namespace EnhancedEditor
         [SerializeField, EnhancedTextArea] private string comment = string.Empty;
         #endif
 
+        /// <summary>
+        /// All tags assigned to this <see cref="GameObject"/>.
+        /// </summary>
         public TagGroup Tags = new TagGroup();
 
         #if UNITY_EDITOR
@@ -28,7 +33,9 @@ namespace EnhancedEditor
         [SerializeField, ReadOnly] private string lastModifiedDate = string.Empty;
         #endif
 
-        public Tag Tag = new Tag();
+        /// <summary>
+        /// When set to true, the associated <see cref="GameObject"/> will not be automatically destroyed on scene loading.
+        /// </summary>
         public bool IsPersistent = false;
         #endregion
 
@@ -36,10 +43,8 @@ namespace EnhancedEditor
         /// <summary>
         /// Called internally in editor to update the last time
         /// the associated <see cref="GameObject"/> has been modified.
-        /// <para/>
-        /// You should simply ignore this.
         /// </summary>
-        public void UpdateLastModifiedState()
+        internal void UpdateLastModifiedState()
         {
             #if UNITY_EDITOR
             lastModifiedBy = Environment.UserName;
@@ -60,7 +65,7 @@ namespace EnhancedEditor
         #region MonoBehaviour
         private void Start()
         {
-            // Persistent objects do persist through scene loadings?
+            // Mark persistent objects as don't destroy on load.
             if (IsPersistent)
             {
                 DontDestroyOnLoad(gameObject);

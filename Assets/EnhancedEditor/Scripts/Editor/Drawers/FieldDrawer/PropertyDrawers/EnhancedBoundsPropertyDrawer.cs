@@ -7,99 +7,123 @@
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace EnhancedEditor.Editor
 {
     /// <summary>
-    /// Special drawer (inheriting from <see cref="EnhancedPropertyDrawer"/>) for classes with attribute <see cref="EnhancedBoundsAttribute"/>.
+    /// Special drawer for fields with the attribute <see cref="EnhancedBoundsAttribute"/> (inherit from <see cref="EnhancedPropertyDrawer"/>).
     /// </summary>
     [CustomDrawer(typeof(EnhancedBoundsAttribute))]
 	public class EnhancedBoundsPropertyDrawer : EnhancedPropertyDrawer
     {
         #region Drawer Content
-        private EnhancedBoundsAttribute boundsAttribute = null;
-        private bool isValid = false;
+        private MonoBehaviour[] behaviours = new MonoBehaviour[] { };
+        private BoxBoundsHandle handle = null;
 
-        BoxBoundsHandle handles = null;
-        MonoBehaviour behaviour = null;
+        private bool isValid = false;
 
         // -----------------------
 
-        public override void OnEnable(SerializedProperty _property)
+        public override void OnEnable()
         {
-            boundsAttribute = (EnhancedBoundsAttribute)Attribute;
-            isValid = (_property.propertyType == SerializedPropertyType.Bounds
-                    || _property.propertyType == SerializedPropertyType.BoundsInt)
-                   && (_property.serializedObject.targetObject is MonoBehaviour);
+            EnhancedBoundsAttribute _attribute = Attribute as EnhancedBoundsAttribute;
 
-            handles = new BoxBoundsHandle();
-            handles.SetColor(boundsAttribute.Color);
-
-            behaviour = _property.serializedObject.targetObject as MonoBehaviour;
-        }
-
-        public override bool OnGUI(Rect _position, SerializedProperty _property, GUIContent _label, out float _height)
-        {
-            if (!isValid)
+            // This attribute only work with Bounds and BoundsInt property types.
+            if ((SerializedProperty.propertyType == SerializedPropertyType.Bounds || SerializedProperty.propertyType == SerializedPropertyType.BoundsInt)
+             && (SerializedProperty.serializedObject.targetObject is MonoBehaviour))
             {
-                _height = 0f;
-                return false;
+                handle = new BoxBoundsHandle();
+                handle.SetColor(_attribute.Color);
+
+                // Only draw handles for target objects in a valid open scene.
+                foreach (Object _object in SerializedProperty.serializedObject.targetObjects)
+                {
+                    MonoBehaviour _behaviour = _object as MonoBehaviour;
+                    Scene _scene = _behaviour.gameObject.scene;
+
+                    if ((_scene != null) && _scene.IsValid() && _scene.isLoaded)
+                    {
+                        ArrayUtility.Add(ref behaviours, _behaviour);
+                    }
+                }
+
+                isValid = behaviours.Length > 0;
             }
-
-            _position.height = _height
-                             = (EditorGUIUtility.singleLineHeight * 3f) + (EditorGUIUtility.standardVerticalSpacing * 2f);
-
-            EditorGUI.PropertyField(_position, _property, _label);
-            return true;
         }
 
-        public override void OnSceneGUI(SerializedProperty _property, SceneView _scene)
+        public override void OnSceneGUI(SceneView _scene)
         {
             if (!isValid)
                 return;
 
-            // Update handle value, draw its handle, then update property value.
-            if (_property.propertyType == SerializedPropertyType.Bounds)
+            if (SerializedProperty.propertyType == SerializedPropertyType.Bounds)
             {
-                handles.center = _property.boundsValue.center + behaviour.transform.position;
-                handles.size = _property.boundsValue.size;
-
-                DrawHandles();
-
-                Bounds _newBounds = new Bounds()
+                // Bounds property.
+                foreach (MonoBehaviour _mono in behaviours)
                 {
-                    center = handles.center - behaviour.transform.position,
-                    size = handles.size
-                };
-                _property.boundsValue = _newBounds;
+                    Bounds _bounds = SerializedProperty.boundsValue;
+
+                    handle.center = _bounds.center + _mono.transform.position;
+                    handle.size = _bounds.size;
+
+                    using (var _changeCheck = new EditorGUI.ChangeCheckScope())
+                    {
+                        DrawHandles(_mono);
+
+                        if (_changeCheck.changed)
+                        {
+                            SerializedProperty.boundsValue = new Bounds()
+                            {
+                                center = handle.center - _mono.transform.position,
+                                size = handle.size
+                            };
+
+                            SerializedProperty.serializedObject.ApplyModifiedProperties();
+                        }
+                    }
+                }
             }
             else
             {
-                handles.center = _property.boundsIntValue.center + behaviour.transform.position;
-                handles.size = _property.boundsIntValue.size;
-
-                DrawHandles();
-
-                Vector3 _position = handles.center - behaviour.transform.position;
-                BoundsInt _newBounds = new BoundsInt()
+                // BoundsInt property.
+                foreach (MonoBehaviour _mono in behaviours)
                 {
-                    position = new Vector3Int((int)_position.x, (int)_position.y, (int)_position.z),
-                    size = new Vector3Int((int)handles.size.x, (int)handles.size.y, (int)handles.size.z)
-                };
-                _property.boundsIntValue = _newBounds;
-            }
-            
-            _property.serializedObject.ApplyModifiedProperties();
-        }
-        #endregion
+                    BoundsInt _bounds = SerializedProperty.boundsIntValue;
 
-        #region Utility
-        private void DrawHandles()
-        {
-            Matrix4x4 _rotatedMatrix = Handles.matrix * Matrix4x4.TRS(Vector3.zero, behaviour.transform.rotation, Vector3.one);
-            using (new Handles.DrawingScope(_rotatedMatrix))
+                    handle.center = _bounds.center + _mono.transform.position;
+                    handle.size = _bounds.size;
+                    
+                    using (var _changeCheck = new EditorGUI.ChangeCheckScope())
+                    {
+                        DrawHandles(_mono);
+
+                        if (_changeCheck.changed)
+                        {
+                            Vector3Int _size = new Vector3Int(Mathf.RoundToInt(handle.size.x), Mathf.RoundToInt(handle.size.y), Mathf.RoundToInt(handle.size.z));
+                            Vector3 _position = handle.center - _mono.transform.position - ((Vector3)_size / 2f);
+
+                            SerializedProperty.boundsIntValue = new BoundsInt()
+                            {
+                                position = new Vector3Int(Mathf.RoundToInt(_position.x), Mathf.RoundToInt(_position.y), Mathf.RoundToInt(_position.z)),
+                                size = _size
+                            };
+
+                            SerializedProperty.serializedObject.ApplyModifiedProperties();
+                        }
+                    }
+                }
+            }
+
+            // ----- Local Method ----- \\
+
+            void DrawHandles(MonoBehaviour _mono)
             {
-                handles.DrawHandle();
+                Matrix4x4 _matrix = Handles.matrix * Matrix4x4.TRS(Vector3.zero, _mono.transform.rotation, Vector3.one);
+                using (var _scope = new Handles.DrawingScope(_matrix))
+                {
+                    handle.DrawHandle();
+                }
             }
         }
         #endregion

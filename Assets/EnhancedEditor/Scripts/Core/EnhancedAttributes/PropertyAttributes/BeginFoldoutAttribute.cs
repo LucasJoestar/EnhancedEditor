@@ -4,22 +4,36 @@
 //
 // ============================================================================ //
 
+
+using System;
 using UnityEngine;
 
 namespace EnhancedEditor
 {
     /// <summary>
-    /// Begins a foldout group encapsulating each following field
+    /// Begins a foldout group encapsulating each of the following fields
     /// until the next <see cref="EndFoldoutAttribute"/>.
     /// </summary>
-	public class BeginFoldoutAttribute : EnhancedPropertyAttribute
+    [AttributeUsage(AttributeTargets.Field, AllowMultiple = true, Inherited = true)]
+    public class BeginFoldoutAttribute : EnhancedPropertyAttribute
     {
         #region Global Members
-        public readonly bool HasColor = false;
-        public readonly Color Color = default;
+        /// <summary>
+        /// Label displayed in front of the foldout.
+        /// </summary>
         public readonly GUIContent Label = null;
 
-        public bool Foldout = false;
+        /// <summary>
+        /// Color of this foldout group background.
+        /// </summary>
+        public readonly Color Color = default;
+
+        /// <summary>
+        /// Is a specific color assigned to this group?
+        /// </summary>
+        public readonly bool HasColor = false;
+
+        internal bool foldout = false;
 
         // -----------------------
 
@@ -29,9 +43,9 @@ namespace EnhancedEditor
             Label = new GUIContent(_label);
         }
 
+        /// <param name="_label"><inheritdoc cref="Label" path="/summary"/></param>
+        /// <param name="_color"><inheritdoc cref="Color" path="/summary"/></param>
         /// <inheritdoc cref="BeginFoldoutAttribute"/>
-        /// <param name="_label">Label displayed next to the foldout.</param>
-        /// <param name="_color">Color of the box encapsulating the group.</param>
         public BeginFoldoutAttribute(string _label, SuperColor _color) : this(_label)
         {
             HasColor = true;
