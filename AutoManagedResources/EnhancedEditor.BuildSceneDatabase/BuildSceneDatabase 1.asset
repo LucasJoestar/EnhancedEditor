@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a116f5f6681aca94d9282bf8e4227c1a, type: 3}
+  m_Name: BuildSceneDatabase 1
+  m_EditorClassIdentifier: 
+  buildSceneGUIDs:
+  - c0d1185a82b43c94db1df2296b2cb698
+  - b05f6dd2b494ddc408dad2ef42d2447e
+  - b2e6d86bc4a6a714586e4a1828a5e79d
+  - 766291a22ae55774cb51b65b0a8c8b91
+  nonBuildScenes: []
