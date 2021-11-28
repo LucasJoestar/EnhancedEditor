@@ -39,10 +39,27 @@ namespace EnhancedEditor.Editor
         [Serializable]
         public class EditorUserSettings
         {
+            [SerializeField] private string buildDirectory = string.Empty;
+
             /// <summary>
             /// The directory where to build and look for existing builds of the game from the <see cref="BuildPipelineWindow"/>.
             /// </summary>
-            public string BuildDirectory = string.Empty;
+            public string BuildDirectory
+            {
+                get
+                {
+                    if (string.IsNullOrEmpty(buildDirectory))
+                    {
+                        buildDirectory = BuildDefaultDirectory;
+                    }
+
+                    return buildDirectory;
+                }
+                set
+                {
+                    buildDirectory = value;
+                }
+            }
 
             /// <summary>
             /// Time interval (in seconds) between two autosave.

@@ -252,6 +252,7 @@ namespace EnhancedEditor.Editor
         {
             // When building, the editor loses all of its horizontal and vertical layout scopes,
             // so begin them once again to avoid errors in the console.
+            GUILayout.BeginScrollView(scroll);
             GUILayout.BeginHorizontal();
             GUILayout.BeginVertical();
         }
@@ -982,7 +983,6 @@ namespace EnhancedEditor.Editor
             {
                 scenes = Array.ConvertAll(buildScenes, (s) => AssetDatabase.GetAssetPath(s.Scene)),
                 locationPathName = $"{Path.Combine(_buildPath, Application.productName)}.exe",
-
                 targetGroup = BuildPipeline.GetBuildTargetGroup(_preset.BuildTarget),
                 target = _preset.BuildTarget,
                 options = _preset.BuildOptions

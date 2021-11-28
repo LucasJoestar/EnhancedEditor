@@ -122,6 +122,12 @@ namespace EnhancedEditor.Editor
         /// </summary>
         public static GUIStyle CenteredPopup => GetStyle(centeredPopup);
         private static GUIStyle centeredPopup = null;
+
+        /// <summary>
+        /// Option panel related transparent button style.
+        /// </summary>
+        public static GUIStyle PaneOptions => GetStyle(paneOptions);
+        private static GUIStyle paneOptions = null;
         #endregion
 
         #region Multi Tags Styles
@@ -309,6 +315,9 @@ namespace EnhancedEditor.Editor
                     fixedHeight = 0,
                     stretchWidth = false
                 };
+
+                // Pane options.
+                paneOptions = new GUIStyle("PaneOptions");
                 #endregion
 
                 #region Multi Tags

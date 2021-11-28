@@ -11,6 +11,8 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
+using Object = UnityEngine.Object;
+
 namespace EnhancedEditor.Editor
 {
     /// <summary>
@@ -133,6 +135,7 @@ namespace EnhancedEditor.Editor
                 if (GUILayout.Button(refreshGUI, EditorStyles.toolbarButton, GUILayout.Width(RefreshButtonWidth)))
                 {
                     Database.Refresh();
+                    FilterScenes();
                 }
             }
 
@@ -182,6 +185,10 @@ namespace EnhancedEditor.Editor
         private const float AddCloseButtonWidth = 50f;
         private const float PlayButtonWidth = 25f;
 
+        private readonly GUIContent moveInGroupGUI = new GUIContent("Move in Group/", "Move this object into one this group.");
+        private readonly GUIContent selectAssetGUI = new GUIContent("Select Asset", "Select this asset in the project window.");
+        private readonly GUIContent deleteGUI = new GUIContent("Delete", "Permanently delete this asset from the project.");
+
         private readonly Color groupColor = new Color(1f, 1f, 1f, .1f);
 
         // -----------------------
@@ -192,10 +199,13 @@ namespace EnhancedEditor.Editor
             {
                 var _group = Database.sceneGroups[_i];
                 if (_group.IsVisible && DrawGroup(Database.sceneGroups, _i, _group.Scenes.Length, IsElementVisible, IsElementLoaded, GetElementName,
-                                                  OnOpen, OnAdd, OnClose, OnPlay))
+                                                  OnOpen, OnAdd, OnClose, OnPlay, OnOptionsMenu))
                 {
                     ArrayUtility.AddRange(ref Database.sceneGroups[0].Scenes, _group.Scenes);
                     ArrayUtility.RemoveAt(ref Database.sceneGroups, _i);
+
+                    Database.Sort();
+                    FilterScenes();
 
                     _i--;
                 }
@@ -205,7 +215,7 @@ namespace EnhancedEditor.Editor
             var _defaultGroup = Database.sceneGroups[0];
             if (_defaultGroup.IsVisible)
             {
-                DrawGroup(Database.sceneGroups, 0, _defaultGroup.Scenes.Length, IsElementVisible, IsElementLoaded, GetElementName, OnOpen, OnAdd, OnClose, OnPlay);
+                DrawGroup(Database.sceneGroups, 0, _defaultGroup.Scenes.Length, IsElementVisible, IsElementLoaded, GetElementName, OnOpen, OnAdd, OnClose, OnPlay, OnOptionsMenu);
             }
 
             // ----- Local Methods ----- \\
@@ -251,6 +261,58 @@ namespace EnhancedEditor.Editor
                 var _element = Database.sceneGroups[_groupIndex].Scenes[_elementIndex];
                 // Play.
             }
+
+            void OnOptionsMenu(int _groupIndex, int _elementIndex, GenericMenu _menu)
+            {
+                var _element = Database.sceneGroups[_groupIndex].Scenes[_elementIndex];
+
+                for (int _i = 0; _i < Database.sceneGroups.Length; _i++)
+                {
+                    if (_i == _groupIndex)
+                        continue;
+
+                    var _group = Database.sceneGroups[_i];
+                    GUIContent _gui = new GUIContent(moveInGroupGUI)
+                    {
+                        text = $"{moveInGroupGUI.text}{_group.Name}"
+                    };
+
+                    _menu.AddItem(_gui, false, () =>
+                    {
+                        ArrayUtility.Add(ref _group.Scenes, _element);
+                        ArrayUtility.RemoveAt(ref Database.sceneGroups[_groupIndex].Scenes, _elementIndex);
+
+                        Database.Sort();
+                        FilterScenes();
+                    });
+                }
+
+                _menu.AddItem(selectAssetGUI, false, () =>
+                {
+                    string _path = AssetDatabase.GUIDToAssetPath(_element.GUID);
+                    if (!string.IsNullOrEmpty(_path))
+                    {
+                        Object _object = AssetDatabase.LoadMainAssetAtPath(_path);
+
+                        EditorGUIUtility.PingObject(_object);
+                        Selection.activeObject = _object;
+                    }
+                });
+                _menu.AddItem(deleteGUI, false, () =>
+                {
+                    string _path = AssetDatabase.GUIDToAssetPath(_element.GUID);
+                    string _name = Path.GetFileNameWithoutExtension(_path);
+
+                    if (!string.IsNullOrEmpty(_path) && EditorUtility.DisplayDialog("Confirm Action",
+                                                                                    $"Are you sure you want to delete the scene {_name} from the project?\n\n" +
+                                                                                    "This action cannot be undone.",
+                                                                                    "Yes", "Cancel"))
+                    {
+                        AssetDatabase.DeleteAsset(_path);
+                        ArrayUtility.RemoveAt(ref Database.sceneGroups[_groupIndex].Scenes, _elementIndex);
+                    }
+                });
+            }
         }
 
         private void DrawBundles()
@@ -259,10 +321,13 @@ namespace EnhancedEditor.Editor
             {
                 var _group = Database.bundleGroups[_i];
                 if (_group.IsVisible && DrawGroup(Database.bundleGroups, _i, _group.Bundles.Length, IsElementVisible, IsElementLoaded, GetElementName,
-                                                  OnOpen, OnAdd, OnClose, OnPlay))
+                                                  OnOpen, OnAdd, OnClose, OnPlay, OnOptionsMenu))
                 {
                     ArrayUtility.AddRange(ref Database.bundleGroups[0].Bundles, _group.Bundles);
                     ArrayUtility.RemoveAt(ref Database.bundleGroups, _i);
+
+                    Database.Sort();
+                    FilterScenes();
 
                     _i--;
                 }
@@ -272,7 +337,7 @@ namespace EnhancedEditor.Editor
             var _defaultGroup = Database.bundleGroups[0];
             if (_defaultGroup.IsVisible)
             {
-                DrawGroup(Database.bundleGroups, 0, _defaultGroup.Bundles.Length, IsElementVisible, IsElementLoaded, GetElementName, OnOpen, OnAdd, OnClose, OnPlay);
+                DrawGroup(Database.bundleGroups, 0, _defaultGroup.Bundles.Length, IsElementVisible, IsElementLoaded, GetElementName, OnOpen, OnAdd, OnClose, OnPlay, OnOptionsMenu);
             }
 
             // ----- Local Methods ----- \\
@@ -297,26 +362,84 @@ namespace EnhancedEditor.Editor
 
             void OnOpen(int _groupIndex, int _elementIndex)
             {
-                var _element = Database.bundleGroups[_groupIndex].Bundles[_elementIndex];
-                // Open
+                SceneBundle _bundle = Database.bundleGroups[_groupIndex].Bundles[_elementIndex].SceneBundle;
+                if (_bundle.Scenes.Length > 0)
+                {
+                    OpenSceneFromGUID(_bundle.Scenes[0].GUID, OpenSceneMode.Single);
+                    for (int _i = 1; _i < _bundle.Scenes.Length; _i++)
+                    {
+                        OpenSceneFromGUID(_bundle.Scenes[_i].GUID, OpenSceneMode.Additive);
+                    }
+                }
             }
 
             void OnAdd(int _groupIndex, int _elementIndex)
             {
-                var _element = Database.bundleGroups[_groupIndex].Bundles[_elementIndex];
-                // Add
+                SceneBundle _bundle = Database.bundleGroups[_groupIndex].Bundles[_elementIndex].SceneBundle;
+                for (int _i = 0; _i < _bundle.Scenes.Length; _i++)
+                {
+                    OpenSceneFromGUID(_bundle.Scenes[_i].GUID, OpenSceneMode.Additive);
+                }
             }
 
             void OnClose(int _groupIndex, int _elementIndex)
             {
-                var _element = Database.bundleGroups[_groupIndex].Bundles[_elementIndex];
-                // Close
+                SceneBundle _bundle = Database.bundleGroups[_groupIndex].Bundles[_elementIndex].SceneBundle;
+                for (int _i = 0; _i < _bundle.Scenes.Length; _i++)
+                {
+                    CloseSceneFromGUID(_bundle.Scenes[_i].GUID);
+                }
             }
 
             void OnPlay(int _groupIndex, int _elementIndex)
             {
                 var _element = Database.bundleGroups[_groupIndex].Bundles[_elementIndex];
                 // Play.
+            }
+
+            void OnOptionsMenu(int _groupIndex, int _elementIndex, GenericMenu _menu)
+            {
+                var _element = Database.bundleGroups[_groupIndex].Bundles[_elementIndex];
+
+                for (int _i = 0; _i < Database.bundleGroups.Length; _i++)
+                {
+                    if (_i == _groupIndex)
+                        continue;
+
+                    var _group = Database.bundleGroups[_i];
+                    GUIContent _gui = new GUIContent(moveInGroupGUI)
+                    {
+                        text = $"{moveInGroupGUI.text}{_group.Name}"
+                    };
+
+                    _menu.AddItem(_gui, false, () =>
+                    {
+                        ArrayUtility.Add(ref _group.Bundles, _element);
+                        ArrayUtility.RemoveAt(ref Database.bundleGroups[_groupIndex].Bundles, _elementIndex);
+
+                        Database.Sort();
+                        FilterScenes();
+                    });
+                }
+
+                _menu.AddItem(selectAssetGUI, false, () =>
+                {
+                    EditorGUIUtility.PingObject(_element.SceneBundle);
+                    Selection.activeObject = _element.SceneBundle;
+                });
+                _menu.AddItem(deleteGUI, false, () =>
+                {
+                    string _path = AssetDatabase.GetAssetPath(_element.SceneBundle);
+
+                    if (!string.IsNullOrEmpty(_path) && EditorUtility.DisplayDialog("Confirm Action",
+                                                                                    $"Are you sure you want to delete the scene bundle {_element.SceneBundle.name} from the project?\n\n" +
+                                                                                    "This action cannot be undone.",
+                                                                                    "Yes", "Cancel"))
+                    {
+                        AssetDatabase.DeleteAsset(_path);
+                        ArrayUtility.RemoveAt(ref Database.bundleGroups[_groupIndex].Bundles, _elementIndex);
+                    }
+                });
             }
         }
 
@@ -329,7 +452,7 @@ namespace EnhancedEditor.Editor
 
         private bool DrawGroup(SceneHandler.Group[] _groups, int _index, int _length,
                                Func<int, int, bool> _isElementVisible, Func<int, int, bool> _isElementLoaded, Func<int, int, string> _getElementName,
-                               Action<int, int> _onOpen, Action<int, int> _onAdd, Action<int, int> _onClose, Action<int, int> _onPlay)
+                               Action<int, int> _onOpen, Action<int, int> _onAdd, Action<int, int> _onClose, Action<int, int> _onPlay, Action<int, int, GenericMenu> _onOptionsMenu)
         {
             bool _isDeleted = false;
             GUILayout.Space(5f);
@@ -461,13 +584,14 @@ namespace EnhancedEditor.Editor
                     _onPlay(_index, _i);
 
                 _temp.x -= 17f;
+                _temp.y += 2f;
                 _temp.width = EnhancedEditorGUIUtility.IconWidth;
 
                 // Menu button.
-                if (EditorGUI.DropdownButton(_temp, menuGUI, FocusType.Passive, EditorStyles.label))
+                if (EditorGUI.DropdownButton(_temp, GUIContent.none, FocusType.Passive, EnhancedEditorStyles.PaneOptions))
                 {
                     GenericMenu _menu = new GenericMenu();
-                    _menu.AddItem(new GUIContent("Select Asset"), false, () => { });
+                    _onOptionsMenu(_index, _i, _menu);
 
                     _menu.DropDown(_temp);
                 }

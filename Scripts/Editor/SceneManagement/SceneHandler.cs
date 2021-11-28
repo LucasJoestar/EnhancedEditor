@@ -329,7 +329,7 @@ namespace EnhancedEditor.Editor
 
                     foreach (var _scene in _bundle.SceneBundle.Scenes)
                     {
-                        if (!ArrayUtility.Contains(_loadedScenePaths, AssetDatabase.GUIDToAssetPath(_scene.GUID)))
+                        if (!string.IsNullOrEmpty(AssetDatabase.GUIDToAssetPath(_scene.GUID)) && !ArrayUtility.Contains(_loadedScenePaths, AssetDatabase.GUIDToAssetPath(_scene.GUID)))
                         {
                             _isLoaded = false;
                             break;

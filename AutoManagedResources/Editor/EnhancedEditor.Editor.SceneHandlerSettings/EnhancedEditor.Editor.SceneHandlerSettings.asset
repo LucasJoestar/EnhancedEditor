@@ -12,23 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ee407a6cd9de5164a84606b5d8fb784a, type: 3}
   m_Name: EnhancedEditor.Editor.SceneHandlerSettings
   m_EditorClassIdentifier: 
-  sceneDatas:
-  - GUID: 766291a22ae55774cb51b65b0a8c8b91
-    Tag: <None>
-    Token: 0
-  - GUID: b05f6dd2b494ddc408dad2ef42d2447e
-    Tag: <None>
-    Token: 0
-  - GUID: c0d1185a82b43c94db1df2296b2cb698
-    Tag: <None>
-    Token: 0
-  - GUID: b2e6d86bc4a6a714586e4a1828a5e79d
-    Tag: <None>
-    Token: 0
-  - GUID: d1c3109bdb54ad54c8a2b2838528e640
-    Tag: <None>
-    Token: 0
-  tags:
-  - <None>
-  IsEnable: 0
-  CoreScene: {fileID: 0}
+  coreScene: {fileID: 0}
+  isCoreSceneEnabled: 0
+  sceneGroups:
+  - Name: Default Group
+    Scenes:
+    - GUID: 766291a22ae55774cb51b65b0a8c8b91
+    - GUID: b05f6dd2b494ddc408dad2ef42d2447e
+    - GUID: c0d1185a82b43c94db1df2296b2cb698
+    - GUID: b2e6d86bc4a6a714586e4a1828a5e79d
+  bundleGroups:
+  - Name: Default Group

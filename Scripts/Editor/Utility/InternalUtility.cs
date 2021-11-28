@@ -7,20 +7,15 @@
 namespace EnhancedEditor.Editor
 {
     /// <summary>
-    /// 
+    /// <see cref="EnhancedEditor"/>-related internal utility class.
     /// </summary>
 	internal class InternalUtility
     {
-        #region Content
+        #region Global Members
         /// <summary>
-        /// 
+        /// Menu item path used for <see cref="EnhancedEditor"/> utilities.
         /// </summary>
         public const string MenuItemPath = "Tools/Enhanced Editor/";
-
-        public static string Get(string _s)
-        {
-            return MenuItemPath + _s;
-        }
         #endregion
     }
 }

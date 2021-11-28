@@ -9,11 +9,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d2637ac576b9edd43bb71ed84ff1bb56, type: 3}
-  m_Name: BP_Custom
+  m_Script: {fileID: 11500000, guid: 3c200996eade5314ea636f191867d9be, type: 3}
+  m_Name: StandardBundle
   m_EditorClassIdentifier: 
-  Description: This is the custom preset.
-  BuildTarget: 19
-  BuildOptions: 0
-  buildCount: 0
-  scriptingDefineSymbols: DEBUG_LOGGER
+  Scenes:
+  - guid: b2e6d86bc4a6a714586e4a1828a5e79d
+  - guid: d1c3109bdb54ad54c8a2b2838528e640
+  - guid: b05f6dd2b494ddc408dad2ef42d2447e
+  comment: 

@@ -926,9 +926,9 @@ namespace EnhancedEditor.Editor
                 MethodInfo[] _methodInfos = _type.GetMethods(getMethodBindingFlags);
                 foreach (MethodInfo _methodInfo in _methodInfos)
                 {
-                    // Only get methods from custom scripts, and public void ones among other components.
-                    if ((_methodInfo.DeclaringType.IsSubclassOf(typeof(MonoBehaviour))
-                        || (_methodInfo.IsPublic && !_methodInfo.IsSpecialName && (_methodInfo.ReturnType == typeof(void)) && !_type.IsSubclassOf(typeof(MonoBehaviour)))))
+                    // Only get non-internal methods from custom scripts, and public void ones among other components.
+                    if ((_methodInfo.DeclaringType.IsSubclassOf(typeof(MonoBehaviour)) && !_methodInfo.IsAssembly)
+                        || (_methodInfo.IsPublic && !_methodInfo.IsSpecialName && (_methodInfo.ReturnType == typeof(void)) && !_type.IsSubclassOf(typeof(MonoBehaviour))))
                     {
                         ParameterInfo[] _parameters = _methodInfo.GetParameters();
 
