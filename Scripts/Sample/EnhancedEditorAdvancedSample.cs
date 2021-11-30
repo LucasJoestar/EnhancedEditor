@@ -35,6 +35,7 @@ namespace EnhancedEditor.Sample
 
         public Tag Tag = new Tag();
         public TagGroup TagGroup = new TagGroup();
+        public SceneAsset SceneAsset = new SceneAsset();
 
         public float MinFloat = 7f;
         public int MaxInt = 5;

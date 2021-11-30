@@ -82,6 +82,17 @@ namespace EnhancedEditor.Editor
         /// The directory in the project where are created all instance trackers (must be in an Editor folder).
         /// </summary>
         public string InstanceTrackerDirectory = InstanceTrackerDefaultDirectory;
+
+        /// <summary>
+        /// The core scene to load when entering play mode.
+        /// <br/> Works only in editor.
+        /// </summary>
+        public SceneAsset CoreScene = new SceneAsset();
+
+        /// <summary>
+        /// Indicates whether the core scene is enabled and should be loaded when entering play mode.
+        /// </summary>
+        public bool IsCoreSceneEnabled = false;
         #endregion
 
         #region Behaviour
@@ -227,8 +238,11 @@ namespace EnhancedEditor.Editor
         private const string InstanceTrackerDirectoryPanelTitle = "Instance Trackers Directory";
         private const string BuildDirectoryPanelTitle = "Build Directory";
 
-        private static readonly GUIContent localHeader = new GUIContent("User Settings:", "User-dependant settings.");
-        private static readonly GUIContent globalHeader = new GUIContent("Global", "Project global settings, shared between users.");
+        private const string CoreSceneMessage = "The Core Scene system allows to always load a specific scene first when entering play mode in the editor.";
+
+        private static readonly GUIContent localHeaderGUI = new GUIContent("User Settings:", "User-dependant settings.");
+        private static readonly GUIContent globalHeaderGUI = new GUIContent("Global", "Project global settings, shared between users.");
+        private static readonly GUIContent coreSceneHeaderGUI = new GUIContent("Core Scene System", "Settings related to the Core Scene system.");
 
         private static readonly GUIContent autoManagedResourceDirectoryGUI = new GUIContent("Managed Resource Dir.",
                                                                                            "Directory in the project where are created all auto-managed resources.");
@@ -242,29 +256,32 @@ namespace EnhancedEditor.Editor
         private static readonly GUIContent autosaveIntervalGUI = new GUIContent("Autosave Interval",
                                                                                "Time interval (in seconds) between two autosave. Autosave can be toggled from the main editor toolbar.");
 
+        private static readonly GUIContent coreSceneGUI = new GUIContent("Core Scene", "The core scene to load when entering play mode.");
+        private static readonly GUIContent isCoreSceneEnabledGUI = new GUIContent("Enabled", "Enables / Disables to core scene system.");
+
         // -----------------------
 
-        private static void DrawPreferences(EnhancedEditorSettings _preferences)
+        private static void DrawPreferences(EnhancedEditorSettings _settings)
         {
-            Undo.RecordObject(_preferences, UndoRecordTitle);
+            Undo.RecordObject(_settings, UndoRecordTitle);
 
             using (var _scope = new GUILayout.HorizontalScope())
             {
                 GUILayout.Space(10f);
                 using (var _verticalScope = new GUILayout.VerticalScope())
                 {
-                    DrawUserSettings(_preferences.UserSettings);
+                    DrawUserSettings(_settings.UserSettings);
 
                     GUILayout.Space(15f);
 
-                    DrawGlobalSettings(_preferences);
+                    DrawGlobalSettings(_settings);
                 }
             }
         }
 
         private static void DrawUserSettings(EditorUserSettings _settings)
         {
-            EnhancedEditorGUILayout.UnderlinedLabel(localHeader, EditorStyles.boldLabel);
+            EnhancedEditorGUILayout.UnderlinedLabel(localHeaderGUI, EditorStyles.boldLabel);
             GUILayout.Space(2f);
 
             using (var _scope = new EditorGUI.IndentLevelScope())
@@ -277,19 +294,32 @@ namespace EnhancedEditor.Editor
             }
         }
 
-        private static void DrawGlobalSettings(EnhancedEditorSettings _preferences)
+        private static void DrawGlobalSettings(EnhancedEditorSettings _settings)
         {
-            EditorGUILayout.LabelField(globalHeader, EditorStyles.boldLabel);
+            EditorGUILayout.LabelField(globalHeaderGUI, EditorStyles.boldLabel);
 
             // Auto-managed resource directory.
-            _preferences.AutoManagedResourceDirectory = EnhancedEditorGUILayout.FolderField(autoManagedResourceDirectoryGUI,
-                                                                                            _preferences.AutoManagedResourceDirectory, false,
+            _settings.AutoManagedResourceDirectory = EnhancedEditorGUILayout.FolderField(autoManagedResourceDirectoryGUI,
+                                                                                            _settings.AutoManagedResourceDirectory, false,
                                                                                             AutoManagedResourceDirectoryPanelTitle);
 
             // Instance trackers dirctory.
-            _preferences.InstanceTrackerDirectory = EnhancedEditorGUILayout.EditorFolderField(instanceTrackerDirectoryGUI,
-                                                                                              _preferences.InstanceTrackerDirectory,
+            _settings.InstanceTrackerDirectory = EnhancedEditorGUILayout.EditorFolderField(instanceTrackerDirectoryGUI,
+                                                                                              _settings.InstanceTrackerDirectory,
                                                                                               InstanceTrackerDirectoryPanelTitle);
+
+            GUILayout.Space(15f);
+
+            // Core scene system.
+            EditorGUILayout.LabelField(coreSceneHeaderGUI, EditorStyles.boldLabel);
+
+            EnhancedEditorGUILayout.SceneAssetField(coreSceneGUI, _settings.CoreScene);
+            if (!string.IsNullOrEmpty(_settings.CoreScene.guid))
+            {
+                _settings.IsCoreSceneEnabled = EditorGUILayout.Toggle(isCoreSceneEnabledGUI, _settings.IsCoreSceneEnabled);
+            }
+
+            EditorGUILayout.HelpBox(CoreSceneMessage, UnityEditor.MessageType.Info);
         }
         #endregion
     }

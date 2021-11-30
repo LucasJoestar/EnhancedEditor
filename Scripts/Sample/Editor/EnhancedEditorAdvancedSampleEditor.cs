@@ -87,6 +87,7 @@ namespace EnhancedEditor.Sample.Editor
 
             var _tag = serializedObject.FindProperty("Tag");
             var _tagGroup = serializedObject.FindProperty("TagGroup");
+            var _sceneAsset = serializedObject.FindProperty("SceneAsset");
 
             var _boolean = serializedObject.FindProperty("Boolean");
             var _folderPath = serializedObject.FindProperty("FolderPath");
@@ -141,6 +142,9 @@ namespace EnhancedEditor.Sample.Editor
             _position.y += _position.height + EditorGUIUtility.standardVerticalSpacing;
             EnhancedEditorGUI.InlineField(_position, _inline, out _extraHeight);
             _position.y += _extraHeight;
+
+            _position.y += _position.height + EditorGUIUtility.standardVerticalSpacing;
+            EnhancedEditorGUI.SceneAssetField(_position, new GUIContent("Scene Asset"), sample.SceneAsset);
 
             // Multi-Tags.
             _position.y += _position.height + EditorGUIUtility.standardVerticalSpacing;
@@ -204,6 +208,7 @@ namespace EnhancedEditor.Sample.Editor
 
             var _tag = serializedObject.FindProperty("Tag");
             var _tagGroup = serializedObject.FindProperty("TagGroup");
+            var _sceneAsset = serializedObject.FindProperty("SceneAsset");
 
             var _boolean = serializedObject.FindProperty("Boolean");
             var _folderPath = serializedObject.FindProperty("FolderPath");
@@ -233,6 +238,8 @@ namespace EnhancedEditor.Sample.Editor
             EnhancedEditorGUILayout.PickerField(_pickerAnimator, new System.Type[] { typeof(ScriptableObject), typeof(EnhancedBehaviour) });
             EnhancedEditorGUILayout.ReadonlyField(_readonly, true);
             EnhancedEditorGUILayout.InlineField(_inline);
+
+            EnhancedEditorGUILayout.SceneAssetField(new GUIContent("Scene Asset"), sample.SceneAsset);
 
             EnhancedEditorGUILayout.Section("Section");
 

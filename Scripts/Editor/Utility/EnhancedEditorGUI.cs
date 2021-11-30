@@ -2864,6 +2864,115 @@ namespace EnhancedEditor.Editor
         }
         #endregion
 
+        #region Scene Asset
+        private static readonly string SceneAssetTypeName = typeof(SceneAsset).Name;
+
+        // ===== Serialized Property ===== \\
+
+        /// <inheritdoc cref="SceneAssetField(Rect, SerializedProperty, GUIContent)"/>
+        public static void SceneAssetField(Rect _position, SerializedProperty _property)
+        {
+            GUIContent _label = EnhancedEditorGUIUtility.GetPropertyLabel(_property);
+            SceneAssetField(_position, _property, _label);
+        }
+
+        /// <inheritdoc cref="SceneAssetField(Rect, SerializedProperty, GUIContent)"/>
+        public static void SceneAssetField(Rect _position, SerializedProperty _property, string _label)
+        {
+            GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
+            SceneAssetField(_position, _property, _labelGUI);
+        }
+
+        /// <summary>
+        /// Makes a scene asset selection field, allowing to select and assign a scene to a <see cref="SceneAsset"/> in the project.
+        /// </summary>
+        /// <param name="_position"><inheritdoc cref="DocumentationMethod(Rect, GUIContent)" path="/param[@name='_position']"/></param>
+        /// <param name="_property"><see cref="SerializedProperty"/> to draw a scene asset field for.</param>
+        /// <param name="_label"><inheritdoc cref="DocumentationMethod(Rect, GUIContent)" path="/param[@name='_label']"/></param>
+        public static void SceneAssetField(Rect _position, SerializedProperty _property, GUIContent _label)
+        {
+            SerializedProperty _guidProperty = _property.Copy();
+
+            // Incompatible property management.
+            if ((_guidProperty.type != SceneAssetTypeName) || !_guidProperty.Next(true))
+            {
+                EditorGUI.PropertyField(_position, _property, _label);
+                return;
+            }
+
+            // Property field.
+            using (var _scope = new EditorGUI.PropertyScope(_position, _label, _property))
+            {
+                string _guid = _guidProperty.stringValue;
+                _guidProperty.stringValue = DoSceneAssetField(_position, _label, _guid);
+            }
+        }
+
+        // ===== Scene Asset Value ===== \\
+
+        /// <inheritdoc cref="SceneAssetField(Rect, GUIContent, SceneAsset)"/>
+        public static void SceneAssetField(Rect _position, SceneAsset _sceneAsset)
+        {
+            GUIContent _label = GUIContent.none;
+            SceneAssetField(_position, _label, _sceneAsset);
+        }
+
+        /// <inheritdoc cref="SceneAssetField(Rect, GUIContent, SceneAsset)"/>
+        public static void SceneAssetField(Rect _position, string _label, SceneAsset _sceneAsset)
+        {
+            GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
+            SceneAssetField(_position, _labelGUI, _sceneAsset);
+        }
+
+        /// <param name="_sceneAsset">The <see cref="SceneAsset"/> the field shows.</param>
+        /// <inheritdoc cref="SceneAssetField(Rect, SerializedProperty, GUIContent)"/>
+        public static void SceneAssetField(Rect _position, GUIContent _label, SceneAsset _sceneAsset)
+        {
+            string _guid = _sceneAsset.guid;
+            _sceneAsset.guid = DoSceneAssetField(_position, _label, _guid);
+        }
+
+        // -----------------------
+
+        private static string DoSceneAssetField(Rect _position, GUIContent _label, string _sceneGUID)
+        {
+            // Loads the database to ensure that one exist in the project.
+            var _database = BuildSceneDatabase.Database;
+
+            // Get the scene asset from registered guid.
+            string _path = AssetDatabase.GUIDToAssetPath(_sceneGUID);
+            UnityEditor.SceneAsset _scene;
+            
+            if (string.IsNullOrEmpty(_path))
+            {
+                _scene = null;
+
+                if (!string.IsNullOrEmpty(_sceneGUID))
+                {
+                    _sceneGUID = string.Empty;
+                    GUI.changed = true;
+                }
+            }
+            else
+                _scene = AssetDatabase.LoadAssetAtPath<UnityEditor.SceneAsset>(_path);
+
+            // Scene asset field.
+            using (var _changeCheck = new EditorGUI.ChangeCheckScope())
+            {
+                _scene = EditorGUI.ObjectField(_position, _label, _scene, typeof(UnityEditor.SceneAsset), false) as UnityEditor.SceneAsset;
+
+                if (_changeCheck.changed)
+                {
+                    _sceneGUID = (_scene != null)
+                                 ? AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(_scene))
+                                 : string.Empty;
+                }
+            }
+
+            return _sceneGUID;
+        }
+        #endregion
+
         #region Text Area
         private static readonly float textAreaMinHeight = (EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing) * 2f;
 
@@ -3132,7 +3241,7 @@ namespace EnhancedEditor.Editor
             // Incompatible property management.
             if ((_tagProperty.type != TagTypeName) || !_tagProperty.Next(true))
             {
-                EditorGUI.PropertyField(_position, _tagProperty, _label);
+                EditorGUI.PropertyField(_position, _property, _label);
                 return;
             }
             
@@ -3253,7 +3362,7 @@ namespace EnhancedEditor.Editor
             // Incompatible property management.
             if ((_tagGroup.type != TagGroupTypeName) || !_tagGroup.Next(true) || !_tagGroup.isArray)
             {
-                EditorGUI.PropertyField(_position, _tagGroup, _label);
+                EditorGUI.PropertyField(_position, _property, _label);
                 _extraHeight = 0f;
 
                 return;

@@ -71,6 +71,7 @@ namespace EnhancedEditor.Editor
         /// <summary>
         /// Wrapper class for <see cref="SceneBundle"/> objects.
         /// </summary>
+        [Serializable]
         public class Bundle : DataWrapper, IComparable<Bundle>
         {
             /// <summary>
@@ -160,42 +161,8 @@ namespace EnhancedEditor.Editor
         #endregion
 
         #region Global Members
-        [SerializeField] private UnityEditor.SceneAsset coreScene = null;
-        [SerializeField] private bool isCoreSceneEnabled = false;
-
         [SerializeField] internal SceneGroup[] sceneGroups = new SceneGroup[] { new SceneGroup("Default Group") };
         [SerializeField] internal BundleGroup[] bundleGroups = new BundleGroup[] { new BundleGroup("Default Group") };
-
-        /// <summary>
-        /// Core scene to load when entering play mode.
-        /// <br/> Works only in editor.
-        /// </summary>
-        public UnityEditor.SceneAsset CoreScene
-        {
-            get => coreScene;
-            set
-            {
-                if (isCoreSceneEnabled && (value == null))
-                    isCoreSceneEnabled = false;
-
-                coreScene = value;
-            }
-        }
-
-        /// <summary>
-        /// Indicates whether the core scene is enabled and should be loaded when entering play mode.
-        /// </summary>
-        public bool IsCoreSceneEnabled
-        {
-            get => IsCoreSceneEnabled;
-            set
-            {
-                if (value && (coreScene == null))
-                    value = false;
-
-                IsCoreSceneEnabled = value;
-            }
-        }
         #endregion
 
         #region Management
@@ -251,7 +218,7 @@ namespace EnhancedEditor.Editor
 
             // Update bundle data.
             List<SceneBundle> bundles = new List<SceneBundle>(EnhancedEditorUtility.LoadAssets<SceneBundle>());
-            for (int _i = 0; _i < bundleGroups.Length; _i++)
+            for (int _i = 1; _i < bundleGroups.Length; _i++)
             {
                 BundleGroup _group = bundleGroups[_i];
                 for (int _j = 0; _j < _group.Bundles.Length; _j++)

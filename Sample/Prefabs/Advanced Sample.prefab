@@ -71,6 +71,9 @@ MonoBehaviour:
   Readonly:
     Name: SubSample
     Enabled: 1
+  Inline:
+    Name: SubSample
+    Enabled: 1
   Picker: {fileID: 1409297715069405628, guid: a6d3449d0539d4549a30f7bce67a1506, type: 3}
   PickerAnimator: {fileID: 0}
   Required: {fileID: 0}
@@ -86,6 +89,8 @@ MonoBehaviour:
     - id: 5
     - id: 6
     - id: 2
+  SceneAsset:
+    guid: c0d1185a82b43c94db1df2296b2cb698
   MinFloat: 8.06
   MaxInt: 61
   ProgressBar: 172

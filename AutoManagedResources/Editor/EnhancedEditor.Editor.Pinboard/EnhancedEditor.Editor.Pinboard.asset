@@ -88,6 +88,14 @@ MonoBehaviour:
   - FolderName: 
     Foldout: 1
     Type: '*UnityEditor.DefaultAsset'
+    Asset: {fileID: 102900000, guid: f47996439a3fd774c96189e6e11ced96, type: 3}
+    Indent: 1
+    IsFolder: 0
+    IsVisible: 1
+    IsSelected: 0
+  - FolderName: 
+    Foldout: 1
+    Type: '*UnityEditor.DefaultAsset'
     Asset: {fileID: 102900000, guid: 63953c6e574684b449f04f091fb84045, type: 3}
     Indent: 1
     IsFolder: 0
@@ -100,7 +108,7 @@ MonoBehaviour:
     Indent: 1
     IsFolder: 0
     IsVisible: 1
-    IsSelected: 0
+    IsSelected: 1
   - FolderName: 
     Foldout: 1
     Type: '*UnityEditor.DefaultAsset'

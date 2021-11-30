@@ -60,6 +60,27 @@ namespace EnhancedEditor
         {
             get
             {
+                #if UNITY_EDITOR
+                if (!Application.isPlaying)
+                {
+                    string _path = UnityEditor.AssetDatabase.GUIDToAssetPath(guid);
+                    int _index = 0;
+
+                    foreach (var _scene in UnityEditor.EditorBuildSettings.scenes)
+                    {
+                        if (!_scene.enabled)
+                            continue;
+
+                        if (_scene.path == _path)
+                            return _index;
+
+                        _index++;
+                    }
+
+                    return -1;
+                }
+                #endif
+
                 if (buildIndex == -2)
                     buildIndex = BuildSceneDatabase.GetSceneBuildIndex(guid);
 
@@ -84,6 +105,18 @@ namespace EnhancedEditor
                 Scene _scene = SceneManager.GetSceneByBuildIndex(_buildIndex);
                 return _scene.name;
             }
+        }
+
+        // -----------------------
+
+        /// <inheritdoc cref="SceneAsset(string)"/>
+        public SceneAsset() { }
+
+        /// <inheritdoc cref="SceneAsset"/>
+        /// <param name="_guid"><inheritdoc cref="GUID" path="/summary"/></param>
+        public SceneAsset(string _guid)
+        {
+            guid = _guid;
         }
         #endregion
 

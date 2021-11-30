@@ -19,6 +19,7 @@ namespace EnhancedEditor.Editor
     /// Editor window used to manage all scenes and scene bundles in the project,
     /// with the ability to easily open and close them in the editor.
     /// </summary>
+    [InitializeOnLoad]
     public class SceneHandlerWindow : EditorWindow
     {
         #region Window GUI
@@ -42,27 +43,39 @@ namespace EnhancedEditor.Editor
 
         private const float CreateGroupButtonWidth = 105f;
         private const float RefreshButtonWidth = 55f;
+        private const float CoreSceneButtonWidth = 102f;
+
+        private const string OpenFormat = "Close all open scene(s) and open this {0} in the editor.";
+        private const string AddFormat = "Open this {0} additively in the editor.";
+        private const string CloseFormat = "Close this {0} in the editor.";
+        private const string PlayFormat = "Enter play mode with this {0} first loaded.";
+        private const string SceneFormat = "scene";
+        private const string BundleFormat = "bundle";
+
         private const string UndoRecordTitle = "Scene Handler Change";
+        private const string UnloadCoreSceneKey = "UnloadCoreScene";
+        private const string PlayScenesKey = "PlayScenes";
+        private const char PlaySceneSeparator = ':';
 
         private static readonly AutoManagedResource<SceneHandler> resource = new AutoManagedResource<SceneHandler>();
 
         private readonly GUIContent createGroupGUI = new GUIContent(" Create Group", "Create a new group.");
         private readonly GUIContent refreshGUI = new GUIContent("Refresh", "Refresh all scenes and scene bundles.");
+        private readonly GUIContent coreSceneGUI = new GUIContent(" Core Scene", "Edit the Core Scene settings");
         private readonly GUIContent[] tabsGUI = new GUIContent[]
                                                     {
                                                         new GUIContent("Scenes", "Browse and manage all Scenes in the project."),
                                                         new GUIContent("Scene Bundles", "Browse and manage all Scene Bundles in the project."),
-                                                        new GUIContent("Core Scene", "Edit the Core Scene settings.")
                                                     };
 
         private readonly GUIContent moveUpGUI = new GUIContent("Move Up ↑", "Move this group up in the hierarchy.");
         private readonly GUIContent moveDownGUI = new GUIContent("Move Down ↓", "Move this group down in the hierarchy.");
         private readonly GUIContent deleteGroupGUI = new GUIContent(string.Empty, "Delete this group.");
 
-        private readonly GUIContent openSceneGUI = new GUIContent("OPEN", "Close all open scene(s) and open this one in the editor.");
-        private readonly GUIContent addSceneGUI = new GUIContent("ADD.", "Open this scene additively in the editor.");
-        private readonly GUIContent closeSceneGUI = new GUIContent("CLOSE", "Close this scene in the editor.");
-        private readonly GUIContent playSceneGUI = new GUIContent(string.Empty, "Switch to play mode with this scene as the first loaded one.");
+        private readonly GUIContent openGUI = new GUIContent("OPEN");
+        private readonly GUIContent addGUI = new GUIContent("ADD.");
+        private readonly GUIContent closeGUI = new GUIContent("CLOSE");
+        private readonly GUIContent playGUI = new GUIContent(string.Empty);
         private readonly GUIContent menuGUI = new GUIContent(string.Empty, "Show additional options.");
 
         /// <summary>
@@ -77,6 +90,12 @@ namespace EnhancedEditor.Editor
 
         // -----------------------
 
+        static SceneHandlerWindow()
+        {
+            EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
+            EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
+        }
+
         private void OnEnable()
         {
             Database.Refresh();
@@ -86,17 +105,16 @@ namespace EnhancedEditor.Editor
             EditorSceneManager.sceneClosed -= OnSceneClosed;
             EditorSceneManager.sceneLoaded -= OnSceneLoaded;
             EditorSceneManager.sceneUnloaded -= OnSceneUnloaded;
-            EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
 
             EditorSceneManager.sceneOpened += OnSceneOpened;
             EditorSceneManager.sceneClosed += OnSceneClosed;
             EditorSceneManager.sceneLoaded += OnSceneLoaded;
             EditorSceneManager.sceneUnloaded += OnSceneUnloaded;
-            EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
 
             createGroupGUI.image = EditorGUIUtility.FindTexture("CreateAddNew");
+            coreSceneGUI.image = EditorGUIUtility.IconContent("SceneAsset Icon").image;
             deleteGroupGUI.image = EditorGUIUtility.IconContent("P4_DeletedLocal").image;
-            playSceneGUI.image = EditorGUIUtility.FindTexture("PlayButton");
+            playGUI.image = EditorGUIUtility.FindTexture("PlayButton");
             menuGUI.image = EditorGUIUtility.FindTexture("_Menu");
         }
 
@@ -145,6 +163,20 @@ namespace EnhancedEditor.Editor
                 GUILayout.Space(5f);
 
                 selectedTab = EnhancedEditorGUILayout.CenteredToolbar(selectedTab, tabsGUI, GUILayout.Height(25f));
+
+                // Core scene.
+                Rect _position = new Rect(GUILayoutUtility.GetLastRect())
+                {
+                    x = position.width - (CoreSceneButtonWidth + 3f),
+                    width = CoreSceneButtonWidth,
+                    height = 25f
+                };
+
+                if (GUI.Button(_position, coreSceneGUI))
+                {
+                    EnhancedEditorSettings.OpenPreferencesSettings();
+                }
+
                 switch (selectedTab)
                 {
                     // Scenes.
@@ -157,14 +189,16 @@ namespace EnhancedEditor.Editor
                         DrawBundles();
                         break;
 
-                    // Core Scene.
-                    case 2:
-                        DrawCoreScene();
-                        break;
-
                     default:
                         break;
                 }
+            }
+
+            // Renaming group focus update.
+            if (!EditorGUIUtility.editingTextField || (Event.current.type == EventType.MouseDown))
+            {
+                GUIUtility.keyboardControl = 0;
+                Repaint();
             }
         }
 
@@ -195,6 +229,11 @@ namespace EnhancedEditor.Editor
 
         private void DrawScenes()
         {
+            openGUI.tooltip = string.Format(OpenFormat, SceneFormat);
+            addGUI.tooltip = string.Format(AddFormat, SceneFormat);
+            closeGUI.tooltip = string.Format(CloseFormat, SceneFormat);
+            playGUI.tooltip = string.Format(PlayFormat, SceneFormat);
+
             for (int _i = 1; _i < Database.sceneGroups.Length; _i++)
             {
                 var _group = Database.sceneGroups[_i];
@@ -259,7 +298,10 @@ namespace EnhancedEditor.Editor
             void OnPlay(int _groupIndex, int _elementIndex)
             {
                 var _element = Database.sceneGroups[_groupIndex].Scenes[_elementIndex];
-                // Play.
+                string _path = AssetDatabase.GUIDToAssetPath(_element.GUID);
+
+                SessionState.SetString(PlayScenesKey, _path);
+                EditorApplication.EnterPlaymode();
             }
 
             void OnOptionsMenu(int _groupIndex, int _elementIndex, GenericMenu _menu)
@@ -317,6 +359,11 @@ namespace EnhancedEditor.Editor
 
         private void DrawBundles()
         {
+            openGUI.tooltip = string.Format(OpenFormat, BundleFormat);
+            addGUI.tooltip = string.Format(AddFormat, BundleFormat);
+            closeGUI.tooltip = string.Format(CloseFormat, BundleFormat);
+            playGUI.tooltip = string.Format(PlayFormat, BundleFormat);
+
             for (int _i = 1; _i < Database.bundleGroups.Length; _i++)
             {
                 var _group = Database.bundleGroups[_i];
@@ -394,7 +441,16 @@ namespace EnhancedEditor.Editor
             void OnPlay(int _groupIndex, int _elementIndex)
             {
                 var _element = Database.bundleGroups[_groupIndex].Bundles[_elementIndex];
-                // Play.
+                string _playScenes = string.Empty;
+
+                foreach (SceneAsset _scene in _element.SceneBundle.Scenes)
+                {
+                    string _path = AssetDatabase.GUIDToAssetPath(_scene.guid);
+                    _playScenes += $"{_path}{PlaySceneSeparator}";
+                }
+
+                SessionState.SetString(PlayScenesKey, _playScenes);
+                EditorApplication.EnterPlaymode();
             }
 
             void OnOptionsMenu(int _groupIndex, int _elementIndex, GenericMenu _menu)
@@ -443,11 +499,6 @@ namespace EnhancedEditor.Editor
             }
         }
 
-        private void DrawCoreScene()
-        {
-
-        }
-
         // -----------------------
 
         private bool DrawGroup(SceneHandler.Group[] _groups, int _index, int _length,
@@ -462,10 +513,9 @@ namespace EnhancedEditor.Editor
             {
                 Rect _temp = new Rect(_groupPosition)
                 {
-                    x = _groupPosition.x + 7f,
+                    xMin = _groupPosition.x + 7f,
                     y = _groupPosition.y + 3f,
                     height = EditorGUIUtility.singleLineHeight,
-                    xMax = _groupPosition.xMax - (MoveUpButtonWidth + MoveDownButtonWidth + EnhancedEditorGUIUtility.IconWidth + 10f + 10f + 5f + 1f)
                 };
 
                 if (_index == 0)
@@ -474,7 +524,15 @@ namespace EnhancedEditor.Editor
                 }
                 else
                 {
-                    _groups[_index].Name = EditorGUI.TextField(_temp, _groups[_index].Name, EditorStyles.boldLabel);
+                    string _id = EnhancedEditorGUIUtility.GetControlID(FocusType.Keyboard).ToString();
+                    _temp.xMax = _groupPosition.xMax - (MoveUpButtonWidth + MoveDownButtonWidth + EnhancedEditorGUIUtility.IconWidth + 10f + 10f + 5f + 1f);
+
+                    GUI.SetNextControlName(_id);
+                    GUIStyle _style = (GUI.GetNameOfFocusedControl() == _id)
+                                    ? EditorStyles.textField
+                                    : EditorStyles.boldLabel;
+
+                    _groups[_index].Name = EditorGUI.TextField(_temp, _groups[_index].Name, _style);
 
                     _temp.x += _temp.width + 10f;
                     _temp.y += 2f;
@@ -485,6 +543,8 @@ namespace EnhancedEditor.Editor
                     {
                         int _destinationIndex = Mathf.Max(1, _index - 1);
                         ArrayUtility.Move(_groups, _index, _destinationIndex);
+
+                        return false;
                     }
 
                     _temp.x += _temp.width;
@@ -494,6 +554,8 @@ namespace EnhancedEditor.Editor
                     {
                         int _destinationIndex = Mathf.Min(_groups.Length - 1, _index + 1);
                         ArrayUtility.Move(_groups, _index, _destinationIndex);
+
+                        return false;
                     }
 
                     _temp.x += _temp.width + 10f;
@@ -550,7 +612,7 @@ namespace EnhancedEditor.Editor
                 // Open button.
                 using (var _scope = EnhancedGUI.GUIColor.Scope(SuperColor.Cyan.Get(.9f)))
                 {
-                    if (GUI.Button(_temp, openSceneGUI))
+                    if (GUI.Button(_temp, openGUI))
                         _onOpen(_index, _i);
                 }
 
@@ -562,10 +624,10 @@ namespace EnhancedEditor.Editor
                 {
                     if (_isLoaded)
                     {
-                        if (GUI.Button(_temp, closeSceneGUI))
+                        if (GUI.Button(_temp, closeGUI))
                             _onClose(_index, _i);
                     }
-                    else if (GUI.Button(_temp, addSceneGUI))
+                    else if (GUI.Button(_temp, addGUI))
                         _onAdd(_index, _i);
                 }
 
@@ -580,7 +642,7 @@ namespace EnhancedEditor.Editor
                 _temp.width = PlayButtonWidth;
 
                 // Play button.
-                if (EnhancedEditorGUI.IconButton(_temp, playSceneGUI))
+                if (EnhancedEditorGUI.IconButton(_temp, playGUI))
                     _onPlay(_index, _i);
 
                 _temp.x -= 17f;
@@ -617,9 +679,10 @@ namespace EnhancedEditor.Editor
             string _searchFilter = searchFilter.ToLower();
 
             // Scene visibility.
-            foreach (var _group in Database.sceneGroups)
+            for (int _i = 0; _i < Database.sceneGroups.Length; _i++)
             {
-                bool _isGroupVisible = false;
+                var _group = Database.sceneGroups[_i];
+                bool _isGroupVisible = _i != 0;
 
                 foreach (var _scene in _group.Scenes)
                 {
@@ -634,14 +697,15 @@ namespace EnhancedEditor.Editor
             }
 
             // Bundle visibility.
-            foreach (var _group in Database.bundleGroups)
+            for (int _i = 0; _i < Database.bundleGroups.Length; _i++)
             {
-                bool _isGroupVisible = false;
+                var _group = Database.bundleGroups[_i];
+                bool _isGroupVisible = _i != 0;
 
-                foreach (var _scene in _group.Bundles)
+                foreach (var _bundle in _group.Bundles)
                 {
-                    bool _isVisible = _scene.SceneBundle.name.ToLower().Contains(_searchFilter);
-                    _scene.IsVisible = _isVisible;
+                    bool _isVisible = _bundle.SceneBundle.name.ToLower().Contains(_searchFilter);
+                    _bundle.IsVisible = _isVisible;
 
                     if (_isVisible)
                         _isGroupVisible = true;
@@ -653,6 +717,85 @@ namespace EnhancedEditor.Editor
         #endregion
 
         #region Scene Management Delegates
+        private static void OnPlayModeStateChanged(PlayModeStateChange _state)
+        {
+            Database.UpdateLoadedScenes();
+
+            switch (_state)
+            {
+                // Unload the core scene if not wanted when entering edit mode.
+                case PlayModeStateChange.EnteredEditMode:
+                {
+                    if (SessionState.GetBool(UnloadCoreSceneKey, false))
+                    {
+                        CloseSceneFromGUID(EnhancedEditorSettings.Settings.CoreScene.guid);
+                        SessionState.SetBool(UnloadCoreSceneKey, false);
+                    }
+                }
+                break;
+
+                // Load the core scene if enabled when exiting edit mode.
+                case PlayModeStateChange.ExitingEditMode:
+                {
+                    if (EnhancedEditorSettings.Settings.IsCoreSceneEnabled)
+                    {
+                        string _path = AssetDatabase.GUIDToAssetPath(EnhancedEditorSettings.Settings.CoreScene.guid);
+                        if (string.IsNullOrEmpty(_path))
+                            return;
+
+                        Scene _coreScene = EditorSceneManager.GetSceneByPath(_path);
+                        Scene _firstScene = EditorSceneManager.GetSceneAt(0);
+
+                        if (!_coreScene.isLoaded && OpenScene(_path, OpenSceneMode.Additive))
+                        {
+                            SessionState.SetBool(UnloadCoreSceneKey, true);
+                            _coreScene = EditorSceneManager.GetSceneByPath(_path);
+                        }
+
+                        if (_coreScene != _firstScene)
+                            EditorSceneManager.MoveSceneBefore(_coreScene, _firstScene);
+
+                        EditorSceneManager.SetActiveScene(_coreScene);
+                    }
+                }
+                break;
+
+                // Load all required scenes when entering play mode.
+                case PlayModeStateChange.EnteredPlayMode:
+                    string _playScenes = SessionState.GetString(PlayScenesKey, string.Empty);
+                    if (!string.IsNullOrEmpty(_playScenes))
+                    {
+                        string _coreScenePath = AssetDatabase.GUIDToAssetPath(EnhancedEditorSettings.Settings.CoreScene.guid);
+                        bool _isCoreSceneEnabled = EnhancedEditorSettings.Settings.IsCoreSceneEnabled;
+                        int _loadedCount = EditorSceneManager.loadedSceneCount;
+
+                        string[] _allScenes = _playScenes.Split(PlaySceneSeparator);
+                        foreach (string _scenePath in _allScenes)
+                        {
+                            Scene _scene = EditorSceneManager.GetSceneByPath(_scenePath);
+                            if (!_scene.isLoaded)
+                                OpenScene(_scenePath, OpenSceneMode.Additive);
+                        }
+
+                        for (int _i = 0; _i < _loadedCount; _i++)
+                        {
+                            Scene _scene = EditorSceneManager.GetSceneAt(_i);
+                            if ((_scene.path != _coreScenePath) && !_playScenes.Contains(_scene.path))
+                                CloseScene(_scene.path);
+                        }
+
+                        SessionState.SetString(PlayScenesKey, string.Empty);
+                    }
+                    break;
+
+                case PlayModeStateChange.ExitingPlayMode:
+                    break;
+
+                default:
+                    break;
+            }
+        }
+
         private void OnSceneOpened(Scene _scene, OpenSceneMode _mode)
         {
             Database.UpdateLoadedScenes();
@@ -671,102 +814,6 @@ namespace EnhancedEditor.Editor
         private void OnSceneUnloaded(Scene _scene)
         {
             Database.UpdateLoadedScenes(_scene.buildIndex);
-        }
-
-        private void OnPlayModeStateChanged(PlayModeStateChange _state)
-        {
-            Database.UpdateLoadedScenes();
-        }
-        #endregion
-
-        #region Core Scene
-        // -------------------------------------------
-        // Core Scene
-        // -------------------------------------------
-
-        private const float EnableWidth = 50;
-        private const float ToggleWidth = 15;
-        private const float HelpBoxHeight = 36;
-
-        private readonly GUIContent coreScenePathGUI = new GUIContent("Core scene path", "Path of the scene to load when entering play mode");
-        private readonly GUIContent isEnableGUI = new GUIContent("Enable", "Is the core scene loading enable");
-
-        /// <summary>
-        /// ID used do display a help box at the bottom of the window :
-        /// 
-        /// • -1  :  Registration Error
-        /// • 0   :  Copy path info
-        /// • 1   :  Autoload scene registered
-        /// • 2   :  Scene autoload disabled
-        /// </summary>
-        private int messageID = 0;
-
-        // -----------------------
-
-
-        /// <summary>
-        /// This method has two purposes:
-        /// 
-        /// • First, when Unity starts, set registered core scene if one,
-        /// as Unity do not keep it in cache.
-        /// 
-        /// • Second, if the associated option is enabled, when entering play mode,
-        /// register active scenes to load them as soon as loading ends.
-        /// 
-        /// Sene loading cannot be performed before entering play mode,
-        /// and once in, active scene informations will not be available anymore.
-        /// </summary>
-        [InitializeOnLoadMethod]
-        private static void Initialization()
-        {
-            // When entering play mode, register active scenes path to load them,
-            // if the associated option is enabled.
-            /*if (EditorApplication.isPlayingOrWillChangePlaymode && LoadSceneHandlerSettings(out SceneHandler _settings)
-                && _settings.IsCoreSceneEnabled && !IsCoreSceneLoaded(out int _coreIndex))
-            {
-                EditorApplication.ExitPlaymode();
-                EditorApplication.playModeStateChanged += (mode) =>
-                {
-                    // First, open core scene now play mode has been exited.
-                    EditorSceneManager.OpenScene(AssetDatabase.GetAssetPath(_settings.CoreScene), OpenSceneMode.Additive);
-
-                    Scene _coreScene = EditorSceneManager.GetSceneAt(_coreIndex);
-                    int _sceneCount = EditorSceneManager.sceneCount;
-
-                    // Reorder scenes to set Core one on top of the hierarchy,
-                    // and set first following scene as active one.
-                    if (_sceneCount > 1)
-                    {
-                        for (int _i = 0; _i < _sceneCount; _i++)
-                        {
-                            Scene _scene = EditorSceneManager.GetSceneAt(_i);
-                            if (_scene.path != _coreScene.path && _coreIndex > _i)
-                            {
-                                EditorSceneManager.MoveSceneBefore(_coreScene, _scene);
-                                _coreIndex = _i;
-                            }
-                        }
-                    }
-
-                    EditorSceneManager.SetActiveScene(EditorSceneManager.GetSceneAt(0));
-
-                    // Finally, re-enter play mode.
-                    EditorApplication.EnterPlaymode();
-                };
-            }
-
-            // ----- Local Method ----- //
-
-            bool IsCoreSceneLoaded(out int _index)
-            {
-                for (_index = 0; _index < EditorSceneManager.sceneCount; _index++)
-                {
-                    if (EditorSceneManager.GetSceneAt(_index).name == _settings.CoreScene.name)
-                        return true;
-                }
-
-                return false;
-            }*/
         }
         #endregion
 
