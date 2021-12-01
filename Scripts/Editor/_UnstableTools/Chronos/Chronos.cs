@@ -12,26 +12,28 @@ namespace EnhancedEditor.Editor
     /// <summary>
     /// 
     /// </summary>
-	public static class TimeFactor
+	public static class Chronos
     {
         #region Global Members
         public static readonly GUIContent[] buttonsGUI = new GUIContent[]
                                                                 {
-                                                                    new GUIContent("<<", ""),
-                                                                    new GUIContent("X", ""),
-                                                                    new GUIContent(">>", ""),
+                                                                    new GUIContent("", ""),
+                                                                    new GUIContent("", ""),
+                                                                    new GUIContent("", ""),
                                                                 };
 
         // -----------------------
 
-        static TimeFactor()
+        static Chronos()
         {
-
+            buttonsGUI[0].image = EditorGUIUtility.FindTexture("Profiler.FirstFrame");
+            buttonsGUI[1].image = EditorGUIUtility.FindTexture("UnityEditor.AnimationWindow");
+            buttonsGUI[2].image = EditorGUIUtility.FindTexture("Profiler.LastFrame");
         }
         #endregion
 
-        #region GUI
-        //[EditorToolbarRightExtension(Order = 75)]
+        #region GUI Draw
+        [EditorToolbarRightExtension(Order = 75)]
         #pragma warning disable IDE0051
         private static void GUI()
         {

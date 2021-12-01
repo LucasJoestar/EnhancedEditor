@@ -46,8 +46,9 @@ namespace EnhancedEditor.Editor
         public static MultiTagsWindow GetWindow()
         {
             MultiTagsWindow _window = GetWindow<MultiTagsWindow>("Multi-Tags");
-            _window.Show();
+            _window.titleContent.image = EditorGUIUtility.FindTexture("FilterByLabel");
 
+            _window.Show();
             return _window;
         }
 

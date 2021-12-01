@@ -614,12 +614,8 @@ namespace EnhancedEditor.Editor
                 _color = _newColor;
             }
 
-            // Load icon.
-            if (paletteMenuGUI.image == null)
-                paletteMenuGUI.image = EditorGUIUtility.FindTexture("CreateAddNew");
-
             // Button to show a menu with additional options.
-            if (IconButton(_temp, paletteMenuGUI, EditorStyles.label))
+            if (EditorGUI.DropdownButton(_temp, paletteMenuGUI, FocusType.Keyboard, EnhancedEditorStyles.PaneOptions))
             {
                 GenericMenu _menu = GetColorPaletteOptionMenu(_palette, _color);
                 _menu.DropDown(_temp);

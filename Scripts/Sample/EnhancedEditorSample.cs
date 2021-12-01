@@ -8,8 +8,10 @@ using UnityEngine;
 
 namespace EnhancedEditor.Sample
 {
+    public interface ISerializable { }
+
     #pragma warning disable 0414
-    public class EnhancedEditorSample : MonoBehaviour, ISerilizable
+    public class EnhancedEditorSample : MonoBehaviour, ISerializable
     {
         [System.Serializable]
         public class Sample
@@ -65,7 +67,7 @@ namespace EnhancedEditor.Sample
             }
         }
 
-        public SerializedInterface<ISerilizable> Interface = null;
+        public SerializedInterface<ISerializable> Interface = null;
 
         [Button(SuperColor.Green)]
         public void InterfaceTest()

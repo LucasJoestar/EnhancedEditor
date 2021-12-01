@@ -155,8 +155,9 @@ namespace EnhancedEditor.Editor
         public static PinboardWindow GetWindow()
         {
             PinboardWindow _window = GetWindow<PinboardWindow>("Pinboard");
-            _window.Show();
+            _window.titleContent.image = EditorGUIUtility.IconContent("pin").image;
 
+            _window.Show();
             return _window;
         }
 

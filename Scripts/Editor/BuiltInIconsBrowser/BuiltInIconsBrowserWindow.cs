@@ -59,8 +59,9 @@ namespace EnhancedEditor.Editor
         public static BuiltInIconsBrowserWindow GetWindow()
         {
             BuiltInIconsBrowserWindow _window = GetWindow<BuiltInIconsBrowserWindow>("Built-in Icons Browser");
-            _window.Show();
+            _window.titleContent.image = EditorGUIUtility.IconContent("search_icon@2x").image;
 
+            _window.Show();
             return _window;
         }
 

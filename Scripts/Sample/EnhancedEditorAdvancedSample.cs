@@ -9,7 +9,7 @@ using UnityEngine;
 
 namespace EnhancedEditor.Sample
 {
-    public interface MyInterface : ISerilizable { }
+    public interface MyInterface { }
 
     #pragma warning disable 0414
     [InstanceTracker]

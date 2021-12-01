@@ -102,8 +102,9 @@ namespace EnhancedEditor.Editor
         public static AnimationEventTrackerWindow GetWindow()
         {
             AnimationEventTrackerWindow _window = GetWindow<AnimationEventTrackerWindow>("Animation Event Tracker");
-            _window.Show();
+            _window.titleContent.image = EditorGUIUtility.IconContent("DotFrameDotted").image;
 
+            _window.Show();
             return _window;
         }
 

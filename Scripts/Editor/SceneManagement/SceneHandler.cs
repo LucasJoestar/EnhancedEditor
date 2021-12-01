@@ -321,6 +321,8 @@ namespace EnhancedEditor.Editor
 
             foreach (var _group in bundleGroups)
                 Array.Sort(_group.Bundles);
+
+            SaveChanges();
         }
         #endregion
 
@@ -330,6 +332,11 @@ namespace EnhancedEditor.Editor
         private static void OpenSceneHandlerWindow()
         {
             SceneHandlerWindow.GetWindow();
+        }
+
+        internal void SaveChanges()
+        {
+            EditorUtility.SetDirty(this);
         }
         #endregion
     }

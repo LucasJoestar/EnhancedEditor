@@ -22,6 +22,7 @@ namespace EnhancedEditor.Editor
         #region Settings Data
         public const string AutoManagedResourceDefaultDirectory = "EnhancedEditor/AutoManagedResources";
         public const string InstanceTrackerDefaultDirectory = "EnhancedEditor/Editor/InstanceTrackers";
+        public const string ScriptTemplateDefaultDirectory = "EnhancedEditor/Editor/ScriptTemplates";
         public const int AutosaveDefaultInterval = 300;
 
         public static string BuildDefaultDirectory
@@ -82,6 +83,11 @@ namespace EnhancedEditor.Editor
         /// The directory in the project where are created all instance trackers (must be in an Editor folder).
         /// </summary>
         public string InstanceTrackerDirectory = InstanceTrackerDefaultDirectory;
+
+        /// <summary>
+        /// The directory in the project where are stored all script templates.
+        /// </summary>
+        public string ScriptTemplateDirectory = ScriptTemplateDefaultDirectory;
 
         /// <summary>
         /// The core scene to load when entering play mode.
@@ -236,6 +242,7 @@ namespace EnhancedEditor.Editor
 
         private const string AutoManagedResourceDirectoryPanelTitle = "Auto-Managed Resources Default Directory";
         private const string InstanceTrackerDirectoryPanelTitle = "Instance Trackers Directory";
+        private const string ScriptTemplateDirectoryPanelTitle = "Script Templates Directory";
         private const string BuildDirectoryPanelTitle = "Build Directory";
 
         private const string CoreSceneMessage = "The Core Scene system allows to always load a specific scene first when entering play mode in the editor.";
@@ -249,6 +256,9 @@ namespace EnhancedEditor.Editor
 
         private static readonly GUIContent instanceTrackerDirectoryGUI = new GUIContent("Instance Tracker Dir.",
                                                                                        "Directory in the project where are created all instance trackers.");
+
+        private static readonly GUIContent scriptTemplateDirectoryGUI = new GUIContent("Script Template Dir.",
+                                                                                       "Directory in the project where are stored all script templates.");
 
         private static readonly GUIContent buildDirectoryGUI = new GUIContent("Build Directory",
                                                                              "Directory where to build and look for existing builds of the game from the BuildPipelineWindow.");
@@ -300,13 +310,18 @@ namespace EnhancedEditor.Editor
 
             // Auto-managed resource directory.
             _settings.AutoManagedResourceDirectory = EnhancedEditorGUILayout.FolderField(autoManagedResourceDirectoryGUI,
-                                                                                            _settings.AutoManagedResourceDirectory, false,
-                                                                                            AutoManagedResourceDirectoryPanelTitle);
+                                                                                         _settings.AutoManagedResourceDirectory, false,
+                                                                                         AutoManagedResourceDirectoryPanelTitle);
 
             // Instance trackers dirctory.
             _settings.InstanceTrackerDirectory = EnhancedEditorGUILayout.EditorFolderField(instanceTrackerDirectoryGUI,
-                                                                                              _settings.InstanceTrackerDirectory,
-                                                                                              InstanceTrackerDirectoryPanelTitle);
+                                                                                           _settings.InstanceTrackerDirectory,
+                                                                                           InstanceTrackerDirectoryPanelTitle);
+
+            // Script templates dirctory.
+            _settings.ScriptTemplateDirectory = EnhancedEditorGUILayout.FolderField(scriptTemplateDirectoryGUI,
+                                                                                    _settings.ScriptTemplateDirectory, false,
+                                                                                    ScriptTemplateDirectoryPanelTitle);
 
             GUILayout.Space(15f);
 

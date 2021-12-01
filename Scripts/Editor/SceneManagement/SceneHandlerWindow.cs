@@ -32,8 +32,9 @@ namespace EnhancedEditor.Editor
         public static SceneHandlerWindow GetWindow()
         {
             SceneHandlerWindow _window = GetWindow<SceneHandlerWindow>("Scene Handler");
-            _window.Show();
+            _window.titleContent.image = EditorGUIUtility.IconContent("SceneAsset On Icon").image;
 
+            _window.Show();
             return _window;
         }
 
@@ -195,9 +196,11 @@ namespace EnhancedEditor.Editor
             }
 
             // Renaming group focus update.
-            if (!EditorGUIUtility.editingTextField || (Event.current.type == EventType.MouseDown))
+            if ((GUIUtility.keyboardControl != 0) && !EditorGUIUtility.editingTextField || (Event.current.type == EventType.MouseDown))
             {
                 GUIUtility.keyboardControl = 0;
+                Database.SaveChanges();
+
                 Repaint();
             }
         }
@@ -352,6 +355,8 @@ namespace EnhancedEditor.Editor
                     {
                         AssetDatabase.DeleteAsset(_path);
                         ArrayUtility.RemoveAt(ref Database.sceneGroups[_groupIndex].Scenes, _elementIndex);
+
+                        Database.SaveChanges();
                     }
                 });
             }
@@ -494,6 +499,8 @@ namespace EnhancedEditor.Editor
                     {
                         AssetDatabase.DeleteAsset(_path);
                         ArrayUtility.RemoveAt(ref Database.bundleGroups[_groupIndex].Bundles, _elementIndex);
+
+                        Database.SaveChanges();
                     }
                 });
             }
@@ -544,6 +551,7 @@ namespace EnhancedEditor.Editor
                         int _destinationIndex = Mathf.Max(1, _index - 1);
                         ArrayUtility.Move(_groups, _index, _destinationIndex);
 
+                        Database.SaveChanges();
                         return false;
                     }
 
@@ -555,6 +563,7 @@ namespace EnhancedEditor.Editor
                         int _destinationIndex = Mathf.Min(_groups.Length - 1, _index + 1);
                         ArrayUtility.Move(_groups, _index, _destinationIndex);
 
+                        Database.SaveChanges();
                         return false;
                     }
 
