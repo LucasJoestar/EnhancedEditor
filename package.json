@@ -1,0 +1,17 @@
+{
+  "name": "com.enhancededitor.unity",
+  "version": "0.1.0",
+  "displayName": "Enhanced Editor",
+  "description": "Miscellaneous tools and improvements for Unity.",
+  "unity": "2019.4",
+  "keywords": [
+    "editor",
+    "extension",
+    "devtools"
+  ],
+  "author": {
+    "name": "Lucas Guibert",
+    "email": "contact@lucas-guibert.com",
+    "url": "https://lucas-guibert.com/"
+  }
+}
