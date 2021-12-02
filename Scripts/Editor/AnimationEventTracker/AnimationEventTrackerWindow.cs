@@ -7,7 +7,9 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+
 using UnityEditor;
+
 using UnityEngine;
 
 using Object = UnityEngine.Object;
@@ -441,7 +443,7 @@ namespace EnhancedEditor.Editor
                 height = 28f
             };
 
-            bool _isCorrupted = _wrapper == null;   
+            bool _isCorrupted = _wrapper == null;
             if (_isCorrupted)
             {
                 // Missing event informations.
@@ -819,8 +821,12 @@ namespace EnhancedEditor.Editor
                 AssetDatabase.OpenAsset(_animator);
             }
 
+#if UNITY_2020_2_OR_NEWER
+            // @todo AnimationWindow is interenal for Unity 2020.1 and older, so it's inaccessible. We could get it through reflection for
+            // older versions. For now, setting up the animation clip is just disabled.
             AnimationWindow _window = GetWindow<AnimationWindow>(string.Empty, false);
             _window.animationClip = clips[selectedClip];
+#endif
         }
 
         private void SaveEvents()
@@ -968,7 +974,7 @@ namespace EnhancedEditor.Editor
 
                                     EventMethodWrapper _method = new EventMethodWrapper(_methodInfo, _label, _eventType);
                                     _wrappers.Add(_method);
-                                } 
+                                }
                             }
                         }
                     }
