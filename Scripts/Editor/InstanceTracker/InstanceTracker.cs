@@ -7,8 +7,10 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+
 using UnityEditor;
 using UnityEditor.SceneManagement;
+
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -19,7 +21,7 @@ namespace EnhancedEditor.Editor
     /// <br/> Usefull to keep track of important objects.
     /// </summary>
     [InitializeOnLoad]
-	public class InstanceTracker : ScriptableObject
+    public class InstanceTracker : ScriptableObject
     {
         #region Scene Track
         [Serializable]
@@ -136,6 +138,10 @@ namespace EnhancedEditor.Editor
             if (trackers == null)
                 trackers = EnhancedEditorUtility.LoadAssets<InstanceTracker>();
 
+
+            // @todo TypeCache utility doesn't exist for Unity versions older than 2019.2. For now, this feature is completely disabled for older
+            // versions.
+#if UNITY_2019_2_OR_NEWER
             var _types = TypeCache.GetTypesWithAttribute<InstanceTrackerAttribute>();
             foreach (var _type in _types)
             {
@@ -159,6 +165,7 @@ namespace EnhancedEditor.Editor
                     AssetDatabase.SaveAssets();
                 }
             }
+#endif
 
             string _guid = AssetDatabase.AssetPathToGUID(_scene.path);
             _scene.GetRootGameObjects(rootGameObjects);

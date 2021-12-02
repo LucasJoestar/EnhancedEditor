@@ -19,7 +19,9 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+
 using UnityEditor;
+
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -67,13 +69,16 @@ namespace EnhancedEditor.Editor
             {
                 toolCount = (int)toolCountInfo.GetValue(null);
             }
-
+            
+// @todo TypeCache utility doesn't exist for Unity versions older than 2019.2. For now, this feature is completely disabled for older
+// versions.
+#if UNITY_2019_2_OR_NEWER
             // Get all toolbar extensions.
             toolbarLeftExtensions = GetExtensions<EditorToolbarLeftExtension>(false);
             toolbarRightExtensions = GetExtensions<EditorToolbarRightExtension>(true);
 
             // ----- Local Method ----- \\
-
+            
             Action[] GetExtensions<T>(bool _sortAscending) where T : EditorToolbarExtension
             {
                 // Get matching extension methods.
@@ -105,6 +110,7 @@ namespace EnhancedEditor.Editor
                     return a.CreateDelegate(typeof(Action)) as Action;
                 });
             }
+#endif
         }
         #endregion
 

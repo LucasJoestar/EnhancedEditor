@@ -56,6 +56,9 @@ namespace EnhancedEditor.Editor
 
         private static void LoadDrawers(ref Dictionary<Type, Type> _data, Type _drawer)
         {
+// @todo TypeCache utility doesn't exist for Unity versions older than 2019.2. For now, this feature is completely disabled for older
+// versions.
+#if UNITY_2019_2_OR_NEWER
             if (_data == null)
             {
                 _data = new Dictionary<Type, Type>();
@@ -75,6 +78,7 @@ namespace EnhancedEditor.Editor
                     }
                 }
             }
+#endif
         }
         #endregion
     }
