@@ -83,7 +83,11 @@ namespace EnhancedEditor.Editor
         private void OnGUI()
         {
             toolbarIndex = GUILayout.Toolbar(toolbarIndex, toolbar);
+#if UNITY_2020_1_OR_NEWER
             EditorGUILayout.Space(10);
+#else
+            EditorGUILayout.GetControlRect(false, 10f);
+#endif
 
             Type[] _list;
             switch (toolbarIndex)
@@ -115,19 +119,31 @@ namespace EnhancedEditor.Editor
                 {
                     if (!string.IsNullOrEmpty(_section))
                     {
+#if UNITY_2020_1_OR_NEWER
                         EditorGUILayout.Space(10);
+#else
+                        EditorGUILayout.GetControlRect(false, 10f);
+#endif
                         _rect = EditorGUILayout.GetControlRect(false, 1);
                         _rect.x += 25;
                         _rect.width -= 50;
 
                         EditorGUI.DrawRect(_rect, Color.gray);
+#if UNITY_2020_1_OR_NEWER
                         EditorGUILayout.Space(10);
+#else
+                        EditorGUILayout.GetControlRect(false, 10f);
+#endif
                     }
 
                     _section = _assembly;
 
                     EditorGUILayout.LabelField(_section.ToString(), EditorStyles.boldLabel);
+#if UNITY_2020_1_OR_NEWER
                     EditorGUILayout.Space(10);
+#else
+                    EditorGUILayout.GetControlRect(false, 10f);
+#endif
                 }
 
                 // Selection of the class new type.
@@ -190,6 +206,6 @@ namespace EnhancedEditor.Editor
             Selection.activeObject = (Object)_newShape;
             Close();
         }
-        #endregion
+#endregion
     }
 }
