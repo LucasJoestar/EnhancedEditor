@@ -57,6 +57,7 @@ namespace EnhancedEditor.Editor
                 string _itemName = ObjectNames.NicifyVariableName(_template.Remove(0, _templateDirectory.Length + 1).Split('.')[0]);
                 string _name = Path.GetFileNameWithoutExtension(_template);
 
+                _template = _template.Remove(0, Application.dataPath.Length + 1);
                 _fileContent += string.Format(ScriptTemplateMenuItem, _itemName, _name, _template);
             }
 
@@ -96,6 +97,8 @@ namespace EnhancedEditor.Editor
             string _path = AssetDatabase.GetAssetPath(Selection.activeObject.GetInstanceID());
             _path = _path.Replace("Assets", Application.dataPath);
 
+            _template = Path.Combine(Application.dataPath, _template);
+
             if (File.Exists(_path))
                 _path = Path.GetDirectoryName(_path);
 
@@ -116,7 +119,7 @@ namespace EnhancedEditor.Editor
                 EditorUtility.DisplayDialog("Script Generation Error",
                                             "Cannot create the desired script in this folder, for a script with the same name already exist in it.",
                                             "OK");
-                //
+                
                 return;
             }
 
