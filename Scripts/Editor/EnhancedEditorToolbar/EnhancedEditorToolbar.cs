@@ -232,15 +232,13 @@ namespace EnhancedEditor.Editor
         /// Draws a group of buttons together, like the ones in the editor toolbar.
         /// </summary>
         /// <param name="_labels">Texts, images and tooltips to be displayed</param>
-        /// <param name="_options"><inheritdoc cref="Button(GUIContent, GUILayoutOption[])" path="/param[@name='_options']"/></param>
         /// <returns>Index of the button the users clicked on if any, -1 otherwise.</returns>
-        public static int ButtonGroup(GUIContent[] _labels, params GUILayoutOption[] _options)
+        public static int ButtonGroup(GUIContent[] _labels)
         {
             GUIStyle _labelStyle = EnhancedEditorStyles.ToolbarLabel;
             int _result = -1;
 
-            Rect _position = EditorGUILayout.GetControlRect(_options);
-            _position.width = Mathf.Round(_position.width / _labels.Length);
+            Rect _position = EditorGUILayout.GetControlRect(GUILayout.Width(0f));
 
             using (var _scope = EnhancedGUI.GUIStyleAlignment.Scope(_labelStyle, TextAnchor.MiddleCenter))
             {
@@ -252,6 +250,9 @@ namespace EnhancedEditor.Editor
                                     ? EnhancedEditorStyles.ToolbarCommandLeft
                                     : ((_i == (_labels.Length - 1)) ? EnhancedEditorStyles.ToolbarCommandRight
                                                                     : EnhancedEditorStyles.ToolbarCommandMid);
+
+                    _position.width = _labelStyle.CalcSize(_content).x + 7f;
+                    EditorGUILayout.GetControlRect(GUILayout.Width(_position.width - EditorGUIUtility.standardVerticalSpacing));
 
                     if (GUI.Button(_position, GUIContent.none, _style))
                         _result = _i;

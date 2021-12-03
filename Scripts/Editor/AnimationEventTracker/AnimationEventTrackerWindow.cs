@@ -102,9 +102,8 @@ namespace EnhancedEditor.Editor
         public static AnimationEventTrackerWindow GetWindow()
         {
             AnimationEventTrackerWindow _window = GetWindow<AnimationEventTrackerWindow>("Animation Event Tracker");
-            _window.titleContent.image = EditorGUIUtility.IconContent("DotFrameDotted").image;
-
             _window.Show();
+
             return _window;
         }
 
@@ -134,6 +133,8 @@ namespace EnhancedEditor.Editor
         {
             Undo.undoRedoPerformed -= OnUndoRedoOperation;
             Undo.undoRedoPerformed += OnUndoRedoOperation;
+
+            titleContent.image = EditorGUIUtility.IconContent("DotFrameDotted").image;
 
             InitializeAnimatorTracker();
             InitializeCorruptedEventTracker();

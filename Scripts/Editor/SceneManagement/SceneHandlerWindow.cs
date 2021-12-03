@@ -32,9 +32,8 @@ namespace EnhancedEditor.Editor
         public static SceneHandlerWindow GetWindow()
         {
             SceneHandlerWindow _window = GetWindow<SceneHandlerWindow>("Scene Handler");
-            _window.titleContent.image = EditorGUIUtility.IconContent("SceneAsset On Icon").image;
-
             _window.Show();
+
             return _window;
         }
 
@@ -112,6 +111,7 @@ namespace EnhancedEditor.Editor
             EditorSceneManager.sceneLoaded += OnSceneLoaded;
             EditorSceneManager.sceneUnloaded += OnSceneUnloaded;
 
+            titleContent.image = EditorGUIUtility.IconContent("SceneAsset On Icon").image;
             createGroupGUI.image = EditorGUIUtility.FindTexture("CreateAddNew");
             coreSceneGUI.image = EditorGUIUtility.IconContent("SceneAsset Icon").image;
             deleteGroupGUI.image = EditorGUIUtility.IconContent("P4_DeletedLocal").image;

@@ -72,7 +72,7 @@ namespace EnhancedEditor.Editor
         // -----------------------
 
         /// <inheritdoc cref="EditorUserSettings"/>
-        [NonSerialized] public EditorUserSettings UserSettings = new EditorUserSettings();
+        public EditorUserSettings UserSettings = new EditorUserSettings();
 
         /// <summary>
         /// The directory in the project where are created all auto-managed resources.
@@ -149,6 +149,10 @@ namespace EnhancedEditor.Editor
             if (!string.IsNullOrEmpty(_data))
             {
                 JsonUtility.FromJsonOverwrite(_data, UserSettings);
+            }
+            else
+            {
+                UserSettings = new EditorUserSettings();
             }
 
             if (string.IsNullOrEmpty(UserSettings.BuildDirectory))
@@ -283,7 +287,6 @@ namespace EnhancedEditor.Editor
                     DrawUserSettings(_settings.UserSettings);
 
                     GUILayout.Space(15f);
-
                     DrawGlobalSettings(_settings);
                 }
             }

@@ -59,9 +59,8 @@ namespace EnhancedEditor.Editor
         public static BuiltInIconsBrowserWindow GetWindow()
         {
             BuiltInIconsBrowserWindow _window = GetWindow<BuiltInIconsBrowserWindow>("Built-in Icons Browser");
-            _window.titleContent.image = EditorGUIUtility.IconContent("search_icon@2x").image;
-
             _window.Show();
+
             return _window;
         }
 
@@ -201,6 +200,8 @@ namespace EnhancedEditor.Editor
             // Repaint on undo / redo operations.
             Undo.undoRedoPerformed -= Repaint;
             Undo.undoRedoPerformed += Repaint;
+
+            titleContent.image = EditorGUIUtility.IconContent("search_icon@2x").image;
         }
 
         private void OnGUI()
