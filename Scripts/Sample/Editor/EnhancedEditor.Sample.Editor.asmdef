@@ -2,9 +2,9 @@
     "name": "EnhancedEditor.Sample.Editor",
     "rootNamespace": "",
     "references": [
-        "GUID:75799b8099ce2e54f8f796e3acc8e06f",
-        "GUID:40b7d6c7684ba8344a2bb87cec188e3a",
-        "GUID:007f7aba8dd994f499a8e16a9059c748"
+        "EnhancedEditor",
+        "EnhancedEditor.Editor",
+        "EnhancedEditor.Sample"
     ],
     "includePlatforms": [
         "Editor"

@@ -6,7 +6,7 @@
 
 using UnityEngine;
 
-#if INPUT_SYSTEM_PACKAGE && ENABLE_INPUT_SYSTEM && CHRONOS_INPUTS
+#if ENABLE_INPUT_SYSTEM && CHRONOS_INPUTS
 using System;
 using UnityEngine.InputSystem;
 #endif
@@ -14,14 +14,18 @@ using UnityEngine.InputSystem;
 namespace EnhancedEditor
 {
     /// <summary>
-    /// Manipulates the global game time scale with the support of keyboard shortcuts.
+    /// Manipulates the global game time scale, with the support of custom inputs at runtime.
     /// </summary>
-    #if INPUT_SYSTEM_PACKAGE && ENABLE_INPUT_SYSTEM
-    [ScriptingDefineSymbol("CHRONOS_INPUTS", "Chronos Input Shortcuts [Keyboard Numpad - * +]")]
+    #if ENABLE_INPUT_SYSTEM
+    [ScriptingDefineSymbol("CHRONOS_INPUTS", "Chronos Runtime Inputs")]
     #endif
     public static class Chronos
     {
         #region Global Members
+        internal const string IncreaseInputKey = "Chronos_IncreaseInput";
+        internal const string ResetInputKey = "Chronos_ResetInput";
+        internal const string DecreaseInputKey = "Chronos_DecreaseInput";
+
         private static readonly float[] chronosValues = new float[]
                                                             {
                                                                 .1f, .2f, .25f, .5f, .75f,
@@ -34,17 +38,27 @@ namespace EnhancedEditor
         [RuntimeInitializeOnLoadMethod]
         private static void Initialization()
         {
-            #if INPUT_SYSTEM_PACKAGE && ENABLE_INPUT_SYSTEM && CHRONOS_INPUTS
-            CreateInput(Keyboard.current.numpadMinusKey, Decrease);
-            CreateInput(Keyboard.current.numpadMultiplyKey, Reset);
-            CreateInput(Keyboard.current.numpadPlusKey, Increase);
+            #if ENABLE_INPUT_SYSTEM && CHRONOS_INPUTS
+            CreateInput(IncreaseInputKey, Keyboard.current.numpadPlusKey, Increase);
+            CreateInput(ResetInputKey, Keyboard.current.numpadMultiplyKey, Reset);
+            CreateInput(DecreaseInputKey, Keyboard.current.numpadMinusKey, Decrease);
 
             // ----- Local Method ----- \\
 
-            void CreateInput(InputControl _defaultControl, Action _onPerformed)
+            void CreateInput(string _prefsKey, InputControl _defaultControl, Action _onPerformed)
             {
-                InputAction _input = new InputAction();
-                _input.AddBinding(_defaultControl);
+                string _value = PlayerPrefs.GetString(_prefsKey, string.Empty);
+                InputAction _input;
+
+                if (string.IsNullOrEmpty(_value))
+                {
+                    _input = new InputAction();
+                    _input.AddBinding(_defaultControl);
+                }
+                else
+                {
+                    _input = JsonUtility.FromJson<InputAction>(_value);
+                }
 
                 _input.performed += (InputAction.CallbackContext _c) =>
                 {
@@ -62,11 +76,11 @@ namespace EnhancedEditor
 
         #region Behaviour
         /// <summary>
-        /// Decreases the game time scale.
+        /// Increases the game time scale.
         /// </summary>
-        public static void Decrease()
+        public static void Increase()
         {
-            int _index = Mathf.Max(GetChronosValueIndex() - 1, 0);
+            int _index = Mathf.Min(GetChronosValueIndex() + 1, chronosValues.Length - 1);
             Time.timeScale = chronosValues[_index];
         }
 
@@ -79,11 +93,11 @@ namespace EnhancedEditor
         }
 
         /// <summary>
-        /// Increases the game time scale.
+        /// Decreases the game time scale.
         /// </summary>
-        public static void Increase()
+        public static void Decrease()
         {
-            int _index = Mathf.Min(GetChronosValueIndex() + 1, chronosValues.Length - 1);
+            int _index = Mathf.Max(GetChronosValueIndex() - 1, 0);
             Time.timeScale = chronosValues[_index];
         }
 
