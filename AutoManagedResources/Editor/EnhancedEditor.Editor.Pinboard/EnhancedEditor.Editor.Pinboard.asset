@@ -60,7 +60,7 @@ MonoBehaviour:
     Indent: 2
     IsFolder: 0
     IsVisible: 1
-    IsSelected: 1
+    IsSelected: 0
   - FolderName: 
     Foldout: 1
     Type: '*UnityEditor.DefaultAsset'

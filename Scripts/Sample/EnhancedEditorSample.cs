@@ -21,6 +21,8 @@ namespace EnhancedEditor.Sample
 
         [Section("SAMPLE SCRIPT")]
 
+        public SceneBundle bundle = null;
+
         [EndFoldout]
         [BeginFoldout("Small Group"), BeginFoldout("Wrapper")]
 
