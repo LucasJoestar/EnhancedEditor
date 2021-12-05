@@ -83,12 +83,12 @@ namespace EnhancedEditor.Editor
 
         // -----------------------
 
-        [Shortcut(ShortcutBasePath + "Decrease Time Scale", KeyCode.KeypadMinus)]
-        private static void DecreaseShortcut()
+        [Shortcut(ShortcutBasePath + "Increase Time Scale", KeyCode.KeypadPlus)]
+        private static void IncreaseShortcut()
         {
             if (UseShortcuts())
             {
-                Chronos.Decrease();
+                Chronos.Increase();
             }
         }
 
@@ -101,12 +101,12 @@ namespace EnhancedEditor.Editor
             }
         }
 
-        [Shortcut(ShortcutBasePath + "Increase Time Scale", KeyCode.KeypadPlus)]
-        private static void IncreaseShortcut()
+        [Shortcut(ShortcutBasePath + "Decrease Time Scale", KeyCode.KeypadMinus)]
+        private static void DecreaseShortcut()
         {
             if (UseShortcuts())
             {
-                Chronos.Increase();
+                Chronos.Decrease();
             }
         }
 
@@ -114,7 +114,7 @@ namespace EnhancedEditor.Editor
 
         private static bool UseShortcuts()
         {
-            bool _useShortcuts = Application.isFocused || (EditorWindow.focusedWindow == EditorWindow.GetWindow(typeof(SceneView), false, string.Empty, false));
+            bool _useShortcuts = Application.isFocused || (EditorWindow.focusedWindow == SceneView.lastActiveSceneView);
             return _useShortcuts;
         }
         #endif
