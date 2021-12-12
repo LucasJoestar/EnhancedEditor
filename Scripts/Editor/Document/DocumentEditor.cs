@@ -15,7 +15,28 @@ namespace EnhancedEditor.Editor
     [CustomEditor(typeof(Document), true)]
     public class DocumentEditor : UnityObjectEditor
     {
-        #region Global Members
+        #region Styles
+        private static class Styles
+        {
+            public static readonly GUIStyle BigTitleStyle = new GUIStyle("In BigTitle");
+            public static readonly GUIStyle TitleStyle = new GUIStyle(EnhancedEditorStyles.BoldWordWrappedLabel)
+                                                                {
+                                                                    fontSize = TitleSize
+                                                                };
+
+            public static readonly GUIStyle HeaderStyle = new GUIStyle(EnhancedEditorStyles.BoldWordWrappedRichText)
+                                                                {
+                                                                    fontSize = HeaderSize
+                                                                };
+
+            public static readonly GUIStyle LabelStyle = new GUIStyle(EnhancedEditorStyles.WordWrappedRichText)
+                                                                {
+                                                                    fontSize = LabelSize
+                                                                };
+        }
+        #endregion
+
+        #region Editor GUI
         private const float IconSize = 128f;
         private const int TitleSize = 26;
         private const int HeaderSize = 18;
@@ -26,17 +47,11 @@ namespace EnhancedEditor.Editor
 
         private static bool isEditing = false;
 
-        private GUIStyle BigTitleStyle = null;
-        private GUIStyle TitleStyle = null;
-        private GUIStyle HeaderStyle = null;
-        private GUIStyle LabelStyle = null;
-        private bool areStylesInitialized = false;
-
         private Document document = null;
         private Vector2 scroll = new Vector2();
-        #endregion
 
-        #region Document Drawer
+        // -----------------------
+
         protected override void OnEnable()
         {
             base.OnEnable();
@@ -45,19 +60,15 @@ namespace EnhancedEditor.Editor
 
         protected override void OnHeaderGUI()
         {
-            // Styles initialization.
-            if (!areStylesInitialized)
-                InitializeStyles();
-
             // Header.
             float _size = Mathf.Min(IconSize, (EditorGUIUtility.currentViewWidth * .5f) - 50f);
-            using (var _scope = new EditorGUILayout.HorizontalScope(BigTitleStyle))
+            using (var _scope = new EditorGUILayout.HorizontalScope(Styles.BigTitleStyle))
             {
                 GUILayout.Label(document.Icon, EnhancedEditorStyles.CenteredLabel, GUILayout.Width(_size), GUILayout.Height(_size));
 
                 using (var _verticalScope = new EditorGUILayout.VerticalScope())
                 {
-                    GUILayout.Label(document.Title, TitleStyle);
+                    GUILayout.Label(document.Title, Styles.TitleStyle);
                     GUILayout.FlexibleSpace();
 
                     // Edit / Display button.
@@ -94,9 +105,9 @@ namespace EnhancedEditor.Editor
                 }
             }
         }
+        #endregion
 
-        // -----------------------
-
+        #region GUI Draw
         private void DrawDocument()
         {
             foreach (var _section in document.Sections)
@@ -108,7 +119,7 @@ namespace EnhancedEditor.Editor
                 if (!string.IsNullOrEmpty(_section.Header))
                 {
                     _label = EnhancedEditorGUIUtility.GetLabelGUI(_section.Header);
-                    EnhancedEditorGUILayout.UnderlinedLabel(_label, HeaderStyle);
+                    EnhancedEditorGUILayout.UnderlinedLabel(_label, Styles.HeaderStyle);
 
                     GUILayout.Space(5f);
                 }
@@ -117,7 +128,7 @@ namespace EnhancedEditor.Editor
                 if (!string.IsNullOrEmpty(_section.Text))
                 {
                     _label = EnhancedEditorGUIUtility.GetLabelGUI(_section.Text);
-                    EditorGUILayout.LabelField(_label, LabelStyle);
+                    EditorGUILayout.LabelField(_label, Styles.LabelStyle);
                 }
 
                 // Content.
@@ -132,7 +143,7 @@ namespace EnhancedEditor.Editor
                         using (var _verticalScope = new GUILayout.HorizontalScope(EditorStyles.helpBox, GUILayout.Width(_width)))
                         {
                             _label = EnhancedEditorGUIUtility.GetLabelGUI(_section.InfoText);
-                            EditorGUILayout.LabelField(_label, LabelStyle);
+                            EditorGUILayout.LabelField(_label, Styles.LabelStyle);
                         }
                     }
                 }
@@ -155,29 +166,6 @@ namespace EnhancedEditor.Editor
 
                 GUILayout.Space(5f);
             }
-        }
-        #endregion
-
-        #region Utility
-        private void InitializeStyles()
-        {
-            BigTitleStyle = new GUIStyle("In BigTitle");
-            TitleStyle = new GUIStyle(EnhancedEditorStyles.BoldWordWrappedLabel)
-            {
-                fontSize = TitleSize
-            };
-
-            HeaderStyle = new GUIStyle(EnhancedEditorStyles.BoldWordWrappedRichText)
-            {
-                fontSize = HeaderSize
-            };
-
-            LabelStyle = new GUIStyle(EnhancedEditorStyles.WordWrappedRichText)
-            {
-                fontSize = LabelSize
-            };
-
-            areStylesInitialized = true;
         }
         #endregion
     }

@@ -8,9 +8,9 @@
 
 using UnityEngine;
 
-namespace EnhancedEditor.Sample.Sub
+namespace EnhancedEditor.Sample
 {
-	public class InheritanceSample1 : InheritanceSample
+	public class InheritanceSample1 : EnhancedEditorSample
     {
         #region Content
 
