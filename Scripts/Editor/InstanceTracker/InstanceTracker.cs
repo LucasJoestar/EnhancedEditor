@@ -137,11 +137,12 @@ namespace EnhancedEditor.Editor
             if (trackers == null)
                 trackers = EnhancedEditorUtility.LoadAssets<InstanceTracker>();
 
-            Type[] _types = new Type[] { };
+            dynamic _types = null;
 
             #if UNITY_2019_2_OR_NEWER
             _types = TypeCache.GetTypesWithAttribute<InstanceTrackerAttribute>();
             #else
+            _types = new Type[] { };
             foreach (Assembly _assembly in AppDomain.CurrentDomain.GetAssemblies())
             {
                 foreach (Type _type in _assembly.GetTypes())

@@ -81,7 +81,7 @@ namespace EnhancedEditor.Editor
             Action[] GetExtensions<T>(bool _sortAscending) where T : EditorToolbarExtension
             {
                 // Get matching extension methods.
-                MethodInfo[] _methods = TypeCache.GetMethodsWithAttribute<T>();
+                var _methods = TypeCache.GetMethodsWithAttribute<T>();
                 List<MethodInfo> _extensions = new List<MethodInfo>();
 
                 foreach (var _method in _methods)
