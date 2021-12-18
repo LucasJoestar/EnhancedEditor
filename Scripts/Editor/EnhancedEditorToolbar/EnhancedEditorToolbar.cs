@@ -19,9 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-
 using UnityEditor;
-
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -37,6 +35,7 @@ namespace EnhancedEditor.Editor
     public static class EnhancedEditorToolbar
     {
         #region Global Members
+        #if UNITY_2020_1_OR_NEWER
         private static readonly BindingFlags reflectionFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
         private static readonly Assembly editorAssembly = typeof(UnityEditor.Editor).Assembly;
 
@@ -50,6 +49,8 @@ namespace EnhancedEditor.Editor
         private static readonly MethodInfo repaintInfo = typeof(VisualElement).GetMethod("MarkDirtyRepaint");
 
         private static readonly FieldInfo toolCountInfo = toolbarType.GetField("k_ToolCount", reflectionFlags);
+        #endif
+
         private static readonly int toolCount = 7;
 
         private static readonly Action[] toolbarLeftExtensions = new Action[] { };
@@ -62,6 +63,7 @@ namespace EnhancedEditor.Editor
 
         static EnhancedEditorToolbar()
         {
+            #if UNITY_2020_1_OR_NEWER
             EditorApplication.update -= Update;
             EditorApplication.update += Update;
 
@@ -69,10 +71,7 @@ namespace EnhancedEditor.Editor
             {
                 toolCount = (int)toolCountInfo.GetValue(null);
             }
-            
-// @todo TypeCache utility doesn't exist for Unity versions older than 2019.2. For now, this feature is completely disabled for older
-// versions.
-#if UNITY_2019_2_OR_NEWER
+
             // Get all toolbar extensions.
             toolbarLeftExtensions = GetExtensions<EditorToolbarLeftExtension>(false);
             toolbarRightExtensions = GetExtensions<EditorToolbarRightExtension>(true);
@@ -82,7 +81,7 @@ namespace EnhancedEditor.Editor
             Action[] GetExtensions<T>(bool _sortAscending) where T : EditorToolbarExtension
             {
                 // Get matching extension methods.
-                var _methods = TypeCache.GetMethodsWithAttribute<T>();
+                MethodInfo[] _methods = TypeCache.GetMethodsWithAttribute<T>();
                 List<MethodInfo> _extensions = new List<MethodInfo>();
 
                 foreach (var _method in _methods)
@@ -112,11 +111,12 @@ namespace EnhancedEditor.Editor
             }
 #endif
         }
-        #endregion
+#endregion
 
         #region Update
         private static void Update()
         {
+            #if UNITY_2020_1_OR_NEWER
             // Subscribe the toolbar GUI callback every time its reference gets lost.
             // Cannot be done on initialization as some editor elements may not be initialized yet.
             if (!toolbar)
@@ -143,6 +143,7 @@ namespace EnhancedEditor.Editor
                 // Get toolbar repaint delegate.
                 repaintDelegate = repaintInfo.CreateDelegate(typeof(Action), _visualTree) as Action;
             }
+            #endif
         }
         #endregion
 
@@ -280,6 +281,6 @@ namespace EnhancedEditor.Editor
         {
             repaintDelegate();
         }
-        #endregion
+#endregion
     }
 }

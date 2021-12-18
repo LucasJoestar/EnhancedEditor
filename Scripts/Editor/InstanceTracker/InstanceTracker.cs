@@ -7,10 +7,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-
+using System.Reflection;
 using UnityEditor;
 using UnityEditor.SceneManagement;
-
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -138,11 +137,23 @@ namespace EnhancedEditor.Editor
             if (trackers == null)
                 trackers = EnhancedEditorUtility.LoadAssets<InstanceTracker>();
 
+            Type[] _types = new Type[] { };
 
-            // @todo TypeCache utility doesn't exist for Unity versions older than 2019.2. For now, this feature is completely disabled for older
-            // versions.
-#if UNITY_2019_2_OR_NEWER
-            var _types = TypeCache.GetTypesWithAttribute<InstanceTrackerAttribute>();
+            #if UNITY_2019_2_OR_NEWER
+            _types = TypeCache.GetTypesWithAttribute<InstanceTrackerAttribute>();
+            #else
+            foreach (Assembly _assembly in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                foreach (Type _type in _assembly.GetTypes())
+                {
+                    if (_type.GetCustomAttribute<InstanceTrackerAttribute>() != null)
+                    {
+                        ArrayUtility.Add(ref _types, _type);
+                    }
+                }
+            }
+            #endif
+
             foreach (var _type in _types)
             {
                 string _target = _type.AssemblyQualifiedName;
@@ -165,7 +176,6 @@ namespace EnhancedEditor.Editor
                     AssetDatabase.SaveAssets();
                 }
             }
-#endif
 
             string _guid = AssetDatabase.AssetPathToGUID(_scene.path);
             _scene.GetRootGameObjects(rootGameObjects);

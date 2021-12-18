@@ -7,9 +7,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-
 using UnityEditor;
-
 using UnityEngine;
 
 using Object = UnityEngine.Object;
@@ -822,12 +820,18 @@ namespace EnhancedEditor.Editor
                 AssetDatabase.OpenAsset(_animator);
             }
 
-#if UNITY_2020_2_OR_NEWER
-            // @todo AnimationWindow is interenal for Unity 2020.1 and older, so it's inaccessible. We could get it through reflection for
-            // older versions. For now, setting up the animation clip is just disabled.
+            #if UNITY_2020_2_OR_NEWER
             AnimationWindow _window = GetWindow<AnimationWindow>(string.Empty, false);
             _window.animationClip = clips[selectedClip];
-#endif
+            #else
+            Type _type = typeof(UnityEditor.Editor).Assembly.GetType("UnityEditor.AnimationWindow");
+
+            var _window = GetWindow(_type, false, string.Empty);
+            var _state = _type.GetProperty("state", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).GetValue(_window);
+            var _activeClip = _state.GetType().GetProperty("activeAnimationClip", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+
+            _activeClip.SetValue(_state, clips[selectedClip]);
+            #endif
         }
 
         private void SaveEvents()

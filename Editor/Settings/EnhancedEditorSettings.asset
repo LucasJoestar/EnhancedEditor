@@ -13,56 +13,8 @@ MonoBehaviour:
   m_Name: EnhancedEditorSettings
   m_EditorClassIdentifier: 
   UserSettings:
-    buildDirectory: H:/- My Stuff -/EnhancedEditorProject/Builds
+    buildDirectory: H:/- My Stuff -/Projets/EnhancedEditor_2019.1/Builds
     AutosaveInterval: 300
-    increaseTimeScale:
-      m_Name: Increase Time Scale
-      m_Type: 0
-      m_ExpectedControlType: 
-      m_Id: 0be0932d-b0b4-4859-bcc6-5fc4966e92b6
-      m_Processors: 
-      m_Interactions: 
-      m_SingletonActionBindings:
-      - m_Name: 
-        m_Id: 5c71e2e9-2351-4b7f-a325-fd3532c2eb09
-        m_Path: <Keyboard>/numpadPlus
-        m_Interactions: 
-        m_Processors: 
-        m_Groups: 
-        m_Action: Increase Time Scale
-        m_Flags: 0
-    resetTimeScale:
-      m_Name: Reset Time Scale
-      m_Type: 0
-      m_ExpectedControlType: 
-      m_Id: de22e599-fc33-4927-8758-ae0372a7ec18
-      m_Processors: 
-      m_Interactions: 
-      m_SingletonActionBindings:
-      - m_Name: 
-        m_Id: 604e1175-8b22-4409-b8ad-8d129f8df942
-        m_Path: <Keyboard>/numpadMultiply
-        m_Interactions: 
-        m_Processors: 
-        m_Groups: 
-        m_Action: Reset Time Scale
-        m_Flags: 0
-    decreaseTimeScale:
-      m_Name: Decrease Time Scale
-      m_Type: 0
-      m_ExpectedControlType: 
-      m_Id: d9974719-38b7-41ab-bab8-a9e6bd73b7d6
-      m_Processors: 
-      m_Interactions: 
-      m_SingletonActionBindings:
-      - m_Name: 
-        m_Id: 31c4c25d-910b-4f19-9bcd-aeb9297ba2dc
-        m_Path: <Keyboard>/numpadMinus
-        m_Interactions: 
-        m_Processors: 
-        m_Groups: 
-        m_Action: Decrease Time Scale
-        m_Flags: 0
   AutoManagedResourceDirectory: EnhancedEditor/AutoManagedResources
   InstanceTrackerDirectory: EnhancedEditor/Editor/InstanceTrackers
   ScriptTemplateDirectory: EnhancedEditor/Editor/ScriptTemplates

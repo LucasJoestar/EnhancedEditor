@@ -8,12 +8,10 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-
+using System.Reflection;
 using UnityEditor;
 using UnityEditor.Build.Reporting;
-
 using UnityEditorInternal;
-
 using UnityEngine;
 
 using Debug = UnityEngine.Debug;
@@ -1747,14 +1745,25 @@ namespace EnhancedEditor.Editor
         {
             // Get all custom define symbols.
             var _symbols = new List<ScriptingDefineSymbolAttribute>();
-            // @todo TypeCache utility doesn't exist for Unity versions older than 2019.2. For now, this feature is completely disabled for older
-            // versions.
-#if UNITY_2019_2_OR_NEWER
+
+            #if UNITY_2019_2_OR_NEWER
             foreach (var _symbol in TypeCache.GetTypesWithAttribute<ScriptingDefineSymbolAttribute>())
             {
                 _symbols.AddRange(_symbol.GetCustomAttributes(typeof(ScriptingDefineSymbolAttribute), true) as ScriptingDefineSymbolAttribute[]);
             }
-#endif
+            #else
+            foreach (Assembly _assembly in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                foreach (Type _type in _assembly.GetTypes())
+                {
+                    var _typeSymbols = _type.GetCustomAttributes<ScriptingDefineSymbolAttribute>(true);
+                    foreach (var _symbol in _typeSymbols)
+                    {
+                        _symbols.Add(_symbol);
+                    }
+                }
+            }
+            #endif
 
             customSymbols = Array.ConvertAll(_symbols.ToArray(), (s) => new ScriptingDefineSymbolInfo(s));
             Array.Sort(customSymbols, (a, b) => a.DefineSymbol.Symbol.CompareTo(b.DefineSymbol.Symbol));
