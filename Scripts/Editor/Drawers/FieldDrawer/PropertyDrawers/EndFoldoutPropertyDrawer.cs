@@ -69,8 +69,10 @@ namespace EnhancedEditor.Editor
                 // Repaint over leaking colors.
                 if (_color == EnhancedEditorGUIUtility.GUIThemeBackgroundColor)
                 {
-                    _position.y += Screen.height;
-                    _position.height -= Screen.height - (_foldout ? 2f : 0f);
+                    float _screenHeight = EnhancedEditorGUIUtility.ScreenHeight;
+
+                    _position.y += _screenHeight;
+                    _position.height -= _screenHeight - (_foldout ? 2f : 0f);
 
                     EditorGUI.DrawRect(_position, _color);
                 }

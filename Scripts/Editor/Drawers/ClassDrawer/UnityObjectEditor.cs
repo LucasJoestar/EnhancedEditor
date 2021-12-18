@@ -2,8 +2,6 @@
 // 
 // Notes:
 //
-//      • Check if the PrefabUtility class exist in older versions.
-//
 // ============================================================================ //
 
 using System;

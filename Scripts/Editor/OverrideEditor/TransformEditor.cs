@@ -92,7 +92,7 @@ namespace EnhancedEditor.Editor
 
             // Avoid jitters and first layout event draw.
             if (_width < 0f)
-                _width = Screen.width - 20f - ResetButtonWidth - Spacing;
+                _width = EnhancedEditorGUIUtility.ScreenWidth - 20f - ResetButtonWidth - Spacing;
 
             // Draw the original inspector.
             using (var _scope = new EditorGUILayout.VerticalScope(GUILayout.Width(_width)))

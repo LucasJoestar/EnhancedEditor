@@ -156,7 +156,8 @@ namespace EnhancedEditor.Editor
         private static void OnGUI()
         {
             // Position calculs.
-            float _playModePos = Mathf.RoundToInt((Screen.width - PlayPauseStopWidth) * .5f);
+            float _width = EnhancedEditorGUIUtility.ScreenWidth;
+            float _playModePos = Mathf.RoundToInt((_width - PlayPauseStopWidth) * .5f);
 
             Rect _leftPosition = new Rect()
             {
@@ -169,7 +170,7 @@ namespace EnhancedEditor.Editor
             Rect _rightPosition = new Rect()
             {
                 x = _playModePos + (StandardButtonWidth * 3f) + Space,
-                xMax = Screen.width - (((DropdownWidth + Space) * 3f) + ((StandardButtonWidth + Space) * 2f) + StandardButtonWidth),
+                xMax = _width - (((DropdownWidth + Space) * 3f) + ((StandardButtonWidth + Space) * 2f) + StandardButtonWidth),
                 y = VerticalPadding,
                 height = ControlHeight
             };
