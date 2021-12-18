@@ -9,6 +9,10 @@ using System.IO;
 using UnityEditor;
 using UnityEngine;
 
+#if ENABLE_INPUT_SYSTEM
+using UnityEngine.InputSystem;
+#endif
+
 namespace EnhancedEditor.Editor
 {
     /// <summary>
@@ -67,12 +71,19 @@ namespace EnhancedEditor.Editor
             /// <br/> Autosave can be toggled from the main editor toolbar.
             /// </summary>
             public int AutosaveInterval = AutosaveDefaultInterval;
+
+            #if ENABLE_INPUT_SYSTEM
+            // Chronos-related inputs.
+            [SerializeField] internal InputAction increaseTimeScale = new InputAction();
+            [SerializeField] internal InputAction resetTimeScale = new InputAction();
+            [SerializeField] internal InputAction decreaseTimeScale = new InputAction();
+            #endif
         }
 
         // -----------------------
 
         /// <inheritdoc cref="EditorUserSettings"/>
-        [NonSerialized] public EditorUserSettings UserSettings = new EditorUserSettings();
+        public EditorUserSettings UserSettings = new EditorUserSettings();
 
         /// <summary>
         /// The directory in the project where are created all auto-managed resources.
@@ -131,6 +142,37 @@ namespace EnhancedEditor.Editor
 
         // -----------------------
 
+        private void OnEnable()
+        {
+            // Load and initialize settings.
+            string _data = EditorPrefs.GetString(PrefsKey, string.Empty);
+            if (!string.IsNullOrEmpty(_data))
+            {
+                JsonUtility.FromJsonOverwrite(_data, UserSettings);
+            }
+            else
+            {
+                UserSettings = new EditorUserSettings();
+
+                #if ENABLE_INPUT_SYSTEM
+                UserSettings.increaseTimeScale.AddBinding(Keyboard.current.numpadPlusKey);
+                UserSettings.resetTimeScale.AddBinding(Keyboard.current.numpadMultiplyKey);
+                UserSettings.decreaseTimeScale.AddBinding(Keyboard.current.numpadMinusKey);
+                #endif
+            }
+
+            if (string.IsNullOrEmpty(UserSettings.BuildDirectory))
+            {
+                UserSettings.BuildDirectory = BuildDefaultDirectory;
+                SaveSettings();
+            }
+        }
+
+        private void OnValidate()
+        {
+            SaveSettings();
+        }
+
         public void SaveSettings()
         {
             // Use EditorPrefs for user-dependant settings.
@@ -140,22 +182,13 @@ namespace EnhancedEditor.Editor
             EditorUtility.SetDirty(this);
 
             EditorAutosave.SetSaveInterval(UserSettings.AutosaveInterval);
-        }
 
-        private void OnEnable()
-        {
-            // Load and initialize settings.
-            string _data = EditorPrefs.GetString(PrefsKey, string.Empty);
-            if (!string.IsNullOrEmpty(_data))
-            {
-                JsonUtility.FromJsonOverwrite(_data, UserSettings);
-            }
-
-            if (string.IsNullOrEmpty(UserSettings.BuildDirectory))
-            {
-                UserSettings.BuildDirectory = BuildDefaultDirectory;
-                SaveSettings();
-            }
+            #if ENABLE_INPUT_SYSTEM
+            // Save chronos inputs.
+            PlayerPrefs.SetString(Chronos.IncreaseInputKey, JsonUtility.ToJson(UserSettings.increaseTimeScale));
+            PlayerPrefs.SetString(Chronos.ResetInputKey, JsonUtility.ToJson(UserSettings.resetTimeScale));
+            PlayerPrefs.SetString(Chronos.DecreaseInputKey, JsonUtility.ToJson(UserSettings.decreaseTimeScale));
+            #endif
         }
         #endregion
 
@@ -185,16 +218,10 @@ namespace EnhancedEditor.Editor
                 
                 guiHandler = (string _searchContext) =>
                 {
-                    EnhancedEditorSettings _settings = Settings;
                     GUILayout.Space(10f);
 
-                    using (var _changeCheck = new EditorGUI.ChangeCheckScope())
-                    {
-                        DrawPreferences(_settings);
-
-                        if (_changeCheck.changed)
-                            _settings.SaveSettings();
-                    }
+                    EnhancedEditorSettings _settings = Settings;
+                    DrawPreferences(_settings);
                 },
             };
 
@@ -248,8 +275,10 @@ namespace EnhancedEditor.Editor
         private const string CoreSceneMessage = "The Core Scene system allows to always load a specific scene first when entering play mode in the editor.";
 
         private static readonly GUIContent localHeaderGUI = new GUIContent("User Settings:", "User-dependant settings.");
-        private static readonly GUIContent globalHeaderGUI = new GUIContent("Global", "Project global settings, shared between users.");
+        private static readonly GUIContent globalHeaderGUI = new GUIContent("Global Settings:", "Project global settings, shared between users.");
         private static readonly GUIContent coreSceneHeaderGUI = new GUIContent("Core Scene System", "Settings related to the Core Scene system.");
+        private static readonly GUIContent chronosHeaderGUI = new GUIContent("Chronos Runtime Inputs", "Input shortcuts related to the chronos tool.");
+        private static readonly GUIContent shortcutsGUI = new GUIContent("Editor Shortcuts", "Edit all Enhanced Editor-related editor shortcuts.");
 
         private static readonly GUIContent autoManagedResourceDirectoryGUI = new GUIContent("Managed Resource Dir.",
                                                                                            "Directory in the project where are created all auto-managed resources.");
@@ -269,6 +298,12 @@ namespace EnhancedEditor.Editor
         private static readonly GUIContent coreSceneGUI = new GUIContent("Core Scene", "The core scene to load when entering play mode.");
         private static readonly GUIContent isCoreSceneEnabledGUI = new GUIContent("Enabled", "Enables / Disables to core scene system.");
 
+        #if ENABLE_INPUT_SYSTEM
+        private static SerializedProperty increaseTimeScaleProperty = null;
+        private static SerializedProperty resetTimeScaleProperty = null;
+        private static SerializedProperty decreaseTimeScaleProperty = null;
+        #endif
+
         // -----------------------
 
         private static void DrawPreferences(EnhancedEditorSettings _settings)
@@ -277,13 +312,12 @@ namespace EnhancedEditor.Editor
 
             using (var _scope = new GUILayout.HorizontalScope())
             {
-                GUILayout.Space(10f);
+                GUILayout.Space(7f);
                 using (var _verticalScope = new GUILayout.VerticalScope())
                 {
                     DrawUserSettings(_settings.UserSettings);
 
                     GUILayout.Space(15f);
-
                     DrawGlobalSettings(_settings);
                 }
             }
@@ -294,19 +328,63 @@ namespace EnhancedEditor.Editor
             EnhancedEditorGUILayout.UnderlinedLabel(localHeaderGUI, EditorStyles.boldLabel);
             GUILayout.Space(2f);
 
-            using (var _scope = new EditorGUI.IndentLevelScope())
+            using (var _scope = new GUILayout.HorizontalScope())
             {
-                // Build dirctory.
-                _settings.BuildDirectory = EnhancedEditorGUILayout.FolderField(buildDirectoryGUI, _settings.BuildDirectory, true, BuildDirectoryPanelTitle);
+                GUILayout.Space(15f);
 
-                // Autosave interval.
-                _settings.AutosaveInterval = EnhancedEditorGUILayout.MinField(autosaveIntervalGUI, _settings.AutosaveInterval, 5);
+                using (var _verticalScope = new GUILayout.VerticalScope())
+                {
+
+                    // Build dirctory.
+                    _settings.BuildDirectory = EnhancedEditorGUILayout.FolderField(buildDirectoryGUI, _settings.BuildDirectory, true, BuildDirectoryPanelTitle);
+
+                    // Autosave interval.
+                    _settings.AutosaveInterval = EnhancedEditorGUILayout.MinField(autosaveIntervalGUI, _settings.AutosaveInterval, 5);
+
+                    #if ENABLE_INPUT_SYSTEM
+                    // Properties initialization.
+                    if (increaseTimeScaleProperty == null)
+                    {
+                        SerializedObject _serializedObject = new SerializedObject(settings);
+                        SerializedProperty _userSettings = _serializedObject.FindProperty("UserSettings");
+
+                        increaseTimeScaleProperty = _userSettings.FindPropertyRelative("increaseTimeScale");
+                        resetTimeScaleProperty = _userSettings.FindPropertyRelative("resetTimeScale");
+                        decreaseTimeScaleProperty = _userSettings.FindPropertyRelative("decreaseTimeScale");
+                    }
+
+                    GUILayout.Space(10f);
+
+                    // Chronos inputs.
+                    EditorGUILayout.LabelField(chronosHeaderGUI, EditorStyles.boldLabel);
+
+                    EditorGUILayout.PropertyField(increaseTimeScaleProperty);
+                    EditorGUILayout.PropertyField(resetTimeScaleProperty);
+                    EditorGUILayout.PropertyField(decreaseTimeScaleProperty);
+                    #endif
+
+                    #if UNITY_2019_1_OR_NEWER
+                    GUILayout.Space(5f);
+
+                    // Editor shortcuts.
+                    using (var _horizontalScope = new GUILayout.HorizontalScope())
+                    {
+                        GUILayout.FlexibleSpace();
+
+                        if (GUILayout.Button(shortcutsGUI, GUILayout.MaxWidth(120f)))
+                        {
+                            EditorApplication.ExecuteMenuItem("Edit/Shortcuts...");
+                        }
+                    }
+                    #endif
+                }
             }
         }
 
         private static void DrawGlobalSettings(EnhancedEditorSettings _settings)
         {
-            EditorGUILayout.LabelField(globalHeaderGUI, EditorStyles.boldLabel);
+            EnhancedEditorGUILayout.UnderlinedLabel(globalHeaderGUI, EditorStyles.boldLabel);
+            GUILayout.Space(3f);
 
             // Auto-managed resource directory.
             _settings.AutoManagedResourceDirectory = EnhancedEditorGUILayout.FolderField(autoManagedResourceDirectoryGUI,

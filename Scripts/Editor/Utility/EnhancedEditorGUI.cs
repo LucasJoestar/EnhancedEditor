@@ -105,10 +105,10 @@ namespace EnhancedEditor.Editor
             }
 
             // Enhanced property drawers context menu.
-            EnhancedPropertyEditor _editor = EnhancedPropertyEditor.enhancedEditors.Find(e => e.propertyPath == _property.propertyPath);
-            if (_editor != null)
+            if (EnhancedPropertyEditor.propertyInfos.ContainsKey(_property.propertyPath))
             {
-                _editor.OnContextMenu(_menu);
+                var _infos = EnhancedPropertyEditor.propertyInfos[_property.propertyPath];
+                _infos.OnContextMenu(_menu);
             }
         }
         #endregion
@@ -2896,10 +2896,20 @@ namespace EnhancedEditor.Editor
                 return;
             }
 
+            string _guid = _guidProperty.stringValue;
+            if (_property.propertyPath.Contains("Array."))
+            {
+                string _path = AssetDatabase.GUIDToAssetPath(_guid);
+                string _name = string.IsNullOrEmpty(_path)
+                             ? "None"
+                             : Path.GetFileNameWithoutExtension(_path);
+
+                _label = EnhancedEditorGUIUtility.GetLabelGUI(_name);
+            }
+
             // Property field.
             using (var _scope = new EditorGUI.PropertyScope(_position, _label, _property))
             {
-                string _guid = _guidProperty.stringValue;
                 _guidProperty.stringValue = DoSceneAssetField(_position, _label, _guid);
             }
         }
@@ -4131,13 +4141,13 @@ namespace EnhancedEditor.Editor
             return dynamicGUIControlHeight[_id];
         }
 
-        internal static bool IconButton(Rect _position, GUIContent _icon)
+        internal static bool IconButton(Rect _position, GUIContent _icon, float _margins = 0f)
         {
             GUIStyle _style = EnhancedEditorStyles.Button;
-            return IconButton(_position, _icon, _style);
+            return IconButton(_position, _icon, _style, _margins);
         }
 
-        internal static bool IconButton(Rect _position, GUIContent _icon, GUIStyle _style)
+        internal static bool IconButton(Rect _position, GUIContent _icon, GUIStyle _style, float _margins = 0f)
         {
             // Draw the icon outside of the button to avoid dealing with its margins.
             bool _click = GUI.Button(_position, GUIContent.none, _style);
@@ -4145,6 +4155,12 @@ namespace EnhancedEditor.Editor
 
             using (var _scope = EnhancedGUI.GUIStyleAlignment.Scope(_labelStyle, TextAnchor.MiddleCenter))
             {
+                _position.width -= _margins;
+                _position.height -= _margins;
+
+                _position.x += _margins / 2f;
+                _position.y += _margins / 2f;
+
                 GUI.Label(_position, _icon, _labelStyle);
             }
 

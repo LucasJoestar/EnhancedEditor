@@ -22,6 +22,20 @@ namespace EnhancedEditor.Editor
     /// </summary>
     public class ObjectPickerWindow : EditorWindow
     {
+        #region Styles
+        private static class Styles
+        {
+            public static readonly GUIStyle PickerTabStyle = new GUIStyle("ObjectPickerTab");
+            public static readonly GUIStyle PickerBackgroundStyle = new GUIStyle("ProjectBrowserIconAreaBg");
+            public static readonly GUIStyle ObjectLabelStyle = new GUIStyle("ProjectBrowserGridLabel");
+            public static readonly GUIStyle PreviewDropShadowStyle = new GUIStyle("ProjectBrowserTextureIconDropShadow");
+            public static readonly GUIStyle InspectorBackgroundStyle = new GUIStyle("PopupCurveSwatchBackground");
+            public static readonly GUIStyle BottomResizeStyle = new GUIStyle("WindowBottomResize");
+            public static readonly GUIStyle PreviewBackgroundStyle = new GUIStyle("ObjectPickerPreviewBackground");
+            public static readonly GUIStyle SmallStatusStyle = new GUIStyle("ObjectPickerSmallStatus");
+        }
+        #endregion
+
         #region Object Info
         private struct ObjectInfo
         {
@@ -113,15 +127,6 @@ namespace EnhancedEditor.Editor
                                                         new GUIContent("Scene", "All matching scene objects.")
                                                     };
 
-        private static GUIStyle pickerTabStyle = null;
-        private static GUIStyle pickerBackgroundStyle = null;
-        private static GUIStyle objectLabelStyle = null;
-        private static GUIStyle previewDropShadowStyle = null;
-        private static GUIStyle inspectorBackgroundStyle = null;
-        private static GUIStyle bottomResizeStyle = null;
-        private static GUIStyle previewBackgroundStyle = null;
-        private static GUIStyle smallStatusStyle = null;
-
         private static int controlID = 0;
         private static bool hasSelectedObject = false;
         private static GameObject selectedObject = null;
@@ -180,7 +185,7 @@ namespace EnhancedEditor.Editor
                     GUIContent _tabGUI = tabsGUI[_i];
                     bool _isSelected = _selectedTab == _i;
 
-                    if (GUILayout.Toggle(_isSelected, _tabGUI, pickerTabStyle))
+                    if (GUILayout.Toggle(_isSelected, _tabGUI, Styles.PickerTabStyle))
                     {
                         _selectedTab = _i;
                     }
@@ -198,12 +203,12 @@ namespace EnhancedEditor.Editor
                 sizeSlider = GUILayout.HorizontalSlider(sizeSlider, SizeSliderMinValue, SizeSliderMaxValue, GUILayout.Width(SizeSliderWidth));
 
                 // Use this to draw the bottom line.
-                GUILayout.Label(GUIContent.none, pickerTabStyle, GUILayout.ExpandWidth(true));
+                GUILayout.Label(GUIContent.none, Styles.PickerTabStyle, GUILayout.ExpandWidth(true));
             }
 
             // Background color.
             Rect _position = new Rect(0f, GUILayoutUtility.GetLastRect().yMax, position.width, position.height);
-            GUI.Label(_position, GUIContent.none, pickerBackgroundStyle);
+            GUI.Label(_position, GUIContent.none, Styles.PickerBackgroundStyle);
 
             // Object picker.
             using (var _scope = new GUILayout.ScrollViewScope(scroll))
@@ -302,16 +307,6 @@ namespace EnhancedEditor.Editor
             allowSceneObjects = _allowSceneObjects;
 
             CreateEditor();
-
-            // Styles.
-            pickerTabStyle = new GUIStyle("ObjectPickerTab");
-            pickerBackgroundStyle = new GUIStyle("ProjectBrowserIconAreaBg");
-            objectLabelStyle = new GUIStyle("ProjectBrowserGridLabel");
-            previewDropShadowStyle = new GUIStyle("ProjectBrowserTextureIconDropShadow");
-            inspectorBackgroundStyle = new GUIStyle("PopupCurveSwatchBackground");
-            bottomResizeStyle = new GUIStyle("WindowBottomResize");
-            previewBackgroundStyle = new GUIStyle("ObjectPickerPreviewBackground");
-            smallStatusStyle = new GUIStyle("ObjectPickerSmallStatus");
 
             // Objects.
             assetObjects = GetMatchingObjects(EnhancedEditorUtility.LoadAssets<GameObject>());
@@ -528,8 +523,8 @@ namespace EnhancedEditor.Editor
                                     // Drop shadow background.
                                     if (Event.current.type == EventType.Repaint)
                                     {
-                                        Rect _dropShadowPos = dropShadowBackgroundOffset.Remove(previewDropShadowStyle.border.Add(_temp));
-                                        previewDropShadowStyle.Draw(_dropShadowPos, GUIContent.none, false, false, false, false);
+                                        Rect _dropShadowPos = dropShadowBackgroundOffset.Remove(Styles.PreviewDropShadowStyle.border.Add(_temp));
+                                        Styles.PreviewDropShadowStyle.Draw(_dropShadowPos, GUIContent.none, false, false, false, false);
                                     }
 
                                     // Preview and selected feedback.
@@ -558,7 +553,7 @@ namespace EnhancedEditor.Editor
                         Rect _labelPos = new Rect(_temp)
                         {
                             y = _temp.yMax + 2f,
-                            height = objectLabelStyle.lineHeight
+                            height = Styles.ObjectLabelStyle.lineHeight
                         };
 
                         // Only draw the label on repaint event, as the method GUIStyle.Draw is not allowed to be called during another event.
@@ -577,12 +572,12 @@ namespace EnhancedEditor.Editor
                                          ? gridLabelSelectedColor
                                          : Color.white;
 
-                            _labelPos.width = objectLabelStyle.CalcSize(_labelGUI).x + 2f;
+                            _labelPos.width = Styles.ObjectLabelStyle.CalcSize(_labelGUI).x + 2f;
                             _labelPos.x += (_temp.width - _labelPos.width) * .5f;
 
                             using (var _scope = EnhancedGUI.GUIBackgroundColor.Scope(_color))
                             {
-                                objectLabelStyle.Draw(_labelPos, _labelGUI, false, false, _isSelected, true);
+                                Styles.ObjectLabelStyle.Draw(_labelPos, _labelGUI, false, false, _isSelected, true);
                             }
                         }
 
@@ -762,7 +757,7 @@ namespace EnhancedEditor.Editor
                 yMax = position.height
             };
 
-            GUI.Box(_temp, GUIContent.none, inspectorBackgroundStyle);
+            GUI.Box(_temp, GUIContent.none, Styles.InspectorBackgroundStyle);
 
             _temp.height = 1f;
             EditorGUI.DrawRect(_temp, inspectorSeparatorColor);
@@ -773,10 +768,10 @@ namespace EnhancedEditor.Editor
                 x = (position.width - BottomResizeWidth) * .5f,
                 y = _temp.y + 2f,
                 width = BottomResizeWidth,
-                height = bottomResizeStyle.fixedHeight
+                height = Styles.BottomResizeStyle.fixedHeight
             };
 
-            GUI.Label(_resizePos, GUIContent.none, bottomResizeStyle);
+            GUI.Label(_resizePos, GUIContent.none, Styles.BottomResizeStyle);
 
             // Inspector resize.
             Event _event = Event.current;
@@ -910,7 +905,7 @@ namespace EnhancedEditor.Editor
                 // Preview.
                 if (objectEditor != null && objectEditor.HasPreviewGUI())
                 {
-                    objectEditor.OnPreviewGUI(_previewPos, previewBackgroundStyle);
+                    objectEditor.OnPreviewGUI(_previewPos, Styles.PreviewBackgroundStyle);
                 }
 
                 // Update label position.
@@ -919,13 +914,13 @@ namespace EnhancedEditor.Editor
                 _position.yMax = position.height - 20f;
             }
 
-            using (var _align = EnhancedGUI.GUIStyleAlignment.Scope(smallStatusStyle, TextAnchor.MiddleLeft))
+            using (var _align = EnhancedGUI.GUIStyleAlignment.Scope(Styles.SmallStatusStyle, TextAnchor.MiddleLeft))
             using (var _scope = new EditorGUI.IndentLevelScope())
             {
                 _position = EditorGUI.IndentedRect(_position);
 
                 GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
-                EditorGUI.DropShadowLabel(_position, _labelGUI, smallStatusStyle);
+                EditorGUI.DropShadowLabel(_position, _labelGUI, Styles.SmallStatusStyle);
             }
         }
         #endregion

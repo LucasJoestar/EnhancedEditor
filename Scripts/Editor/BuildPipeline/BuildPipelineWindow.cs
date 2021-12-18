@@ -110,9 +110,8 @@ namespace EnhancedEditor.Editor
         public static BuildPipelineWindow GetWindow()
         {
             BuildPipelineWindow _window = GetWindow<BuildPipelineWindow>("Build Pipeline");
-            _window.titleContent.image = EditorGUIUtility.FindTexture("BuildSettings.Editor.Small");
-
             _window.Show();
+
             return _window;
         }
 
@@ -185,6 +184,8 @@ namespace EnhancedEditor.Editor
 
             Undo.undoRedoPerformed -= OnUndoRedoOperation;
             Undo.undoRedoPerformed += OnUndoRedoOperation;
+
+            titleContent.image = EditorGUIUtility.FindTexture("BuildSettings.Editor.Small");
 
             InitializeBuildPresets();
 

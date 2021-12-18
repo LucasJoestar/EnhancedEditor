@@ -57,6 +57,7 @@ namespace EnhancedEditor.Editor
                 string _itemName = ObjectNames.NicifyVariableName(_template.Remove(0, _templateDirectory.Length + 1).Split('.')[0]);
                 string _name = Path.GetFileNameWithoutExtension(_template);
 
+                _template = _template.Remove(0, Application.dataPath.Length + 1);
                 _fileContent += string.Format(ScriptTemplateMenuItem, _itemName, _name, _template);
             }
 
@@ -96,16 +97,29 @@ namespace EnhancedEditor.Editor
             string _path = AssetDatabase.GetAssetPath(Selection.activeObject.GetInstanceID());
             _path = _path.Replace("Assets", Application.dataPath);
 
+            _template = Path.Combine(Application.dataPath, _template);
+
             if (File.Exists(_path))
                 _path = Path.GetDirectoryName(_path);
+
+            string _templateName = Path.GetFileNameWithoutExtension(_template);
+            string[] _parts = _templateName.Split('_');
+
+            // Prefix.
+            if ((_parts.Length > 1) && (_parts[0].ToUpper() == _parts[0]))
+                _name = $"{_parts[0]}_{_name}";
+
+            // Suffix.
+            if ((_parts.Length > 1) && (_parts[_parts.Length - 1].ToUpper() == _parts[_parts.Length - 1]))
+                _name = $"{_name}_{_parts[_parts.Length - 1]}";
 
             _path = Path.Combine(_path, $"{_name}.cs");
             if (File.Exists(_path))
             {
-                EditorUtility.DisplayDialog("Script Creation Error",
+                EditorUtility.DisplayDialog("Script Generation Error",
                                             "Cannot create the desired script in this folder, for a script with the same name already exist in it.",
                                             "OK");
-
+                
                 return;
             }
 

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: EnhancedEditor.Editor.Pinboard
   m_EditorClassIdentifier: 
   PinObjects:
-  - FolderName: New Folder
+  - FolderName: Parent Folder
     Foldout: 1
     Type: 
     Asset: {fileID: 0}
@@ -21,8 +21,8 @@ MonoBehaviour:
     IsFolder: 1
     IsVisible: 1
     IsSelected: 0
-  - FolderName: New Folder
-    Foldout: 0
+  - FolderName: Children
+    Foldout: 1
     Type: 
     Asset: {fileID: 0}
     Indent: 1
@@ -35,7 +35,7 @@ MonoBehaviour:
     Asset: {fileID: 102900000, guid: 0ad58add6eabce74a9b57b15e9485393, type: 3}
     Indent: 2
     IsFolder: 0
-    IsVisible: 0
+    IsVisible: 1
     IsSelected: 0
   - FolderName: 
     Foldout: 1
@@ -43,7 +43,7 @@ MonoBehaviour:
     Asset: {fileID: 102900000, guid: 881bbd902c357b14383e328fc41ba81e, type: 3}
     Indent: 2
     IsFolder: 0
-    IsVisible: 0
+    IsVisible: 1
     IsSelected: 0
   - FolderName: 
     Foldout: 1
@@ -51,7 +51,7 @@ MonoBehaviour:
     Asset: {fileID: 102900000, guid: 781c61c096afef34fa22813b12d90b8d, type: 3}
     Indent: 2
     IsFolder: 0
-    IsVisible: 0
+    IsVisible: 1
     IsSelected: 0
   - FolderName: 
     Foldout: 1
@@ -59,7 +59,7 @@ MonoBehaviour:
     Asset: {fileID: 102900000, guid: 364eeb5c0d72a7c4fa164bb842f817cb, type: 3}
     Indent: 2
     IsFolder: 0
-    IsVisible: 0
+    IsVisible: 1
     IsSelected: 0
   - FolderName: 
     Foldout: 1
@@ -67,7 +67,15 @@ MonoBehaviour:
     Asset: {fileID: 102900000, guid: 9c0a45f07bdf51d469c73da2c0c440eb, type: 3}
     Indent: 2
     IsFolder: 0
-    IsVisible: 0
+    IsVisible: 1
+    IsSelected: 0
+  - FolderName: Empty Folder
+    Foldout: 0
+    Type: 
+    Asset: {fileID: 0}
+    Indent: 1
+    IsFolder: 1
+    IsVisible: 1
     IsSelected: 0
   - FolderName: 
     Foldout: 1
@@ -108,7 +116,7 @@ MonoBehaviour:
     Indent: 1
     IsFolder: 0
     IsVisible: 1
-    IsSelected: 1
+    IsSelected: 0
   - FolderName: 
     Foldout: 1
     Type: '*UnityEditor.DefaultAsset'

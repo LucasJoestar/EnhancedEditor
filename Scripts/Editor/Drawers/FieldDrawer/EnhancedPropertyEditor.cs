@@ -5,6 +5,7 @@
 // ============================================================================ //
 
 using System;
+using System.Reflection;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
@@ -19,41 +20,83 @@ namespace EnhancedEditor.Editor
     internal sealed class EnhancedPropertyEditor : PropertyDrawer
     {
         #region Property Infos
-        private class PropertyInfos
+        internal class PropertyInfos
         {
-            public EnhancedPropertyDrawer[] PropertyDrawers = new EnhancedPropertyDrawer[] { };
+            public EnhancedPropertyDrawer[] PropertyDrawers = null;
             public float Height = EditorGUIUtility.singleLineHeight;
+
+            // -----------------------
+
+            public PropertyInfos(SerializedProperty _property, FieldInfo _fieldInfo)
+            {
+                // Get all enhanced attributes from the target field, and create their respective drawer.
+                var _attributes = _fieldInfo.GetCustomAttributes(typeof(EnhancedPropertyAttribute), true) as EnhancedPropertyAttribute[];
+                PropertyDrawers = new EnhancedPropertyDrawer[] { };
+
+                foreach (EnhancedPropertyAttribute _attribute in _attributes)
+                {
+                    foreach (KeyValuePair<Type, Type> _pair in EnhancedDrawerUtility.GetPropertyDrawers())
+                    {
+                        if (_pair.Value == _attribute.GetType())
+                        {
+                            EnhancedPropertyDrawer _customDrawer = EnhancedPropertyDrawer.CreateInstance(_pair.Key, _property, _attribute, _fieldInfo);
+                            ArrayUtility.Add(ref PropertyDrawers, _customDrawer);
+
+                            break;
+                        }
+                    }
+                }
+
+                // Sort the drawers by their order.
+                Array.Sort(PropertyDrawers, (a, b) => a.Attribute.order.CompareTo(b.Attribute.order));
+            }
+
+            // -----------------------
+
+            public void OnContextMenu(GenericMenu _menu)
+            {
+                foreach (EnhancedPropertyDrawer _drawer in PropertyDrawers)
+                    _drawer.OnContextMenu(_menu);
+            }
         }
         #endregion
 
         #region Drawer Content
-        // To do.
-        private static readonly Dictionary<string, PropertyInfos> propertyInfos = new Dictionary<string, PropertyInfos>();
-
-        internal static List<EnhancedPropertyEditor> enhancedEditors = new List<EnhancedPropertyEditor>();
-        internal string propertyPath = string.Empty;
-
-        private EnhancedPropertyDrawer[] propertyDrawers = null;
-        private float propertyHeight = EditorGUIUtility.singleLineHeight;
+        internal static readonly Dictionary<string, PropertyInfos> propertyInfos = new Dictionary<string, PropertyInfos>();
 
         // -----------------------
 
         public override float GetPropertyHeight(SerializedProperty _property, GUIContent _label)
         {
+            string _path = _property.propertyPath;
+
             // Repaint on next frame if not yet initialized.
-            if (propertyDrawers == null)
+            if (!propertyInfos.ContainsKey(_path))
             {
                 EnhancedEditorGUIUtility.Repaint(_property.serializedObject);
+                return EditorGUIUtility.singleLineHeight;
             }
 
-            return propertyHeight;
+            return propertyInfos[_path].Height;
         }
 
         public override void OnGUI(Rect _position, SerializedProperty _property, GUIContent _label)
         {
-            // Initialization.
-            if (propertyDrawers == null)
-                Initialize(_property);
+            string _path = _property.propertyPath;
+
+            // Property initialization.
+            if (!propertyInfos.ContainsKey(_path))
+            {
+                // Data clear.
+                if (propertyInfos.Count > 100)
+                {
+                    propertyInfos.Clear();
+                    GC.Collect();
+                }
+
+                PropertyInfos _newInfos = new PropertyInfos(_property, fieldInfo);
+                propertyInfos.Add(_path, _newInfos);
+            }
 
             float _yOrigin = _position.y;
             _position.height = EditorGUIUtility.singleLineHeight;
@@ -66,10 +109,11 @@ namespace EnhancedEditor.Editor
                 _label = _tempLabel;
             }
 
+            var _infos = propertyInfos[_path];
             using (var _changeCheck = new EditorGUI.ChangeCheckScope())
             {
                 // Pre GUI callback.
-                foreach (EnhancedPropertyDrawer _drawer in propertyDrawers)
+                foreach (EnhancedPropertyDrawer _drawer in _infos.PropertyDrawers)
                 {
                     if (_drawer.OnBeforeGUI(_position, _property, _label, out float _height))
                     {
@@ -84,7 +128,7 @@ namespace EnhancedEditor.Editor
 
                 // Property GUI.
                 bool _isDrawn = false;
-                foreach (EnhancedPropertyDrawer _drawer in propertyDrawers)
+                foreach (EnhancedPropertyDrawer _drawer in _infos.PropertyDrawers)
                 {
                     if (_drawer.OnGUI(_position, _property, _label, out float _height))
                     {
@@ -108,7 +152,7 @@ namespace EnhancedEditor.Editor
                 }
 
                 // Post GUI callback.
-                foreach (EnhancedPropertyDrawer _drawer in propertyDrawers)
+                foreach (EnhancedPropertyDrawer _drawer in _infos.PropertyDrawers)
                 {
                     _drawer.OnAfterGUI(_position, _property, _label, out float _height);
                     IncreasePosition(_height);
@@ -120,7 +164,7 @@ namespace EnhancedEditor.Editor
                     _property.serializedObject.ApplyModifiedProperties();
                     _property.serializedObject.Update();
 
-                    foreach (EnhancedPropertyDrawer _drawer in propertyDrawers)
+                    foreach (EnhancedPropertyDrawer _drawer in _infos.PropertyDrawers)
                     {
                         _drawer.OnValueChanged();
                     }
@@ -131,12 +175,12 @@ namespace EnhancedEditor.Editor
 
             // Context click menu. 
             _position.y = _yOrigin;
-            _position.height = propertyHeight;
+            _position.height = _infos.Height;
 
             if (EnhancedEditorGUIUtility.ContextClick(_position))
             {
                 GenericMenu _menu = new GenericMenu();
-                OnContextMenu(_menu);
+                _infos.OnContextMenu(_menu);
 
                 if (_menu.GetItemCount() > 0)
                     _menu.ShowAsContext();
@@ -152,63 +196,14 @@ namespace EnhancedEditor.Editor
 
             void CalculateFullHeight()
             {
-                propertyHeight = _position.y - _yOrigin;
-                if (propertyHeight != 0f)
+                float _height = _position.y - _yOrigin;
+                if (_height != 0f)
                 {
-                    propertyHeight -= EditorGUIUtility.standardVerticalSpacing;
+                    _height -= EditorGUIUtility.standardVerticalSpacing;
                 }
+
+                _infos.Height = _height;
             }
-        }
-        #endregion
-
-        #region Utility
-        internal void OnContextMenu(GenericMenu _menu)
-        {
-            foreach (EnhancedPropertyDrawer _drawer in propertyDrawers)
-                _drawer.OnContextMenu(_menu);
-        }
-
-        private void Initialize(SerializedProperty _property)
-        {
-            // To do.
-            /*PropertyInfos _infos = new PropertyInfos();
-            propertyInfos.Add(_property.propertyPath, _infos);*/
-
-            // -----------------------
-
-            propertyPath = _property.propertyPath;
-
-            // Register this property drawer.
-            int _index = enhancedEditors.FindIndex(d => d.propertyPath == propertyPath);
-            if (_index > -1)
-            {
-                enhancedEditors[_index] = this;
-            }
-            else
-            {
-                enhancedEditors.Add(this);
-            }
-
-            // Get all enhanced attributes from the target field, and create their respective drawer.
-            var _attributes = fieldInfo.GetCustomAttributes(typeof(EnhancedPropertyAttribute), true) as EnhancedPropertyAttribute[];
-            propertyDrawers = new EnhancedPropertyDrawer[] { };
-            
-            foreach (EnhancedPropertyAttribute _attribute in _attributes)
-            {
-                foreach (KeyValuePair<Type, Type> _pair in EnhancedDrawerUtility.GetPropertyDrawers())
-                {
-                    if (_pair.Value == _attribute.GetType())
-                    {
-                        EnhancedPropertyDrawer _customDrawer = EnhancedPropertyDrawer.CreateInstance(_pair.Key, _property, _attribute, fieldInfo);
-                        ArrayUtility.Add(ref propertyDrawers, _customDrawer);
-
-                        break;
-                    }
-                }
-            }
-
-            // Sort the drawers by their order.
-            Array.Sort(propertyDrawers, (a, b) => a.Attribute.order.CompareTo(b.Attribute.order));
         }
         #endregion
     }

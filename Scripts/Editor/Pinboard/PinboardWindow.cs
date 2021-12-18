@@ -155,9 +155,8 @@ namespace EnhancedEditor.Editor
         public static PinboardWindow GetWindow()
         {
             PinboardWindow _window = GetWindow<PinboardWindow>("Pinboard");
-            _window.titleContent.image = EditorGUIUtility.IconContent("pin").image;
-
             _window.Show();
+
             return _window;
         }
 
@@ -207,6 +206,7 @@ namespace EnhancedEditor.Editor
 
         private void OnEnable()
         {
+            titleContent.image = EditorGUIUtility.IconContent("pin").image;
             createFolderGUI.image = EditorGUIUtility.FindTexture("CreateAddNew");
 
             contextMenu = new GenericMenu();
