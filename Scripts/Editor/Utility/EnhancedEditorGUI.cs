@@ -105,10 +105,10 @@ namespace EnhancedEditor.Editor
             }
 
             // Enhanced property drawers context menu.
-            EnhancedPropertyEditor _editor = EnhancedPropertyEditor.enhancedEditors.Find(e => e.propertyPath == _property.propertyPath);
-            if (_editor != null)
+            if (EnhancedPropertyEditor.propertyInfos.ContainsKey(_property.propertyPath))
             {
-                _editor.OnContextMenu(_menu);
+                var _infos = EnhancedPropertyEditor.propertyInfos[_property.propertyPath];
+                _infos.OnContextMenu(_menu);
             }
         }
         #endregion
@@ -2896,10 +2896,20 @@ namespace EnhancedEditor.Editor
                 return;
             }
 
+            string _guid = _guidProperty.stringValue;
+            if (_property.propertyPath.Contains("Array."))
+            {
+                string _path = AssetDatabase.GUIDToAssetPath(_guid);
+                string _name = string.IsNullOrEmpty(_path)
+                             ? "None"
+                             : Path.GetFileNameWithoutExtension(_path);
+
+                _label = EnhancedEditorGUIUtility.GetLabelGUI(_name);
+            }
+
             // Property field.
             using (var _scope = new EditorGUI.PropertyScope(_position, _label, _property))
             {
-                string _guid = _guidProperty.stringValue;
                 _guidProperty.stringValue = DoSceneAssetField(_position, _label, _guid);
             }
         }

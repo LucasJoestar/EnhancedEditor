@@ -407,7 +407,7 @@ namespace EnhancedEditor.Editor
                     float _size = GridIconSize * sizeSlider;
                     GUILayoutOption _height = GUILayout.Height(_size - EditorGUIUtility.standardVerticalSpacing);
 
-                    float _screenWidth = Screen.width - 15f;
+                    float _screenWidth = position.width - 15f;
                     float _gridCount = Mathf.Floor(_screenWidth / _size);
                     float _margin = (_screenWidth % _size) / 2f;
                     int _index = -1;

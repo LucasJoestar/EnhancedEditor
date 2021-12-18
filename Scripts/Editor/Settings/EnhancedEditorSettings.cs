@@ -154,9 +154,11 @@ namespace EnhancedEditor.Editor
             {
                 UserSettings = new EditorUserSettings();
 
+                #if ENABLE_INPUT_SYSTEM
                 UserSettings.increaseTimeScale.AddBinding(Keyboard.current.numpadPlusKey);
                 UserSettings.resetTimeScale.AddBinding(Keyboard.current.numpadMultiplyKey);
                 UserSettings.decreaseTimeScale.AddBinding(Keyboard.current.numpadMinusKey);
+                #endif
             }
 
             if (string.IsNullOrEmpty(UserSettings.BuildDirectory))
@@ -181,10 +183,12 @@ namespace EnhancedEditor.Editor
 
             EditorAutosave.SetSaveInterval(UserSettings.AutosaveInterval);
 
+            #if ENABLE_INPUT_SYSTEM
             // Save chronos inputs.
             PlayerPrefs.SetString(Chronos.IncreaseInputKey, JsonUtility.ToJson(UserSettings.increaseTimeScale));
             PlayerPrefs.SetString(Chronos.ResetInputKey, JsonUtility.ToJson(UserSettings.resetTimeScale));
             PlayerPrefs.SetString(Chronos.DecreaseInputKey, JsonUtility.ToJson(UserSettings.decreaseTimeScale));
+            #endif
         }
         #endregion
 

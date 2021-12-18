@@ -71,7 +71,7 @@ namespace EnhancedEditor.Editor
                 GUILayout.FlexibleSpace();
 
                 // Pack all button GUI controls within a nice box group.
-                float _size = Mathf.Max(EditorStyles.label.CalcSize(Label).x + 20f, Screen.width - 250f);
+                float _size = Mathf.Max(EditorStyles.label.CalcSize(Label).x + 20f, EnhancedEditorGUIUtility.ScreenWidth - 250f);
                 using (var _verticalScope = new GUILayout.VerticalScope(EditorStyles.helpBox, GUILayout.Width(_size)))
                 {
                     using (EnhancedGUI.GUIEnabled.Scope(_isEnable))
