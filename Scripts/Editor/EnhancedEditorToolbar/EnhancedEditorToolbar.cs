@@ -142,8 +142,6 @@ namespace EnhancedEditor.Editor
 
                 // Get toolbar repaint delegate.
                 repaintDelegate = repaintInfo.CreateDelegate(typeof(Action), _visualTree) as Action;
-
-                _visualTree.Add(new UnityEditor.UIElements.ToolbarButton(() => Debug.Log("Click")) { name = "Test" });
             }
             #endif
         }

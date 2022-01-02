@@ -10,10 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d2637ac576b9edd43bb71ed84ff1bb56, type: 3}
-  m_Name: BP_Custom
+  m_Name: BP_Preset
   m_EditorClassIdentifier: 
   Description: This is the custom preset.
   BuildTarget: 19
   BuildOptions: 0
   buildCount: 0
-  scriptingDefineSymbols: DEBUG_LOGGER
+  scriptingDefineSymbols: DEBUG_LOGGER;UNITY_EDITOR_CUSTOM
