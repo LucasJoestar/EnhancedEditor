@@ -63,6 +63,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 30fe509ce7c0cf34483dec926dab4338, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  Folder: EnhancedEditor/Sample
+  bundle: {fileID: 0}
   AssetPreview: {fileID: 1409297715069405628, guid: a6d3449d0539d4549a30f7bce67a1506,
     type: 3}
   Ender: {fileID: 0}
@@ -71,7 +73,7 @@ MonoBehaviour:
     Enabled: 1
   MySample:
     DoYouSeeMe: {fileID: 0}
-  Boolean: 1
+  Boolean: 0
   HelpBox: 0
   Inline:
     DoYouSeeMe: {fileID: 0}

@@ -101,6 +101,11 @@ namespace EnhancedEditor.Editor
         public string ScriptTemplateDirectory = ScriptTemplateDefaultDirectory;
 
         /// <summary>
+        /// All folders used to select objects to place in the scene using the <see cref="SceneDesigner"/>.
+        /// </summary>
+        [Folder] public string[] SceneDesignerFolders = new string[] { };
+
+        /// <summary>
         /// The core scene to load when entering play mode.
         /// <br/> Works only in editor.
         /// </summary>
@@ -281,22 +286,27 @@ namespace EnhancedEditor.Editor
         private static readonly GUIContent shortcutsGUI = new GUIContent("Editor Shortcuts", "Edit all Enhanced Editor-related editor shortcuts.");
 
         private static readonly GUIContent autoManagedResourceDirectoryGUI = new GUIContent("Managed Resource Dir.",
-                                                                                           "Directory in the project where are created all auto-managed resources.");
+                                                                                            "Directory in the project where are created all auto-managed resources.");
 
         private static readonly GUIContent instanceTrackerDirectoryGUI = new GUIContent("Instance Tracker Dir.",
-                                                                                       "Directory in the project where are created all instance trackers.");
+                                                                                        "Directory in the project where are created all instance trackers.");
 
         private static readonly GUIContent scriptTemplateDirectoryGUI = new GUIContent("Script Template Dir.",
                                                                                        "Directory in the project where are stored all script templates.");
 
         private static readonly GUIContent buildDirectoryGUI = new GUIContent("Build Directory",
-                                                                             "Directory where to build and look for existing builds of the game from the BuildPipelineWindow.");
+                                                                              "Directory where to build and look for existing builds of the game from the BuildPipelineWindow.");
 
         private static readonly GUIContent autosaveIntervalGUI = new GUIContent("Autosave Interval",
-                                                                               "Time interval (in seconds) between two autosave. Autosave can be toggled from the main editor toolbar.");
+                                                                                "Time interval (in seconds) between two autosave. Autosave can be toggled from the main editor toolbar.");
+
+        private static readonly GUIContent sceneDesignerFoldersGUI = new GUIContent("Scene Designer Folders",
+                                                                                    "All folders displayed to select objects to place in the scene using the Scene Designer.");
 
         private static readonly GUIContent coreSceneGUI = new GUIContent("Core Scene", "The core scene to load when entering play mode.");
         private static readonly GUIContent isCoreSceneEnabledGUI = new GUIContent("Enabled", "Enables / Disables to core scene system.");
+
+        private static SerializedProperty sceneDesignerFoldersProperty = null;
 
         #if ENABLE_INPUT_SYSTEM
         private static SerializedProperty increaseTimeScaleProperty = null;
@@ -400,6 +410,17 @@ namespace EnhancedEditor.Editor
             _settings.ScriptTemplateDirectory = EnhancedEditorGUILayout.FolderField(scriptTemplateDirectoryGUI,
                                                                                     _settings.ScriptTemplateDirectory, false,
                                                                                     ScriptTemplateDirectoryPanelTitle);
+
+            GUILayout.Space(5f);
+
+            // Scene Designer folders.
+            if (sceneDesignerFoldersProperty == null)
+            {
+                SerializedObject _serializedObject = new SerializedObject(settings);
+                sceneDesignerFoldersProperty = _serializedObject.FindProperty("SceneDesignerFolders");
+            }
+
+            EditorGUILayout.PropertyField(sceneDesignerFoldersProperty);
 
             GUILayout.Space(15f);
 

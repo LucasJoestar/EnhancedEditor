@@ -281,6 +281,6 @@ namespace EnhancedEditor.Editor
         {
             repaintDelegate();
         }
-#endregion
+        #endregion
     }
 }

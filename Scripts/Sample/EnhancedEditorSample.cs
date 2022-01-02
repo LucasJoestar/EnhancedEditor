@@ -21,6 +21,7 @@ namespace EnhancedEditor.Sample
 
         [Section("SAMPLE SCRIPT")]
 
+        [Folder] public string Folder = string.Empty;
         public SceneBundle bundle = null;
 
         [EndFoldout]

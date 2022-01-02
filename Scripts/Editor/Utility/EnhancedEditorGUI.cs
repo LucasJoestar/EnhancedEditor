@@ -997,18 +997,22 @@ namespace EnhancedEditor.Editor
             }
 
             // Folder field.
-            using (var _scope = new EditorGUI.PropertyScope(_position, _label, _property))
-            using (var _changeCheck = new EditorGUI.ChangeCheckScope())
+            EditorGUI.BeginProperty(_position, _label, _property);
+            EditorGUI.BeginChangeCheck();
             {
                 string _folderPath = _property.stringValue;
                 _folderPath = FolderField(_position, _label, _folderPath, _allowOutsideProjectFolder, _folderPanelTitle);
 
                 // Save new value.
-                if (_changeCheck.changed)
+                if (EditorGUI.EndChangeCheck())
                 {
                     _property.stringValue = _folderPath;
+
+                    EditorGUI.BeginProperty(_position, _label, _property);
                 }
             }
+
+            EditorGUI.EndProperty();
         }
 
         // ===== String Value ===== \\
