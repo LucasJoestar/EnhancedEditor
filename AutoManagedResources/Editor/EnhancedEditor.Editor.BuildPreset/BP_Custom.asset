@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d2637ac576b9edd43bb71ed84ff1bb56, type: 3}
   m_Name: BP_Custom
   m_EditorClassIdentifier: 
-  Description: This is the custom preset.
-  BuildTarget: 19
-  BuildOptions: 0
+  Description: Enter a description here...
+  BuildTarget: 5
+  BuildOptions: 1
   buildCount: 0
-  scriptingDefineSymbols: DEBUG_LOGGER
+  scriptingDefineSymbols: 

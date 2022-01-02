@@ -15,30 +15,6 @@ MonoBehaviour:
   UserSettings:
     buildDirectory: H:/- My Stuff -/Projets/EnhancedEditor_2019.1/Builds
     AutosaveInterval: 300
-    increaseTimeScale:
-      m_Name: 
-      m_Type: 0
-      m_ExpectedControlType: 
-      m_Id: 
-      m_Processors: 
-      m_Interactions: 
-      m_SingletonActionBindings: []
-    resetTimeScale:
-      m_Name: 
-      m_Type: 0
-      m_ExpectedControlType: 
-      m_Id: 
-      m_Processors: 
-      m_Interactions: 
-      m_SingletonActionBindings: []
-    decreaseTimeScale:
-      m_Name: 
-      m_Type: 0
-      m_ExpectedControlType: 
-      m_Id: 
-      m_Processors: 
-      m_Interactions: 
-      m_SingletonActionBindings: []
   AutoManagedResourceDirectory: EnhancedEditor/AutoManagedResources
   InstanceTrackerDirectory: EnhancedEditor/Editor/InstanceTrackers
   ScriptTemplateDirectory: EnhancedEditor/Editor/ScriptTemplates
