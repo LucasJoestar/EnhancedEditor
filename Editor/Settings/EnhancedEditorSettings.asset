@@ -12,32 +12,32 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5b2139ef6864a2c4d86790d78a4ce5c3, type: 3}
   m_Name: EnhancedEditorSettings
   m_EditorClassIdentifier: 
-  UserSettings:
-    buildDirectory: H:/- My Stuff -/Projets/EnhancedEditor_2019.1/Builds
+  userSettings:
+    buildDirectory: 
     AutosaveInterval: 300
     increaseTimeScale:
-      m_Name: Increase Time Scale
+      m_Name: 
       m_Type: 0
       m_ExpectedControlType: 
-      m_Id: 487a808b-92ed-4d84-a551-30e473349055
+      m_Id: 
       m_Processors: 
       m_Interactions: 
       m_SingletonActionBindings: []
       m_Flags: 0
     resetTimeScale:
-      m_Name: Reset Time Scale
+      m_Name: 
       m_Type: 0
       m_ExpectedControlType: 
-      m_Id: c4c8b000-f175-4716-9dc6-89f0a217740a
+      m_Id: 
       m_Processors: 
       m_Interactions: 
       m_SingletonActionBindings: []
       m_Flags: 0
     decreaseTimeScale:
-      m_Name: Decrease Time Scale
+      m_Name: 
       m_Type: 0
       m_ExpectedControlType: 
-      m_Id: 572d103e-b142-4804-aebb-97af60bf86bc
+      m_Id: 
       m_Processors: 
       m_Interactions: 
       m_SingletonActionBindings: []
@@ -48,5 +48,5 @@ MonoBehaviour:
   SceneDesignerFolders:
   - EnhancedEditor
   CoreScene:
-    guid: 
-  IsCoreSceneEnabled: 0
+    guid: 2806c0e9be23d0e48b848d03d6eead33
+  IsCoreSceneEnabled: 1

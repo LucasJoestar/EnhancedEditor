@@ -14,7 +14,7 @@ using UnityEngine;
 namespace EnhancedEditor.Editor
 {
     /// <summary>
-    /// 
+    /// Editor toolbar extension used to easily select prefabs from the project and place them in the scene.
     /// </summary>
 	public class SceneDesigner : EditorWindow
     {
@@ -330,6 +330,11 @@ namespace EnhancedEditor.Editor
             string[] _folders = EnhancedEditorSettings.Settings.SceneDesignerFolders;
             if (_folders != folders)
             {
+                root.Folders.Clear();
+
+                if (_folders.Length == 0)
+                    return;
+
                 string[] _pathHelpers = new string[_folders.Length];
                 for (int _i = 0; _i < _folders.Length; _i++)
                 {

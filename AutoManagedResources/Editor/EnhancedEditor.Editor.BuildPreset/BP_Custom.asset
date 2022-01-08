@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: BP_Custom
   m_EditorClassIdentifier: 
   Description: Enter a description here...
-  BuildTarget: 5
-  BuildOptions: 1
-  buildCount: 0
-  scriptingDefineSymbols: 
+  BuildTarget: 19
+  BuildOptions: 0
+  buildCount: 1
+  scriptingDefineSymbols: CHRONOS_INPUTS;DEBUG_LOGGER

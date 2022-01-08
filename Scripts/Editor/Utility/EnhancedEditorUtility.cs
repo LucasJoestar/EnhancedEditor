@@ -258,6 +258,8 @@ namespace EnhancedEditor.Editor
         public static string[] FindAssetsGUID<T>() where T : Object
         {
             string _filter = $"t:{typeof(T).Name}";
+
+            AssetDatabase.Refresh();
             return AssetDatabase.FindAssets(_filter);
         }
 
@@ -305,6 +307,20 @@ namespace EnhancedEditor.Editor
 
             _asset = null;
             return false;
+        }
+
+        /// <summary>
+        /// Saves a specific asset in the database.
+        /// </summary>
+        /// <param name="_asset">Database asset to save.</param>
+        public static void SaveAsset(Object _asset) {
+            string _path = AssetDatabase.GetAssetPath(_asset);
+            if (string.IsNullOrEmpty(_path))
+                return;
+
+            EditorUtility.SetDirty(_asset);
+            AssetModificationProcessor.saveAssetPath = _path;
+            AssetDatabase.SaveAssets();
         }
         #endregion
 

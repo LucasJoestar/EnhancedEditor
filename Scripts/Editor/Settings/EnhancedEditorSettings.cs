@@ -44,6 +44,8 @@ namespace EnhancedEditor.Editor
         [Serializable]
         public class EditorUserSettings
         {
+            [NonSerialized] internal bool isInitialized = false;
+
             [SerializeField] private string buildDirectory = string.Empty;
 
             /// <summary>
@@ -70,7 +72,7 @@ namespace EnhancedEditor.Editor
             /// Time interval (in seconds) between two autosave.
             /// <br/> Autosave can be toggled from the main editor toolbar.
             /// </summary>
-            public int AutosaveInterval = AutosaveDefaultInterval;
+            [SerializeField] public int AutosaveInterval = AutosaveDefaultInterval;
 
             #if ENABLE_INPUT_SYSTEM
             // Chronos-related inputs.
@@ -83,7 +85,45 @@ namespace EnhancedEditor.Editor
         // -----------------------
 
         /// <inheritdoc cref="EditorUserSettings"/>
-        public EditorUserSettings UserSettings = new EditorUserSettings();
+        [SerializeField] private EditorUserSettings userSettings = new EditorUserSettings();
+
+        /// <inheritdoc cref="userSettings"/>
+        public EditorUserSettings UserSettings
+        {
+            get
+            {
+                if (!userSettings.isInitialized)
+                {
+                    // Load and initialize settings.
+                    string _data = EditorPrefs.GetString(PrefsKey, string.Empty);
+                    if (!string.IsNullOrEmpty(_data))
+                    {
+                        JsonUtility.FromJsonOverwrite(_data, userSettings);
+                    }
+                    else
+                    {
+                        userSettings = new EditorUserSettings();
+
+                        #if ENABLE_INPUT_SYSTEM
+                        userSettings.increaseTimeScale.AddBinding(Keyboard.current.numpadPlusKey);
+                        userSettings.resetTimeScale.AddBinding(Keyboard.current.numpadMultiplyKey);
+                        userSettings.decreaseTimeScale.AddBinding(Keyboard.current.numpadMinusKey);
+                        #endif
+                    }
+
+                    if (string.IsNullOrEmpty(userSettings.BuildDirectory))
+                    {
+                        userSettings.BuildDirectory = BuildDefaultDirectory;
+                        SaveSettings();
+                    }
+
+                    userSettings.isInitialized = true;
+                }
+
+
+                return userSettings;
+            }
+        }
 
         /// <summary>
         /// The directory in the project where are created all auto-managed resources.
@@ -147,32 +187,6 @@ namespace EnhancedEditor.Editor
 
         // -----------------------
 
-        private void OnEnable()
-        {
-            // Load and initialize settings.
-            string _data = EditorPrefs.GetString(PrefsKey, string.Empty);
-            if (!string.IsNullOrEmpty(_data))
-            {
-                JsonUtility.FromJsonOverwrite(_data, UserSettings);
-            }
-            else
-            {
-                UserSettings = new EditorUserSettings();
-
-                #if ENABLE_INPUT_SYSTEM
-                UserSettings.increaseTimeScale.AddBinding(Keyboard.current.numpadPlusKey);
-                UserSettings.resetTimeScale.AddBinding(Keyboard.current.numpadMultiplyKey);
-                UserSettings.decreaseTimeScale.AddBinding(Keyboard.current.numpadMinusKey);
-                #endif
-            }
-
-            if (string.IsNullOrEmpty(UserSettings.BuildDirectory))
-            {
-                UserSettings.BuildDirectory = BuildDefaultDirectory;
-                SaveSettings();
-            }
-        }
-
         private void OnValidate()
         {
             SaveSettings();
@@ -182,18 +196,19 @@ namespace EnhancedEditor.Editor
         {
             // Use EditorPrefs for user-dependant settings.
             string _data = JsonUtility.ToJson(UserSettings);
-
             EditorPrefs.SetString(PrefsKey, _data);
-            EditorUtility.SetDirty(this);
 
-            EditorAutosave.SetSaveInterval(UserSettings.AutosaveInterval);
+            EditorAutosave.SetSaveInterval(userSettings.AutosaveInterval);
 
             #if ENABLE_INPUT_SYSTEM
             // Save chronos inputs.
-            PlayerPrefs.SetString(Chronos.IncreaseInputKey, JsonUtility.ToJson(UserSettings.increaseTimeScale));
-            PlayerPrefs.SetString(Chronos.ResetInputKey, JsonUtility.ToJson(UserSettings.resetTimeScale));
-            PlayerPrefs.SetString(Chronos.DecreaseInputKey, JsonUtility.ToJson(UserSettings.decreaseTimeScale));
+            PlayerPrefs.SetString(Chronos.IncreaseInputKey, JsonUtility.ToJson(userSettings.increaseTimeScale));
+            PlayerPrefs.SetString(Chronos.ResetInputKey, JsonUtility.ToJson(userSettings.resetTimeScale));
+            PlayerPrefs.SetString(Chronos.DecreaseInputKey, JsonUtility.ToJson(userSettings.decreaseTimeScale));
             #endif
+
+            userSettings = new EditorUserSettings();
+            EnhancedEditorUtility.SaveAsset(this);
         }
         #endregion
 
@@ -300,13 +315,22 @@ namespace EnhancedEditor.Editor
         private static readonly GUIContent autosaveIntervalGUI = new GUIContent("Autosave Interval",
                                                                                 "Time interval (in seconds) between two autosave. Autosave can be toggled from the main editor toolbar.");
 
+        private static readonly GUIContent increaseTimeScaleGUI = new GUIContent("Increase Time Scale", "Input used to increase the game time scale at runtime.");
+        private static readonly GUIContent resetTimeScaleGUI = new GUIContent("Reset Time Scale", "Input used to reset the game time scale at runtime.");
+        private static readonly GUIContent decreaseTimeScaleGUI = new GUIContent("Decrease Time Scale", "Input used to decrease the game time scale at runtime.");
+
         private static readonly GUIContent sceneDesignerFoldersGUI = new GUIContent("Scene Designer Folders",
                                                                                     "All folders displayed to select objects to place in the scene using the Scene Designer.");
 
         private static readonly GUIContent coreSceneGUI = new GUIContent("Core Scene", "The core scene to load when entering play mode.");
         private static readonly GUIContent isCoreSceneEnabledGUI = new GUIContent("Enabled", "Enables / Disables to core scene system.");
 
-        private static SerializedProperty sceneDesignerFoldersProperty = null;
+        // -----------------------
+
+        private static SerializedObject serializedObject = null;
+
+        private static SerializedProperty buildDirectoryProperty = null;
+        private static SerializedProperty autosaveIntervalProperty = null;
 
         #if ENABLE_INPUT_SYSTEM
         private static SerializedProperty increaseTimeScaleProperty = null;
@@ -314,26 +338,66 @@ namespace EnhancedEditor.Editor
         private static SerializedProperty decreaseTimeScaleProperty = null;
         #endif
 
+        private static SerializedProperty autoManagedResourceDirectoryProperty = null;
+        private static SerializedProperty instanceTrackerDirectoryProperty = null;
+        private static SerializedProperty scriptTemplateDirectoryProperty = null;
+        private static SerializedProperty sceneDesignerFoldersProperty = null;
+        private static SerializedProperty coreSceneProperty = null;
+        private static SerializedProperty coreSceneGUIDProperty = null;
+        private static SerializedProperty isCoreSceneEnabledProperty = null;
+
         // -----------------------
 
         private static void DrawPreferences(EnhancedEditorSettings _settings)
         {
+            if ((serializedObject == null) || (!_settings.userSettings.isInitialized)) {
+                var _loadUserSettings = _settings.UserSettings;
+
+                serializedObject = new SerializedObject(settings);
+                SerializedProperty _userSettings = serializedObject.FindProperty("userSettings");
+
+                buildDirectoryProperty = _userSettings.FindPropertyRelative("buildDirectory");
+                autosaveIntervalProperty = _userSettings.FindPropertyRelative("AutosaveInterval");
+
+                #if ENABLE_INPUT_SYSTEM
+                increaseTimeScaleProperty = _userSettings.FindPropertyRelative("increaseTimeScale");
+                resetTimeScaleProperty = _userSettings.FindPropertyRelative("resetTimeScale");
+                decreaseTimeScaleProperty = _userSettings.FindPropertyRelative("decreaseTimeScale");
+                #endif
+
+                autoManagedResourceDirectoryProperty = serializedObject.FindProperty("AutoManagedResourceDirectory");
+                instanceTrackerDirectoryProperty = serializedObject.FindProperty("InstanceTrackerDirectory");
+                scriptTemplateDirectoryProperty = serializedObject.FindProperty("ScriptTemplateDirectory");
+                sceneDesignerFoldersProperty = serializedObject.FindProperty("SceneDesignerFolders");
+                coreSceneProperty = serializedObject.FindProperty("CoreScene");
+                coreSceneGUIDProperty = coreSceneProperty.FindPropertyRelative("guid");
+                isCoreSceneEnabledProperty = serializedObject.FindProperty("IsCoreSceneEnabled");
+            }
+
             Undo.RecordObject(_settings, UndoRecordTitle);
 
             using (var _scope = new GUILayout.HorizontalScope())
             {
                 GUILayout.Space(7f);
                 using (var _verticalScope = new GUILayout.VerticalScope())
+                using (var _changeCheck = new EditorGUI.ChangeCheckScope())
                 {
-                    DrawUserSettings(_settings.UserSettings);
+                    DrawUserSettings();
 
                     GUILayout.Space(15f);
-                    DrawGlobalSettings(_settings);
+                    DrawGlobalSettings();
+
+                    // Save on any change.
+                    if (_changeCheck.changed)
+                    {
+                        serializedObject.ApplyModifiedProperties();
+                        settings.SaveSettings();
+                    }
                 }
             }
         }
 
-        private static void DrawUserSettings(EditorUserSettings _settings)
+        private static void DrawUserSettings()
         {
             EnhancedEditorGUILayout.UnderlinedLabel(localHeaderGUI, EditorStyles.boldLabel);
             GUILayout.Space(2f);
@@ -346,30 +410,28 @@ namespace EnhancedEditor.Editor
                 {
 
                     // Build dirctory.
-                    _settings.BuildDirectory = EnhancedEditorGUILayout.FolderField(buildDirectoryGUI, _settings.BuildDirectory, true, BuildDirectoryPanelTitle);
+                    EnhancedEditorGUILayout.FolderField(buildDirectoryProperty, buildDirectoryGUI, true, BuildDirectoryPanelTitle);
 
                     // Autosave interval.
-                    _settings.AutosaveInterval = EnhancedEditorGUILayout.MinField(autosaveIntervalGUI, _settings.AutosaveInterval, 5);
+                    EnhancedEditorGUILayout.MinField(autosaveIntervalProperty, autosaveIntervalGUI, 5);
 
                     #if ENABLE_INPUT_SYSTEM
-                    // Properties initialization.
-                    if (increaseTimeScaleProperty == null)
-                    {
-                        SerializedObject _serializedObject = new SerializedObject(settings);
-                        SerializedProperty _userSettings = _serializedObject.FindProperty("UserSettings");
-
-                        increaseTimeScaleProperty = _userSettings.FindPropertyRelative("increaseTimeScale");
-                        resetTimeScaleProperty = _userSettings.FindPropertyRelative("resetTimeScale");
-                        decreaseTimeScaleProperty = _userSettings.FindPropertyRelative("decreaseTimeScale");
-                    }
-
                     GUILayout.Space(10f);
 
                     // Chronos inputs.
                     EditorGUILayout.LabelField(chronosHeaderGUI, EditorStyles.boldLabel);
 
+                    EditorGUILayout.PrefixLabel(increaseTimeScaleGUI);
                     EditorGUILayout.PropertyField(increaseTimeScaleProperty);
+
+                    GUILayout.Space(3f);
+
+                    EditorGUILayout.PrefixLabel(resetTimeScaleGUI);
                     EditorGUILayout.PropertyField(resetTimeScaleProperty);
+
+                    GUILayout.Space(3f);
+
+                    EditorGUILayout.PrefixLabel(decreaseTimeScaleGUI);
                     EditorGUILayout.PropertyField(decreaseTimeScaleProperty);
                     #endif
 
@@ -391,46 +453,34 @@ namespace EnhancedEditor.Editor
             }
         }
 
-        private static void DrawGlobalSettings(EnhancedEditorSettings _settings)
+        private static void DrawGlobalSettings()
         {
             EnhancedEditorGUILayout.UnderlinedLabel(globalHeaderGUI, EditorStyles.boldLabel);
             GUILayout.Space(3f);
 
             // Auto-managed resource directory.
-            _settings.AutoManagedResourceDirectory = EnhancedEditorGUILayout.FolderField(autoManagedResourceDirectoryGUI,
-                                                                                         _settings.AutoManagedResourceDirectory, false,
-                                                                                         AutoManagedResourceDirectoryPanelTitle);
+            EnhancedEditorGUILayout.FolderField(autoManagedResourceDirectoryProperty, autoManagedResourceDirectoryGUI, false, AutoManagedResourceDirectoryPanelTitle);
 
             // Instance trackers dirctory.
-            _settings.InstanceTrackerDirectory = EnhancedEditorGUILayout.EditorFolderField(instanceTrackerDirectoryGUI,
-                                                                                           _settings.InstanceTrackerDirectory,
-                                                                                           InstanceTrackerDirectoryPanelTitle);
+            EnhancedEditorGUILayout.EditorFolderField(instanceTrackerDirectoryProperty, instanceTrackerDirectoryGUI, InstanceTrackerDirectoryPanelTitle);
 
             // Script templates dirctory.
-            _settings.ScriptTemplateDirectory = EnhancedEditorGUILayout.FolderField(scriptTemplateDirectoryGUI,
-                                                                                    _settings.ScriptTemplateDirectory, false,
-                                                                                    ScriptTemplateDirectoryPanelTitle);
+            EnhancedEditorGUILayout.FolderField(scriptTemplateDirectoryProperty, scriptTemplateDirectoryGUI, false, ScriptTemplateDirectoryPanelTitle);
 
             GUILayout.Space(5f);
 
             // Scene Designer folders.
-            if (sceneDesignerFoldersProperty == null)
-            {
-                SerializedObject _serializedObject = new SerializedObject(settings);
-                sceneDesignerFoldersProperty = _serializedObject.FindProperty("SceneDesignerFolders");
-            }
-
-            EditorGUILayout.PropertyField(sceneDesignerFoldersProperty);
+            EditorGUILayout.PropertyField(sceneDesignerFoldersProperty, sceneDesignerFoldersGUI);
 
             GUILayout.Space(15f);
 
             // Core scene system.
             EditorGUILayout.LabelField(coreSceneHeaderGUI, EditorStyles.boldLabel);
 
-            EnhancedEditorGUILayout.SceneAssetField(coreSceneGUI, _settings.CoreScene);
-            if (!string.IsNullOrEmpty(_settings.CoreScene.guid))
+            EnhancedEditorGUILayout.SceneAssetField(coreSceneProperty, coreSceneGUI);
+            if (!string.IsNullOrEmpty(coreSceneGUIDProperty.stringValue))
             {
-                _settings.IsCoreSceneEnabled = EditorGUILayout.Toggle(isCoreSceneEnabledGUI, _settings.IsCoreSceneEnabled);
+                EditorGUILayout.PropertyField(isCoreSceneEnabledProperty, isCoreSceneEnabledGUI);
             }
 
             EditorGUILayout.HelpBox(CoreSceneMessage, UnityEditor.MessageType.Info);

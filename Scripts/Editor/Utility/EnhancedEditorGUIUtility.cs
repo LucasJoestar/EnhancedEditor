@@ -184,7 +184,7 @@ namespace EnhancedEditor.Editor
         {
             get
             {
-                float _width = Mathf.RoundToInt(Screen.width * ScreenScale);
+                float _width = Mathf.RoundToInt(Screen.width / ScreenScale);
                 return _width;
             }
         }
@@ -196,7 +196,7 @@ namespace EnhancedEditor.Editor
         {
             get
             {
-                float _width = Mathf.RoundToInt(Screen.height * ScreenScale);
+                float _width = Mathf.RoundToInt(Screen.height / ScreenScale);
                 return _width;
             }
         }
