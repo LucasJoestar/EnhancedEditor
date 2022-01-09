@@ -258,8 +258,6 @@ namespace EnhancedEditor.Editor
         public static string[] FindAssetsGUID<T>() where T : Object
         {
             string _filter = $"t:{typeof(T).Name}";
-
-            AssetDatabase.Refresh();
             return AssetDatabase.FindAssets(_filter);
         }
 
