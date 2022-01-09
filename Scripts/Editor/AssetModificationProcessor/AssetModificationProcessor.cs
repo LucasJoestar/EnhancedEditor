@@ -35,6 +35,10 @@ namespace EnhancedEditor.Editor
         #endregion
 
         #region Asset Modifications
+        internal static string saveAssetPath = string.Empty;
+
+        // -----------------------
+
         #pragma warning disable IDE0051
         private static string[] OnWillSaveAssets(string[] _paths)
         {
@@ -57,6 +61,12 @@ namespace EnhancedEditor.Editor
 
                 modifiedObjects.Clear();
                 SetModifiedObjects();
+            }
+
+            // When asked to only save one asset, discard the others.
+            if (!string.IsNullOrEmpty(saveAssetPath)) {
+                _paths = new string[] { saveAssetPath };
+                saveAssetPath = string.Empty;
             }
 
             return _paths;

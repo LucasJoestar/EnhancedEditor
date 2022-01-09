@@ -164,33 +164,37 @@ namespace EnhancedEditor.Editor
 
         public override void OnInspectorGUI()
         {
-            // Top method drawers.
-            foreach (MethodDrawerGroup _group in methodDrawerGroups)
+            try
             {
-                _group.DrawMethodDrawers(true);
-            }
-
-            // Inspector.
-            bool _drawInspector = true;
-            foreach (UnityObjectDrawer _drawer in objectDrawers)
-            {
-                if (_drawer.OnInspectorGUI())
+                // Top method drawers.
+                foreach (MethodDrawerGroup _group in methodDrawerGroups)
                 {
-                    _drawInspector = false;
-                    break;
+                    _group.DrawMethodDrawers(true);
+                }
+
+                // Inspector.
+                bool _drawInspector = true;
+                foreach (UnityObjectDrawer _drawer in objectDrawers)
+                {
+                    if (_drawer.OnInspectorGUI())
+                    {
+                        _drawInspector = false;
+                        break;
+                    }
+                }
+
+                if (_drawInspector)
+                    base.OnInspectorGUI();
+
+                GUILayout.Space(10f);
+
+                // Bottom method drawers.
+                foreach (MethodDrawerGroup _group in methodDrawerGroups)
+                {
+                    _group.DrawMethodDrawers(false);
                 }
             }
-
-            if (_drawInspector)
-                base.OnInspectorGUI();
-
-            GUILayout.Space(10f);
-
-            // Bottom method drawers.
-            foreach (MethodDrawerGroup _group in methodDrawerGroups)
-            {
-                _group.DrawMethodDrawers(false);
-            }
+            catch (InvalidOperationException) { }
         }
 
         protected virtual void OnDisable()

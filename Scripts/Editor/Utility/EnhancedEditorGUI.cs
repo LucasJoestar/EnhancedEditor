@@ -936,7 +936,7 @@ namespace EnhancedEditor.Editor
         #endregion
 
         #region Folder
-        private const string DefaultEditorPanelTitle = "Select an Editor Folder";
+        internal const string DefaultEditorPanelTitle = "Select an Editor Folder";
         private const string EditorFolder = "Editor";
 
         private static readonly GUIContent folderButtonGUI = new GUIContent(string.Empty, "Opens the panel to select a folder.");
@@ -997,18 +997,22 @@ namespace EnhancedEditor.Editor
             }
 
             // Folder field.
-            using (var _scope = new EditorGUI.PropertyScope(_position, _label, _property))
-            using (var _changeCheck = new EditorGUI.ChangeCheckScope())
+            EditorGUI.BeginProperty(_position, _label, _property);
+            EditorGUI.BeginChangeCheck();
             {
                 string _folderPath = _property.stringValue;
                 _folderPath = FolderField(_position, _label, _folderPath, _allowOutsideProjectFolder, _folderPanelTitle);
 
                 // Save new value.
-                if (_changeCheck.changed)
+                if (EditorGUI.EndChangeCheck())
                 {
                     _property.stringValue = _folderPath;
+
+                    EditorGUI.BeginProperty(_position, _label, _property);
                 }
             }
+
+            EditorGUI.EndProperty();
         }
 
         // ===== String Value ===== \\
@@ -1109,6 +1113,49 @@ namespace EnhancedEditor.Editor
             return _folderPath;
         }
 
+        // ===== Editor Folder - Serialized Property ===== \\
+
+        /// <inheritdoc cref="EditorFolderField(Rect, SerializedProperty, GUIContent, string)"/>
+        public static void EditorFolderField(Rect _position, SerializedProperty _property, string _folderPanelTitle = DefaultEditorPanelTitle) {
+            GUIContent _label = GUIContent.none;
+            EditorFolderField(_position, _property, _label, _folderPanelTitle);
+        }
+
+        /// <inheritdoc cref="EditorFolderField(Rect, SerializedProperty, GUIContent, string)"/>
+        public static void EditorFolderField(Rect _position, SerializedProperty _property, string _label, string _folderPanelTitle = DefaultEditorPanelTitle) {
+            GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
+            EditorFolderField(_position, _property, _labelGUI, _folderPanelTitle);
+        }
+
+        /// <summary>
+        /// Makes a field for selecting a folder located in an Editor folder.
+        /// </summary>
+        /// <inheritdoc cref="FolderField(Rect, SerializedProperty, GUIContent, bool, string)"/>
+        public static void EditorFolderField(Rect _position, SerializedProperty _property, GUIContent _label, string _folderPanelTitle = DefaultEditorPanelTitle) {
+            // Incompatible property management.
+            if (_property.propertyType != SerializedPropertyType.String) {
+                EditorGUI.PropertyField(_position, _property, _label);
+                return;
+            }
+
+            // Folder field.
+            EditorGUI.BeginProperty(_position, _label, _property);
+            EditorGUI.BeginChangeCheck();
+            {
+                string _folderPath = _property.stringValue;
+                _folderPath = EditorFolderField(_position, _label, _folderPath, _folderPanelTitle);
+
+                // Save new value.
+                if (EditorGUI.EndChangeCheck()) {
+                    _property.stringValue = _folderPath;
+
+                    EditorGUI.BeginProperty(_position, _label, _property);
+                }
+            }
+
+            EditorGUI.EndProperty();
+        }
+
         // ===== Editor Folder - String Value ===== \\
 
         /// <inheritdoc cref="EditorFolderField(Rect, GUIContent, string, string)"/>
@@ -1126,7 +1173,7 @@ namespace EnhancedEditor.Editor
         }
 
         /// <summary>
-        /// Makes a field for selecting a folder located in an Editor folder.
+        /// <inheritdoc cref="EditorFolderField(Rect, SerializedProperty, GUIContent, string)" path="/summary"/>
         /// </summary>
         /// <inheritdoc cref="FolderField(Rect, GUIContent, string, bool, string)"/>
         public static string EditorFolderField(Rect _position, GUIContent _label, string _folderPath, string _folderPanelTitle = DefaultEditorPanelTitle)

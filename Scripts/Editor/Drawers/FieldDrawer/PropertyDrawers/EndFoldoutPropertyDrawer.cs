@@ -27,6 +27,8 @@ namespace EnhancedEditor.Editor
 
         private bool isFirstDraw = true;
 
+        public override bool RequireConstantRepaint => true;
+
         // -----------------------
 
         public override void OnEnable()
