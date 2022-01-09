@@ -214,6 +214,10 @@ namespace EnhancedEditor.Editor
         #endregion
 
         #region GUI Utility
+        private static readonly GUIContent dropdownGUI = new GUIContent();
+
+        // -----------------------
+
         /// <summary>
         /// Draws a toolbar-like button. Use this to draw buttons on the editor toolbar in your own extensions.
         /// </summary>
@@ -260,7 +264,7 @@ namespace EnhancedEditor.Editor
                                                                     : EnhancedEditorStyles.ToolbarCommandMid);
 
                     _position.width = _labelStyle.CalcSize(_content).x + 7f;
-                    EditorGUILayout.GetControlRect(GUILayout.Width(_position.width - EditorGUIUtility.standardVerticalSpacing));
+                    EditorGUILayout.GetControlRect(GUILayout.Width(_position.width - 3f));
 
                     if (GUI.Button(_position, GUIContent.none, _style))
                         _result = _i;
@@ -269,6 +273,51 @@ namespace EnhancedEditor.Editor
                     GUI.Label(_position, _content, _labelStyle);
                     _position.x += _position.width;
                 }
+            }
+
+            return _result;
+        }
+
+        /// <summary>
+        /// Draws a toggle next to a dropdown.
+        /// </summary>
+        /// <param name="toggle">Toggle button value.</param>
+        /// <param name="_label">Text, image and tooltip to be displayed on the toggle button.</param>
+        /// <param name="_options"><inheritdoc cref="Button(GUIContent, GUILayoutOption[])" path="/param[@name='_options']"/></param>
+        /// <returns>0 if the toggle value has changed, 1 if the user clicked on the dropdown, and -1 otherwise.</returns>
+        public static int DropdownToggle(bool toggle, GUIContent _label, params GUILayoutOption[] _options)
+        {
+            int _result = -1;
+
+            // Toggle button.
+            Rect _position = EditorGUILayout.GetControlRect(_options);
+            using (var _changeCheck = new EditorGUI.ChangeCheckScope())
+            {
+                GUI.Toggle(_position, toggle, GUIContent.none, EnhancedEditorStyles.ToolbarCommandLeft);
+
+                if (_changeCheck.changed)
+                    _result = 0;
+            }
+
+            GUIStyle _labelStyle = EnhancedEditorStyles.ToolbarLabel;
+            using (var _scope = EnhancedGUI.GUIStyleAlignment.Scope(_labelStyle, TextAnchor.MiddleCenter))
+            {
+                GUI.Label(_position, _label, _labelStyle);
+            }
+
+            // Dropdown.
+            if (dropdownGUI.image == null)
+                dropdownGUI.image = EditorGUIUtility.IconContent("dropdown").image;
+
+            _position = EditorGUILayout.GetControlRect(GUILayout.Width(12f));
+            _position.xMin -= 3f;
+
+            if (EditorGUI.DropdownButton(_position, GUIContent.none, FocusType.Passive, EnhancedEditorStyles.ToolbarCommandRight))
+                _result = 1;
+
+            using (var _scope = EnhancedGUI.GUIStyleAlignment.Scope(_labelStyle, TextAnchor.MiddleCenter))
+            {
+                GUI.Label(_position, dropdownGUI, _labelStyle);
             }
 
             return _result;

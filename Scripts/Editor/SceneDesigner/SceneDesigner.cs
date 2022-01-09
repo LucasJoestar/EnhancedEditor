@@ -106,11 +106,7 @@ namespace EnhancedEditor.Editor
         private const string EnabledKey = "SceneDesignerEnabled";
         private const string SelectedAssetKey = "SceneDesignerSelectedAsset";
 
-        private static readonly GUIContent[] toolbarButtons = new GUIContent[]
-                                                                    {
-                                                                        new GUIContent(),
-                                                                        new GUIContent()
-                                                                    };
+        private static readonly GUIContent toolbarButton = new GUIContent();
 
         private static bool isEnabled = false;
         private static string selectedAssetPath = string.Empty;
@@ -121,12 +117,13 @@ namespace EnhancedEditor.Editor
 
         static SceneDesigner()
         {
-            toolbarButtons[0].image = EditorGUIUtility.IconContent("PreMatCube").image;
-            toolbarButtons[1].image = EditorGUIUtility.IconContent("dropdown").image;
+            toolbarButton.image = EditorGUIUtility.IconContent("PreMatCube").image;
 
             // Loads session values.
+            bool _isEnabled = SessionState.GetBool(EnabledKey, isEnabled);
+
             SelectAsset(SessionState.GetString(SelectedAssetKey, selectedAssetPath));
-            SetEnable(SessionState.GetBool(EnabledKey, isEnabled));
+            SetEnable(_isEnabled);
         }
         #endregion
 
@@ -248,6 +245,8 @@ namespace EnhancedEditor.Editor
 
             isEnabled = _isEnable;
             SessionState.SetBool(EnabledKey, _isEnable);
+
+            EnhancedEditorToolbar.Repaint();
         }
 
         /// <inheritdoc cref="SelectAsset(string)"/>
@@ -315,6 +314,9 @@ namespace EnhancedEditor.Editor
         // -------------------------------------------
         // Window GUI
         // -------------------------------------------
+
+        private const string NoAssetMessage = "No asset could be found in the specified folders. " +
+                                              "You can edit the scene designers folders using the button on the window top-right corner.";
 
         private static readonly Color indentColor = SuperColor.Grey.Get();
 
@@ -389,11 +391,30 @@ namespace EnhancedEditor.Editor
                 scroll = _scope.scrollPosition;
 
                 GUILayout.Space(2f);
-                using (var _horizontalScope = new GUILayout.HorizontalScope())
+                using (var _horizontalScope = new EditorGUILayout.HorizontalScope())
                 {
+                    // Preferences button.
+                    Rect _position = new Rect(_horizontalScope.rect)
+                    {
+                        xMin = _horizontalScope.rect.xMax - 25f,
+                        height = 20f
+                    };
+
+                    EnhancedEditorSettings.DrawPreferencesButton(_position);
+
                     GUILayout.Space(5f);
                     using (var _verticalScope = new GUILayout.VerticalScope())
                     {
+                        // No asset message.
+                        if (root.Folders.Count == 0)
+                        {
+                            GUILayout.FlexibleSpace();
+                            EditorGUILayout.HelpBox(NoAssetMessage, UnityEditor.MessageType.Info, true);
+
+                            GUILayout.FlexibleSpace();
+                            return;
+                        }
+
                         DrawFolder(root);
                     }
                 }
@@ -550,7 +571,7 @@ namespace EnhancedEditor.Editor
         [EditorToolbarLeftExtension(Order = 100)]
         private static void ToolbarExtension()
         {
-            int _result = EnhancedEditorToolbar.ButtonGroup(toolbarButtons);
+            int _result = EnhancedEditorToolbar.DropdownToggle(isEnabled, toolbarButton, GUILayout.Width(32f));
 
             switch (_result)
             {

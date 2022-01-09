@@ -22,6 +22,8 @@ namespace EnhancedEditor.Editor
         #region Property Infos
         internal class PropertyInfos
         {
+            public readonly bool RequireConstantRepaint = false;
+
             public EnhancedPropertyDrawer[] PropertyDrawers = null;
             public float Height = EditorGUIUtility.singleLineHeight;
 
@@ -41,6 +43,9 @@ namespace EnhancedEditor.Editor
                         {
                             EnhancedPropertyDrawer _customDrawer = EnhancedPropertyDrawer.CreateInstance(_pair.Key, _property, _attribute, _fieldInfo);
                             ArrayUtility.Add(ref PropertyDrawers, _customDrawer);
+
+                            if (!RequireConstantRepaint)
+                                RequireConstantRepaint = _customDrawer.RequireConstantRepaint;
 
                             break;
                         }
@@ -110,6 +115,11 @@ namespace EnhancedEditor.Editor
             }
 
             var _infos = propertyInfos[_path];
+
+            // Constantly repaint for the drawers who need it.
+            if (_infos.RequireConstantRepaint)
+                EnhancedEditorGUIUtility.Repaint(_property.serializedObject);
+
             using (var _changeCheck = new EditorGUI.ChangeCheckScope())
             {
                 // Pre GUI callback.

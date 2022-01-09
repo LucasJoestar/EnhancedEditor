@@ -114,7 +114,6 @@ namespace EnhancedEditor.Editor
                     if (string.IsNullOrEmpty(userSettings.BuildDirectory))
                     {
                         userSettings.BuildDirectory = BuildDefaultDirectory;
-                        SaveSettings();
                     }
 
                     userSettings.isInitialized = true;
@@ -271,8 +270,7 @@ namespace EnhancedEditor.Editor
         #pragma warning disable IDE0051
         private static void OpenPreferencesToolbarExtension()
         {
-            if (toolbarButtonGUI.image == null)
-                toolbarButtonGUI.image = EditorGUIUtility.FindTexture("d_Settings");
+            LoadIcon();
 
             GUILayout.FlexibleSpace();
             if (EnhancedEditorToolbar.Button(toolbarButtonGUI, GUILayout.Width(32f)))
@@ -281,6 +279,24 @@ namespace EnhancedEditor.Editor
             }
 
             GUILayout.Space(25f);
+        }
+
+        // -----------------------
+
+        public static void DrawPreferencesButton(Rect _position)
+        {
+            LoadIcon();
+
+            if (EnhancedEditorGUI.IconButton(_position, toolbarButtonGUI))
+            {
+                OpenPreferencesSettings();
+            }
+        }
+
+        private static void LoadIcon()
+        {
+            if (toolbarButtonGUI.image == null)
+                toolbarButtonGUI.image = EditorGUIUtility.FindTexture("d_Settings");
         }
         #endregion
 
