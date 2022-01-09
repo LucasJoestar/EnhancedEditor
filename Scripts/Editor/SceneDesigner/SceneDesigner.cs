@@ -203,7 +203,7 @@ namespace EnhancedEditor.Editor
 
         private static void DrawMeshes(Camera _camera)
         {
-            if ((GUIUtility.hotControl != 0) || (_camera != SceneView.lastActiveSceneView.camera))
+            if ((GUIUtility.hotControl != 0) || (_camera != SceneView.lastActiveSceneView.camera) || !(mouseOverWindow is SceneView))
                 return;
 
             Transform _transform = selectedAsset.transform;
