@@ -4,6 +4,12 @@
 //
 // ============================================================================ //
 
+#if UNITY_2021_1_OR_NEWER
+#define SCENEVIEW_TOOLBAR
+#elif UNITY_2020_1_OR_NEWER
+#define EDITOR_TOOLBAR
+#endif
+
 using System;
 using System.IO;
 using UnityEditor;
@@ -142,7 +148,7 @@ namespace EnhancedEditor.Editor
         /// <summary>
         /// All folders used to select objects to place in the scene using the <see cref="SceneDesigner"/>.
         /// </summary>
-        [Folder] public string[] SceneDesignerFolders = new string[] { };
+        [Enhanced, Folder] public string[] SceneDesignerFolders = new string[] { };
 
         /// <summary>
         /// The core scene to load when entering play mode.
@@ -158,7 +164,8 @@ namespace EnhancedEditor.Editor
 
         #region Behaviour
         private const string DefaultSettingsDirectory = "EnhancedEditor/Editor/Settings/";
-        private const string PrefsKey = "EnhancedEditorPreferences";
+
+        private static string PrefsKey => $"{Application.productName}_EnhancedEditorPreferences";
 
         private static EnhancedEditorSettings settings = null;
 
@@ -272,13 +279,20 @@ namespace EnhancedEditor.Editor
         {
             LoadIcon();
 
+            #if SCENEVIEW_TOOLBAR
+            GUILayout.Space(10f);
+            #elif EDITOR_TOOLBAR
             GUILayout.FlexibleSpace();
+            #endif
+
             if (EnhancedEditorToolbar.Button(toolbarButtonGUI, GUILayout.Width(32f)))
             {
                 OpenPreferencesSettings();
             }
 
+            #if EDITOR_TOOLBAR
             GUILayout.Space(25f);
+            #endif
         }
 
         // -----------------------

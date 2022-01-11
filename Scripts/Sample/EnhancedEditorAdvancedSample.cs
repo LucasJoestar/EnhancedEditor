@@ -18,7 +18,7 @@ namespace EnhancedEditor.Sample
         [Serializable]
         public class SampleClass
         {
-            [EnhancedTextArea] public string Name = "SubSample";
+            [Enhanced, EnhancedTextArea] public string Name = "SubSample";
             public bool Enabled = true;
 
             //public Document.Section Section = null;

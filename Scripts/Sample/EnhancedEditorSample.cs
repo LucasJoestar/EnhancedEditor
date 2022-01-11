@@ -16,7 +16,7 @@ namespace EnhancedEditor.Sample
         [System.Serializable]
         public class Sample
         {
-            [Required] public GameObject DoYouSeeMe = null;
+            [Enhanced, Required] public GameObject DoYouSeeMe = null;
         }
 
         [Section("SAMPLE SCRIPT")]

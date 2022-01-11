@@ -18,7 +18,8 @@ MonoBehaviour:
   AutoManagedResourceDirectory: EnhancedEditor/AutoManagedResources
   InstanceTrackerDirectory: EnhancedEditor/Editor/InstanceTrackers
   ScriptTemplateDirectory: EnhancedEditor/Editor/ScriptTemplates
-  SceneDesignerFolders: []
+  SceneDesignerFolders:
+  - EnhancedEditor
   CoreScene:
     guid: 
   IsCoreSceneEnabled: 0

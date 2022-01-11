@@ -4,6 +4,12 @@
 //
 // ============================================================================ //
 
+#if UNITY_2021_1_OR_NEWER
+#define SCENEVIEW_TOOLBAR
+#elif UNITY_2020_1_OR_NEWER
+#define EDITOR_TOOLBAR
+#endif
+
 using System;
 using System.IO;
 using System.Collections.Generic;
@@ -180,7 +186,12 @@ namespace EnhancedEditor.Editor
             }
 
             // Position handles.
-            if (GUIUtility.hotControl == 0)
+            bool doDrawHandles = GUIUtility.hotControl == 0;
+            #if SCENEVIEW_TOOLBAR
+            doDrawHandles &= _event.mousePosition.y > 25f;
+            #endif
+
+            if (doDrawHandles)
             {
                 Transform _transform = selectedAsset.transform;
 

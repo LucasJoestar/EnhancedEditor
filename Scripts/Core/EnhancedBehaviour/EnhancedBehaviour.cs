@@ -20,7 +20,7 @@ namespace EnhancedEditor
     {
         #region Global Members
         #if UNITY_EDITOR
-        [SerializeField, EnhancedTextArea] private string comment = string.Empty;
+        [SerializeField, Enhanced, EnhancedTextArea] private string comment = string.Empty;
         #endif
 
         /// <summary>
@@ -29,8 +29,8 @@ namespace EnhancedEditor
         public TagGroup Tags = new TagGroup();
 
         #if UNITY_EDITOR
-        [SerializeField, ReadOnly] private string lastModifiedBy = string.Empty;
-        [SerializeField, ReadOnly] private string lastModifiedDate = string.Empty;
+        [SerializeField, Enhanced, ReadOnly] private string lastModifiedBy = string.Empty;
+        [SerializeField, Enhanced, ReadOnly] private string lastModifiedDate = string.Empty;
         #endif
 
         /// <summary>

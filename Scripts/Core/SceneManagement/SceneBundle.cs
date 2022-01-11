@@ -24,7 +24,7 @@ namespace EnhancedEditor
         public SceneAsset[] Scenes = new SceneAsset[] { };
 
         #if UNITY_EDITOR
-        [SerializeField, Space(5f), EnhancedTextArea(true)] private string comment = string.Empty;
+        [SerializeField, Space(5f), Enhanced, EnhancedTextArea(true)] private string comment = string.Empty;
         #endif
         #endregion
 

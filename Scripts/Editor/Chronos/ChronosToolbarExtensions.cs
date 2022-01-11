@@ -4,6 +4,12 @@
 //
 // ============================================================================ //
 
+#if UNITY_2021_1_OR_NEWER
+#define SCENEVIEW_TOOLBAR
+#elif UNITY_2020_1_OR_NEWER
+#define EDITOR_TOOLBAR
+#endif
+
 using UnityEditor;
 using UnityEngine;
 
@@ -47,7 +53,9 @@ namespace EnhancedEditor.Editor
         #pragma warning disable IDE0051
         private static void GUI()
         {
+            #if EDITOR_TOOLBAR
             GUILayout.Space(25f);
+            #endif
             
             buttonsGUI[1].text = (Time.timeScale == 1f)
                                ? string.Empty
