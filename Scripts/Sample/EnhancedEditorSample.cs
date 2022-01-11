@@ -21,43 +21,43 @@ namespace EnhancedEditor.Sample
 
         [Section("SAMPLE SCRIPT")]
 
-        [Folder] public string Folder = string.Empty;
+        [Enhanced, Folder] public string Folder = string.Empty;
         public SceneBundle bundle = null;
 
-        [EndFoldout]
+        [Enhanced, EndFoldout]
         [BeginFoldout("Small Group"), BeginFoldout("Wrapper")]
 
         [AssetPreview] public GameObject AssetPreview = null;
 
-        [EndFoldout, EndFoldout] public GameObject Ender = null;
+        [Enhanced, EndFoldout, EndFoldout] public GameObject Ender = null;
 
-        [BeginFoldout("Large Group")]
+        [Enhanced, BeginFoldout("Large Group")]
 
         [Block, DisplayName("This is a Block", "Yes it is")] public EnhancedEditorAdvancedSample.SampleClass BlockClass = null;
-        [Block] public Sample MySample = null;
+        [Enhanced, Block] public Sample MySample = null;
 
         public bool Boolean = true;
 
-        [ShowIf("Boolean", ConditionType.False), HelpBox("This is a help box. My content is very long, so make sure my width is supported for dynamic height.", MessageType.Info, true)]
+        [Enhanced, ShowIf("Boolean", ConditionType.False), HelpBox("This is a help box. My content is very long, so make sure my width is supported for dynamic height.", MessageType.Info, true)]
         public int HelpBox = 0;
 
-        [Inline] public Sample Inline = null;
-        [Min(0f), Max(100f)] public float MinMax = 500f;
-        [MinMax(0f, 100f)] public Vector2 MinMaxField = new Vector2(3, 50);
+        [Enhanced, Inline] public Sample Inline = null;
+        [Enhanced, Min(0f), Max(100f)] public float MinMax = 500f;
+        [Enhanced, MinMax(0f, 100f)] public Vector2 MinMaxField = new Vector2(3, 50);
 
-        [ColorPalette(order = 0), EndFoldout(order = 1)]
+        [Enhanced, ColorPalette(order = 0), EndFoldout(order = 1)]
         public Color MyColor = Color.red;
 
-        [Required, Picker(typeof(Transform))] public GameObject Picker = null;
-        [PrecisionSlider(0f, 100f, .5f)] public float Precision = 50f;
-        [ProgressBar(100f, 25f, SuperColor.Chocolate, true)] public float ProgressBar = 10f;
-        [ValidationMember("ValidationProperty", ActivationMode.Editor)] public float ValidationField = 10f;
-        [ReadOnly(true)] public bool Readonly = true;
+        [Enhanced, Required, Picker(typeof(Transform))] public GameObject Picker = null;
+        [Enhanced, PrecisionSlider(0f, 100f, .5f)] public float Precision = 50f;
+        [Enhanced, ProgressBar(100f, 25f, SuperColor.Chocolate, true)] public float ProgressBar = 10f;
+        [Enhanced, ValidationMember("ValidationProperty", ActivationMode.Editor)] public float ValidationField = 10f;
+        [Enhanced, ReadOnly(true)] public bool Readonly = true;
 
-        [EnhancedCurve(0f, 0f, 1f, 1f, SuperColor.Crimson)] public AnimationCurve MyCurve = new AnimationCurve();
-        [EnhancedTextArea] public string TextArea = "This is a text area.";
+        [Enhanced, EnhancedCurve(0f, 0f, 1f, 1f, SuperColor.Crimson)] public AnimationCurve MyCurve = new AnimationCurve();
+        [Enhanced, EnhancedTextArea] public string TextArea = "This is a text area.";
 
-        [EnhancedBounds] public Bounds MyBounds = new Bounds();
+        [Enhanced, EnhancedBounds] public Bounds MyBounds = new Bounds();
         public string EndOfTheLine = "End of the Line";
 
         public float MaxProperty => 100f;

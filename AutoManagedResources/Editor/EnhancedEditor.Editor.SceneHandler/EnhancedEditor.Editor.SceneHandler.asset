@@ -19,6 +19,7 @@ MonoBehaviour:
     - GUID: 766291a22ae55774cb51b65b0a8c8b91
     - GUID: b05f6dd2b494ddc408dad2ef42d2447e
     - GUID: b2e6d86bc4a6a714586e4a1828a5e79d
+    - GUID: d1c3109bdb54ad54c8a2b2838528e640
   bundleGroups:
   - Name: Default Group
     Bundles:

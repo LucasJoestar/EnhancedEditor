@@ -6,7 +6,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using UnityEngine;
 using UnityEditor;
 
@@ -16,59 +15,31 @@ namespace EnhancedEditor.Editor
     /// Custom <see cref="SerializedInterface"/> drawer.
     /// </summary>
     [CustomPropertyDrawer(typeof(SerializedInterface), true)]
-	public class SerializedInterfacePropertyDrawer : PropertyDrawer
+	public class SerializedInterfacePropertyDrawer : EnhancedPropertyEditor
     {
-        #region Property Infos
-        private struct PropertyInfos
-        {
-            public Type InterfaceType;
-            public float Height;
-
-            // -----------------------
-
-            public PropertyInfos(FieldInfo _fieldInfo)
-            {
-                InterfaceType = EnhancedEditorUtility.GetFieldInfoType(_fieldInfo);
-                Height = 0f;
-            }
-        }
-        #endregion
-
         #region Drawer Content
-        private static readonly Dictionary<string, PropertyInfos> propertyInfos = new Dictionary<string, PropertyInfos>();
+        private static readonly Dictionary<string, Type> interfaceInfos = new Dictionary<string, Type>();
 
         // -----------------------
 
-        public override float GetPropertyHeight(SerializedProperty _property, GUIContent _label)
-        {
-            string _key = _property.propertyPath;
+        protected override float GetDefaultHeight(SerializedProperty _property, GUIContent _label) {
+            SerializedProperty _gameObjectProperty = _property.FindPropertyRelative("gameObject");
 
-            // Only calculate the height if it has not been cached.
-            if (!propertyInfos.TryGetValue(_key, out PropertyInfos _infos))
-            {
-                SerializedProperty _gameObjectProperty = _property.FindPropertyRelative("gameObject");
-                _infos = new PropertyInfos(fieldInfo);
+            Rect _position = EnhancedEditorGUIUtility.GetViewControlRect();
+            float _height = _position.height + EnhancedEditorGUI.GetRequiredExtraHeight(_position, _label, _gameObjectProperty.objectReferenceValue);
 
-                Rect _position = EnhancedEditorGUIUtility.GetViewControlRect();
-                float _height =_infos.Height
-                              = _position.height + EnhancedEditorGUI.GetRequiredExtraHeight(_position, _label, _gameObjectProperty.objectReferenceValue);
-
-                propertyInfos.Add(_key, _infos);
-                return _height;
-            }
-
-            return _infos.Height;
+            return _height;
         }
 
-        public override void OnGUI(Rect _position, SerializedProperty _property, GUIContent _label)
+        protected override float OnEnhancedGUI(Rect _position, SerializedProperty _property, GUIContent _label)
         {
-            // Register this property to cache its infos.
+            // Register this property to cache its interface type.
             string _key = _property.propertyPath;
 
-            if (!propertyInfos.TryGetValue(_key, out PropertyInfos _infos))
+            if (!interfaceInfos.TryGetValue(_key, out Type _interfaceType))
             {
-                _infos = new PropertyInfos(fieldInfo);
-                propertyInfos.Add(_key, _infos);
+                _interfaceType = EnhancedEditorUtility.GetFieldInfoType(fieldInfo);
+                interfaceInfos.Add(_key, _interfaceType);
             }
 
             // Required field help box.
@@ -85,10 +56,10 @@ namespace EnhancedEditor.Editor
             _position.y += _extraHeight;
 
             // Interface picker.
-            EnhancedEditorGUI.PickerField(_position, _gameObjectProperty, _label, _infos.InterfaceType);
+            EnhancedEditorGUI.PickerField(_position, _gameObjectProperty, _label, _interfaceType);
 
-            _infos.Height = _position.height + _extraHeight;
-            propertyInfos[_key] = _infos;
+            float _height = _position.height + _extraHeight;
+            return _height;
         }
         #endregion
     }

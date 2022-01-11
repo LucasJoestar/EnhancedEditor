@@ -13,11 +13,16 @@ using UnityEngine;
 namespace EnhancedEditor.Editor
 {
     /// <summary>
-    /// <see cref="EnhancedEditor"/> internal class used to manage multiple property drawers
-    /// for a single field, and performing additional operations.
+    /// Base class to inherit all custom property drawers from instead of <see cref="PropertyDrawer"/>.
+    /// <para/>
+    /// Performs additional operations used to manage multiple property drawers
+    /// for a single field.
     /// </summary>
+    #if !UNITY_2021_1_OR_NEWER
     [CustomPropertyDrawer(typeof(EnhancedPropertyAttribute), true)]
-    internal sealed class EnhancedPropertyEditor : PropertyDrawer
+    #endif
+    [CustomPropertyDrawer(typeof(EnhancedAttribute), false)]
+    public class EnhancedPropertyEditor : PropertyDrawer
     {
         #region Property Infos
         internal class PropertyInfos
@@ -71,21 +76,21 @@ namespace EnhancedEditor.Editor
 
         // -----------------------
 
-        public override float GetPropertyHeight(SerializedProperty _property, GUIContent _label)
+        public override sealed float GetPropertyHeight(SerializedProperty _property, GUIContent _label)
         {
             string _path = _property.propertyPath;
 
             // Repaint on next frame if not yet initialized.
             if (!propertyInfos.ContainsKey(_path))
             {
-                EnhancedEditorGUIUtility.Repaint(_property.serializedObject);
-                return EditorGUIUtility.singleLineHeight;
+                float _height = GetDefaultHeight(_property, _label);
+                return _height;
             }
 
             return propertyInfos[_path].Height;
         }
 
-        public override void OnGUI(Rect _position, SerializedProperty _property, GUIContent _label)
+        public override sealed void OnGUI(Rect _position, SerializedProperty _property, GUIContent _label)
         {
             string _path = _property.propertyPath;
 
@@ -154,10 +159,9 @@ namespace EnhancedEditor.Editor
                 // If no specific property field has been drawn, draw default one.
                 if (!_isDrawn)
                 {
-                    _position.height = EditorGUI.GetPropertyHeight(_property, true);
-                    EditorGUI.PropertyField(_position, _property, _label, true);
+                    float _height = OnEnhancedGUI(_position, _property, _label);
+                    IncreasePosition(_height);
 
-                    IncreasePosition(_position.height);
                     _position.height = EditorGUIUtility.singleLineHeight;
                 }
 
@@ -214,6 +218,37 @@ namespace EnhancedEditor.Editor
 
                 _infos.Height = _height;
             }
+        }
+        #endregion
+
+        #region Default Behaviour
+        /// <summary>
+        /// Override this to specify the height to use for a specific property.
+        /// </summary>
+        /// <param name="_property"><see cref="SerializedProperty"/> to specify the height for.</param>
+        /// <param name="_label">Label displayed in front of the property.</param>
+        /// <returns>Total height to be used to draw this property field.</returns>
+        protected virtual float GetDefaultHeight(SerializedProperty _property, GUIContent _label)
+        {
+            EnhancedEditorGUIUtility.Repaint(_property.serializedObject);
+            return EditorGUIUtility.singleLineHeight;
+        }
+
+        /// <summary>
+        /// Replacement method for <see cref="OnGUI(Rect, SerializedProperty, GUIContent)"/>.
+        /// <br/> Height has to be specified as returned value.
+        /// </summary>
+        /// <param name="_position">Rectangle on the screen to draw within.</param>
+        /// <param name="_property"><see cref="SerializedProperty"/> to draw a field for.</param>
+        /// <param name="_label">Label displayed in front of the field.</param>
+        /// <returns>Total height used to draw this property field.</returns>
+        protected virtual float OnEnhancedGUI(Rect _position, SerializedProperty _property, GUIContent _label)
+        {
+            float _height = _position.height
+                          = EditorGUI.GetPropertyHeight(_property, _label, true);
+
+            EditorGUI.PropertyField(_position, _property, _label, true);
+            return _height;
         }
         #endregion
     }
