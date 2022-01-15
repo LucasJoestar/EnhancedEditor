@@ -30,7 +30,7 @@ namespace EnhancedEditor
             return _gameObject.AddComponent<T>();
         }
 
-#if !UNITY_2019_2_OR_NEWER
+        #if !UNITY_2019_2_OR_NEWER
         /// <summary>
         /// Gets the component of the specified type, if it exists.<br/>
         /// TryGetComponent will attempt to retrieve the component of the given type.The notable difference compared to
@@ -51,7 +51,7 @@ namespace EnhancedEditor
             _component = _gameObject.GetComponent(type);
             return _component != null;
         }
-#endif
+        #endif
         #endregion
     }
 }

@@ -94,16 +94,30 @@ namespace EnhancedEditor.Editor
         private class MeshInfo
         {
             public Mesh Mesh = null;
-            public Material Material = null;
+            public Material[] Materials = null;
             public Transform Transform = null;
+
+            public Bounds Bounds = new Bounds();
 
             // -----------------------
 
             public MeshInfo(MeshFilter _mesh)
             {
                 Mesh = _mesh.sharedMesh;
-                Material = _mesh.GetComponent<MeshRenderer>()?.sharedMaterial;
                 Transform = _mesh.transform;
+
+                if (_mesh.TryGetComponent(out MeshRenderer _meshRenderer))
+                    Materials = _meshRenderer.sharedMaterials;
+
+                Bounds = _mesh.GetComponent<Renderer>().bounds;
+            }
+
+            public MeshInfo(SkinnedMeshRenderer _mesh) {
+                Mesh = _mesh.sharedMesh;
+                Materials = _mesh.sharedMaterials;
+                Transform = _mesh.transform;
+
+                Bounds = _mesh.GetComponent<Renderer>().bounds;
             }
         }
         #endregion
@@ -178,7 +192,7 @@ namespace EnhancedEditor.Editor
                                                      Mathf.RoundToInt(_hit.normal.z));
 
                 // Set the preview position relative to the virtual collider
-                worldPosition = (_hit.point + assetBounds.center) + Vector3.Scale(assetBounds.extents, _roundedNormal);
+                worldPosition = (_hit.point - assetBounds.center) + Vector3.Scale(assetBounds.extents, _roundedNormal);
             }
             else
             {
@@ -227,7 +241,13 @@ namespace EnhancedEditor.Editor
                                _mesh.Transform.rotation,
                                _mesh.Transform.lossyScale);
 
-                Graphics.DrawMesh(_mesh.Mesh, _matrix, _mesh.Material, 2, _camera);
+                for (int _i = 0; _i < _mesh.Materials.Length; _i++)
+                {
+                    Material _material = _mesh.Materials[_i];
+                    Graphics.DrawMesh(_mesh.Mesh, _matrix, _material, 2, _camera, _i);
+                }
+
+                Handles.DrawWireCube(worldPosition + _mesh.Bounds.center, _mesh.Bounds.size);
             }
         }
 
@@ -281,14 +301,18 @@ namespace EnhancedEditor.Editor
                 Transform _transform = _asset.transform;
                 selectedAsset = _asset;
 
-                MeshFilter[] _meshes = selectedAsset.GetComponentsInChildren<MeshFilter>();
-                meshInfos = Array.ConvertAll(_meshes, (m) => new MeshInfo(m));
+                MeshFilter[] _meshFilters = selectedAsset.GetComponentsInChildren<MeshFilter>();
+                SkinnedMeshRenderer[] _meshRenderers = selectedAsset.GetComponentsInChildren<SkinnedMeshRenderer>();
+
+                meshInfos = Array.ConvertAll(_meshFilters, (m) => new MeshInfo(m));
+                ArrayUtility.AddRange(ref meshInfos, Array.ConvertAll(_meshRenderers, (m) => new MeshInfo(m)));
+
                 assetBounds = new Bounds();
 
-                foreach (MeshFilter _mesh in _meshes)
+                foreach (MeshInfo _mesh in meshInfos)
                 {
-                    Bounds _bounds = _mesh.sharedMesh.bounds;
-                    _bounds.center += _mesh.transform.InverseTransformPoint(_transform.position);
+                    Bounds _bounds = _mesh.Bounds;
+                    _bounds.center -= _transform.position;
 
                     assetBounds.Encapsulate(_bounds);
                 }
@@ -361,7 +385,9 @@ namespace EnhancedEditor.Editor
                 for (int _i = 0; _i < _folders.Length; _i++)
                 {
                     string _base = _folders[_i].Split('/', '\\')[0];
-                    _pathHelpers[_i] = _base;
+                    _pathHelpers[_i] = string.IsNullOrEmpty(_base)
+                                     ? InternalEditorUtility.GetAssetsFolder()
+                                     : _base;
                 }
 
                 // Register each asset.
@@ -370,7 +396,7 @@ namespace EnhancedEditor.Editor
                     string[] _directories = _path.Split('/', '\\');
                     int _index = 0;
 
-                    while (Array.IndexOf(_pathHelpers, _directories[_index]) == -1)
+                    while (Array.IndexOf(_pathHelpers, _directories[_index].Trim()) == -1)
                         _index++;
 
                     root.RegisterAsset(_directories, _path, _index);
@@ -610,7 +636,7 @@ namespace EnhancedEditor.Editor
                 PreviewWindow _window = CreateInstance<PreviewWindow>();
 
                 Vector2 _position = GUIUtility.GUIToScreenPoint(Event.current.mousePosition);
-                Vector2 _size = new Vector2(200f, 200f);
+                Vector2 _size = new Vector2(174f, 174f);
 
                 _window.screenPosition = _screenPosition;
                 _window.preview = _preview;

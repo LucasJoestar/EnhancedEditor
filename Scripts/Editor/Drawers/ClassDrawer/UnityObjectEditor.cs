@@ -148,7 +148,7 @@ namespace EnhancedEditor.Editor
                 foreach (var _object in serializedObject.targetObjects)
                 {
                     // If this object is a prefab, only add the component to the origin asset to avoid troubles with the prefab override system.
-                    if (PrefabUtility.IsPartOfPrefabInstance(_object) || PrefabUtility.IsAddedComponentOverride(_object))
+                    if (PrefabUtility.IsPartOfPrefabInstance(_object) || PrefabUtility.IsAddedComponentOverride(_object) || PrefabUtility.IsPartOfImmutablePrefab(_object))
                         continue;
 
                     if (_object is Component _component)

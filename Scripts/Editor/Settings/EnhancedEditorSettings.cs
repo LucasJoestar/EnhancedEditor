@@ -111,9 +111,12 @@ namespace EnhancedEditor.Editor
                         userSettings = new EditorUserSettings();
 
                         #if ENABLE_INPUT_SYSTEM
-                        userSettings.increaseTimeScale.AddBinding(Keyboard.current.numpadPlusKey);
-                        userSettings.resetTimeScale.AddBinding(Keyboard.current.numpadMultiplyKey);
-                        userSettings.decreaseTimeScale.AddBinding(Keyboard.current.numpadMinusKey);
+                        if (Keyboard.current != null)
+                        {
+                            userSettings.increaseTimeScale.AddBinding(Keyboard.current.numpadPlusKey);
+                            userSettings.resetTimeScale.AddBinding(Keyboard.current.numpadMultiplyKey);
+                            userSettings.decreaseTimeScale.AddBinding(Keyboard.current.numpadMinusKey);
+                        }
                         #endif
                     }
 

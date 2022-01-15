@@ -15,11 +15,38 @@ MonoBehaviour:
   userSettings:
     buildDirectory: 
     AutosaveInterval: 300
+    increaseTimeScale:
+      m_Name: 
+      m_Type: 0
+      m_ExpectedControlType: 
+      m_Id: 
+      m_Processors: 
+      m_Interactions: 
+      m_SingletonActionBindings: []
+      m_Flags: 0
+    resetTimeScale:
+      m_Name: 
+      m_Type: 0
+      m_ExpectedControlType: 
+      m_Id: 
+      m_Processors: 
+      m_Interactions: 
+      m_SingletonActionBindings: []
+      m_Flags: 0
+    decreaseTimeScale:
+      m_Name: 
+      m_Type: 0
+      m_ExpectedControlType: 
+      m_Id: 
+      m_Processors: 
+      m_Interactions: 
+      m_SingletonActionBindings: []
+      m_Flags: 0
   AutoManagedResourceDirectory: EnhancedEditor/AutoManagedResources
   InstanceTrackerDirectory: EnhancedEditor/Editor/InstanceTrackers
   ScriptTemplateDirectory: EnhancedEditor/Editor/ScriptTemplates
   SceneDesignerFolders:
-  - EnhancedEditor
+  - 
   CoreScene:
     guid: 
   IsCoreSceneEnabled: 0
