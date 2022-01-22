@@ -226,7 +226,7 @@ namespace EnhancedEditor.Editor
             _sceneView.Repaint();
 
             // Draw the selected mesh on camera.
-            if ((GUIUtility.hotControl != 0) || (SceneView.lastActiveSceneView != _sceneView) || !(mouseOverWindow is SceneView))
+            if ((GUIUtility.hotControl != 0) || (SceneView.lastActiveSceneView != _sceneView))
                 return;
 
             Camera _camera = _sceneView.camera;

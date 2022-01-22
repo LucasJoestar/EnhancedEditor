@@ -46,7 +46,7 @@ MonoBehaviour:
   InstanceTrackerDirectory: EnhancedEditor/Editor/InstanceTrackers
   ScriptTemplateDirectory: EnhancedEditor/Editor/ScriptTemplates
   SceneDesignerFolders:
-  - 
+  - EnhancedEditor
   CoreScene:
-    guid: 
-  IsCoreSceneEnabled: 0
+    guid: 2806c0e9be23d0e48b848d03d6eead33
+  IsCoreSceneEnabled: 1
