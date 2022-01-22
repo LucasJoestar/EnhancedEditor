@@ -224,30 +224,25 @@ namespace EnhancedEditor.Editor
             }
 
             _sceneView.Repaint();
-        }
 
-        private static void DrawMeshes(Camera _camera)
-        {
-            if ((GUIUtility.hotControl != 0) || (_camera != SceneView.lastActiveSceneView.camera) || !(mouseOverWindow is SceneView))
+            // Draw the selected mesh on camera.
+            if ((GUIUtility.hotControl != 0) || (SceneView.lastActiveSceneView != _sceneView) || !(mouseOverWindow is SceneView))
                 return;
 
-            Transform _transform = selectedAsset.transform;
+            Camera _camera = _sceneView.camera;
+            Transform _assetTransform = selectedAsset.transform;
             Matrix4x4 _matrix = new Matrix4x4();
 
-            foreach (MeshInfo _mesh in meshInfos)
-            {
+            foreach (MeshInfo _mesh in meshInfos) {
                 // Set the matrix to use for preview
-                _matrix.SetTRS(worldPosition + _transform.InverseTransformPoint(_mesh.Transform.position),
+                _matrix.SetTRS(worldPosition + _assetTransform.InverseTransformPoint(_mesh.Transform.position),
                                _mesh.Transform.rotation,
                                _mesh.Transform.lossyScale);
 
-                for (int _i = 0; _i < _mesh.Materials.Length; _i++)
-                {
+                for (int _i = 0; _i < _mesh.Materials.Length; _i++) {
                     Material _material = _mesh.Materials[_i];
                     Graphics.DrawMesh(_mesh.Mesh, _matrix, _material, 2, _camera, _i);
                 }
-
-                Handles.DrawWireCube(worldPosition + _mesh.Bounds.center, _mesh.Bounds.size);
             }
         }
 
@@ -260,7 +255,6 @@ namespace EnhancedEditor.Editor
         public static void SetEnable(bool _isEnable)
         {
             SceneView.duringSceneGui -= OnSceneGUI;
-            Camera.onPreCull -= DrawMeshes;
 
             if (_isEnable)
             {
@@ -271,7 +265,6 @@ namespace EnhancedEditor.Editor
                 }
 
                 SceneView.duringSceneGui += OnSceneGUI;
-                Camera.onPreCull += DrawMeshes;
             }
 
             isEnabled = _isEnable;
