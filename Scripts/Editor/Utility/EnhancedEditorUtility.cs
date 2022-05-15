@@ -25,7 +25,7 @@ namespace EnhancedEditor.Editor
             // Assembly reloading.
             AssemblyReloadEvents.beforeAssemblyReload -= OnBeforeAssembliesReload;
             AssemblyReloadEvents.afterAssemblyReload -= OnAfterAssembliesReload;
-
+            
             AssemblyReloadEvents.beforeAssemblyReload += OnBeforeAssembliesReload;
             AssemblyReloadEvents.afterAssemblyReload += OnAfterAssembliesReload;
         }

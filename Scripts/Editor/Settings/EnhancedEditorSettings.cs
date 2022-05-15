@@ -198,7 +198,6 @@ namespace EnhancedEditor.Editor
 
         private void OnValidate()
         {
-            return;
             if (!EditorApplication.isPlayingOrWillChangePlaymode && !EditorApplication.isCompiling && !EnhancedEditorUtility.isReloadingAssemblies)
             {
                 SaveSettings();
@@ -207,6 +206,12 @@ namespace EnhancedEditor.Editor
 
         public void SaveSettings()
         {
+            string _allDatas = JsonUtility.ToJson(this);
+            if (SessionState.GetString(PrefsKey, string.Empty) == _allDatas)
+                return;
+
+            SessionState.SetString(PrefsKey, _allDatas);
+
             // Use EditorPrefs for user-dependant settings.
             string _data = JsonUtility.ToJson(UserSettings);
             EditorPrefs.SetString(PrefsKey, _data);

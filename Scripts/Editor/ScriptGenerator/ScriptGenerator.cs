@@ -41,7 +41,6 @@ namespace EnhancedEditor.Editor
 
         static ScriptGenerator()
         {
-            return;
             if (EditorApplication.isPlayingOrWillChangePlaymode || EditorApplication.isCompiling || EnhancedEditorUtility.isReloadingAssemblies)
                 return;
 
