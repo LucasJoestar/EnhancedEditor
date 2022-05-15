@@ -198,6 +198,7 @@ namespace EnhancedEditor.Editor
 
         private void OnValidate()
         {
+            return;
             if (!EditorApplication.isPlayingOrWillChangePlaymode && !EditorApplication.isCompiling && !EnhancedEditorUtility.isReloadingAssemblies)
             {
                 SaveSettings();
