@@ -32,9 +32,8 @@ namespace EnhancedEditor.Editor
         public static SceneHandlerWindow GetWindow()
         {
             SceneHandlerWindow _window = GetWindow<SceneHandlerWindow>("Scene Handler");
-            _window.titleContent.image = EditorGUIUtility.IconContent("SceneAsset On Icon").image;
-
             _window.Show();
+
             return _window;
         }
 
@@ -112,6 +111,7 @@ namespace EnhancedEditor.Editor
             EditorSceneManager.sceneLoaded += OnSceneLoaded;
             EditorSceneManager.sceneUnloaded += OnSceneUnloaded;
 
+            titleContent.image = EditorGUIUtility.IconContent("SceneAsset On Icon").image;
             createGroupGUI.image = EditorGUIUtility.FindTexture("CreateAddNew");
             coreSceneGUI.image = EditorGUIUtility.IconContent("SceneAsset Icon").image;
             deleteGroupGUI.image = EditorGUIUtility.IconContent("P4_DeletedLocal").image;
@@ -274,10 +274,19 @@ namespace EnhancedEditor.Editor
                 return _element.IsLoaded;
             }
 
-            string GetElementName(int _groupIndex, int _elementIndex)
+            GUIContent GetElementName(int _groupIndex, int _elementIndex)
             {
+                var _settings = EnhancedEditorSettings.Settings;
                 var _element = Database.sceneGroups[_groupIndex].Scenes[_elementIndex];
-                return _element.Name;
+
+                GUIContent _label = EnhancedEditorGUIUtility.GetLabelGUI(_element.Name);
+
+                if (_settings.IsCoreSceneEnabled && (_settings.CoreScene.GUID == _element.GUID))
+                {
+                    _label.image = coreSceneGUI.image;
+                }
+
+                return _label;
             }
 
             void OnOpen(int _groupIndex, int _elementIndex)
@@ -406,10 +415,10 @@ namespace EnhancedEditor.Editor
                 return _element.IsLoaded;
             }
 
-            string GetElementName(int _groupIndex, int _elementIndex)
+            GUIContent GetElementName(int _groupIndex, int _elementIndex)
             {
                 var _element = Database.bundleGroups[_groupIndex].Bundles[_elementIndex];
-                return _element.SceneBundle.name;
+                return EnhancedEditorGUIUtility.GetLabelGUI(_element.SceneBundle.name);
             }
 
             void OnOpen(int _groupIndex, int _elementIndex)
@@ -509,7 +518,7 @@ namespace EnhancedEditor.Editor
         // -----------------------
 
         private bool DrawGroup(SceneHandler.Group[] _groups, int _index, int _length,
-                               Func<int, int, bool> _isElementVisible, Func<int, int, bool> _isElementLoaded, Func<int, int, string> _getElementName,
+                               Func<int, int, bool> _isElementVisible, Func<int, int, bool> _isElementLoaded, Func<int, int, GUIContent> _getElementName,
                                Action<int, int> _onOpen, Action<int, int> _onAdd, Action<int, int> _onClose, Action<int, int> _onPlay, Action<int, int, GenericMenu> _onOptionsMenu)
         {
             bool _isDeleted = false;
@@ -644,7 +653,7 @@ namespace EnhancedEditor.Editor
                 _temp.xMax = _position.xMax - (PlayButtonWidth + EnhancedEditorGUIUtility.IconWidth + 10f);
 
                 // Element name.
-                string _elementName = _getElementName(_index, _i);
+                GUIContent _elementName = _getElementName(_index, _i);
                 EditorGUI.LabelField(_temp, _elementName);
 
                 _temp.x += _temp.width + EnhancedEditorGUIUtility.IconWidth + 5f;

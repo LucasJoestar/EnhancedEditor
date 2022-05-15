@@ -102,7 +102,7 @@ namespace EnhancedEditor.Editor
         /// <returns>First loaded resource asset.</returns>
         public T GetResource()
         {
-            if (resources.Length == 0)
+            if ((resources.Length == 0) || (resources[0] == null))
                 Reload();
 
             return resources[0];
@@ -195,6 +195,7 @@ namespace EnhancedEditor.Editor
 
             AssetDatabase.CreateAsset(_resource, _path);
             AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
 
             ArrayUtility.Add(ref resources, _resource);
             return _resource;

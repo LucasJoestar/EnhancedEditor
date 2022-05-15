@@ -2,7 +2,8 @@
     "name": "EnhancedEditor.Editor",
     "rootNamespace": "",
     "references": [
-        "EnhancedEditor"
+        "EnhancedEditor",
+        "Unity.InputSystem"
     ],
     "includePlatforms": [
         "Editor"
@@ -13,6 +14,12 @@
     "precompiledReferences": [],
     "autoReferenced": true,
     "defineConstraints": [],
-    "versionDefines": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.inputsystem",
+            "expression": "",
+            "define": "INPUT_SYSTEM_PACKAGE"
+        }
+    ],
     "noEngineReferences": false
 }

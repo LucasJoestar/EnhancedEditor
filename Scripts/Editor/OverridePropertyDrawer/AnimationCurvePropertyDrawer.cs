@@ -13,7 +13,7 @@ namespace EnhancedEditor.Editor
     /// Custom <see cref="AnimationCurve"/> drawer, with some additional context click utilities.
     /// </summary>
     [CustomPropertyDrawer(typeof(AnimationCurve), true)]
-    public class AnimationCurvePropertyDrawer : PropertyDrawer
+    public class AnimationCurvePropertyDrawer : EnhancedPropertyEditor
     {
         #region Drawer Content
         private static readonly GUIContent copyGUI = new GUIContent("Copy", "Copy this animation curve value.");
@@ -26,8 +26,11 @@ namespace EnhancedEditor.Editor
 
         // -----------------------
 
-        public override void OnGUI(Rect _position, SerializedProperty _property, GUIContent _label)
+        protected override float OnEnhancedGUI(Rect _position, SerializedProperty _property, GUIContent _label)
         {
+            float _height = _position.height
+                          = EditorGUIUtility.singleLineHeight;
+
             // Add new copy / paste options on context menu.
             // Do not use the context click event to prevent from opening the curve editor.
             Rect _temp = EnhancedEditorGUI.InvisiblePrefixLabel(_position, _label);
@@ -43,6 +46,7 @@ namespace EnhancedEditor.Editor
 
             // Draw base property field.
             EditorGUI.PropertyField(_position, _property, _label);
+            return _height;
         }
 
         internal static void OnContextMenu(GenericMenu _menu, SerializedProperty _property)

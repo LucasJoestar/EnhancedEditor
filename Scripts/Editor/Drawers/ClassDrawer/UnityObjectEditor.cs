@@ -2,8 +2,6 @@
 // 
 // Notes:
 //
-//      • Check if the PrefabUtility class exist in older versions.
-//
 // ============================================================================ //
 
 using System;
@@ -150,7 +148,7 @@ namespace EnhancedEditor.Editor
                 foreach (var _object in serializedObject.targetObjects)
                 {
                     // If this object is a prefab, only add the component to the origin asset to avoid troubles with the prefab override system.
-                    if (PrefabUtility.IsPartOfPrefabInstance(_object) || PrefabUtility.IsAddedComponentOverride(_object))
+                    if (PrefabUtility.IsPartOfPrefabInstance(_object) || PrefabUtility.IsAddedComponentOverride(_object) || PrefabUtility.IsPartOfImmutablePrefab(_object))
                         continue;
 
                     if (_object is Component _component)
@@ -166,33 +164,37 @@ namespace EnhancedEditor.Editor
 
         public override void OnInspectorGUI()
         {
-            // Top method drawers.
-            foreach (MethodDrawerGroup _group in methodDrawerGroups)
+            try
             {
-                _group.DrawMethodDrawers(true);
-            }
-
-            // Inspector.
-            bool _drawInspector = true;
-            foreach (UnityObjectDrawer _drawer in objectDrawers)
-            {
-                if (_drawer.OnInspectorGUI())
+                // Top method drawers.
+                foreach (MethodDrawerGroup _group in methodDrawerGroups)
                 {
-                    _drawInspector = false;
-                    break;
+                    _group.DrawMethodDrawers(true);
+                }
+
+                // Inspector.
+                bool _drawInspector = true;
+                foreach (UnityObjectDrawer _drawer in objectDrawers)
+                {
+                    if (_drawer.OnInspectorGUI())
+                    {
+                        _drawInspector = false;
+                        break;
+                    }
+                }
+
+                if (_drawInspector)
+                    base.OnInspectorGUI();
+
+                GUILayout.Space(10f);
+
+                // Bottom method drawers.
+                foreach (MethodDrawerGroup _group in methodDrawerGroups)
+                {
+                    _group.DrawMethodDrawers(false);
                 }
             }
-
-            if (_drawInspector)
-                base.OnInspectorGUI();
-
-            GUILayout.Space(10f);
-
-            // Bottom method drawers.
-            foreach (MethodDrawerGroup _group in methodDrawerGroups)
-            {
-                _group.DrawMethodDrawers(false);
-            }
+            catch (InvalidOperationException) { }
         }
 
         protected virtual void OnDisable()

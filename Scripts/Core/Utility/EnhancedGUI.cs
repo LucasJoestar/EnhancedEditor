@@ -15,6 +15,12 @@ namespace EnhancedEditor
     {
         #region GUI Buffers
         /// <summary>
+        /// <see cref="Gizmos.color"/> buffer system. Use this to dynamically push / pop gizmos colors.
+        /// </summary>
+        public static readonly GUIBuffer<Color> GizmosColor = new GUIBuffer<Color>(() => Gizmos.color,
+                                                                                   (c) => Gizmos.color = c, "Gizmos Color");
+
+        /// <summary>
         /// <see cref="GUI.color"/> buffer system. Use this to dynamically push / pop GUI colors.
         /// </summary>
         public static readonly GUIBuffer<Color> GUIColor = new GUIBuffer<Color>(() => GUI.color,

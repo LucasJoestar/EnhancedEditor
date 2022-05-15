@@ -30,8 +30,8 @@ namespace EnhancedEditor
         public static readonly TagData UnknownTag = new TagData(-1, "——", DefaultColor.Get());
 
         #region Global Members
-        [SerializeField, ReadOnly] internal string name = "NewTag";
-        [SerializeField, ReadOnly] private long id = 0;
+        [SerializeField, Enhanced, ReadOnly] internal string name = "NewTag";
+        [SerializeField, Enhanced, ReadOnly] private long id = 0;
 
         /// <summary>
         /// ID of this tag. This is the only identifier of the object,

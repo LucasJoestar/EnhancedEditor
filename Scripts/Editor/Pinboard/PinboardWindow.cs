@@ -155,9 +155,8 @@ namespace EnhancedEditor.Editor
         public static PinboardWindow GetWindow()
         {
             PinboardWindow _window = GetWindow<PinboardWindow>("Pinboard");
-            _window.titleContent.image = EditorGUIUtility.IconContent("pin").image;
-
             _window.Show();
+
             return _window;
         }
 
@@ -207,6 +206,7 @@ namespace EnhancedEditor.Editor
 
         private void OnEnable()
         {
+            titleContent.image = EditorGUIUtility.IconContent("pin").image;
             createFolderGUI.image = EditorGUIUtility.FindTexture("CreateAddNew");
 
             contextMenu = new GenericMenu();
@@ -704,7 +704,7 @@ namespace EnhancedEditor.Editor
                 {
                     // If moving a folder into one of its child folder,
                     // move this child and all its content on top of it.
-                    if (IsMovingInChild(out int _parentIndex, out int _childIndex))
+                    if (IsMovingInChild(_index, out int _parentIndex, out int _childIndex, _pinObjects))
                     {
                         PinObject _parent = _pinObjects[_parentIndex];
                         _object = _pinObjects[_childIndex];
@@ -819,95 +819,6 @@ namespace EnhancedEditor.Editor
                         if (_indexOf >= _moveIndex)
                             _moveIndex++;
                     }
-
-                    // ----- Local Methods ----- \\
-
-                    bool IsMovingInChild(out int _parentIndex, out int _childIndex)
-                    {
-                        _parentIndex = -1;
-                        _childIndex = -1;
-
-                        if (_index == Pinboard.PinObjects.Length)
-                            return false;
-
-                        List<PinObject> _childFolders = new List<PinObject>();
-                        PinObject _indexObject = Pinboard.PinObjects[_index];
-
-                        if (_indexObject.IsFolder && (_index > 0))
-                        {
-                            _indexObject = Pinboard.PinObjects[_index - 1];
-                        }
-
-                        for (int _i = 0; _i < _pinObjects.Length; _i++)
-                        {
-                            PinObject _parent = _pinObjects[_i];
-                            if (!_parent.IsFolder || !_parent.IsSelected)
-                                continue;
-
-                            // Moving a folder into itself ; cancel operation.
-                            if (_parent == _indexObject)
-                            {
-                                CancelParentDrag(_i);
-                                return false;
-                            }
-
-                            // Reset folder counter.
-                            _childFolders.Clear();
-                            _childFolders.Add(_parent);
-
-                            for (int _j = _i + 1; _j < _pinObjects.Length; _j++)
-                            {
-                                PinObject _child = _pinObjects[_j];
-                                if (_child.Indent <= _parent.Indent)
-                                    break;
-
-                                // Ignore non-parent folders.
-                                while (_childFolders.Last().Indent >= _child.Indent)
-                                    _childFolders.RemoveLast();
-
-                                if (_child.IsFolder)
-                                    _childFolders.Add(_child);
-
-                                if (_child == _indexObject)
-                                {
-                                    // Moving a folder into itself ; cancel operation.
-                                    var _last = _childFolders.Last();
-                                    if (_last == _parent)
-                                    {
-                                        CancelParentDrag(_i);
-                                        return false;
-                                    }
-
-                                    // Get informations.
-                                    _parentIndex = _i;
-                                    _childIndex = Array.IndexOf(_pinObjects, _last);
-
-                                    return true;
-                                }
-                            }
-                        }
-
-                        return false;
-                    }
-
-                    void CancelParentDrag(int _index)
-                    {
-                        PinObject _parent = _pinObjects[_index];
-                        ArrayUtility.RemoveAt(ref _pinObjects, _index);
-
-                        for (int _i = _index; _i < _pinObjects.Length; _i++)
-                        {
-                            PinObject _child = _pinObjects[_i];
-                            if (_child.Indent <= _parent.Indent)
-                                break;
-
-                            if (!_child.IsSelected)
-                            {
-                                ArrayUtility.RemoveAt(ref _pinObjects, _i);
-                                _i--;
-                            }
-                        }
-                    }
                 }
 
                 // Assets.
@@ -983,6 +894,106 @@ namespace EnhancedEditor.Editor
                 DragAndDrop.StartDrag(StartDragTitle);
 
                 _event.Use();
+            }
+        }
+
+        /// <summary>
+        /// Checks if the folder at the given index is moving into one of its child folder.
+        /// </summary>
+        /// <param name="_index">The index of the folder to check (in the pin objects list).</param>
+        /// <param name="_parentIndex">Outputs the index of the new parent folder.</param>
+        /// <param name="_childIndex">Outputs the new index of the moved folder.</param>
+        /// <param name="_pinObjects">The list of all the pinned items.</param>
+        /// <returns>returns true if the foldder is moving into one of its child folder, otherwise false.</returns>
+        private bool IsMovingInChild(int _index, out int _parentIndex, out int _childIndex, PinObject[] _pinObjects)
+        {
+            _parentIndex = -1;
+            _childIndex = -1;
+
+            if (_index == Pinboard.PinObjects.Length)
+                return false;
+
+            List<PinObject> _childFolders = new List<PinObject>();
+            PinObject _indexObject = Pinboard.PinObjects[_index];
+
+            if (_indexObject.IsFolder && (_index > 0))
+            {
+                _indexObject = Pinboard.PinObjects[_index - 1];
+            }
+
+            for (int _i = 0; _i < _pinObjects.Length; _i++)
+            {
+                PinObject _parent = _pinObjects[_i];
+                if (!_parent.IsFolder || !_parent.IsSelected)
+                    continue;
+
+                // Moving a folder into itself ; cancel operation.
+                if (_parent == _indexObject)
+                {
+                    CancelParentDrag(_i, _pinObjects);
+                    return false;
+                }
+
+                // Reset folder counter.
+                _childFolders.Clear();
+                _childFolders.Add(_parent);
+
+                for (int _j = _i + 1; _j < _pinObjects.Length; _j++)
+                {
+                    PinObject _child = _pinObjects[_j];
+                    if (_child.Indent <= _parent.Indent)
+                        break;
+
+                    // Ignore non-parent folders.
+                    while (_childFolders.Last().Indent >= _child.Indent)
+                        _childFolders.RemoveLast();
+
+                    if (_child.IsFolder)
+                        _childFolders.Add(_child);
+
+                    if (_child == _indexObject)
+                    {
+                        // Moving a folder into itself ; cancel operation.
+                        var _last = _childFolders.Last();
+                        if (_last == _parent)
+                        {
+                            CancelParentDrag(_i, _pinObjects);
+                            return false;
+                        }
+
+                        // Get informations.
+                        _parentIndex = _i;
+                        _childIndex = Array.IndexOf(_pinObjects, _last);
+
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Cancels the parent drag operation.
+        /// </summary>
+        /// <param name="_index">The index of the dragged item in the Pin Objects list.</param>
+        /// <param name="_pinObjects">The list of all the pinned items.</param>
+        private void CancelParentDrag(int _index, PinObject[] _pinObjects)
+        {
+            PinObject _parent = _pinObjects[_index];
+            ArrayUtility.RemoveAt(ref _pinObjects, _index);
+
+            for (int _i = _index; _i < _pinObjects.Length; _i++)
+            {
+                PinObject _child = _pinObjects[_i];
+                if (_child.Indent <= _parent.Indent)
+                    break;
+
+                if (!_child.IsSelected)
+                {
+                    ArrayUtility.RemoveAt(ref _pinObjects, _i);
+                    _i--;
+                }
             }
         }
 

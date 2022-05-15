@@ -18,12 +18,22 @@ namespace EnhancedEditor.Editor
 	[CustomEditor(typeof(InstanceTracker)), CanEditMultipleObjects]
 	public class InstanceTrackerEditor : UnityObjectEditor
     {
+        #region Styles
+        private static class Styles
+        {
+            public static readonly GUIStyle HeaderStyle = new GUIStyle(EditorStyles.label)
+                                                                {
+                                                                    fontSize = 16,
+                                                                    fixedHeight = 22f
+                                                                };
+        }
+        #endregion
+
         #region Editor Content
         private static readonly string multiObjectEditingMessage = $"{typeof(InstanceTracker).Name} does not support multi-object editing. " +
                                                                    $"Please select only one object at a time to preview.";
 
         private static readonly GUIContent headerGUI = new GUIContent();
-        private static GUIStyle headerStyle = null;
 
         private InstanceTracker tracker = null;
 
@@ -97,16 +107,7 @@ namespace EnhancedEditor.Editor
                 GUILayout.Space(5f);
                 
                 // Header.
-                if (headerStyle == null)
-                {
-                    headerStyle = new GUIStyle(EditorStyles.label)
-                    {
-                        fontSize = 16,
-                        fixedHeight = 22f
-                    };
-                }
-
-                EditorGUILayout.LabelField(headerGUI, headerStyle);
+                EditorGUILayout.LabelField(headerGUI, Styles.HeaderStyle);
                 GUILayout.Space(7f);
 
                 // Multi editing is not allowed.

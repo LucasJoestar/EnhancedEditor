@@ -102,9 +102,8 @@ namespace EnhancedEditor.Editor
         public static AnimationEventTrackerWindow GetWindow()
         {
             AnimationEventTrackerWindow _window = GetWindow<AnimationEventTrackerWindow>("Animation Event Tracker");
-            _window.titleContent.image = EditorGUIUtility.IconContent("DotFrameDotted").image;
-
             _window.Show();
+
             return _window;
         }
 
@@ -134,6 +133,8 @@ namespace EnhancedEditor.Editor
         {
             Undo.undoRedoPerformed -= OnUndoRedoOperation;
             Undo.undoRedoPerformed += OnUndoRedoOperation;
+
+            titleContent.image = EditorGUIUtility.IconContent("DotFrameDotted").image;
 
             InitializeAnimatorTracker();
             InitializeCorruptedEventTracker();
@@ -441,7 +442,7 @@ namespace EnhancedEditor.Editor
                 height = 28f
             };
 
-            bool _isCorrupted = _wrapper == null;   
+            bool _isCorrupted = _wrapper == null;
             if (_isCorrupted)
             {
                 // Missing event informations.
@@ -819,8 +820,18 @@ namespace EnhancedEditor.Editor
                 AssetDatabase.OpenAsset(_animator);
             }
 
+            #if UNITY_2020_2_OR_NEWER
             AnimationWindow _window = GetWindow<AnimationWindow>(string.Empty, false);
             _window.animationClip = clips[selectedClip];
+            #else
+            Type _type = typeof(UnityEditor.Editor).Assembly.GetType("UnityEditor.AnimationWindow");
+
+            var _window = GetWindow(_type, false, string.Empty);
+            var _state = _type.GetProperty("state", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).GetValue(_window);
+            var _activeClip = _state.GetType().GetProperty("activeAnimationClip", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+
+            _activeClip.SetValue(_state, clips[selectedClip]);
+            #endif
         }
 
         private void SaveEvents()
@@ -968,7 +979,7 @@ namespace EnhancedEditor.Editor
 
                                     EventMethodWrapper _method = new EventMethodWrapper(_methodInfo, _label, _eventType);
                                     _wrappers.Add(_method);
-                                } 
+                                }
                             }
                         }
                     }

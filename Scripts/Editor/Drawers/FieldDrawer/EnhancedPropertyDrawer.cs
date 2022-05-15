@@ -77,6 +77,11 @@ namespace EnhancedEditor.Editor
         /// </summary>
         public FieldInfo FieldInfo { get; private set; } = null;
 
+        /// <summary>
+        /// Indicates whether this drawer requires to be constantly repaint or not.
+        /// </summary>
+        public virtual bool RequireConstantRepaint => false;
+
         // -----------------------
 
         /// <summary>

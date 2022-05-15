@@ -33,8 +33,6 @@ namespace EnhancedEditor.Editor
 
         static BuildSceneDatabaseManager()
         {
-            UpdateDatabase();
-
             EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
             EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
 

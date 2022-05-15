@@ -26,8 +26,8 @@ namespace EnhancedEditor
             [Space(10f)]
 
             public string Header = string.Empty;
-            [EnhancedTextArea] public string Text = string.Empty;
-            [EnhancedTextArea] public string InfoText = string.Empty;
+            [Enhanced, EnhancedTextArea] public string Text = string.Empty;
+            [Enhanced, EnhancedTextArea] public string InfoText = string.Empty;
             public Texture2D Image = null;
 
             [Space(10f)]
@@ -41,7 +41,7 @@ namespace EnhancedEditor
         [Section("Document Title")]
 
         public string Title = "Document";
-        [Required] public Texture2D Icon = null;
+        [Enhanced, Required] public Texture2D Icon = null;
 
         [Section("Sections")]
 

@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using UnityEditor;
 using UnityEditor.Build.Reporting;
 using UnityEditorInternal;
@@ -68,7 +69,7 @@ namespace EnhancedEditor.Editor
                 Scene = _scene;
                 Label = new GUIContent(_scene?.name);
                 IsEnabled = _isEnabled;
-                
+
                 IsSelected = false;
             }
         }
@@ -107,9 +108,8 @@ namespace EnhancedEditor.Editor
         public static BuildPipelineWindow GetWindow()
         {
             BuildPipelineWindow _window = GetWindow<BuildPipelineWindow>("Build Pipeline");
-            _window.titleContent.image = EditorGUIUtility.FindTexture("BuildSettings.Editor.Small");
-
             _window.Show();
+
             return _window;
         }
 
@@ -182,6 +182,8 @@ namespace EnhancedEditor.Editor
 
             Undo.undoRedoPerformed -= OnUndoRedoOperation;
             Undo.undoRedoPerformed += OnUndoRedoOperation;
+
+            titleContent.image = EditorGUIUtility.FindTexture("BuildSettings.Editor.Small");
 
             InitializeBuildPresets();
 
@@ -393,9 +395,9 @@ namespace EnhancedEditor.Editor
             else
             {
                 DrawScenes(buildScenes, DrawBuildScene);
-            }            
+            }
         }
-        
+
         private void DrawScenes(SceneWrapper[] _scenes, Action<Rect, int> _onDrawScene)
         {
             GUILayout.Space(3f);
@@ -747,7 +749,7 @@ namespace EnhancedEditor.Editor
             SceneWrapper _scene = projectScenes[_index];
             if (_isSelected && !_scene.IsVisible)
                 return;
-            
+
             _scene.IsSelected = _isSelected;
 
             // Last selected index update.
@@ -1146,7 +1148,7 @@ namespace EnhancedEditor.Editor
                 {
                     SetSelectedBuild(_i);
                 }
-                
+
                 // Build infos.
                 _position.xMin += 5f;
                 EditorGUI.LabelField(_position, _build.Icon);
@@ -1743,10 +1745,25 @@ namespace EnhancedEditor.Editor
         {
             // Get all custom define symbols.
             var _symbols = new List<ScriptingDefineSymbolAttribute>();
+
+            #if UNITY_2019_2_OR_NEWER
             foreach (var _symbol in TypeCache.GetTypesWithAttribute<ScriptingDefineSymbolAttribute>())
             {
                 _symbols.AddRange(_symbol.GetCustomAttributes(typeof(ScriptingDefineSymbolAttribute), true) as ScriptingDefineSymbolAttribute[]);
             }
+            #else
+            foreach (Assembly _assembly in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                foreach (Type _type in _assembly.GetTypes())
+                {
+                    var _typeSymbols = _type.GetCustomAttributes<ScriptingDefineSymbolAttribute>(true);
+                    foreach (var _symbol in _typeSymbols)
+                    {
+                        _symbols.Add(_symbol);
+                    }
+                }
+            }
+            #endif
 
             customSymbols = Array.ConvertAll(_symbols.ToArray(), (s) => new ScriptingDefineSymbolInfo(s));
             Array.Sort(customSymbols, (a, b) => a.DefineSymbol.Symbol.CompareTo(b.DefineSymbol.Symbol));
@@ -2166,7 +2183,7 @@ namespace EnhancedEditor.Editor
 
                             GUI.Label(_toolbarPosition, GUIContent.none, EditorStyles.toolbarButton);
                         }
-                        
+
                         _onDrawSectionToolbar();
                     }
 
@@ -2424,7 +2441,7 @@ namespace EnhancedEditor.Editor
                 _position.width = position.width - _position.x - 5f;
 
                 presetName = EditorGUI.TextField(_position, presetName);
-                
+
                 string _value = presetName.Trim();
                 GUILayout.Space(3f);
 

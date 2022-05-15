@@ -115,27 +115,6 @@ namespace EnhancedEditor
 
             _value = default;
             return false;
-
-            // ----- Local Method ----- \\
-
-            bool CastValue(object _object, Type _type, out T _value)
-            {
-                if (_object is T)
-                {
-                    _value = (T)_object;
-                    return true;
-                }
-                try
-                {
-                    _value = (T)Convert.ChangeType(_object, _type);
-                    return true;
-                }
-                catch (InvalidCastException)
-                {
-                    _value = default;
-                    return false;
-                }
-            }
         }
 
         /// <summary>
@@ -195,27 +174,54 @@ namespace EnhancedEditor
             }
 
             return false;
+        }
 
-            // ----- Local Method ----- \\
-
-            bool CastValue(T _object, Type _objectType, Type _targetType, out object _value)
+        /// <summary>
+        /// Casts a given object into an expected type.
+        /// </summary>
+        /// <param name="_object">The object to cast.</param>
+        /// <param name="_objectType">The original object type.</param>
+        /// <param name="_targetType">The type to which you want to cast the object.</param>
+        /// <param name="_value">Outputs the cast object.</param>
+        /// <returns>Returns true if the cast has been applied successfully, otherwise false.</returns>
+        private bool CastValue(T _object, Type _objectType, Type _targetType, out object _value)
+        {
+            if (_objectType == _targetType)
             {
-                if (_objectType == _targetType)
-                {
-                    _value = _object;
-                    return true;
-                }
+                _value = _object;
+                return true;
+            }
 
-                try
-                {
-                    _value = Convert.ChangeType(_object, _targetType);
-                    return true;
-                }
-                catch (InvalidCastException)
-                {
-                    _value = default;
-                    return false;
-                }
+            try
+            {
+                _value = Convert.ChangeType(_object, _targetType);
+                return true;
+            }
+            catch (InvalidCastException)
+            {
+                _value = default;
+                return false;
+            }
+        }
+
+        /// <inheritdoc cref="CastValue(T, Type, Type, out object)"/>
+        /// <param name="_type">The type to which you want to cast the object.</param>
+        private bool CastValue(object _object, Type _type, out T _value)
+        {
+            if (_object is T)
+            {
+                _value = (T)_object;
+                return true;
+            }
+            try
+            {
+                _value = (T)Convert.ChangeType(_object, _type);
+                return true;
+            }
+            catch (InvalidCastException)
+            {
+                _value = default;
+                return false;
             }
         }
         #endregion

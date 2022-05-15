@@ -55,6 +55,10 @@ namespace EnhancedEditor
 
                 return interfaceInstance;
             }
+            set
+            {
+                interfaceInstance = value;
+            }
         }
 
         /// <inheritdoc cref="SerializedInterface.gameObject"/>

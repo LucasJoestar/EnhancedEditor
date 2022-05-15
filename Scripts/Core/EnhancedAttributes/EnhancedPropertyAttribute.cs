@@ -20,4 +20,15 @@ namespace EnhancedEditor
     [Conditional("UNITY_EDITOR")]
     [AttributeUsage(AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
     public abstract class EnhancedPropertyAttribute : PropertyAttribute { }
+
+    /// <summary>
+    /// New attribute required to be used on every field using at least one other attribute
+    /// starting from the 2021.1 version of Unity.
+    /// <para/>
+    /// As from this version multiple drawers for a single field causes multiple errors
+    /// and strange behaviours, a single drawer is used for this attribute exclusively.
+    /// </summary>
+    [Conditional("UNITY_EDITOR")]
+    [AttributeUsage(AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
+    public sealed class EnhancedAttribute : PropertyAttribute { }
 }

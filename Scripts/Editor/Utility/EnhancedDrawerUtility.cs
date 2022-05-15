@@ -61,18 +61,37 @@ namespace EnhancedEditor.Editor
                 _data = new Dictionary<Type, Type>();
 
                 // Search for all target drawers in the project.
+                #if UNITY_2019_2_OR_NEWER
                 var _types = TypeCache.GetTypesDerivedFrom(_drawer);
                 foreach (Type _type in _types)
                 {
                     // Only register the drawer if it has a target class.
                     if (!_type.IsAbstract)
                     {
-                        var _customDrawer = _type.GetCustomAttribute<CustomDrawerAttribute>(true);
-                        if (_customDrawer != null)
+                        RegisterDrawer(_data, _type);
+                    }
+                }
+                #else
+                foreach (Assembly _assembly in AppDomain.CurrentDomain.GetAssemblies())
+                {
+                    foreach (Type _type in _assembly.GetTypes())
+                    {
+                        // Register drawer if having a target class.
+                        if (_type.IsSubclassOf(_drawer) && !_type.IsAbstract)
                         {
-                            _data[_type] = _customDrawer.TargetType;
+                            RegisterDrawer(_data, _type);
                         }
                     }
+                }
+                #endif
+            }
+
+            void RegisterDrawer(Dictionary<Type, Type> _dataDictionary, Type _typeToRegister)
+            {
+                var _customDrawer = _typeToRegister.GetCustomAttribute<CustomDrawerAttribute>(true);
+                if (_customDrawer != null)
+                {
+                    _dataDictionary[_typeToRegister] = _customDrawer.TargetType;
                 }
             }
         }

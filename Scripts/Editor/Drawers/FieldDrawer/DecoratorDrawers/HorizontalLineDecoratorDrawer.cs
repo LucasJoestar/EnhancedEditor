@@ -27,7 +27,7 @@ namespace EnhancedEditor.Editor
             HorizontalLineAttribute _attribute = attribute as HorizontalLineAttribute;
             _position.height -= EditorGUIUtility.standardVerticalSpacing;
 
-            EnhancedEditorGUI.HorizontalLine(_position, _attribute.Color);
+            EnhancedEditorGUI.HorizontalLine(_position, _attribute.Color, _attribute.Margins);
         }
         #endregion
     }

@@ -4,6 +4,12 @@
 //
 // ============================================================================ //
 
+#if UNITY_2021_1_OR_NEWER
+#define SCENEVIEW_TOOLBAR
+#elif UNITY_2020_1_OR_NEWER
+#define EDITOR_TOOLBAR
+#endif
+
 using System;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -95,6 +101,10 @@ namespace EnhancedEditor.Editor
         #pragma warning disable IDE0051
         private static void OnGUI()
         {
+            #if SCENEVIEW_TOOLBAR
+            GUILayout.Space(10f);
+            #endif
+
             // Select the appropriate options depending on the activation state.
             GUIContent _label;
             GUILayoutOption _width;
@@ -128,7 +138,9 @@ namespace EnhancedEditor.Editor
                 }
             }
 
+            #if EDITOR_TOOLBAR
             GUILayout.Space(20f);
+            #endif
         }
         #endregion
     }

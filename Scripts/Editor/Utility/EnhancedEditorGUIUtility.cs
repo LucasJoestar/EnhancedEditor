@@ -142,6 +142,7 @@ namespace EnhancedEditor.Editor
         {
             labelGUI.text = _label;
             labelGUI.tooltip = _tooltip;
+            labelGUI.image = null;
 
             return labelGUI;
         }
@@ -176,6 +177,42 @@ namespace EnhancedEditor.Editor
         #endregion
 
         #region Rect and Position
+        /// <summary>
+        /// The current screen width, scaled by the device dpi.
+        /// </summary>
+        public static float ScreenWidth
+        {
+            get
+            {
+                float _width = Mathf.RoundToInt(Screen.width / ScreenScale);
+                return _width;
+            }
+        }
+
+        /// <summary>
+        /// The current screen height, scaled by the device dpi.
+        /// </summary>
+        public static float ScreenHeight
+        {
+            get
+            {
+                float _width = Mathf.RoundToInt(Screen.height / ScreenScale);
+                return _width;
+            }
+        }
+
+        /// <summary>
+        /// The actual editor scale depending on the screen device dpi.
+        /// </summary>
+        public static float ScreenScale
+        {
+            get
+            {
+                float _scale = Screen.dpi / 96f;
+                return _scale;
+            }
+        }
+
         /// <summary>
         /// Get this view default rect for an Editor control.
         /// <br/>

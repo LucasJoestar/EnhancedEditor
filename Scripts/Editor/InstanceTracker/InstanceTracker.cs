@@ -7,6 +7,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -19,7 +20,7 @@ namespace EnhancedEditor.Editor
     /// <br/> Usefull to keep track of important objects.
     /// </summary>
     [InitializeOnLoad]
-	public class InstanceTracker : ScriptableObject
+    public class InstanceTracker : ScriptableObject
     {
         #region Scene Track
         [Serializable]
@@ -136,7 +137,24 @@ namespace EnhancedEditor.Editor
             if (trackers == null)
                 trackers = EnhancedEditorUtility.LoadAssets<InstanceTracker>();
 
-            var _types = TypeCache.GetTypesWithAttribute<InstanceTrackerAttribute>();
+            dynamic _types = null;
+
+            #if UNITY_2019_2_OR_NEWER
+            _types = TypeCache.GetTypesWithAttribute<InstanceTrackerAttribute>();
+            #else
+            _types = new Type[] { };
+            foreach (Assembly _assembly in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                foreach (Type _type in _assembly.GetTypes())
+                {
+                    if (_type.GetCustomAttribute<InstanceTrackerAttribute>() != null)
+                    {
+                        ArrayUtility.Add(ref _types, _type);
+                    }
+                }
+            }
+            #endif
+
             foreach (var _type in _types)
             {
                 string _target = _type.AssemblyQualifiedName;

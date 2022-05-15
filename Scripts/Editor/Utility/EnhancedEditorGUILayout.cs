@@ -432,17 +432,40 @@ namespace EnhancedEditor.Editor
             return EnhancedEditorGUI.FolderField(_position, _label, _folderPath, _allowOutsideProjectFolder, _folderPanelTitle);
         }
 
+        // ===== Editor Folder - Serialized Property ===== \\
+
+        /// <inheritdoc cref="EditorFolderField(SerializedProperty, GUIContent, string, GUILayoutOption[])"/>
+        public static void EditorFolderField(SerializedProperty _property, string _folderPanelTitle = EnhancedEditorGUI.DefaultEditorPanelTitle, params GUILayoutOption[] _options) {
+            GUIContent _label = GUIContent.none;
+            EditorFolderField(_property, _label, _folderPanelTitle);
+        }
+
+        /// <inheritdoc cref="EditorFolderField(SerializedProperty, GUIContent, string, GUILayoutOption[])"/>
+        public static void EditorFolderField(SerializedProperty _property, string _label, string _folderPanelTitle = EnhancedEditorGUI.DefaultEditorPanelTitle,
+                                             params GUILayoutOption[] _options) {
+            GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
+            EditorFolderField(_property, _labelGUI, _folderPanelTitle);
+        }
+
+        /// <param name="_options"><inheritdoc cref="DocumentationMethod(GUILayoutOption[])" path="/param[@name='_options']"/></param>
+        /// <inheritdoc cref="EnhancedEditorGUI.EditorFolderField(Rect, SerializedProperty, GUIContent, string)"/>
+        public static void EditorFolderField(SerializedProperty _property, GUIContent _label, string _folderPanelTitle = EnhancedEditorGUI.DefaultEditorPanelTitle,
+                                             params GUILayoutOption[] _options) {
+            Rect _position = GetPosition(_options);
+            EnhancedEditorGUI.EditorFolderField(_position, _property, _label, _folderPanelTitle);
+        }
+
         // ===== Editor Folder - String Value ===== \\
 
         /// <inheritdoc cref="EditorFolderField(GUIContent, string, string, GUILayoutOption[])"/>
-        public static string EditorFolderField(string _folderPath, string _folderPanelTitle = "Select an Editor Folder", params GUILayoutOption[] _options)
+        public static string EditorFolderField(string _folderPath, string _folderPanelTitle = EnhancedEditorGUI.DefaultEditorPanelTitle, params GUILayoutOption[] _options)
         {
             GUIContent _label = GUIContent.none;
             return EditorFolderField(_label, _folderPath, _folderPanelTitle, _options);
         }
 
         /// <inheritdoc cref="EditorFolderField(GUIContent, string, string, GUILayoutOption[])"/>
-        public static string EditorFolderField(string _label, string _folderPath, string _folderPanelTitle = "Select an Editor Folder", params GUILayoutOption[] _options)
+        public static string EditorFolderField(string _label, string _folderPath, string _folderPanelTitle = EnhancedEditorGUI.DefaultEditorPanelTitle, params GUILayoutOption[] _options)
         {
             GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
             return EditorFolderField(_labelGUI, _folderPath, _folderPanelTitle, _options);
@@ -450,7 +473,7 @@ namespace EnhancedEditor.Editor
 
         /// <param name="_options"><inheritdoc cref="DocumentationMethod(GUILayoutOption[])" path="/param[@name='_options']"/></param>
         /// <inheritdoc cref="EnhancedEditorGUI.EditorFolderField(Rect, GUIContent, string, string)"/>
-        public static string EditorFolderField(GUIContent _label, string _folderPath, string _folderPanelTitle = "Select an Editor Folder", params GUILayoutOption[] _options)
+        public static string EditorFolderField(GUIContent _label, string _folderPath, string _folderPanelTitle = EnhancedEditorGUI.DefaultEditorPanelTitle, params GUILayoutOption[] _options)
         {
             Rect _position = GetPosition(_options);
             return EnhancedEditorGUI.EditorFolderField(_position, _label, _folderPath, _folderPanelTitle);

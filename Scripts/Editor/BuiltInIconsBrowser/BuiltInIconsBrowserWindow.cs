@@ -59,9 +59,8 @@ namespace EnhancedEditor.Editor
         public static BuiltInIconsBrowserWindow GetWindow()
         {
             BuiltInIconsBrowserWindow _window = GetWindow<BuiltInIconsBrowserWindow>("Built-in Icons Browser");
-            _window.titleContent.image = EditorGUIUtility.IconContent("search_icon@2x").image;
-
             _window.Show();
+
             return _window;
         }
 
@@ -201,6 +200,8 @@ namespace EnhancedEditor.Editor
             // Repaint on undo / redo operations.
             Undo.undoRedoPerformed -= Repaint;
             Undo.undoRedoPerformed += Repaint;
+
+            titleContent.image = EditorGUIUtility.IconContent("search_icon@2x").image;
         }
 
         private void OnGUI()
@@ -406,7 +407,7 @@ namespace EnhancedEditor.Editor
                     float _size = GridIconSize * sizeSlider;
                     GUILayoutOption _height = GUILayout.Height(_size - EditorGUIUtility.standardVerticalSpacing);
 
-                    float _screenWidth = Screen.width - 15f;
+                    float _screenWidth = position.width - 15f;
                     float _gridCount = Mathf.Floor(_screenWidth / _size);
                     float _margin = (_screenWidth % _size) / 2f;
                     int _index = -1;
