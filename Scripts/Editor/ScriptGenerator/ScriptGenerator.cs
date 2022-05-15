@@ -41,6 +41,9 @@ namespace EnhancedEditor.Editor
 
         static ScriptGenerator()
         {
+            if (EditorApplication.isPlayingOrWillChangePlaymode || EditorApplication.isCompiling || EnhancedEditorUtility.isReloadingAssemblies)
+                return;
+
             // Template directory management.
             string _templateDirectory = $"{Application.dataPath}/{EnhancedEditorSettings.Settings.ScriptTemplateDirectory}";
             if (!Directory.Exists(_templateDirectory))
@@ -82,7 +85,7 @@ namespace EnhancedEditor.Editor
             }
             
             // Write script content.
-            if (!File.Exists(_path) || (File.ReadAllText(_path) != _fileContent))
+            if (!string.IsNullOrEmpty(_path) && (!File.Exists(_path) || (File.ReadAllText(_path) != _fileContent)))
             {
                 File.WriteAllText(_path, _fileContent);
                 AssetDatabase.Refresh();
