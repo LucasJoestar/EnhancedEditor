@@ -15,6 +15,7 @@ MonoBehaviour:
   userSettings:
     buildDirectory: 
     AutosaveInterval: 300
+    SceneDesignerFolders: []
     increaseTimeScale:
       m_Name: 
       m_Type: 0
@@ -45,8 +46,6 @@ MonoBehaviour:
   AutoManagedResourceDirectory: EnhancedEditor/AutoManagedResources
   InstanceTrackerDirectory: EnhancedEditor/Editor/InstanceTrackers
   ScriptTemplateDirectory: EnhancedEditor/Editor/ScriptTemplates
-  SceneDesignerFolders:
-  - EnhancedEditor
   CoreScene:
     guid: 2806c0e9be23d0e48b848d03d6eead33
   IsCoreSceneEnabled: 1

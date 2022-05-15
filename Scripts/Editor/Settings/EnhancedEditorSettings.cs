@@ -80,6 +80,11 @@ namespace EnhancedEditor.Editor
             /// </summary>
             [SerializeField] public int AutosaveInterval = AutosaveDefaultInterval;
 
+            /// <summary>
+            /// All folders used to select objects to place in the scene using the <see cref="SceneDesigner"/>.
+            /// </summary>
+            [SerializeField, Enhanced, Folder] public string[] SceneDesignerFolders = new string[] { };
+
             #if ENABLE_INPUT_SYSTEM
             // Chronos-related inputs.
             [SerializeField] internal InputAction increaseTimeScale = new InputAction();
@@ -147,11 +152,6 @@ namespace EnhancedEditor.Editor
         /// The directory in the project where are stored all script templates.
         /// </summary>
         public string ScriptTemplateDirectory = ScriptTemplateDefaultDirectory;
-
-        /// <summary>
-        /// All folders used to select objects to place in the scene using the <see cref="SceneDesigner"/>.
-        /// </summary>
-        [Enhanced, Folder] public string[] SceneDesignerFolders = new string[] { };
 
         /// <summary>
         /// The core scene to load when entering play mode.
@@ -348,12 +348,12 @@ namespace EnhancedEditor.Editor
         private static readonly GUIContent autosaveIntervalGUI = new GUIContent("Autosave Interval",
                                                                                 "Time interval (in seconds) between two autosave. Autosave can be toggled from the main editor toolbar.");
 
+        private static readonly GUIContent sceneDesignerFoldersGUI = new GUIContent("Scene Designer Folders",
+                                                                                    "All folders displayed to select objects to place in the scene using the Scene Designer.");
+
         private static readonly GUIContent increaseTimeScaleGUI = new GUIContent("Increase Time Scale", "Input used to increase the game time scale at runtime.");
         private static readonly GUIContent resetTimeScaleGUI = new GUIContent("Reset Time Scale", "Input used to reset the game time scale at runtime.");
         private static readonly GUIContent decreaseTimeScaleGUI = new GUIContent("Decrease Time Scale", "Input used to decrease the game time scale at runtime.");
-
-        private static readonly GUIContent sceneDesignerFoldersGUI = new GUIContent("Scene Designer Folders",
-                                                                                    "All folders displayed to select objects to place in the scene using the Scene Designer.");
 
         private static readonly GUIContent coreSceneGUI = new GUIContent("Core Scene", "The core scene to load when entering play mode.");
         private static readonly GUIContent isCoreSceneEnabledGUI = new GUIContent("Enabled", "Enables / Disables to core scene system.");
@@ -364,6 +364,7 @@ namespace EnhancedEditor.Editor
 
         private static SerializedProperty buildDirectoryProperty = null;
         private static SerializedProperty autosaveIntervalProperty = null;
+        private static SerializedProperty sceneDesignerFoldersProperty = null;
 
         #if ENABLE_INPUT_SYSTEM
         private static SerializedProperty increaseTimeScaleProperty = null;
@@ -374,7 +375,6 @@ namespace EnhancedEditor.Editor
         private static SerializedProperty autoManagedResourceDirectoryProperty = null;
         private static SerializedProperty instanceTrackerDirectoryProperty = null;
         private static SerializedProperty scriptTemplateDirectoryProperty = null;
-        private static SerializedProperty sceneDesignerFoldersProperty = null;
         private static SerializedProperty coreSceneProperty = null;
         private static SerializedProperty coreSceneGUIDProperty = null;
         private static SerializedProperty isCoreSceneEnabledProperty = null;
@@ -391,6 +391,7 @@ namespace EnhancedEditor.Editor
 
                 buildDirectoryProperty = _userSettings.FindPropertyRelative("buildDirectory");
                 autosaveIntervalProperty = _userSettings.FindPropertyRelative("AutosaveInterval");
+                sceneDesignerFoldersProperty = _userSettings.FindPropertyRelative("SceneDesignerFolders");
 
                 #if ENABLE_INPUT_SYSTEM
                 increaseTimeScaleProperty = _userSettings.FindPropertyRelative("increaseTimeScale");
@@ -401,7 +402,6 @@ namespace EnhancedEditor.Editor
                 autoManagedResourceDirectoryProperty = serializedObject.FindProperty("AutoManagedResourceDirectory");
                 instanceTrackerDirectoryProperty = serializedObject.FindProperty("InstanceTrackerDirectory");
                 scriptTemplateDirectoryProperty = serializedObject.FindProperty("ScriptTemplateDirectory");
-                sceneDesignerFoldersProperty = serializedObject.FindProperty("SceneDesignerFolders");
                 coreSceneProperty = serializedObject.FindProperty("CoreScene");
                 coreSceneGUIDProperty = coreSceneProperty.FindPropertyRelative("guid");
                 isCoreSceneEnabledProperty = serializedObject.FindProperty("IsCoreSceneEnabled");
@@ -447,6 +447,13 @@ namespace EnhancedEditor.Editor
 
                     // Autosave interval.
                     EnhancedEditorGUILayout.MinField(autosaveIntervalProperty, autosaveIntervalGUI, 5);
+
+                    GUILayout.Space(5f);
+
+                    // Scene Designer folders.
+                    EditorGUILayout.PropertyField(sceneDesignerFoldersProperty, sceneDesignerFoldersGUI);
+
+                    GUILayout.Space(5f);
 
                     #if ENABLE_INPUT_SYSTEM
                     GUILayout.Space(10f);
@@ -499,11 +506,6 @@ namespace EnhancedEditor.Editor
 
             // Script templates dirctory.
             EnhancedEditorGUILayout.FolderField(scriptTemplateDirectoryProperty, scriptTemplateDirectoryGUI, false, ScriptTemplateDirectoryPanelTitle);
-
-            GUILayout.Space(5f);
-
-            // Scene Designer folders.
-            EditorGUILayout.PropertyField(sceneDesignerFoldersProperty, sceneDesignerFoldersGUI);
 
             GUILayout.Space(15f);
 

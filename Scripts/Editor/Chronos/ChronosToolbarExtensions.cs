@@ -37,11 +37,11 @@ namespace EnhancedEditor.Editor
         static ChronosToolbarExtensions()
         {
             string _hourglassIcon = EditorGUIUtility.isProSkin
-                                  ? "Hourglass_dark.png"
-                                  : "Hourglass.png";
+                                  ? "Hourglass_dark"
+                                  : "Hourglass";
 
             buttonsGUI[0].image = EditorGUIUtility.FindTexture("Profiler.FirstFrame");
-            buttonsGUI[1].image = EditorGUIUtility.IconContent(_hourglassIcon).image;
+            buttonsGUI[1].image = Resources.Load<Texture>(_hourglassIcon);
             buttonsGUI[2].image = EditorGUIUtility.FindTexture("Profiler.LastFrame");
 
             Chronos.Reset();

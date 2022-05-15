@@ -266,7 +266,7 @@ namespace EnhancedEditor.Editor
             // Toolbar width update.
             float _targetWidth = foldout
                                ? ToolbarFoldoutWidth
-                               : Screen.width;
+                               : EnhancedEditorGUIUtility.ScreenWidth;
 
             if (toolbarWidth != _targetWidth)
             {

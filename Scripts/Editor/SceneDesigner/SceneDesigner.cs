@@ -14,6 +14,7 @@ using System;
 using System.IO;
 using System.Collections.Generic;
 using UnityEditor;
+using UnityEditor.ShortcutManagement;
 using UnityEditorInternal;
 using UnityEngine;
 
@@ -357,7 +358,7 @@ namespace EnhancedEditor.Editor
 
         private void OnEnable()
         {
-            string[] _folders = EnhancedEditorSettings.Settings.SceneDesignerFolders;
+            string[] _folders = EnhancedEditorSettings.Settings.UserSettings.SceneDesignerFolders;
             if (_folders != folders)
             {
                 root.Folders.Clear();
@@ -680,6 +681,61 @@ namespace EnhancedEditor.Editor
             {
                 HasFocus = false;
                 FocusWindowIfItsOpen<SceneDesigner>();
+            }
+        }
+        #endregion
+
+        #region Shortcut
+        private static readonly Collider[] _colliderBuffer = new Collider[16];
+
+        // -----------------------
+
+        [Shortcut("Enhanced Editor/Snap Object", KeyCode.PageDown)]
+        private static void SnapSelection() {
+            foreach (var go in Selection.gameObjects) {
+                Collider closest = null;
+                Vector3 normal = default;
+                float distance = 999f;
+
+                Transform transform = go.transform;
+                Vector3 position = transform.position;
+                int amount = Physics.OverlapSphereNonAlloc(position, 10f, _colliderBuffer);
+
+                for (int i = 0; i < amount; i++) {
+                    Collider collider = _colliderBuffer[i];
+                    if (collider.isTrigger || collider.transform.IsChildOf(transform))
+                        continue;
+
+                    Vector3 point;
+
+                    if (collider is MeshCollider && Physics.Raycast(position, -transform.up, out RaycastHit hit, 10f)) {
+                        point = hit.point;
+                    } else {
+                        point = collider.ClosestPoint(position);
+                    }
+
+                    float pointDistance = (point - position).sqrMagnitude;
+
+                    if (pointDistance < distance) {
+                        distance = pointDistance;
+                        normal = point - position;
+                        closest = collider;
+                    }
+                }
+
+                if (distance != 999f) {
+                    go.transform.position += normal;
+
+                    foreach (var collider in go.GetComponentsInChildren<Collider>()) {
+                        if (collider.isTrigger)
+                            continue;
+
+                        if (Physics.ComputePenetration(collider, collider.transform.position, collider.transform.rotation,
+                                                       closest, closest.transform.position, closest.transform.rotation, out normal, out distance)) {
+                            go.transform.position += normal * distance;
+                        }
+                    }
+                }
             }
         }
         #endregion
