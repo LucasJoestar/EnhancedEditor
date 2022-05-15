@@ -17,8 +17,20 @@ namespace EnhancedEditor.Editor
     /// <summary>
     /// Contains multiple editor utility methods.
     /// </summary>
+    [InitializeOnLoad]
 	public static class EnhancedEditorUtility
     {
+        #region Global Members
+        static EnhancedEditorUtility() {
+            // Assembly reloading.
+            AssemblyReloadEvents.beforeAssemblyReload -= OnBeforeAssembliesReload;
+            AssemblyReloadEvents.afterAssemblyReload -= OnAfterAssembliesReload;
+
+            AssemblyReloadEvents.beforeAssemblyReload += OnBeforeAssembliesReload;
+            AssemblyReloadEvents.afterAssemblyReload += OnAfterAssembliesReload;
+        }
+        #endregion
+
         #region Color Picker
         private static readonly BindingFlags colorPickerFlags = BindingFlags.InvokeMethod | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
         private static readonly object[] colorPickerArgs = new object[] { null, null, null, true, false };
@@ -343,6 +355,27 @@ namespace EnhancedEditor.Editor
         {
             bool _isPickable = (_type == typeof(GameObject)) || _type.IsSubclassOf(typeof(Component));
             return _isPickable;
+        }
+        #endregion
+
+        #region Assembly Reload
+        private const string ReloadingAssembliesKey = "IsReloadingAssemblies";
+
+        /// <summary>
+        /// True once <see cref="AssemblyReloadEvents.beforeAssemblyReload"/> is called, false after <see cref=" AssemblyReloadEvents.afterAssemblyReload"/>.
+        /// </summary>
+        public static bool isReloadingAssemblies => SessionState.GetBool(ReloadingAssembliesKey, false);
+
+        // -----------------------
+
+        private static void OnBeforeAssembliesReload()
+        {
+            SessionState.SetBool(ReloadingAssembliesKey, true);
+        }
+
+        private static void OnAfterAssembliesReload()
+        {
+            SessionState.SetBool(ReloadingAssembliesKey, false);
         }
         #endregion
     }
