@@ -1,0 +1,72 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a8af76d847d699c4aa02b51064a60c84, type: 3}
+  m_Name: DOC_EE_Presentation
+  m_EditorClassIdentifier: 
+  Title: Enhanced Editor
+  _useBuiltInIcon: 1
+  IconContent: UnityLogoLarge
+  Icon: {fileID: 10309, guid: 0000000000000000f000000000000000, type: 0}
+  Sections:
+  - Name: Header
+    Spacing: 0
+    Header: Presentation
+    Text: 
+    InfoText: 
+    Image: {fileID: 0}
+    LinkText: 
+    URL: 
+  - Name: Intro
+    Spacing: 10
+    Header: 
+    Text: Welcome to the Enhanced Editor plugin, featuring a bunch of useful new
+      tools, attributes, script utilities and much more for Unity.
+    InfoText: 
+    Image: {fileID: 0}
+    LinkText: 
+    URL: 
+  - Name: Link
+    Spacing: 10
+    Header: 
+    Text: 'You can find the plugin Git repository at the following address:'
+    InfoText: 
+    Image: {fileID: 0}
+    LinkText: Git URL
+    URL: https://github.com/LucasJoestar/EnhancedEditor/
+  - Name: Samples
+    Spacing: 20
+    Header: 
+    Text: For more informations about how this plugins works and the various features
+      available in, don't hesitate to take a look at the available samples from the
+      Package Manager.
+    InfoText: 
+    Image: {fileID: 0}
+    LinkText: 
+    URL: 
+  - Name: Web Page
+    Spacing: 10
+    Header: 
+    Text: 'You can also find the official plugin presentation on my website following
+      this link:'
+    InfoText: 
+    Image: {fileID: 0}
+    LinkText: Official Page
+    URL: https://lucas-guibert.com/
+  - Name: Open Source
+    Spacing: 25
+    Header: 
+    Text: This plugin is completely open for modification, so don't hesitate to edit
+      its content or remove undesired features if you want to.
+    InfoText: 
+    Image: {fileID: 0}
+    LinkText: 
+    URL: 

@@ -41,7 +41,10 @@ namespace EnhancedEditor
         [Section("Document Title")]
 
         public string Title = "Document";
-        [Enhanced, Required] public Texture2D Icon = null;
+        public bool _useBuiltInIcon = false;
+
+        [Enhanced, ShowIf("_useBuiltInIcon", ConditionType.True)] public string IconContent = "UnityLogo";
+        [Enhanced, ShowIf("_useBuiltInIcon", ConditionType.False), Required] public Texture2D Icon = null;
 
         [Section("Sections")]
 

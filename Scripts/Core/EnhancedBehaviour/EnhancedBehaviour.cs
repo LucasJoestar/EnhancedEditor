@@ -63,7 +63,7 @@ namespace EnhancedEditor
         #endregion
 
         #region MonoBehaviour
-        private void Start()
+        private void Awake()
         {
             // Mark persistent objects as don't destroy on load.
             if (IsPersistent)

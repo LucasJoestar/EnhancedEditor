@@ -64,7 +64,20 @@ namespace EnhancedEditor.Editor
             float _size = Mathf.Min(IconSize, (EditorGUIUtility.currentViewWidth * .5f) - 50f);
             using (var _scope = new EditorGUILayout.HorizontalScope(Styles.BigTitleStyle))
             {
-                GUILayout.Label(document.Icon, EnhancedEditorStyles.CenteredLabel, GUILayout.Width(_size), GUILayout.Height(_size));
+                if (document._useBuiltInIcon)
+                {
+                    // As Unity is automatically logging an error message if the icon could not be found, temporarily deactivate it.
+                    bool wasLoggerEnabled = Debug.unityLogger.logEnabled;
+                    Debug.unityLogger.logEnabled = false;
+
+                    GUILayout.Label(EditorGUIUtility.IconContent(document.IconContent), EnhancedEditorStyles.CenteredLabel, GUILayout.Width(_size), GUILayout.Height(_size));
+
+                    Debug.unityLogger.logEnabled = wasLoggerEnabled;
+                }
+                else
+                {
+                    GUILayout.Label(document.Icon, EnhancedEditorStyles.CenteredLabel, GUILayout.Width(_size), GUILayout.Height(_size));
+                }
 
                 using (var _verticalScope = new EditorGUILayout.VerticalScope())
                 {

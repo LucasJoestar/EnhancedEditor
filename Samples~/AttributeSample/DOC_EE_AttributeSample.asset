@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a8af76d847d699c4aa02b51064a60c84, type: 3}
+  m_Name: DOC_EE_AttributeSample
+  m_EditorClassIdentifier: 
+  Title: Attribute Sample
+  _useBuiltInIcon: 1
+  IconContent: PrefabVariant Icon
+  Icon: {fileID: 0}
+  Sections:
+  - Name: Header
+    Spacing: 0
+    Header: Attribute Sample
+    Text: "This sample is composed of:\n\n\u2022 Two sample scripts\n\u2022 Two prefabs,
+      one for each script\n\u2022 A simple scene, with both prefabs in it"
+    InfoText: 
+    Image: {fileID: 0}
+    LinkText: 
+    URL: 
+  - Name: Content
+    Spacing: 20
+    Header: 
+    Text: These scripts illustrates how to use the enhanced attributes to pimp a
+      little bit your components inspector, and how to use the new EnhancedEditor
+      API on editor scripts, so don't be afraid to take a closer look on their content.
+    InfoText: 
+    Image: {fileID: 0}
+    LinkText: 
+    URL: 

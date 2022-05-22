@@ -1,17 +1,24 @@
 {
   "name": "com.enhancededitor.unity",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "displayName": "Enhanced Editor",
   "description": "Miscellaneous tools and improvements for Unity.",
   "unity": "2019.4",
+  "author": {
+    "name": "Lucas Guibert",
+    "email": "contact@lucas-guibert.com",
+    "url": "https://lucas-guibert.com/"
+  },
   "keywords": [
     "editor",
     "extension",
     "devtools"
   ],
-  "author": {
-    "name": "Lucas Guibert",
-    "email": "contact@lucas-guibert.com",
-    "url": "https://lucas-guibert.com/"
-  }
+  "samples": [
+    {
+      "displayName": "Attribute Sample",
+      "description": "Provides some components illustrating how to use the new enhanced attributes.",
+      "path": "Samples~/AttributeSample"
+    }
+  ]
 }
