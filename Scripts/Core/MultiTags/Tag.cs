@@ -12,7 +12,7 @@ namespace EnhancedEditor
     /// <summary>
     /// Tag identifier, referencing an existing <see cref="TagData"/> with the help of its <see cref="ID"/>.
     /// <para/>
-    /// It is notably used in the <see cref="EnhancedBehaviour"/> component to assign multiple tags to a single <see cref="GameObject"/>.
+    /// It is notably used in the <see cref="ExtendedBehaviour"/> component to assign multiple tags to a single <see cref="GameObject"/>.
     /// </summary>
     [Serializable]
     public struct Tag

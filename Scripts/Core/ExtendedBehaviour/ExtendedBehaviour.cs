@@ -16,7 +16,7 @@ namespace EnhancedEditor
     /// <see cref="GameObject"/>-extending class containing multiple editor notes and runtime features.
     /// </summary>
     #pragma warning disable IDE0052
-    public class EnhancedBehaviour : MonoBehaviour
+    public class ExtendedBehaviour : MonoBehaviour
     {
         #region Global Members
         #if UNITY_EDITOR

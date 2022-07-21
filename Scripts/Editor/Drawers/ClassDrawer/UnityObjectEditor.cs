@@ -153,7 +153,7 @@ namespace EnhancedEditor.Editor
 
                     if (_object is Component _component)
                     {
-                        var _behaviour = _component.gameObject.AddComponentIfNone<EnhancedBehaviour>();
+                        var _behaviour = _component.gameObject.AddComponentIfNone<ExtendedBehaviour>();
 
                         do { }
                         while (ComponentUtility.MoveComponentUp(_behaviour));

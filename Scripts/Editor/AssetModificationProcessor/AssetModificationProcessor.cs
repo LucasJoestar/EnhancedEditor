@@ -12,7 +12,7 @@ namespace EnhancedEditor.Editor
 {
     /// <summary>
     /// <see cref="EnhancedEditor"/>-related <see cref="UnityEditor.AssetModificationProcessor"/>,
-    /// especially used to update the last time a <see cref="GameObject"/> was modified in its <see cref="EnhancedBehaviour"/> component. 
+    /// especially used to update the last time a <see cref="GameObject"/> was modified in its <see cref="ExtendedBehaviour"/> component. 
     /// </summary>
     [InitializeOnLoad]
     public class AssetModificationProcessor : UnityEditor.AssetModificationProcessor
@@ -51,7 +51,7 @@ namespace EnhancedEditor.Editor
                     Object _object = EditorUtility.InstanceIDToObject(_id);
 
                     if (EditorUtility.IsDirty(_object)
-                        && (((_object is Component _component) && _component.TryGetComponent(out EnhancedBehaviour _behaviour))
+                        && (((_object is Component _component) && _component.TryGetComponent(out ExtendedBehaviour _behaviour))
                            || ((_object is GameObject _gameObject) && _gameObject.TryGetComponent(out _behaviour))))
                     {
                         _behaviour.UpdateLastModifiedState();
