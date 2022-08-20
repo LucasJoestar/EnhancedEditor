@@ -28,7 +28,7 @@ namespace EnhancedEditor.Editor
         /// <param name="_attribute"><inheritdoc cref="Attribute" path="/summary"/></param>.
         /// <param name="_fieldInfo"><inheritdoc cref="FieldInfo" path="/summary"/>.</param>.
         /// <returns>Newly created <see cref="EnhancedPropertyDrawer"/> instance.</returns>
-        internal static EnhancedPropertyDrawer CreateInstance(Type _type, SerializedProperty _property, EnhancedPropertyAttribute _attribute, FieldInfo _fieldInfo)
+        internal static EnhancedPropertyDrawer CreateInstance(Type _type, SerializedProperty _property, IEnhancedPropertyAttribute _attribute, FieldInfo _fieldInfo)
         {
             EnhancedPropertyDrawer _drawer = Activator.CreateInstance(_type) as EnhancedPropertyDrawer;
             _drawer.Attribute = _attribute;
@@ -68,9 +68,9 @@ namespace EnhancedEditor.Editor
         public SerializedProperty SerializedProperty { get; private set; } = null;
 
         /// <summary>
-        /// The <see cref="EnhancedPropertyAttribute"/> associated with this drawer.
+        /// The <see cref="IEnhancedPropertyAttribute"/> associated with this drawer.
         /// </summary>
-        public EnhancedPropertyAttribute Attribute { get; private set; } = null;
+        public IEnhancedPropertyAttribute Attribute { get; private set; } = null;
 
         /// <summary>
         /// The reflection <see cref="System.Reflection.FieldInfo"/> for the member this property represents.

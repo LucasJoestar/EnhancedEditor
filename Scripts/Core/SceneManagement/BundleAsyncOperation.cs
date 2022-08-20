@@ -84,7 +84,6 @@ namespace EnhancedEditor
         public event Action<SceneBundle> OnCompleted = null;
 
         private readonly LoadSceneParameters parameters = default;
-        private bool setSceneActive = false;
         private bool allowFirstSceneActivation = true;
 
         /// <summary>
@@ -129,11 +128,10 @@ namespace EnhancedEditor
             progress = 1f;
         }
 
-        internal LoadBundleAsyncOperation(SceneBundle _bundle, LoadSceneParameters _parameters, bool _setFirstSceneActive)
+        internal LoadBundleAsyncOperation(SceneBundle _bundle, LoadSceneParameters _parameters)
         {
             bundle = _bundle;
             parameters = new LoadSceneParameters(LoadSceneMode.Additive, _parameters.localPhysicsMode);
-            setSceneActive = _setFirstSceneActive;
 
             // Launch first operation.
             if (LoadNextScene(_parameters))
@@ -155,15 +153,14 @@ namespace EnhancedEditor
                 OnSceneLoaded.Invoke(_scene);
             }
 
-            // First scene activation.
+            // Scene activation.
             // Do not use the OnSceneLoaded callback to avoid extra costs.
-            if (setSceneActive)
+            if (bundle.ActiveSceneIndex == sceneIndex)
             {
-                int _sceneIndex = bundle.Scenes[0].BuildIndex;
+                int _sceneIndex = bundle.Scenes[sceneIndex].BuildIndex;
                 Scene _scene = SceneManager.GetSceneByBuildIndex(_sceneIndex);
 
                 SceneManager.SetActiveScene(_scene);
-                setSceneActive = false;
             }
 
             sceneIndex++;

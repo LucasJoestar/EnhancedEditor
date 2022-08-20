@@ -12,7 +12,7 @@ namespace EnhancedEditor.Editor
     /// <summary>
     /// Special <see cref="DecoratorDrawer"/> for fields with the attribute <see cref="SectionAttribute"/>.
     /// </summary>
-    [CustomPropertyDrawer(typeof(SectionAttribute), true)]
+    [CustomPropertyDrawer(typeof(SectionAttribute), false)]
     public class SectionDecoratorDrawer : DecoratorDrawer
     {
         #region Decorator Content

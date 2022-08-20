@@ -10,14 +10,12 @@ using System.Runtime.CompilerServices;
 using UnityEngine;
 
 [assembly: InternalsVisibleTo("EnhancedEditor.Editor")]
-namespace EnhancedEditor
-{
+namespace EnhancedEditor {
     /// <summary>
     /// <see cref="GameObject"/>-extending class containing multiple editor notes and runtime features.
     /// </summary>
     #pragma warning disable IDE0052
-    public class ExtendedBehaviour : MonoBehaviour
-    {
+    public class ExtendedBehaviour : MonoBehaviour {
         #region Global Members
         #if UNITY_EDITOR
         [SerializeField, Enhanced, EnhancedTextArea] private string comment = string.Empty;
@@ -33,10 +31,12 @@ namespace EnhancedEditor
         [SerializeField, Enhanced, ReadOnly] private string lastModifiedDate = string.Empty;
         #endif
 
-        /// <summary>
-        /// When set to true, the associated <see cref="GameObject"/> will not be automatically destroyed on scene loading.
-        /// </summary>
-        public bool IsPersistent = false;
+        #if UNITY_EDITOR
+        private const string EditorOnlyTag = "EditorOnly";
+
+        [Space(10f), HelpBox("Editor preview objects are meant to be only used in editor mode, outside of play", MessageType.Info, false)]
+        [SerializeField, Enhanced, ShowIf("IsPersistent", ConditionType.False)] private bool IsEditorPreview = false;
+        #endif
         #endregion
 
         #region Editor Utility
@@ -44,8 +44,7 @@ namespace EnhancedEditor
         /// Called internally in editor to update the last time
         /// the associated <see cref="GameObject"/> has been modified.
         /// </summary>
-        internal void UpdateLastModifiedState()
-        {
+        internal void UpdateLastModifiedState() {
             #if UNITY_EDITOR
             lastModifiedBy = Environment.UserName;
             lastModifiedDate = DateTime.Now.ToString(CultureInfo.CurrentCulture);
@@ -53,24 +52,29 @@ namespace EnhancedEditor
         }
 
         #if UNITY_EDITOR
-        private void OnValidate()
-        {
-            // Update modified state on object creation.
-            if (lastModifiedDate == string.Empty)
-                UpdateLastModifiedState();
-        }
-        #endif
-        #endregion
+        private void OnValidate() {
+            if (Application.isPlaying) {
+                return;
+            }
 
-        #region MonoBehaviour
-        private void Awake()
-        {
-            // Mark persistent objects as don't destroy on load.
-            if (IsPersistent)
-            {
-                DontDestroyOnLoad(gameObject);
+            // Update modified state on object creation.
+            if (lastModifiedDate == string.Empty) {
+                UpdateLastModifiedState();
+            }
+
+            // Markes this object as editor only, so it won't be included in any build.
+            if (IsEditorPreview && !gameObject.CompareTag(EditorOnlyTag)) {
+                gameObject.tag = EditorOnlyTag;
             }
         }
+
+        private void Awake() {
+            // Destroy preview objects.
+            if (IsEditorPreview) {
+                Destroy(gameObject);
+            }
+        }
+        #endif
         #endregion
     }
 }

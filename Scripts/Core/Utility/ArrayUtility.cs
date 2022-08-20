@@ -160,13 +160,7 @@ namespace EnhancedEditor
         /// <returns>True if the array contains the specified element, false otherwise.</returns>
         public static bool Contains<T>(T[] _array, T _element)
         {
-            foreach (T _arrayElement in _array)
-            {
-                if ((_arrayElement != null) && _arrayElement.Equals(_element))
-                    return true;
-            }
-
-            return false;
+            return Array.IndexOf(_array, _element) > -1;
         }
 
         /// <summary>

@@ -313,9 +313,6 @@ namespace EnhancedEditor.Editor
         /// </summary>
         internal void Sort()
         {
-            Array.Sort(sceneGroups, 1, sceneGroups.Length - 1);
-            Array.Sort(bundleGroups, 1, bundleGroups.Length - 1);
-
             foreach (var _group in sceneGroups)
                 Array.Sort(_group.Scenes);
 

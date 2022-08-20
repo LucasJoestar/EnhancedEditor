@@ -146,7 +146,7 @@ namespace EnhancedEditor
             if (!IsValid())
                 return default;
 
-            return SceneManager.LoadScene(buildIndex, _parameters);
+            return SceneManager.LoadScene(BuildIndex, _parameters);
         }
         #endregion
 
@@ -250,6 +250,10 @@ namespace EnhancedEditor
         #endregion
 
         #region Utility
+        private bool IsCoreScene() {
+            return BuildIndex == BuildSceneDatabase.Database.coreSceneIndex;
+        }
+
         private bool IsValid()
         {
             if (BuildIndex == -1)
@@ -258,6 +262,10 @@ namespace EnhancedEditor
                 Debug.LogException(new NonBuildSceneException(BuildSceneDatabase.GetNonBuildSceneName(guid)), BuildSceneDatabase.Database);
                 #endif
 
+                return false;
+            }
+
+            if (IsCoreScene() && SceneManager.GetSceneByBuildIndex(BuildIndex).isLoaded) {
                 return false;
             }
 

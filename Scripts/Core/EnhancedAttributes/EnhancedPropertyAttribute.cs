@@ -8,8 +8,14 @@ using System;
 using System.Diagnostics;
 using UnityEngine;
 
-namespace EnhancedEditor
-{
+namespace EnhancedEditor {
+    /// <summary>
+    /// Base interface to use on every custom enhanced property attributes.
+    /// </summary>
+    public interface IEnhancedPropertyAttribute {
+        int Order { get; }
+    }
+
     /// <summary>
     /// Base class to derive all custom property attributes from.
     /// Use this to create and assign multiple custom attributes to your script variables.
@@ -18,8 +24,10 @@ namespace EnhancedEditor
     /// to customize the way the variable is drawn in the inspector.
     /// </summary>
     [Conditional("UNITY_EDITOR")]
-    [AttributeUsage(AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
-    public abstract class EnhancedPropertyAttribute : PropertyAttribute { }
+    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
+    public abstract class EnhancedPropertyAttribute : PropertyAttribute, IEnhancedPropertyAttribute {
+        public int Order => order;
+    }
 
     /// <summary>
     /// New attribute required to be used on every field using at least one other attribute
@@ -29,6 +37,6 @@ namespace EnhancedEditor
     /// and strange behaviours, a single drawer is used for this attribute exclusively.
     /// </summary>
     [Conditional("UNITY_EDITOR")]
-    [AttributeUsage(AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
+    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = true, Inherited = true)]
     public sealed class EnhancedAttribute : PropertyAttribute { }
 }

@@ -54,6 +54,7 @@ namespace EnhancedEditor.Editor
 
         private const string UndoRecordTitle = "Scene Handler Change";
         private const string UnloadCoreSceneKey = "UnloadCoreScene";
+        private const string PlayActiveScene = "PlayActiveScene";
         private const string PlayScenesKey = "PlayScenes";
         private const char PlaySceneSeparator = ':';
 
@@ -749,6 +750,8 @@ namespace EnhancedEditor.Editor
                         CloseSceneFromGUID(EnhancedEditorSettings.Settings.CoreScene.guid);
                         SessionState.SetBool(UnloadCoreSceneKey, false);
                     }
+
+                    SetActiveScene();
                 }
                 break;
 
@@ -761,19 +764,20 @@ namespace EnhancedEditor.Editor
                         if (string.IsNullOrEmpty(_path))
                             return;
 
-                        Scene _coreScene = EditorSceneManager.GetSceneByPath(_path);
-                        Scene _firstScene = EditorSceneManager.GetSceneAt(0);
+                        Scene _coreScene = SceneManager.GetSceneByPath(_path);
+                        Scene _firstScene = SceneManager.GetSceneAt(0);
 
                         if (!_coreScene.isLoaded && OpenScene(_path, OpenSceneMode.Additive))
                         {
                             SessionState.SetBool(UnloadCoreSceneKey, true);
-                            _coreScene = EditorSceneManager.GetSceneByPath(_path);
+                            _coreScene = SceneManager.GetSceneByPath(_path);
                         }
 
                         if (_coreScene != _firstScene)
                             EditorSceneManager.MoveSceneBefore(_coreScene, _firstScene);
 
-                        EditorSceneManager.SetActiveScene(_coreScene);
+                        SessionState.SetString(PlayActiveScene, SceneManager.GetActiveScene().path);
+                        SceneManager.SetActiveScene(_coreScene);
                     }
                 }
                 break;
@@ -784,26 +788,27 @@ namespace EnhancedEditor.Editor
                     if (!string.IsNullOrEmpty(_playScenes))
                     {
                         string _coreScenePath = AssetDatabase.GUIDToAssetPath(EnhancedEditorSettings.Settings.CoreScene.guid);
-                        bool _isCoreSceneEnabled = EnhancedEditorSettings.Settings.IsCoreSceneEnabled;
                         int _loadedCount = EditorSceneManager.loadedSceneCount;
 
                         string[] _allScenes = _playScenes.Split(PlaySceneSeparator);
                         foreach (string _scenePath in _allScenes)
                         {
-                            Scene _scene = EditorSceneManager.GetSceneByPath(_scenePath);
+                            Scene _scene = SceneManager.GetSceneByPath(_scenePath);
                             if (!_scene.isLoaded)
                                 OpenScene(_scenePath, OpenSceneMode.Additive);
                         }
 
                         for (int _i = 0; _i < _loadedCount; _i++)
                         {
-                            Scene _scene = EditorSceneManager.GetSceneAt(_i);
+                            Scene _scene = SceneManager.GetSceneAt(_i);
                             if ((_scene.path != _coreScenePath) && !_playScenes.Contains(_scene.path))
                                 CloseScene(_scene.path);
                         }
 
                         SessionState.SetString(PlayScenesKey, string.Empty);
                     }
+
+                    SetActiveScene();
                     break;
 
                 case PlayModeStateChange.ExitingPlayMode:
@@ -811,6 +816,18 @@ namespace EnhancedEditor.Editor
 
                 default:
                     break;
+            }
+
+            // ----- Local Method ----- \\
+
+            void SetActiveScene() {
+                if (EnhancedEditorSettings.Settings.IsCoreSceneEnabled) {
+                    string _path = SessionState.GetString(PlayActiveScene, string.Empty);
+
+                    if (!string.IsNullOrEmpty(_path)) {
+                        SceneManager.SetActiveScene(SceneManager.GetSceneByPath(_path));
+                    }
+                }
             }
         }
 

@@ -12,7 +12,7 @@ namespace EnhancedEditor.Editor
     /// <summary>
     /// Special <see cref="DecoratorDrawer"/> for fields with the attribute <see cref="HorizontalLineAttribute"/>.
     /// </summary>
-    [CustomPropertyDrawer(typeof(HorizontalLineAttribute), true)]
+    [CustomPropertyDrawer(typeof(HorizontalLineAttribute), false)]
     public class HorizontalLineDecoratorDrawer : DecoratorDrawer
     {
         #region Decorator Content

@@ -87,6 +87,7 @@ namespace EnhancedEditor
         }
 
         [SerializeField] internal string[] buildSceneGUIDs = new string[] { };
+        [SerializeField] internal int coreSceneIndex = -1;
 
         #if UNITY_EDITOR || DEVELOPMENT_BUILD
         [SerializeField] internal NonBuildScene[] nonBuildScenes = new NonBuildScene[] { };

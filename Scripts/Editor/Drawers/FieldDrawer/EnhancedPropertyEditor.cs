@@ -37,10 +37,10 @@ namespace EnhancedEditor.Editor
             public PropertyInfos(SerializedProperty _property, FieldInfo _fieldInfo)
             {
                 // Get all enhanced attributes from the target field, and create their respective drawer.
-                var _attributes = _fieldInfo.GetCustomAttributes(typeof(EnhancedPropertyAttribute), true) as EnhancedPropertyAttribute[];
+                var _attributes = _fieldInfo.GetCustomAttributes(typeof(IEnhancedPropertyAttribute), true) as IEnhancedPropertyAttribute[];
                 PropertyDrawers = new EnhancedPropertyDrawer[] { };
 
-                foreach (EnhancedPropertyAttribute _attribute in _attributes)
+                foreach (IEnhancedPropertyAttribute _attribute in _attributes)
                 {
                     foreach (KeyValuePair<Type, Type> _pair in EnhancedDrawerUtility.GetPropertyDrawers())
                     {
@@ -58,7 +58,7 @@ namespace EnhancedEditor.Editor
                 }
 
                 // Sort the drawers by their order.
-                Array.Sort(PropertyDrawers, (a, b) => a.Attribute.order.CompareTo(b.Attribute.order));
+                Array.Sort(PropertyDrawers, (a, b) => a.Attribute.Order.CompareTo(b.Attribute.Order));
             }
 
             // -----------------------

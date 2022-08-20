@@ -2874,31 +2874,33 @@ namespace EnhancedEditor.Editor
 
         internal static bool GetRequiredObject(int _id, SerializedProperty _property, out Object _object)
         {
-            if (selectRequiredObject && (selectedRequiredID == _id) && EnhancedEditorUtility.FindSerializedObjectField(_property.serializedObject, _property.propertyPath,
-                                                                                                                       out FieldInfo _field))
+            if (selectRequiredObject && (selectedRequiredID == _id) && GetRequiredObject(_property, out _object))
             {
+                selectRequiredObject = false;
+                return true;
+            }
+
+            _object = null;
+            return false;
+        }
+
+        internal static bool GetRequiredObject(SerializedProperty _property, out Object _object) {
+            if (EnhancedEditorUtility.FindSerializedObjectField(_property.serializedObject, _property.propertyPath, out FieldInfo _field)) {
                 Component _component = _property.serializedObject.targetObject as Component;
                 Type _type = _field.FieldType;
 
                 // GetComponent requires the target type to either be a component or an interface.
-                if (EnhancedEditorUtility.IsComponentOrInterface(_type) && _component.TryGetComponent(_type, out Component _objectComponent))
-                {
+                if (EnhancedEditorUtility.IsComponentOrInterface(_type) && _component.TryGetComponent(_type, out Component _objectComponent)) {
                     _object = _objectComponent;
-                }
-                else if (_type == typeof(GameObject))
-                {
+                } else if (_type == typeof(GameObject)) {
                     _object = (_component.transform.childCount > 0)
                             ? _component.transform.GetChild(0).gameObject
                             : _component.gameObject;
-                }
-                else
-                {
+                } else {
                     _object = null;
                 }
 
-                selectRequiredObject = false;
                 GUI.changed = true;
-
                 return true;
             }
 

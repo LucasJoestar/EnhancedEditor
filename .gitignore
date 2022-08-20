@@ -14,6 +14,15 @@
 /_InternalResources/
 *_InternalResources.meta
 
+# Plugin specific ignored files & folders
+/[Aa]utoManagedResources/
+/[Ee]ditor/ScriptTemplates/
+/[Ee]ditor/Settings/
+
+/[Aa]utoManagedResources.meta
+/[Ee]ditor/ScriptTemplates.meta
+/[Ee]ditor/Settings.meta
+
 # Asset meta data should only be ignored when the corresponding asset is also ignored
 !/[Aa]ssets/**/*.meta
 
