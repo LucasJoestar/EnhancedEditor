@@ -46,8 +46,7 @@ namespace EnhancedEditor.Editor
         #endregion
 
         #region Context Menu
-        private static readonly string SerializedInterfaceTypeName = typeof(SerializedInterface).Name;
-
+        private static readonly string SerializedInterfaceTypeName = typeof(SerializedInterface<>).Name;
         private static readonly GUIContent SortTagsGUI = new GUIContent("Sort Tags by their Name");
 
         // -----------------------

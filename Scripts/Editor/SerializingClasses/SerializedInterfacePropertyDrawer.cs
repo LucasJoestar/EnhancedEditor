@@ -6,17 +6,15 @@
 
 using System;
 using System.Collections.Generic;
-using UnityEngine;
 using UnityEditor;
+using UnityEngine;
 
-namespace EnhancedEditor.Editor
-{
+namespace EnhancedEditor.Editor {
     /// <summary>
-    /// Custom <see cref="SerializedInterface"/> drawer.
+    /// Custom <see cref="SerializedInterface{T}"/> drawer.
     /// </summary>
-    [CustomPropertyDrawer(typeof(SerializedInterface), true)]
-	public class SerializedInterfacePropertyDrawer : EnhancedPropertyEditor
-    {
+    [CustomPropertyDrawer(typeof(SerializedInterface<>), true)]
+    public class SerializedInterfacePropertyDrawer : EnhancedPropertyEditor {
         #region Drawer Content
         private static readonly Dictionary<string, Type> interfaceInfos = new Dictionary<string, Type>();
 
@@ -31,13 +29,11 @@ namespace EnhancedEditor.Editor
             return _height;
         }
 
-        protected override float OnEnhancedGUI(Rect _position, SerializedProperty _property, GUIContent _label)
-        {
+        protected override float OnEnhancedGUI(Rect _position, SerializedProperty _property, GUIContent _label) {
             // Register this property to cache its interface type.
             string _key = _property.propertyPath;
 
-            if (!interfaceInfos.TryGetValue(_key, out Type _interfaceType))
-            {
+            if (!interfaceInfos.TryGetValue(_key, out Type _interfaceType)) {
                 _interfaceType = EnhancedEditorUtility.GetFieldInfoType(fieldInfo);
                 interfaceInfos.Add(_key, _interfaceType);
             }

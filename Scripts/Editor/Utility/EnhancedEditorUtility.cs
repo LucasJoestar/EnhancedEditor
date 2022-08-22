@@ -238,7 +238,7 @@ namespace EnhancedEditor.Editor
 
         #region Field Reflection
         /// <summary>
-        /// Get the actual type of a specific <see cref="FieldInfo"/>.
+        /// Get the actual content or generic type of a specific <see cref="FieldInfo"/>.
         /// </summary>
         /// <param name="_field"><see cref="FieldInfo"/> to get type.</param>
         /// <returns>Field object type.</returns>
