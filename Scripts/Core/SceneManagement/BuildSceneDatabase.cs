@@ -7,6 +7,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 [assembly: InternalsVisibleTo("EnhancedEditor.Editor")]
 namespace EnhancedEditor
@@ -122,6 +123,17 @@ namespace EnhancedEditor
             #endif
 
             return string.Empty;
+        }
+        #endregion
+
+        #region Utility
+        /// <summary>
+        /// Is this scene the core game scene?
+        /// </summary>
+        /// <param name="_scene">Scene to check.</param>
+        /// <returns>True if this is the core scene, false otherwise.</returns>
+        public bool IsCoreScene(Scene _scene) {
+            return _scene.buildIndex == coreSceneIndex;
         }
         #endregion
     }

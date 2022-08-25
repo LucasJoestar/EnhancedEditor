@@ -105,6 +105,23 @@ namespace EnhancedEditor.Editor
 
         #region Serialized Property
         /// <summary>
+        /// Get the the type name of the actual value of a specific <see cref="SerializedProperty"/>.
+        /// </summary>
+        /// <param name="_property"><see cref="SerializedProperty"/> to get the type name from.</param>
+        /// <returns>The property value type name.</returns>
+        public static string GetSerializedPropertyValueTypeName(SerializedProperty _property) {
+            string _name = _property.type;
+            int _index = _name.IndexOf('<');
+
+            if (_index == -1) {
+                return _name;
+            }
+
+            _index++;
+            return _name.Substring(_index, _name.Length - (_index + 1));
+        }
+
+        /// <summary>
         /// Get the object type of a specific <see cref="SerializedProperty"/>.
         /// </summary>
         /// <param name="_property"><see cref="SerializedProperty"/> to get type from.</param>

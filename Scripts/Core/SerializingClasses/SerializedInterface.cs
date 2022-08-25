@@ -55,15 +55,11 @@ namespace EnhancedEditor {
 
         #region Operators
         public static implicit operator T(SerializedInterface<T> _interface) {
-            return _interface.interfaceInstance;
+            return _interface.Interface;
         }
 
         public static implicit operator GameObject(SerializedInterface<T> _interface) {
             return _interface.gameObject;
-        }
-
-        public static implicit operator SerializedInterface<T>(Type _interface) {
-            return typeof(SerializedType<>).MakeGenericType(_interface);
         }
 
         public override string ToString() {

@@ -15,7 +15,7 @@ namespace EnhancedEditor
     /// <see cref="LoadBundleAsyncOperation"/> and <see cref="UnloadBundleAsyncOperation"/>.
     /// <para/> You should simply ignore this.
     /// </summary>
-    public abstract class BundleAsyncOperation : CustomYieldInstruction
+    public abstract class BundleAsyncOperation : CustomYieldInstruction, IComparable<BundleAsyncOperation>
     {
         #region Global Members
         protected AsyncOperation currentOperation = null;
@@ -25,6 +25,17 @@ namespace EnhancedEditor
         protected bool isDone = false;
         protected float progress = 0f;
         protected int priority = 0;
+
+        public abstract bool IsDone { get; }
+
+        /// <summary>
+        /// The <see cref="SceneBundle"/> associated with thtis operation.
+        /// </summary>
+        public SceneBundle Bundle {
+            get {
+                return bundle;
+            }
+        }
 
         /// <summary>
         /// This full operation progress.
@@ -60,6 +71,12 @@ namespace EnhancedEditor
         public override bool keepWaiting => !isDone;
         #endregion
 
+        #region Comparison
+        int IComparable<BundleAsyncOperation>.CompareTo(BundleAsyncOperation _other) {
+            return _other.priority.CompareTo(priority);
+        }
+        #endregion
+
         #region Behaviour
         protected abstract void OnOperationComplete(AsyncOperation _operation);
         #endregion
@@ -72,6 +89,8 @@ namespace EnhancedEditor
     /// </summary>
     public class LoadBundleAsyncOperation : BundleAsyncOperation
     {
+        public static LoadBundleAsyncOperation CompleteOperation => new LoadBundleAsyncOperation();
+
         #region Global Members
         /// <summary>
         /// Called whenver a scene in this bundle has been fully loaded.
@@ -81,7 +100,7 @@ namespace EnhancedEditor
         /// <summary>
         /// Called once all scenes in this bundle have been fully loaded.
         /// </summary>
-        public event Action<SceneBundle> OnCompleted = null;
+        public event Action<LoadBundleAsyncOperation> OnCompleted = null;
 
         private readonly LoadSceneParameters parameters = default;
         private bool allowFirstSceneActivation = true;
@@ -89,7 +108,7 @@ namespace EnhancedEditor
         /// <summary>
         /// Has the operation finished, that is all scenes in this bundle been fully loaded?
         /// </summary>
-        public bool IsDone => isDone;
+        public override bool IsDone => isDone;
 
         /// <summary>
         /// Allows the first scene of the bundle being loaded to be
@@ -172,7 +191,7 @@ namespace EnhancedEditor
                 isDone = true;
                 progress = 1f;
 
-                OnCompleted?.Invoke(bundle);
+                OnCompleted?.Invoke(this);
 
                 return;
             }
@@ -189,7 +208,7 @@ namespace EnhancedEditor
 
         private bool LoadNextScene(LoadSceneParameters _parameters)
         {
-            while (!bundle.Scenes[sceneIndex].LoadAsync(_parameters, out currentOperation))
+            while (!bundle.Scenes[sceneIndex].LoadAsync(out currentOperation, _parameters))
             {
                 sceneIndex++;
 
@@ -199,7 +218,7 @@ namespace EnhancedEditor
                     isDone = true;
                     progress = 1f;
 
-                    OnCompleted?.Invoke(bundle);
+                    OnCompleted?.Invoke(this);
 
                     return false;
                 }
@@ -217,6 +236,8 @@ namespace EnhancedEditor
     /// </summary>
     public class UnloadBundleAsyncOperation : BundleAsyncOperation
     {
+        public static UnloadBundleAsyncOperation CompleteOperation => new UnloadBundleAsyncOperation();
+
         #region Global Members
         /// <summary>
         /// Called whenver a scene in this bundle has been unloaded.
@@ -226,14 +247,14 @@ namespace EnhancedEditor
         /// <summary>
         /// Called once all scenes in this bundle have been fully unloaded.
         /// </summary>
-        public event Action<SceneBundle> OnCompleted = null;
+        public event Action<UnloadBundleAsyncOperation> OnCompleted = null;
 
         private readonly UnloadSceneOptions options = 0;
 
         /// <summary>
         /// Has the operation finished, that is all scenes in this bundle been fully unloaded?
         /// </summary>
-        public bool IsDone => isDone;
+        public override bool IsDone => isDone;
         #endregion
 
         #region Behaviour
@@ -276,7 +297,7 @@ namespace EnhancedEditor
                 isDone = true;
                 progress = 1f;
 
-                OnCompleted?.Invoke(bundle);
+                OnCompleted?.Invoke(this);
 
                 return;
             }
@@ -294,7 +315,7 @@ namespace EnhancedEditor
         private bool UnloadNextScene()
         {
             bool _canUnloadScene;
-            while (!(_canUnloadScene = SceneManager.sceneCount > 1) || !bundle.Scenes[sceneIndex].UnloadAsync(options, out currentOperation))
+            while (!(_canUnloadScene = SceneManager.sceneCount > 1) || !bundle.Scenes[sceneIndex].UnloadAsync(out currentOperation, options))
             {
                 sceneIndex++;
 
@@ -304,7 +325,7 @@ namespace EnhancedEditor
                     isDone = true;
                     progress = 1f;
 
-                    OnCompleted?.Invoke(bundle);
+                    OnCompleted?.Invoke(this);
 
                     return false;
                 }

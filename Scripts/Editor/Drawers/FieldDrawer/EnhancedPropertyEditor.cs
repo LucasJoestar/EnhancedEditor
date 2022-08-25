@@ -72,6 +72,7 @@ namespace EnhancedEditor.Editor
         #endregion
 
         #region Drawer Content
+        private const int CacheLimit = 100;
         internal static readonly Dictionary<string, PropertyInfos> propertyInfos = new Dictionary<string, PropertyInfos>();
 
         // -----------------------
@@ -98,7 +99,7 @@ namespace EnhancedEditor.Editor
             if (!propertyInfos.ContainsKey(_path))
             {
                 // Data clear.
-                if (propertyInfos.Count > 100)
+                if (propertyInfos.Count > CacheLimit)
                 {
                     propertyInfos.Clear();
                     GC.Collect();

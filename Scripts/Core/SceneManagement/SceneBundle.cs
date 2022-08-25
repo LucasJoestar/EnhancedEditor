@@ -2,6 +2,8 @@
 // 
 // Notes:
 //
+//  • Custom editor to add content scenes into the build.
+//
 // ============================================================================ //
 
 using UnityEngine;
@@ -39,18 +41,66 @@ namespace EnhancedEditor {
                 activeSceneIndex = Mathf.Clamp(value, -1, Scenes.Length - 1);
             }
         }
+
+        /// <summary>
+        /// Is this bundle currently loaded?
+        /// </summary>
+        public bool IsLoaded {
+            get {
+                foreach (SceneAsset _scene in Scenes) {
+                    if (!_scene.IsLoaded) {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+        }
+        #endregion
+
+        #region Unload Async
+        /// <summary>
+        /// Destroys all <see cref="GameObject"/> associated with this bundle and remove it from the <see cref="SceneManager"/>.
+        /// </summary>
+        /// <param name="_options">Scene unloading options.</param>
+        /// <returns><see cref="UnloadBundleAsyncOperation"/> used to determine when the operation has completed.</returns>
+        [Button(ActivationMode.Play, SuperColor.Crimson, IsDrawnOnTop = false)]
+        public UnloadBundleAsyncOperation UnloadAsync(UnloadSceneOptions _options = UnloadSceneOptions.None) {
+            if (Scenes.Length == 0)
+                return new UnloadBundleAsyncOperation();
+
+            UnloadBundleAsyncOperation _operation = new UnloadBundleAsyncOperation(this, _options);
+            return _operation;
+        }
+        #endregion
+
+        #region Load Async
+        /// <param name="_mode"><inheritdoc cref="Load(LoadSceneMode)" path="/param[@name='_mode']"/></param>
+        /// <inheritdoc cref="LoadAsync(LoadSceneParameters)"/>
+        [Button(ActivationMode.Play, SuperColor.Green, IsDrawnOnTop = false)]
+        public LoadBundleAsyncOperation LoadAsync(LoadSceneMode _mode = LoadSceneMode.Single) {
+            LoadSceneParameters _parameters = new LoadSceneParameters(_mode, LocalPhysicsMode.None);
+            return LoadAsync(_parameters);
+        }
+
+        /// <summary>
+        /// Loads this bundle asynchronously in the background.
+        /// </summary>
+        /// <param name="_parameters"><inheritdoc cref="Load(LoadSceneParameters)" path="/param[@name='_parameters']"/></param>
+        /// <returns><see cref="LoadBundleAsyncOperation"/> used to determine when the operation has completed.</returns>
+        public LoadBundleAsyncOperation LoadAsync(LoadSceneParameters _parameters) {
+            if (Scenes.Length == 0)
+                return new LoadBundleAsyncOperation();
+
+            LoadBundleAsyncOperation _operation = new LoadBundleAsyncOperation(this, _parameters);
+            return _operation;
+        }
         #endregion
 
         #region Load
-        /// <inheritdoc cref="Load(LoadSceneParameters)"/>
-        public void Load() {
-            LoadSceneMode _mode = LoadSceneMode.Single;
-            Load(_mode);
-        }
-
         /// <param name="_mode">Allows you to specify whether or not to load these scenes additively.</param>
         /// <inheritdoc cref="Load(LoadSceneParameters)"/>
-        public void Load(LoadSceneMode _mode) {
+        public void Load(LoadSceneMode _mode = LoadSceneMode.Single) {
             LoadSceneParameters _parameters = new LoadSceneParameters(_mode, LocalPhysicsMode.None);
             Load(_parameters);
         }
@@ -63,20 +113,7 @@ namespace EnhancedEditor {
             if (Scenes.Length == 0)
                 return;
 
-            int _index = BuildSceneDatabase.Database.coreSceneIndex;
-
-            if ((_parameters.loadSceneMode == LoadSceneMode.Single) && (_index != -1)) {
-                for (int i = 0; i < SceneManager.sceneCount; i++) {
-                    Scene _scene = SceneManager.GetSceneAt(i);
-
-                    if (_scene.buildIndex != _index) {
-                        SceneManager.UnloadSceneAsync(_scene);
-                    }
-                }
-            } else {
-                LoadScene(0);
-            }
-
+            LoadScene(0);
             _parameters.loadSceneMode = LoadSceneMode.Additive;
 
             for (int _i = 1; _i < Scenes.Length; _i++) {
@@ -92,59 +129,6 @@ namespace EnhancedEditor {
                     SceneManager.SetActiveScene(_scene);
                 }
             }
-        }
-        #endregion
-
-        #region Load Async
-        /// <summary>
-        /// Loads this scene asynchronously in the background.
-        /// </summary>
-        /// <param name="_setFirstSceneActive">Determines whether the first scene in this bundle
-        /// should be set active once loaded or not.</param>
-        /// <returns><see cref="LoadBundleAsyncOperation"/> used to determine when the operation has completed.</returns>
-        public LoadBundleAsyncOperation LoadAsync() {
-            LoadSceneMode _mode = LoadSceneMode.Single;
-            return LoadAsync(_mode);
-        }
-
-        /// <param name="_mode"><inheritdoc cref="Load(LoadSceneMode)" path="/param[@name='_mode']"/></param>
-        /// <inheritdoc cref="LoadAsync()"/>
-        [Button(ActivationMode.Play, SuperColor.Green, IsDrawnOnTop = false)]
-        public LoadBundleAsyncOperation LoadAsync(LoadSceneMode _mode) {
-            LoadSceneParameters _parameters = new LoadSceneParameters(_mode, LocalPhysicsMode.None);
-            return LoadAsync(_parameters);
-        }
-
-        /// <param name="_parameters"><inheritdoc cref="Load(LoadSceneParameters)" path="/param[@name='_parameters']"/></param>
-        /// <inheritdoc cref="LoadAsync()"/>
-        public LoadBundleAsyncOperation LoadAsync(LoadSceneParameters _parameters) {
-            if (Scenes.Length == 0)
-                return new LoadBundleAsyncOperation();
-
-            LoadBundleAsyncOperation _operation = new LoadBundleAsyncOperation(this, _parameters);
-            return _operation;
-        }
-        #endregion
-
-        #region Unload Async
-        /// <summary>
-        /// Destroys all <see cref="GameObject"/> associated with this scene and remove it from the <see cref="SceneManager"/>.
-        /// </summary>
-        /// <returns><see cref="UnloadBundleAsyncOperation"/> used to determine when the operation has completed.</returns>
-        public UnloadBundleAsyncOperation UnloadAsync() {
-            UnloadSceneOptions _options = UnloadSceneOptions.None;
-            return UnloadAsync(_options);
-        }
-
-        /// <param name="_options">Scene unloading options.</param>
-        /// <inheritdoc cref="UnloadAsync()"/>
-        [Button(ActivationMode.Play, SuperColor.Crimson, IsDrawnOnTop = false)]
-        public UnloadBundleAsyncOperation UnloadAsync(UnloadSceneOptions _options) {
-            if (Scenes.Length == 0)
-                return new UnloadBundleAsyncOperation();
-
-            UnloadBundleAsyncOperation _operation = new UnloadBundleAsyncOperation(this, _options);
-            return _operation;
         }
         #endregion
     }

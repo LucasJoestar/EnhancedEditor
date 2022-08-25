@@ -66,10 +66,6 @@ namespace EnhancedEditor {
 			return _type.typeName;
 		}
 
-		public static implicit operator SerializedType<T>(Type _type) {
-			return typeof(SerializedType<>).MakeGenericType(_type);
-		}
-
 		public override string ToString() {
 			return (type != null) ? type.FullName : "[Null Type]";
 		}

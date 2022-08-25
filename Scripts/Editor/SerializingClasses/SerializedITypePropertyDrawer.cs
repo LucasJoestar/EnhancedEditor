@@ -17,6 +17,7 @@ namespace EnhancedEditor.Editor {
     [CustomPropertyDrawer(typeof(SerializedType<>), true)]
     public class SerializedITypePropertyDrawer : EnhancedPropertyEditor {
         #region Drawer Content
+        private const int CacheLimit = 25;
         private static readonly Dictionary<string, GUIContent[]> interfaceInfos = new Dictionary<string, GUIContent[]>();
 
         // -----------------------
@@ -26,6 +27,11 @@ namespace EnhancedEditor.Editor {
             string _key = _property.propertyPath;
 
             if (!interfaceInfos.TryGetValue(_key, out GUIContent[] _selectableTypes)) {
+                // Clear cache on limit reach.
+                if (interfaceInfos.Count > CacheLimit) {
+                    interfaceInfos.Clear();
+                }
+
                 Type _baseType = EnhancedEditorUtility.GetFieldInfoType(fieldInfo);
                 List<GUIContent> _temp = new List<GUIContent>();
 

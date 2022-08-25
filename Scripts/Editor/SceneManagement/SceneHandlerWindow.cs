@@ -922,6 +922,18 @@ namespace EnhancedEditor.Editor
                         return false;
 
                     EditorSceneManager.OpenScene(_scenePath, _mode);
+
+                    // Always make sure the core scene is loaded.
+                    var _settings = EnhancedEditorSettings.Settings;
+
+                    if (_settings.IsCoreSceneEnabled && !_settings.CoreScene.IsLoaded) {
+                        Scene _core = EditorSceneManager.OpenScene(AssetDatabase.GUIDToAssetPath(_settings.CoreScene.GUID), OpenSceneMode.Additive);
+                        Scene _first = SceneManager.GetSceneAt(0);
+
+                        if (_core != _first) {
+                            EditorSceneManager.MoveSceneBefore(_core, _first);
+                        }
+                    }
                 }
             }
             catch (ArgumentException)

@@ -16,6 +16,7 @@ namespace EnhancedEditor.Editor {
     [CustomPropertyDrawer(typeof(SerializedInterface<>), true)]
     public class SerializedInterfacePropertyDrawer : EnhancedPropertyEditor {
         #region Drawer Content
+        private const int CacheLimit = 25;
         private static readonly Dictionary<string, Type> interfaceInfos = new Dictionary<string, Type>();
 
         // -----------------------
@@ -34,6 +35,11 @@ namespace EnhancedEditor.Editor {
             string _key = _property.propertyPath;
 
             if (!interfaceInfos.TryGetValue(_key, out Type _interfaceType)) {
+                // Clear cache on limit reach.
+                if (interfaceInfos.Count > CacheLimit) {
+                    interfaceInfos.Clear();
+                }
+
                 _interfaceType = EnhancedEditorUtility.GetFieldInfoType(fieldInfo);
                 interfaceInfos.Add(_key, _interfaceType);
             }
