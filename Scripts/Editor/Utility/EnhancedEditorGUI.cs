@@ -4293,7 +4293,7 @@ namespace EnhancedEditor.Editor
             FlagReferenceGroupField(_position, _labelGUI, _group);
         }
 
-        /// <param name="_flag">The <see cref="FlagValue"/> to make a field for.</param>
+        /// <param name="_group">The <see cref="FlagReferenceGroup"/> to make a field for.</param>
         /// <inheritdoc cref="FlagReferenceGroupField(Rect, SerializedProperty, GUIContent)"/>
         public static void FlagReferenceGroupField(Rect _position, GUIContent _label, FlagReferenceGroup _group) {
             // Get all flags as a label.
@@ -4431,7 +4431,7 @@ namespace EnhancedEditor.Editor
             FlagValueGroupField(_position, _labelGUI, _group);
         }
 
-        /// <param name="_flag">The <see cref="FlagValue"/> to make a field for.</param>
+        /// <param name="_group">The <see cref="FlagValueGroup"/> to make a field for.</param>
         /// <inheritdoc cref="FlagValueGroupField(Rect, SerializedProperty, GUIContent)"/>
         public static void FlagValueGroupField(Rect _position, GUIContent _label, FlagValueGroup _group) {
             // Get all flags as a label.
