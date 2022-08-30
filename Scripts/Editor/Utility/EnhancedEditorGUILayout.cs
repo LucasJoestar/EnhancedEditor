@@ -244,6 +244,50 @@ namespace EnhancedEditor.Editor
         }
         #endregion
 
+        #region Bool Popup
+        // ===== Serialized Property ===== \\
+
+        /// <inheritdoc cref="BoolPopupField(SerializedProperty, GUIContent, GUILayoutOption[])"/>
+        public static void BoolPopupField(SerializedProperty _property, params GUILayoutOption[] _options) {
+            GUIContent _label = EnhancedEditorGUIUtility.GetPropertyLabel(_property);
+            BoolPopupField(_property, _label, _options);
+        }
+
+        /// <inheritdoc cref="BoolPopupField(SerializedProperty, GUIContent, GUILayoutOption[])"/>
+        public static void BoolPopupField(SerializedProperty _property, string _label, params GUILayoutOption[] _options) {
+            GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
+            BoolPopupField(_property, _labelGUI, _options);
+        }
+
+        /// <param name="_options"><inheritdoc cref="DocumentationMethod(GUILayoutOption[])" path="/param[@name='_options']"/></param>
+        /// <inheritdoc cref="EnhancedEditorGUI.BoolPopupField(Rect, SerializedProperty, GUIContent)"/>
+        public static void BoolPopupField(SerializedProperty _property, GUIContent _label, params GUILayoutOption[] _options) {
+            Rect _position = GetPosition(_options);
+            EnhancedEditorGUI.BoolPopupField(_position, _property, _label);
+        }
+
+        // ===== Boolean Value ===== \\
+
+        /// <inheritdoc cref="BoolPopupField(GUIContent, bool, GUILayoutOption[])"/>
+        public static bool BoolPopupField(bool _value, params GUILayoutOption[] _options) {
+            GUIContent _label = GUIContent.none;
+            return BoolPopupField(_label, _value);
+        }
+
+        /// <inheritdoc cref="BoolPopupField(GUIContent, bool, GUILayoutOption[])"/>
+        public static bool BoolPopupField(string _label, bool _value, params GUILayoutOption[] _options) {
+            GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
+            return BoolPopupField(_labelGUI, _value);
+        }
+
+        /// <param name="_options"><inheritdoc cref="DocumentationMethod(GUILayoutOption[])" path="/param[@name='_options']"/></param>
+        /// <inheritdoc cref="EnhancedEditorGUI.BoolPopupField(Rect, GUIContent, bool)"/>
+        public static bool BoolPopupField(GUIContent _label, bool _value, params GUILayoutOption[] _options) {
+            Rect _position = GetPosition(_options);
+            return EnhancedEditorGUI.BoolPopupField(_position, _label, _value);
+        }
+        #endregion
+
         #region Color Palette
         // ===== Serialized Property ===== \\
 
@@ -1764,6 +1808,15 @@ namespace EnhancedEditor.Editor
         {
             Rect _position = GetPosition(true, EnhancedEditorStyles.LinkLabel, _options);
             EnhancedEditorGUI.LinkLabel(_position, _label, _url);
+        }
+        #endregion
+
+        #region Editable Label
+        /// <param name="_options"><inheritdoc cref="DocumentationMethod(GUILayoutOption[])" path="/param[@name='_options']"/></param>
+        /// <inheritdoc cref="EnhancedEditorGUI.EditableLabel(Rect, string)"/>
+        public static string EditableLabel(string _text, GUILayoutOption[] _options) {
+            Rect _position = GetPosition(_options);
+            return EnhancedEditorGUI.EditableLabel(_position, _text);
         }
         #endregion
 

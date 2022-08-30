@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine;
@@ -432,6 +433,93 @@ namespace EnhancedEditor.Editor
                     _label = EnhancedEditorGUIUtility.GetPropertyLabel(_current);
                     BlockField(_position, _current, _label);
                 } while (_current.NextVisible(false));
+            }
+        }
+        #endregion
+
+        #region Bool Popup
+        private static readonly GUIContent[] boolPopupGUI = new GUIContent[] {
+                                                                    new GUIContent("False"),
+                                                                    new GUIContent("True")
+                                                                };
+
+        // ===== Serialized Property ===== \\
+
+        /// <inheritdoc cref="BoolPopupField(Rect, SerializedProperty, GUIContent)"/>
+        public static void BoolPopupField(Rect _position, SerializedProperty _property) {
+            GUIContent _label = EnhancedEditorGUIUtility.GetPropertyLabel(_property);
+            BoolPopupField(_position, _property, _label);
+        }
+
+        /// <inheritdoc cref="BoolPopupField(Rect, SerializedProperty, GUIContent)"/>
+        public static void BoolPopupField(Rect _position, SerializedProperty _property, string _label) {
+            GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
+            BoolPopupField(_position, _property, _labelGUI);
+        }
+
+        /// <summary>
+        /// Draws a boolean value as a selectable flag from a popup.
+        /// </summary>
+        /// <param name="_position"><inheritdoc cref="DocumentationMethod(Rect, GUIContent)" path="/param[@name='_position']"/></param>
+        /// <param name="_property"><see cref="SerializedProperty"/> to make a flag field for.</param>
+        /// <param name="_label"><inheritdoc cref="DocumentationMethod(Rect, GUIContent)" path="/param[@name='_label']"/></param>
+        /// <inheritdoc cref="BoolPopupField(Rect, GUIContent, bool)"/>
+        public static void BoolPopupField(Rect _position, SerializedProperty _property, GUIContent _label) {
+            // Incompatible property management.
+            if (_property.propertyType != SerializedPropertyType.Boolean) {
+                EditorGUI.PropertyField(_position, _property, _label);
+                return;
+            }
+
+            // Flag field.
+            using (var _scope = new EditorGUI.PropertyScope(_position, _label, _property))
+            using (var _changeCheck = new EditorGUI.ChangeCheckScope()) {
+                bool _value = DoBoolPopupField(_position, _label, _property.boolValue, _property.hasMultipleDifferentValues);
+
+                if (_changeCheck.changed) {
+                    _property.boolValue = _value;
+                }
+            }
+        }
+
+        // ===== Boolean Value ===== \\
+
+        /// <inheritdoc cref="BoolPopupField(Rect, GUIContent, bool)"/>
+        public static bool BoolPopupField(Rect _position, bool _value) {
+            GUIContent _label = GUIContent.none;
+            return BoolPopupField(_position, _label, _value);
+        }
+
+        /// <inheritdoc cref="BoolPopupField(Rect, GUIContent, bool)"/>
+        public static bool BoolPopupField(Rect _position, string _label, bool _value) {
+            GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
+            return BoolPopupField(_position, _labelGUI, _value);
+        }
+
+        /// <param name="_value">Boolean value to draw as a flag.</param>
+        /// <returns>The boolean flag value selected by the user.</returns>
+        /// <inheritdoc cref="BoolPopupField(Rect, SerializedProperty, GUIContent)"/>
+        public static bool BoolPopupField(Rect _position, GUIContent _label, bool _value) {
+            return DoBoolPopupField(_position, _label, _value, false);
+        }
+
+        // -----------------------
+
+        private static bool DoBoolPopupField(Rect _position, GUIContent _label, bool _value, bool _hasDifferentValues) {
+            int _index = _hasDifferentValues
+                       ? -1
+                       : (_value ? 1 : 0);
+
+            int _flag = EditorGUI.Popup(_position, _label, _index, boolPopupGUI);
+            switch (_flag) {
+                case 0:
+                    return false;
+
+                case 1:
+                    return true;
+
+                default:
+                    return _value;
             }
         }
         #endregion
@@ -3857,6 +3945,616 @@ namespace EnhancedEditor.Editor
         }
         #endregion
 
+        // --- Flags --- \\
+
+        #region Flag
+        private static readonly GUIContent nameGUI = new GUIContent(string.Empty, "Name of the flag");
+        private static readonly GUIContent valueGUI = new GUIContent(string.Empty, "Default value of the flag");
+
+        // ===== Serialized Property ===== \\
+
+        /// <inheritdoc cref="FlagField(Rect, SerializedProperty, GUIContent)"/>
+        public static void FlagField(Rect _position, SerializedProperty _property) {
+            GUIContent _label = EnhancedEditorGUIUtility.GetPropertyLabel(_property);
+            FlagField(_position, _property, _label);
+        }
+
+        /// <inheritdoc cref="FlagField(Rect, SerializedProperty, GUIContent)"/>
+        public static void FlagField(Rect _position, SerializedProperty _property, string _label) {
+            GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
+            FlagField(_position, _property, _labelGUI);
+        }
+
+        /// <summary>
+        /// Makes an editable field for a <see cref="Flag"/>.
+        /// </summary>
+        /// <param name="_position"><inheritdoc cref="DocumentationMethod(Rect, GUIContent)" path="/param[@name='_position']"/></param>
+        /// <param name="_property">The <see cref="SerializedProperty"/> to make a flag field for.</param>
+        /// <param name="_label"><inheritdoc cref="DocumentationMethod(Rect, GUIContent)" path="/param[@name='_label']"/></param>
+        public static void FlagField(Rect _position, SerializedProperty _property, GUIContent _label) {
+            SerializedProperty _name = _property.FindPropertyRelative("Name");
+            SerializedProperty _value = _property.FindPropertyRelative("value");
+
+            using (var _scope = new EditorGUI.PropertyScope(_position, _label, _property))
+            using (var _changeCheck = new EditorGUI.ChangeCheckScope()) {
+                string _text = DoFlagField(ref _position, _label, _name.stringValue);
+
+                if (_changeCheck.changed) {
+                    _name.stringValue = _text;
+                }
+            }
+
+            BoolPopupField(_position, _value, GUIContent.none);
+        }
+
+        // ===== Flag Value ===== \\
+
+        /// <inheritdoc cref="FlagField(Rect, GUIContent, Flag)"/>
+        public static void FlagField(Rect _position, Flag _flag) {
+            GUIContent _label = GUIContent.none;
+            FlagField(_position, _label, _flag);
+        }
+
+        /// <inheritdoc cref="FlagField(Rect, GUIContent, Flag)"/>
+        public static void FlagField(Rect _position, string _label, Flag _flag) {
+            GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
+            FlagField(_position, _labelGUI, _flag);
+        }
+
+        /// <param name="_flag">The <see cref="Flag"/> to make a field for.</param>
+        /// <inheritdoc cref="FlagField(Rect, SerializedProperty, GUIContent)"/>
+        public static void FlagField(Rect _position, GUIContent _label, Flag _flag) {
+            using (var _changeCheck = new EditorGUI.ChangeCheckScope()) {
+                string _text = DoFlagField(ref _position, _label, _flag.Name);
+
+                if (_changeCheck.changed) {
+                    _flag.Name = _text;
+                }
+            }
+
+            _flag.value = BoolPopupField(_position, GUIContent.none, _flag.value);
+        }
+
+        // -----------------------
+
+        private static string DoFlagField(ref Rect _position, GUIContent _label, string _flagName) {
+            _position = EditorGUI.PrefixLabel(_position, _label);
+
+            GetFlagRects(_position, out Rect _labelPosition, out Rect _valuePosition);
+
+            EditorGUI.LabelField(_labelPosition, nameGUI);
+            EditorGUI.LabelField(_valuePosition, valueGUI);
+
+            _position = _valuePosition;
+            return EditableLabel(_labelPosition, _flagName);
+        }
+        #endregion
+
+        #region Flag Reference
+        // ===== Serialized Property ===== \\
+
+        /// <inheritdoc cref="FlagReferenceField(Rect, SerializedProperty, GUIContent)"/>
+        public static void FlagReferenceField(Rect _position, SerializedProperty _property) {
+            GUIContent _label = EnhancedEditorGUIUtility.GetPropertyLabel(_property);
+            FlagReferenceField(_position, _property, _label);
+        }
+
+        /// <inheritdoc cref="FlagReferenceField(Rect, SerializedProperty, GUIContent)"/>
+        public static void FlagReferenceField(Rect _position, SerializedProperty _property, string _label) {
+            GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
+            FlagReferenceField(_position, _property, _labelGUI);
+        }
+
+        /// <summary>
+        /// Makes an field for a <see cref="FlagReference"/>.
+        /// </summary>
+        /// <param name="_position"><inheritdoc cref="DocumentationMethod(Rect, GUIContent)" path="/param[@name='_position']"/></param>
+        /// <param name="_property">The <see cref="SerializedProperty"/> to make a flag reference field for.</param>
+        /// <param name="_label"><inheritdoc cref="DocumentationMethod(Rect, GUIContent)" path="/param[@name='_label']"/></param>
+        public static void FlagReferenceField(Rect _position, SerializedProperty _property, GUIContent _label) {
+            SerializedProperty _holderProperty = _property.FindPropertyRelative("holder");
+            SerializedProperty _flagGuid = _property.FindPropertyRelative("guid");
+
+            GetFlagPickerRects(_position, out Rect _labelPosition, out Rect _buttonPosition);
+
+            // Flag field.
+            using (var _scope = new EditorGUI.PropertyScope(_position, _label, _property)) {
+                FlagHolder _holder = _holderProperty.objectReferenceValue as FlagHolder;
+
+                if (FlagPicker(_labelPosition, _buttonPosition, _label, _flagGuid.intValue, _holder, out Flag _flag, out _holder)) {
+                    _holderProperty.objectReferenceValue = _holder;
+                    _flagGuid.intValue = _flag.guid;
+                }
+            }
+        }
+
+        // ===== Flag Reference Value ===== \\
+
+        /// <inheritdoc cref="FlagReferenceField(Rect, GUIContent, FlagReference)"/>
+        public static void FlagReferenceField(Rect _position, FlagReference _flag) {
+            GUIContent _label = GUIContent.none;
+            FlagReferenceField(_position, _label, _flag);
+        }
+
+        /// <inheritdoc cref="FlagReferenceField(Rect, GUIContent, FlagReference)"/>
+        public static void FlagReferenceField(Rect _position, string _label, FlagReference _flag) {
+            GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
+            FlagReferenceField(_position, _labelGUI, _flag);
+        }
+
+        /// <param name="_flag">The <see cref="FlagReference"/> to make a field for.</param>
+        /// <inheritdoc cref="FlagReferenceField(Rect, SerializedProperty, GUIContent)"/>
+        public static void FlagReferenceField(Rect _position, GUIContent _label, FlagReference _flag) {
+            GetFlagPickerRects(_position, out Rect _labelPosition, out Rect _buttonPosition);
+
+            if (FlagPicker(_labelPosition, _buttonPosition, _label, _flag.guid, _flag.holder, out Flag _selectFlag, out FlagHolder _selectHolder)) {
+                _flag.SerializeFlag(_selectFlag, _selectHolder);
+            }
+        }
+        #endregion
+
+        #region Flag Value
+        private static readonly GUIContent flagValueGUI = new GUIContent(string.Empty, "The required value of the selected flag to be considered as \'valid\'.");
+
+        // ===== Serialized Property ===== \\
+
+        /// <inheritdoc cref="FlagValueField(Rect, SerializedProperty, GUIContent)"/>
+        public static void FlagValueField(Rect _position, SerializedProperty _property) {
+            GUIContent _label = EnhancedEditorGUIUtility.GetPropertyLabel(_property);
+            FlagValueField(_position, _property, _label);
+        }
+
+        /// <inheritdoc cref="FlagValueField(Rect, SerializedProperty, GUIContent)"/>
+        public static void FlagValueField(Rect _position, SerializedProperty _property, string _label) {
+            GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
+            FlagValueField(_position, _property, _labelGUI);
+        }
+
+        /// <summary>
+        /// Makes an field for a <see cref="FlagValue"/>.
+        /// </summary>
+        /// <param name="_position"><inheritdoc cref="DocumentationMethod(Rect, GUIContent)" path="/param[@name='_position']"/></param>
+        /// <param name="_property">The <see cref="SerializedProperty"/> to make a flag value field for.</param>
+        /// <param name="_label"><inheritdoc cref="DocumentationMethod(Rect, GUIContent)" path="/param[@name='_label']"/></param>
+        public static void FlagValueField(Rect _position, SerializedProperty _property, GUIContent _label) {
+            SerializedProperty _holderProperty = _property.FindPropertyRelative("holder");
+            SerializedProperty _flagGuid = _property.FindPropertyRelative("guid");
+
+            // Flag field.
+            using (var _scope = new EditorGUI.PropertyScope(_position, _label, _property)) {
+                FlagHolder _holder = _holderProperty.objectReferenceValue as FlagHolder;
+                Rect _labelPosition, _buttonPosition;
+
+                if (!_holder) {
+                    if (_flagGuid.intValue != 0) {
+                        _flagGuid.intValue = 0;
+                    }
+
+                    // If no flag is selected, draw it as a flag reference field.
+                    GetFlagPickerRects(_position, out _labelPosition, out _buttonPosition);
+                } else {
+                    SerializedProperty _requiredValue = _property.FindPropertyRelative("RequiredValue");
+                    GetFlagValuePickerRects(_position, out _labelPosition, out Rect _valuePosition, out _buttonPosition);
+
+                    EditorGUI.LabelField(_valuePosition, flagValueGUI);
+                    BoolPopupField(_valuePosition, _requiredValue, GUIContent.none);
+                }
+
+                // Flag picker button.
+                if (FlagPicker(_labelPosition, _buttonPosition, _label, _flagGuid.intValue, _holder, out Flag _flag, out _holder)) {
+                    _holderProperty.objectReferenceValue = _holder;
+                    _flagGuid.intValue = _flag.guid;
+                }
+            }
+        }
+
+        // ===== Flag Value Value ===== \\
+
+        /// <inheritdoc cref="FlagValueField(Rect, GUIContent, FlagValue)"/>
+        public static void FlagValueField(Rect _position, FlagValue _flag) {
+            GUIContent _label = GUIContent.none;
+            FlagValueField(_position, _label, _flag);
+        }
+
+        /// <inheritdoc cref="FlagValueField(Rect, GUIContent, FlagValue)"/>
+        public static void FlagValueField(Rect _position, string _label, FlagValue _flag) {
+            GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
+            FlagValueField(_position, _labelGUI, _flag);
+        }
+
+        /// <param name="_flag">The <see cref="FlagValue"/> to make a field for.</param>
+        /// <inheritdoc cref="FlagValueField(Rect, SerializedProperty, GUIContent)"/>
+        public static void FlagValueField(Rect _position, GUIContent _label, FlagValue _flag) {
+            FlagHolder _holder = _flag.holder;
+            Rect _labelPosition, _buttonPosition;
+
+            if (!_holder) {
+                if (_flag.guid != 0) {
+                    _flag.guid = 0;
+                }
+
+                // If no flag is selected, draw it as a flag reference field.
+                GetFlagPickerRects(_position, out _labelPosition, out _buttonPosition);
+            } else {
+                GetFlagValuePickerRects(_position, out _labelPosition, out Rect _valuePosition, out _buttonPosition);
+
+                EditorGUI.LabelField(_valuePosition, flagValueGUI);
+                _flag.RequiredValue = BoolPopupField(_valuePosition, GUIContent.none, _flag.RequiredValue);
+            }
+
+            // Flag picker button.
+            if (FlagPicker(_labelPosition, _buttonPosition, _label, _flag.guid, _holder, out Flag _selectFlag, out _holder)) {
+                _flag.SerializeFlag(_selectFlag, _holder);
+            }
+        }
+        #endregion
+
+        #region Flag Reference Group
+        // ===== Serialized Property ===== \\
+
+        /// <inheritdoc cref="FlagReferenceGroupField(Rect, SerializedProperty, GUIContent)"/>
+        public static void FlagReferenceGroupField(Rect _position, SerializedProperty _property) {
+            GUIContent _label = EnhancedEditorGUIUtility.GetPropertyLabel(_property);
+            FlagReferenceGroupField(_position, _property, _label);
+        }
+
+        /// <inheritdoc cref="FlagReferenceGroupField(Rect, SerializedProperty, GUIContent)"/>
+        public static void FlagReferenceGroupField(Rect _position, SerializedProperty _property, string _label) {
+            GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
+            FlagReferenceGroupField(_position, _property, _labelGUI);
+        }
+
+        /// <summary>
+        /// Makes an field for a <see cref="FlagReferenceGroup"/>.
+        /// </summary>
+        /// <param name="_position"><inheritdoc cref="DocumentationMethod(Rect, GUIContent)" path="/param[@name='_position']"/></param>
+        /// <param name="_property">The <see cref="SerializedProperty"/> to make a flag reference group field for.</param>
+        /// <param name="_label"><inheritdoc cref="DocumentationMethod(Rect, GUIContent)" path="/param[@name='_label']"/></param>
+        public static void FlagReferenceGroupField(Rect _position, SerializedProperty _property, GUIContent _label) {
+            SerializedProperty _flags = _property.Copy();
+
+            // Incompatible property management.
+            if ((_flags.type != flagReferenceGroupTypeName) || !_flags.Next(true) || !_flags.isArray) {
+                EditorGUI.PropertyField(_position, _property, _label);
+                return;
+            }
+
+            // Get all flags as a label.
+            StringBuilder _builder = new StringBuilder();
+
+            for (int i = 0; i < _flags.arraySize; i++) {
+                SerializedProperty _flagProperty = _flags.GetArrayElementAtIndex(i);
+
+                FlagHolder _holder = _flagProperty.FindPropertyRelative("holder").objectReferenceValue as FlagHolder;
+                int _guid = _flagProperty.FindPropertyRelative("guid").intValue;
+
+                if ((_holder != null) && _holder.RetrieveFlag(_guid, out Flag _flag)) {
+                    _builder.Append(string.Format(FlagReferenceGroupFormat, _flag.Name));
+                } else {
+                    _flags.DeleteArrayElementAtIndex(i);
+                    i--;
+                }
+            }
+
+            if (_flags.arraySize == 0) {
+                _builder.Append(EmptyFlagGroupLabel);
+            }
+
+            // Group pikcer.
+            using (var _scope = new EditorGUI.PropertyScope(_position, _label, _property)) {
+                if (FlagGroupPicker(_position, _label, _builder.ToString(), GetFlagGroup, out FlagGroup _group)) {
+                    // Update group values.
+                    FlagReferenceGroup _refs = _group as FlagReferenceGroup;
+
+                    for (int i = 0; i < _group.Count; i++) {
+                        if (_flags.arraySize == i) {
+                            _flags.InsertArrayElementAtIndex(i);
+                        }
+
+                        SerializedProperty _flagProperty = _flags.GetArrayElementAtIndex(i);
+                        FlagReference _ref = _refs.Flags[i];
+
+                        _flagProperty.FindPropertyRelative("holder").objectReferenceValue = _ref.holder;
+                        _flagProperty.FindPropertyRelative("guid").intValue = _ref.guid;
+                    }
+
+                    while (_flags.arraySize > _group.Count) {
+                        _flags.DeleteArrayElementAtIndex(_group.Count);
+                    }
+                }
+            }
+
+            // ----- Local Method ----- \\
+
+            FlagGroup GetFlagGroup() {
+                FlagReference[] _references = new FlagReference[_flags.arraySize];
+
+                for (int i = 0; i < _references.Length; i++) {
+                    SerializedProperty _flag = _flags.GetArrayElementAtIndex(i);
+                    _references[i] = new FlagReference(_flag.FindPropertyRelative("guid").intValue,
+                                                       _flag.FindPropertyRelative("holder").objectReferenceValue as FlagHolder);
+                }
+
+                return new FlagReferenceGroup(_references);
+            }
+        }
+
+        // ===== Flag Reference Group Value ===== \\
+
+        /// <inheritdoc cref="FlagReferenceGroupField(Rect, GUIContent, FlagReferenceGroup)"/>
+        public static void FlagReferenceGroupField(Rect _position, FlagReferenceGroup _group) {
+            GUIContent _label = GUIContent.none;
+            FlagReferenceGroupField(_position, _label, _group);
+        }
+
+        /// <inheritdoc cref="FlagReferenceGroupField(Rect, GUIContent, FlagReferenceGroup)"/>
+        public static void FlagReferenceGroupField(Rect _position, string _label, FlagReferenceGroup _group) {
+            GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
+            FlagReferenceGroupField(_position, _labelGUI, _group);
+        }
+
+        /// <param name="_flag">The <see cref="FlagValue"/> to make a field for.</param>
+        /// <inheritdoc cref="FlagReferenceGroupField(Rect, SerializedProperty, GUIContent)"/>
+        public static void FlagReferenceGroupField(Rect _position, GUIContent _label, FlagReferenceGroup _group) {
+            // Get all flags as a label.
+            StringBuilder _builder = new StringBuilder();
+
+            for (int i = 0; i < _group.Count; i++) {
+                FlagReference _ref = _group.Flags[i];
+                FlagHolder _holder = _ref.holder;
+
+                if ((_holder != null) && _holder.RetrieveFlag(_ref.guid, out Flag _flag)) {
+                    _builder.Append(string.Format(FlagReferenceGroupFormat, _flag.Name));
+                } else {
+                    _group.RemoveFlagAt(i);
+                    i--;
+                }
+            }
+
+            if (_group.Count == 0) {
+                _builder.Append(EmptyFlagGroupLabel);
+            }
+
+            // Group pikcer.
+            FlagGroupPicker(_position, _label, _builder.ToString(), GetFlagGroup, out _);
+
+            // ----- Local Method ----- \\
+
+            FlagGroup GetFlagGroup() {
+                return _group;
+            }
+        }
+        #endregion
+
+        #region Flag Value Group
+        // ===== Serialized Property ===== \\
+
+        /// <inheritdoc cref="FlagValueGroupField(Rect, SerializedProperty, GUIContent)"/>
+        public static void FlagValueGroupField(Rect _position, SerializedProperty _property) {
+            GUIContent _label = EnhancedEditorGUIUtility.GetPropertyLabel(_property);
+            FlagValueGroupField(_position, _property, _label);
+        }
+
+        /// <inheritdoc cref="FlagValueGroupField(Rect, SerializedProperty, GUIContent)"/>
+        public static void FlagValueGroupField(Rect _position, SerializedProperty _property, string _label) {
+            GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
+            FlagValueGroupField(_position, _property, _labelGUI);
+        }
+
+        /// <summary>
+        /// Makes an field for a <see cref="FlagValueGroup"/>.
+        /// </summary>
+        /// <param name="_position"><inheritdoc cref="DocumentationMethod(Rect, GUIContent)" path="/param[@name='_position']"/></param>
+        /// <param name="_property">The <see cref="SerializedProperty"/> to make a flag value group field for.</param>
+        /// <param name="_label"><inheritdoc cref="DocumentationMethod(Rect, GUIContent)" path="/param[@name='_label']"/></param>
+        public static void FlagValueGroupField(Rect _position, SerializedProperty _property, GUIContent _label) {
+            SerializedProperty _flags = _property.Copy();
+
+            // Incompatible property management.
+            if ((_flags.type != flagValueGroupTypeName) || !_flags.Next(true) || !_flags.isArray) {
+                EditorGUI.PropertyField(_position, _property, _label);
+                return;
+            }
+
+            // Get all flags as a label.
+            StringBuilder _builder = new StringBuilder();
+
+            for (int i = 0; i < _flags.arraySize; i++) {
+                SerializedProperty _flagProperty = _flags.GetArrayElementAtIndex(i);
+
+                FlagHolder _holder = _flagProperty.FindPropertyRelative("holder").objectReferenceValue as FlagHolder;
+                int _guid = _flagProperty.FindPropertyRelative("guid").intValue;
+
+                if ((_holder != null) && _holder.RetrieveFlag(_guid, out Flag _flag)) {
+                    _builder.Append(string.Format(FlagValueGroupFormat, _flag.Name, _flagProperty.FindPropertyRelative("RequiredValue").boolValue));
+                } else {
+                    _flags.DeleteArrayElementAtIndex(i);
+                    i--;
+                }
+            }
+
+            if (_flags.arraySize == 0) {
+                _builder.Append(EmptyFlagGroupLabel);
+            }
+
+            using (var _scope = new EditorGUI.PropertyScope(_position, _label, _property)) {
+                if (FlagGroupPicker(_position, _label, _builder.ToString(), GetFlagGroup, out FlagGroup _group)) {
+                    // Update group values.
+                    FlagValueGroup _values = _group as FlagValueGroup;
+
+                    for (int i = 0; i < _group.Count; i++) {
+                        if (_flags.arraySize == i) {
+                            _flags.InsertArrayElementAtIndex(i);
+                        }
+
+                        SerializedProperty _flagProperty = _flags.GetArrayElementAtIndex(i);
+                        FlagValue _ref = _values.Flags[i];
+
+                        _flagProperty.FindPropertyRelative("holder").objectReferenceValue = _ref.holder;
+                        _flagProperty.FindPropertyRelative("guid").intValue = _ref.guid;
+                        _flagProperty.FindPropertyRelative("RequiredValue").boolValue = _ref.RequiredValue;
+                    }
+
+                    while (_flags.arraySize > _group.Count) {
+                        _flags.DeleteArrayElementAtIndex(_group.Count);
+                    }
+                }
+            }
+
+            // ----- Local Method ----- \\
+
+            FlagGroup GetFlagGroup() {
+                FlagValue[] _values = new FlagValue[_flags.arraySize];
+
+                for (int i = 0; i < _values.Length; i++) {
+                    SerializedProperty _flag = _flags.GetArrayElementAtIndex(i);
+                    _values[i] = new FlagValue(_flag.FindPropertyRelative("guid").intValue,
+                                               _flag.FindPropertyRelative("holder").objectReferenceValue as FlagHolder,
+                                               _flag.FindPropertyRelative("RequiredValue").boolValue);
+                }
+
+                return new FlagValueGroup(_values);
+            }
+        }
+
+        // ===== Flag Value Group Value ===== \\
+
+        /// <inheritdoc cref="FlagValueGroupField(Rect, GUIContent, FlagValueGroup)"/>
+        public static void FlagValueGroupField(Rect _position, FlagValueGroup _group) {
+            GUIContent _label = GUIContent.none;
+            FlagValueGroupField(_position, _label, _group);
+        }
+
+        /// <inheritdoc cref="FlagValueGroupField(Rect, GUIContent, FlagValueGroup)"/>
+        public static void FlagValueGroupField(Rect _position, string _label, FlagValueGroup _group) {
+            GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
+            FlagValueGroupField(_position, _labelGUI, _group);
+        }
+
+        /// <param name="_flag">The <see cref="FlagValue"/> to make a field for.</param>
+        /// <inheritdoc cref="FlagValueGroupField(Rect, SerializedProperty, GUIContent)"/>
+        public static void FlagValueGroupField(Rect _position, GUIContent _label, FlagValueGroup _group) {
+            // Get all flags as a label.
+            StringBuilder _builder = new StringBuilder();
+
+            for (int i = 0; i < _group.Count; i++) {
+                FlagValue _ref = _group.Flags[i];
+                FlagHolder _holder = _ref.holder;
+
+                if ((_holder != null) && _holder.RetrieveFlag(_ref.guid, out Flag _flag)) {
+                    _builder.Append(string.Format(FlagValueGroupFormat, _flag.Name, _ref.RequiredValue));
+                } else {
+                    _group.RemoveFlagAt(i);
+                    i--;
+                }
+            }
+
+            if (_group.Count == 0) {
+                _builder.Append(EmptyFlagGroupLabel);
+            }
+
+            // Group pikcer.
+            FlagGroupPicker(_position, _label, _builder.ToString(), GetFlagGroup, out _);
+
+            // ----- Local Method ----- \\
+
+            FlagGroup GetFlagGroup() {
+                return _group;
+            }
+        }
+        #endregion
+
+        #region Flag Utility
+        private const float FlagPopupWidth = 125f;
+
+        private const string NullFlagLabel = "[NONE]";
+        private const string EmptyFlagGroupLabel = "[EMPTY]";
+        private const string FlagReferenceGroupFormat = "{0}; ";
+        private const string FlagValueGroupFormat = "{0}={1}; ";
+
+        private static readonly GUIContent flagReferenceNameGUI = new GUIContent(string.Empty, "The name of the selected flag.");
+        private static readonly GUIContent flagGroupLabelGUI = new GUIContent(string.Empty, "All referenced flags in this group.");
+        private static readonly GUIContent flagButtonGUI = new GUIContent(string.Empty, "Opens the flag picker.");
+
+        private static readonly string flagReferenceGroupTypeName = typeof(FlagReferenceGroup).Name;
+        private static readonly string flagValueGroupTypeName = typeof(FlagValueGroup).Name;
+
+        // -----------------------
+
+        private static bool FlagPicker(Rect _labelPosition, Rect _buttonPosition, GUIContent _label, int _flagGuid, FlagHolder _flagHolder, out Flag _flag, out FlagHolder _holder) {
+            // Flag label.
+            if ((_flagHolder != null) && _flagHolder.RetrieveFlag(_flagGuid, out _flag)) {
+                flagReferenceNameGUI.text = _flag.Name;
+            } else {
+                flagReferenceNameGUI.text = NullFlagLabel;
+                _flag = null;
+            }
+
+            EditorGUI.LabelField(_labelPosition, _label, flagReferenceNameGUI, EditorStyles.helpBox);
+
+            // Picker.
+            int _id = EnhancedEditorGUIUtility.GetControlID(_label, FocusType.Keyboard, _buttonPosition);
+
+            if (flagButtonGUI.image == null) {
+                flagButtonGUI.image = EditorGUIUtility.FindTexture("Search Icon");
+            }
+
+            if (IconButton(_buttonPosition, flagButtonGUI)) {
+                FlagPickerWindow.GetWindow(_id, _flag, _flagHolder);
+            }
+
+            return FlagPickerWindow.GetSelectedFlag(_id, out _flag, out _holder);
+        }
+
+        private static bool FlagGroupPicker(Rect _position, GUIContent _label, string _text, Func<FlagGroup> _getFlagGroup, out FlagGroup _group) {
+            // Flags as label.
+            GetFlagPickerRects(_position, out Rect _labelPosition, out Rect _buttonPosition);
+
+            flagGroupLabelGUI.text = _text;
+            EditorGUI.LabelField(_labelPosition, _label, flagGroupLabelGUI, EditorStyles.helpBox);
+
+            // Picker.
+            int _id = EnhancedEditorGUIUtility.GetControlID(_label, FocusType.Keyboard, _buttonPosition);
+
+            if (flagButtonGUI.image == null) {
+                flagButtonGUI.image = EditorGUIUtility.FindTexture("Search Icon");
+            }
+
+            if (IconButton(_buttonPosition, flagButtonGUI)) {
+                FlagPickerWindow.GetWindow(_id, _getFlagGroup.Invoke());
+            }
+            
+            return FlagPickerWindow.GetSelectedFlagGroup(_id, out _group);
+        }
+
+        // -----------------------
+
+        internal static void GetFlagRects(Rect _position, out Rect _labelPosition, out Rect _valuePosition) {
+            _labelPosition = new Rect(_position) {
+                width = _position.width - FlagPopupWidth
+            };
+
+            _valuePosition = new Rect(_position) {
+                xMin = _labelPosition.xMax + 5f
+            };
+        }
+
+        private static void GetFlagPickerRects(Rect _position, out Rect _labelPosition, out Rect _buttonPosition) {
+            _labelPosition = new Rect(_position) {
+                width = _position.width - (EnhancedEditorGUIUtility.IconWidth + 2f)
+            };
+
+            _buttonPosition = new Rect(_position) {
+                xMin = _position.xMax - EnhancedEditorGUIUtility.IconWidth
+            };
+        }
+
+        private static void GetFlagValuePickerRects(Rect _position, out Rect _labelPosition, out Rect _valuePosition, out Rect _buttonPosition) {
+            GetFlagPickerRects(_position, out _labelPosition, out _buttonPosition);
+            GetFlagRects(_labelPosition, out _labelPosition, out _valuePosition);
+        }
+        #endregion
+
         // --- Various GUI Controls --- \\
 
         #region Background Line
@@ -3891,6 +4589,47 @@ namespace EnhancedEditor.Editor
             {
                 EditorGUI.DrawRect(_position, _peerColor);
             }
+        }
+        #endregion
+
+        #region Editable Label
+        /// <summary>
+        /// Makes a field for label that becomes modifiable when the user focus on it.
+        /// </summary>
+        /// <param name="_position"><inheritdoc cref="DocumentationMethod(Rect, GUIContent)" path="/param[@name='_position']"/></param>
+        /// <param name="_text">Editable text to display.</param>
+        /// <returns>New text value.</returns>
+        public static string EditableLabel(Rect _position, string _text) {
+            string _id = EnhancedEditorGUIUtility.GetControlID(FocusType.Keyboard, _position).ToString();
+            GUI.SetNextControlName(_id);
+
+            bool _isEdited = GUI.GetNameOfFocusedControl() == _id;
+
+            GUIStyle _style = _isEdited ? EditorStyles.textField : EditorStyles.label;
+            string _newText = EditorGUI.DelayedTextField(_position, _text, _style);
+
+            // Unfocus control on Return or Escape key.
+            Event _event = Event.current;
+
+            if (_isEdited && _event.isKey) {
+                if (_event.keyCode == KeyCode.Escape) {
+                    UnfocusControl();
+                    return _text;
+                }
+
+                if (_event.keyCode == KeyCode.Return) {
+                    UnfocusControl();
+                }
+            }
+
+            return _newText;
+        }
+
+        // -----------------------
+
+        private static void UnfocusControl() {
+            GUI.FocusControl(string.Empty);
+            GUI.changed = true;
         }
         #endregion
 
@@ -4151,7 +4890,7 @@ namespace EnhancedEditor.Editor
 
         #region Internal Utility
         private static readonly Dictionary<int, float> dynamicGUIControlHeight = new Dictionary<int, float>();
-        internal static readonly GUIContent blankLabelGUI = new GUIContent(" ");
+        private static readonly GUIContent blankLabelGUI = new GUIContent(" ");
 
         // -----------------------
 
