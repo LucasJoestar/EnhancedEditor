@@ -166,11 +166,13 @@ namespace EnhancedEditor.Editor
         #endregion
 
         #region Behaviour
+        private const double SaveInterval = 2d;
         private const string DefaultSettingsDirectory = "EnhancedEditor/Editor/Settings/";
 
         private static string PrefsKey => $"{Application.productName}_EnhancedEditorPreferences";
 
         private static EnhancedEditorSettings settings = null;
+        private static double lastSaveTime = 0d;
 
         /// <inheritdoc cref="EnhancedEditorSettings"/>
         public static EnhancedEditorSettings Settings
@@ -198,7 +200,8 @@ namespace EnhancedEditor.Editor
 
         private void OnValidate()
         {
-            if (!EditorApplication.isPlayingOrWillChangePlaymode && !EditorApplication.isCompiling && !EnhancedEditorUtility.isReloadingAssemblies)
+            double _time = EditorApplication.timeSinceStartup;
+            if (((_time - lastSaveTime) > SaveInterval) && !EditorApplication.isPlayingOrWillChangePlaymode && !EditorApplication.isCompiling && !EnhancedEditorUtility.isReloadingAssemblies)
             {
                 SaveSettings();
             }
@@ -225,7 +228,9 @@ namespace EnhancedEditor.Editor
             PlayerPrefs.SetString(Chronos.DecreaseInputKey, JsonUtility.ToJson(userSettings.decreaseTimeScale));
             #endif
 
+            lastSaveTime = EditorApplication.timeSinceStartup;
             userSettings = new EditorUserSettings();
+
             EnhancedEditorUtility.SaveAsset(this);
         }
         #endregion
