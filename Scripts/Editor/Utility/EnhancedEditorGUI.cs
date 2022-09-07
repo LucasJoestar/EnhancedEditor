@@ -4133,7 +4133,7 @@ namespace EnhancedEditor.Editor
                     // If no flag is selected, draw it as a flag reference field.
                     GetFlagPickerRects(_position, out _labelPosition, out _buttonPosition);
                 } else {
-                    SerializedProperty _requiredValue = _property.FindPropertyRelative("RequiredValue");
+                    SerializedProperty _requiredValue = _property.FindPropertyRelative("Value");
                     GetFlagValuePickerRects(_position, out _labelPosition, out Rect _valuePosition, out _buttonPosition);
 
                     EditorGUI.LabelField(_valuePosition, flagValueGUI);
@@ -4366,7 +4366,7 @@ namespace EnhancedEditor.Editor
                 int _guid = _flagProperty.FindPropertyRelative("guid").intValue;
 
                 if ((_holder != null) && _holder.RetrieveFlag(_guid, out Flag _flag)) {
-                    _builder.Append(string.Format(FlagValueGroupFormat, _flag.Name, _flagProperty.FindPropertyRelative("RequiredValue").boolValue));
+                    _builder.Append(string.Format(FlagValueGroupFormat, _flag.Name, _flagProperty.FindPropertyRelative("Value").boolValue));
                 } else {
                     _flags.DeleteArrayElementAtIndex(i);
                     i--;
@@ -4392,7 +4392,7 @@ namespace EnhancedEditor.Editor
 
                         _flagProperty.FindPropertyRelative("holder").objectReferenceValue = _ref.holder;
                         _flagProperty.FindPropertyRelative("guid").intValue = _ref.guid;
-                        _flagProperty.FindPropertyRelative("RequiredValue").boolValue = _ref.Value;
+                        _flagProperty.FindPropertyRelative("Value").boolValue = _ref.Value;
                     }
 
                     while (_flags.arraySize > _group.Count) {
@@ -4410,7 +4410,7 @@ namespace EnhancedEditor.Editor
                     SerializedProperty _flag = _flags.GetArrayElementAtIndex(i);
                     _values[i] = new FlagValue(_flag.FindPropertyRelative("guid").intValue,
                                                _flag.FindPropertyRelative("holder").objectReferenceValue as FlagHolder,
-                                               _flag.FindPropertyRelative("RequiredValue").boolValue);
+                                               _flag.FindPropertyRelative("Value").boolValue);
                 }
 
                 return new FlagValueGroup(_values);

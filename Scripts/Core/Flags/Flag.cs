@@ -65,6 +65,9 @@ namespace EnhancedEditor {
         public FlagReference(Flag _flag, FlagHolder _holder) {
             SerializeFlag(_flag, _holder);
         }
+
+        /// <inheritdoc cref="FlagReference"/>
+        public FlagReference() { }
         #endregion
 
         #region Operator
@@ -127,6 +130,9 @@ namespace EnhancedEditor {
         public FlagValue(Flag _flag, FlagHolder _holder, bool _value = true) : base(_flag, _holder) {
             Value = _value;
         }
+
+        /// <inheritdoc cref="FlagValue"/>
+        public FlagValue() { }
         #endregion
 
         #region Operator
