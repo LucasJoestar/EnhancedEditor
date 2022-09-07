@@ -16,7 +16,7 @@
 
 # Plugin specific ignored files & folders
 /[Aa]utoManagedResources/
-/[Ee]ditor/ScriptTemplates/
+/[Ee]ditor/ScriptTemplate/
 /[Ee]ditor/ScriptGenerator/
 /[Ee]ditor/Settings/
 
