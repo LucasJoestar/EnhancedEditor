@@ -24,21 +24,3 @@ Unity will download the module and add it as a dependency.
 ### Updates
 
 You check and download updated of the package by doing the same thing as the package installation (see the above section). After you click on *Add*, Unity will check for package changes, and install the new version if needed.
-
-## Documentation
-
-[=> Go to the full documentation!](./Documentation~/README.md)
-
-## License
-
-This project is under [license CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0), which means:
-
-- You are free to share the content: copy and redistribute it in any medium or format
-- You can change anything from the original material, but you must distribute it under the same terms
-- You must give appropriate credit, provide a link to the license and indicate if changes were made
-- You can't use it as is for commercial purposes
-
-License informations:
-
-- [LICENSE.md](./LICENSE.md)
-- [License CC BY-NC-SA 4.0 official document](https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode)
