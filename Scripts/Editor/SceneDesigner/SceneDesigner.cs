@@ -353,6 +353,7 @@ namespace EnhancedEditor.Editor
         private static string[] folders = new string[] { };
 
         private static Vector2 scroll = new Vector2();
+        private bool hasFocus = false;
 
         // -----------------------
 
@@ -402,8 +403,12 @@ namespace EnhancedEditor.Editor
 
         private void OnFocus()
         {
-            if (!InternalEditorUtility.isApplicationActive)
+            if (!InternalEditorUtility.isApplicationActive) {
                 Close();
+                return;
+            }
+
+            hasFocus = true;
         }
 
         private void OnGUI()
@@ -593,8 +598,11 @@ namespace EnhancedEditor.Editor
 
         private void OnLostFocus()
         {
-            if (!PreviewWindow.HasFocus)
+            if (!PreviewWindow.HasFocus) {
                 Close();
+            }
+
+            hasFocus = false;
         }
         #endregion
 
