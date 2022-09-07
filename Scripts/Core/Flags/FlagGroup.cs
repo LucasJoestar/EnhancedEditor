@@ -237,6 +237,15 @@ namespace EnhancedEditor {
 
             return true;
         }
+
+        /// <summary>
+        /// Set the value of all flags in this group.
+        /// </summary>
+        public void SetValues() {
+            foreach (FlagValue _flag in Flags) {
+                _flag.SetFlag();
+            }
+        }
         #endregion
     }
 }

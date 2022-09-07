@@ -6,6 +6,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
 using UnityEditor;
 using UnityEngine;
@@ -275,6 +276,34 @@ namespace EnhancedEditor.Editor
             }
 
             return _type;
+        }
+        #endregion
+
+        #region Project
+        /// <summary>
+        /// Get the path of the selected folder in the project window.
+        /// </summary>
+        /// <returns>Selected folder path.</returns>
+        public static string GetProjectSelectedFolderPath() {
+            string _path = GetProjectPath();
+            _path = Path.Combine(_path, AssetDatabase.GetAssetPath(Selection.activeObject));
+
+            if (!Directory.Exists(_path)) {
+                _path = Path.GetDirectoryName(_path);
+            }
+
+            return _path;
+        }
+
+        /// <summary>
+        /// Get the path of the project (similar to <see cref="Application.dataPath"/> but without the '/Assets' folder).
+        /// </summary>
+        /// <returns></returns>
+        public static string GetProjectPath() {
+            string _assetFolder = UnityEditorInternal.InternalEditorUtility.GetAssetsFolder();
+            string _path = Application.dataPath;
+
+            return _path.Remove(_path.Length - _assetFolder.Length, _assetFolder.Length);
         }
         #endregion
 

@@ -108,24 +108,24 @@ namespace EnhancedEditor {
     public class FlagValue : FlagReference {
         #region Global Members
         /// <summary>
-        /// The required value for this flag to be valid.
+        /// The value to be used to validate or set this flag.
         /// </summary>
-        public bool RequiredValue = true;
+        public bool Value = true;
 
         // -----------------------
 
         /// <param name="_guid">The guid of the flag to reference.</param>
         /// <inheritdoc cref="FlagValue(Flag, FlagHolder, bool)"/>
-        internal FlagValue(int _guid, FlagHolder _holder, bool _requiredValue = true) : base(_guid, _holder) {
-            RequiredValue = _requiredValue;
+        internal FlagValue(int _guid, FlagHolder _holder, bool _value = true) : base(_guid, _holder) {
+            Value = _value;
         }
 
         /// <param name="_flag"><inheritdoc cref="Flag" path="/summary"/></param>
         /// <param name="_holder"><inheritdoc cref="FlagReference(Flag, FlagHolder)" path="/param[@name='_holder']"/></param>
-        /// <param name="_requiredValue"><inheritdoc cref="RequiredValue" path="/summary"/></param>
+        /// <param name="_value"><inheritdoc cref="Value" path="/summary"/></param>
         /// <inheritdoc cref="FlagValue"/>
-        public FlagValue(Flag _flag, FlagHolder _holder, bool _requiredValue = true) : base(_flag, _holder) {
-            RequiredValue = _requiredValue;
+        public FlagValue(Flag _flag, FlagHolder _holder, bool _value = true) : base(_flag, _holder) {
+            Value = _value;
         }
         #endregion
 
@@ -136,7 +136,7 @@ namespace EnhancedEditor {
 
         public override string ToString() {
             #if FLAG_NAME
-            return $"{Flag.Name}={RequiredValue}";
+            return $"{Flag.Name}={Value}";
             #else
             return IsValid().ToString();
             #endif
@@ -145,11 +145,18 @@ namespace EnhancedEditor {
 
         #region Utility
         /// <summary>
-        /// Is this flag value the same as the required one to be valid?
+        /// Is this <see cref="Flag"/> value the same as this object <see cref="Value"/>?
         /// </summary>
         /// <returns>True if this flag is valid, false otherwise.</returns>
         public bool IsValid() {
-            return Flag == RequiredValue;
+            return Flag == Value;
+        }
+
+        /// <summary>
+        /// Set this <see cref="Flag"/> value to this object <see cref="Value"/>.
+        /// </summary>
+        public void SetFlag() {
+            Flag.Value = Value;
         }
         #endregion
     }

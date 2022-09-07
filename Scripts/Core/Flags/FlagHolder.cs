@@ -18,11 +18,6 @@ namespace EnhancedEditor {
     [ResetOnExitPlayMode]
     [CreateAssetMenu(fileName = "FH_NewFlagHplder", menuName = "Enhanced Editor/Flag Holder", order = 200)]
     public class FlagHolder : ScriptableObject {
-        public FlagReference Ref;
-        public FlagValue Val;
-        public FlagReferenceGroup RefGroup;
-        public FlagValueGroup ValGroup;
-
         #region Global Members
         /// <summary>
         /// All flags contained in this object.
@@ -66,6 +61,8 @@ namespace EnhancedEditor {
                         i = 0;
                     }
                 }
+
+                Sort();
             }
         }
 

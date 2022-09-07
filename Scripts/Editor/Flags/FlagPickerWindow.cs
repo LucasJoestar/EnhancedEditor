@@ -78,7 +78,6 @@ namespace EnhancedEditor.Editor {
             return _window;
         }
 
-        [MenuItem("Tools/DEBUG _F6", false, 30)]
         private static FlagPickerWindow DoGetWindow() {
             hasChanged = false;
 
@@ -434,12 +433,12 @@ namespace EnhancedEditor.Editor {
 
                         EditorGUI.LabelField(_labelPosition, _valGroup.Flags[index].Flag.Name);
 
-                        bool _value = _valGroup.Flags[index].RequiredValue;
+                        bool _value = _valGroup.Flags[index].Value;
                         using (var _scope = new EditorGUI.ChangeCheckScope()) {
                             _value = EnhancedEditorGUI.BoolPopupField(_valuePosition, _value);
 
                             if (_scope.changed) {
-                                _valGroup.Flags[index].RequiredValue = _value;
+                                _valGroup.Flags[index].Value = _value;
 
                                 hasChanged = true;
                                 InternalEditorUtility.RepaintAllViews();

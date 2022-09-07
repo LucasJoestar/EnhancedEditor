@@ -4179,7 +4179,7 @@ namespace EnhancedEditor.Editor
                 GetFlagValuePickerRects(_position, out _labelPosition, out Rect _valuePosition, out _buttonPosition);
 
                 EditorGUI.LabelField(_valuePosition, flagValueGUI);
-                _flag.RequiredValue = BoolPopupField(_valuePosition, GUIContent.none, _flag.RequiredValue);
+                _flag.Value = BoolPopupField(_valuePosition, GUIContent.none, _flag.Value);
             }
 
             // Flag picker button.
@@ -4392,7 +4392,7 @@ namespace EnhancedEditor.Editor
 
                         _flagProperty.FindPropertyRelative("holder").objectReferenceValue = _ref.holder;
                         _flagProperty.FindPropertyRelative("guid").intValue = _ref.guid;
-                        _flagProperty.FindPropertyRelative("RequiredValue").boolValue = _ref.RequiredValue;
+                        _flagProperty.FindPropertyRelative("RequiredValue").boolValue = _ref.Value;
                     }
 
                     while (_flags.arraySize > _group.Count) {
@@ -4442,7 +4442,7 @@ namespace EnhancedEditor.Editor
                 FlagHolder _holder = _ref.holder;
 
                 if ((_holder != null) && _holder.RetrieveFlag(_ref.guid, out Flag _flag)) {
-                    _builder.Append(string.Format(FlagValueGroupFormat, _flag.Name, _ref.RequiredValue));
+                    _builder.Append(string.Format(FlagValueGroupFormat, _flag.Name, _ref.Value));
                 } else {
                     _group.RemoveFlagAt(i);
                     i--;
@@ -4588,6 +4588,53 @@ namespace EnhancedEditor.Editor
             else if ((_index % 2) == 0)
             {
                 EditorGUI.DrawRect(_position, _peerColor);
+            }
+        }
+        #endregion
+
+        #region Dotted Line
+        private const float DotSize = 2f;
+        private const float DotSpace = 2f;
+        private const float DotThickness = 1f;
+
+        // -----------------------
+
+        /// <summary>
+        /// Draws an horizontal dotted line.
+        /// </summary>
+        /// <param name="_position">Position on the screen where to draw the line.</param>
+        /// <param name="_size">Line dot size.</param>
+        /// <param name="_space">Line dot spacing.</param>
+        /// <param name="_thickness">Line dot thickness.</param>
+        public static void HorizontalDottedLine(Rect _position, float _size = DotSize, float _space = DotSpace, float _thickness = DotThickness) {
+            _position.height = _thickness;
+
+            while (_position.width > _size) {
+                Rect _temp = new Rect(_position) {
+                    width = _size
+                };
+
+                _position.xMin += _size + _space;
+
+                EditorGUI.DrawRect(_temp, SuperColor.Grey.Get());
+            }
+        }
+
+        /// <summary>
+        /// Draws a vertical dotted line.
+        /// </summary>
+        /// <inheritdoc cref="HorizontalDottedLine(Rect, float, float, float)"/>
+        public static void VerticalDottedLine(Rect _position, float _size = DotSize, float _space = DotSpace, float _thickness = DotThickness) {
+            _position.width = _thickness;
+
+            while (_position.height > _size) {
+                Rect _temp = new Rect(_position) {
+                    height = _size
+                };
+
+                _position.yMin += _size + _space;
+
+                EditorGUI.DrawRect(_temp, SuperColor.Grey.Get());
             }
         }
         #endregion

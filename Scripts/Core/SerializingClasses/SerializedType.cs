@@ -35,7 +35,7 @@ namespace EnhancedEditor {
 				} else if ((canBeBaseType && (value == _base)) || value.IsSubclassOf(_base)) {
 					type = value;
 					typeName = value.GetReflectionName();
-                } 
+				}
 			}
 		}
 		#endregion

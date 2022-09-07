@@ -33,6 +33,11 @@ namespace EnhancedEditor.Editor
         public const float IconWidth = 20f;
 
         /// <summary>
+        /// Width used to draw various mini icons (in pixels).
+        /// </summary>
+        public const float MiniIconWidth = 17f;
+
+        /// <summary>
         /// Default width of the lines surrounding the label of a section (in pixels).
         /// </summary>
         public const float SectionDefaultLineWidth = 50f;
