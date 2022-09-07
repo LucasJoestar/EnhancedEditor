@@ -108,6 +108,20 @@ namespace EnhancedEditor
         }
 
         /// <summary>
+        /// Does this group contain any tag in another group?
+        /// </summary>
+        /// <param name="_group">Group to check content.</param>
+        /// <returns>True if this group contain any of the other group tag, false otherwise.</returns>
+        public bool ContainsAny(TagGroup _group) {
+            foreach (Tag _tag in _group.Tags) {
+                if (Contains(_tag)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
         /// Get all <see cref="TagData"/> referenced in this group (automatically cached and updated).
         /// </summary>
         /// <returns>All <see cref="TagData"/> referenced in this group (with null entries for each tag that could not be found).
