@@ -11,18 +11,24 @@
 /[Mm]emoryCaptures/
 /[Aa]ssets/[Pp]lugins/
 
-/_InternalResources/
-*_InternalResources.meta
-
 # Plugin specific ignored files & folders
-/[Aa]utoManagedResources/
-/[Ee]ditor/ScriptTemplate/
-/[Ee]ditor/ScriptGenerator/
-/[Ee]ditor/Settings/
 
+/_InternalResources/
+/_InternalResources.meta
+
+/[Aa]utoManagedResources/
 /[Aa]utoManagedResources.meta
+
+/[Ee]ditor/ScriptTemplate/
+/[Ee]ditor/ScriptTemplate.meta
+
+/[Ee]ditor/ScriptTemplates/
 /[Ee]ditor/ScriptTemplates.meta
+
+/[Ee]ditor/Settings/
 /[Ee]ditor/Settings.meta
+
+/[Ss]cripts/[Ee]ditor/ScriptGenerator/ScriptGeneratorMenu.cs
 
 # Asset meta data should only be ignored when the corresponding asset is also ignored
 !/[Aa]ssets/**/*.meta

@@ -5,35 +5,48 @@
 // ============================================================================ //
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 
+#if LOCALIZATION_ENABLED
+using UnityEngine.Localization.Settings;
+#endif
+
 using Object = UnityEngine.Object;
 
-namespace EnhancedEditor.Editor
-{
+namespace EnhancedEditor.Editor {
     /// <summary>
     /// Contains multiple editor utility methods.
     /// </summary>
     [InitializeOnLoad]
-	public static class EnhancedEditorUtility
-    {
+    public static class EnhancedEditorUtility {
         #region Global Members
         static EnhancedEditorUtility() {
             // Assembly reloading.
             AssemblyReloadEvents.beforeAssemblyReload -= OnBeforeAssembliesReload;
             AssemblyReloadEvents.afterAssemblyReload -= OnAfterAssembliesReload;
-            
+
             AssemblyReloadEvents.beforeAssemblyReload += OnBeforeAssembliesReload;
             AssemblyReloadEvents.afterAssemblyReload += OnAfterAssembliesReload;
+
+            #if LOCALIZATION_ENABLED
+            // Default locale setup.
+            var _settings = EnhancedEditorSettings.Settings.UserSettings;
+
+            if ((LocalizationSettings.SelectedLocale == null) && _settings.autoSetupLocale && (_settings.defaultLocale != null)) {
+                LocalizationSettings.SelectedLocale = _settings.defaultLocale;
+                Debug.Log("Set Locale => " + _settings.defaultLocale.name);
+            }
+
+            Debug.Log("Init");
+            #endif
         }
         #endregion
 
         #region Color Picker
-        private static readonly BindingFlags colorPickerFlags = BindingFlags.InvokeMethod | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
+        private const BindingFlags ColorPickerFlags = BindingFlags.InvokeMethod | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
         private static readonly object[] colorPickerArgs = new object[] { null, null, null, true, false };
 
         // -----------------------
@@ -43,68 +56,20 @@ namespace EnhancedEditor.Editor
         /// </summary>
         /// <param name="_color">The color the color picker shows.</param>
         /// <param name="_callback">Callback for whenever the user selects a new color in the color picker.</param>
-        public static void ColorPicker(Color _color, Action<Color> _callback)
-        {
+        public static void ColorPicker(Color _color, Action<Color> _callback) {
             colorPickerArgs[1] = _callback;
             colorPickerArgs[2] = _color;
 
             EditorWindow _colorPicker = ScriptableObject.CreateInstance("ColorPicker") as EditorWindow;
-            _colorPicker.GetType().InvokeMember("Show", colorPickerFlags, null, _colorPicker, colorPickerArgs);
-        }
-        #endregion
-
-        #region Serialized Object
-        private static readonly BindingFlags getFieldFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance | BindingFlags.GetField;
-
-        // -----------------------
-
-        /// <summary>
-        /// Retrieves a specific field from a <see cref="SerializedObject"/>.
-        /// </summary>
-        /// <param name="_object"><see cref="SerializedObject"/> to get this field from.</param>
-        /// <param name="_fieldPath">Full path of this field (like <see cref="SerializedProperty.propertyPath"/>).</param>
-        /// <param name="_field">Found <see cref="FieldInfo"/>.</param>
-        /// <returns>True if this field was successfully found, false otherwise.</returns>
-        public static bool FindSerializedObjectField(SerializedObject _object, string _fieldPath, out FieldInfo _field)
-        {
-            Type _type = _object.targetObject.GetType();
-            _field = null;
-
-            string[] _fields = _fieldPath.Split('.');
-            for (int _i = 0; _i < _fields.Length; _i++)
-            {
-                _field = _type.GetField(_fields[_i], getFieldFlags);
-
-                if (_field == null)
-                    return false;
-
-                // Serialized containers management:
-                // Array.
-                if (_field.FieldType.IsArray)
-                {
-                    _type = _field.FieldType.GetElementType();
-                    _i += 2;
-
-                    continue;
-                }
-
-                // List.
-                if (_field.FieldType.IsGenericType && (_field.FieldType.GetGenericTypeDefinition() == typeof(List<>)))
-                {
-                    _type = _field.FieldType.GetGenericArguments()[0];
-                    _i += 2;
-
-                    continue;
-                }
-
-                _type = _field.FieldType;
-            }
-
-            return true;
+            _colorPicker.GetType().InvokeMember("Show", ColorPickerFlags, null, _colorPicker, colorPickerArgs);
         }
         #endregion
 
         #region Serialized Property
+        private const BindingFlags FieldFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
+
+        // -----------------------
+
         /// <summary>
         /// Get the the type name of the actual value of a specific <see cref="SerializedProperty"/>.
         /// </summary>
@@ -127,11 +92,10 @@ namespace EnhancedEditor.Editor
         /// </summary>
         /// <param name="_property"><see cref="SerializedProperty"/> to get type from.</param>
         /// <returns>Property object type.</returns>
-        public static Type GetSerializedPropertyType(SerializedProperty _property)
-        {
-            if (FindSerializedObjectField(_property.serializedObject, _property.propertyPath, out FieldInfo _field))
-            {
-                return GetFieldInfoType(_field);
+        public static Type GetSerializedPropertyType(SerializedProperty _property) {
+            if (FindSerializedPropertyField(_property, out FieldInfo _field)) {
+                Type _type = _field.FieldType;
+                return _type.IsGenericType ? _type.GetGenericTypeDefinition() : _field.FieldType;
             }
 
             return null;
@@ -143,10 +107,8 @@ namespace EnhancedEditor.Editor
         /// <param name="_property"><see cref="SerializedProperty"/> to get value from.</param>
         /// <param name="_value">Property value as single (0 if the property type is not compatible).</param>
         /// <returns>True if the property value has been fully converted as single, false otherwise.</returns>
-        public static bool GetSerializedPropertyValueAsSingle(SerializedProperty _property, out float _value)
-        {
-            switch (_property.propertyType)
-            {
+        public static bool GetSerializedPropertyValueAsSingle(SerializedProperty _property, out float _value) {
+            switch (_property.propertyType) {
                 case SerializedPropertyType.Integer:
                     _value = _property.intValue;
                     break;
@@ -175,10 +137,8 @@ namespace EnhancedEditor.Editor
         /// <param name="_property"><see cref="SerializedProperty"/> to set value.</param>
         /// <param name="_value">New property value.</param>
         /// <returns>True if the property value has been successfully set, false otherwise.</returns>
-        public static bool SetSerializedPropertyValueAsSingle(SerializedProperty _property, float _value)
-        {
-            switch (_property.propertyType)
-            {
+        public static bool SetSerializedPropertyValueAsSingle(SerializedProperty _property, float _value) {
+            switch (_property.propertyType) {
                 case SerializedPropertyType.Integer:
                     _property.intValue = (int)_value;
                     break;
@@ -204,10 +164,8 @@ namespace EnhancedEditor.Editor
         /// </summary>
         /// <param name="_property"><see cref="SerializedProperty"/> to ceil value.</param>
         /// <param name="_maxValue">Maximum allowed value.</param>
-        public static void CeilSerializedPropertyValue(SerializedProperty _property, float _maxValue)
-        {
-            switch (_property.propertyType)
-            {
+        public static void CeilSerializedPropertyValue(SerializedProperty _property, float _maxValue) {
+            switch (_property.propertyType) {
                 case SerializedPropertyType.Integer:
                     _property.intValue = (int)Mathf.Min(_property.intValue, _maxValue);
                     break;
@@ -231,10 +189,8 @@ namespace EnhancedEditor.Editor
         /// </summary>
         /// <param name="_property"><see cref="SerializedProperty"/> to floor value.</param>
         /// <param name="_minValue">Minimum allowed value.</param>
-        public static void FloorSerializedPropertyValue(SerializedProperty _property, float _minValue)
-        {
-            switch (_property.propertyType)
-            {
+        public static void FloorSerializedPropertyValue(SerializedProperty _property, float _minValue) {
+            switch (_property.propertyType) {
                 case SerializedPropertyType.Integer:
                     _property.intValue = (int)Mathf.Max(_property.intValue, _minValue);
                     break;
@@ -252,6 +208,67 @@ namespace EnhancedEditor.Editor
                     break;
             }
         }
+
+        /// <summary>
+        /// Retrieves a specific field from a <see cref="SerializedProperty"/>.
+        /// </summary>
+        /// <param name="_property"><see cref="SerializedProperty"/> to get this field from.</param>
+        /// <param name="_field">Found <see cref="FieldInfo"/>.</param>
+        /// <returns>True if this field was successfully found, false otherwise.</returns>
+        public static bool FindSerializedPropertyField(SerializedProperty _property, out FieldInfo _field) {
+            return FindSerializedPropertyField(_property, 0, out _field, out _, out _);
+        }
+
+        // -----------------------
+
+        internal static bool FindSerializedPropertyField(SerializedProperty _property, int _ignoreCount, out FieldInfo _field, out Type _type, out object _value) {
+            string[] _paths = _property.propertyPath.Split('.');
+
+            _value = _property.serializedObject.targetObject;
+            _type = _value.GetType();
+            _field = null;
+
+            for (int i = 0; i < _paths.Length - _ignoreCount; i++) {
+                _field = _type.GetField(_paths[i], FieldFlags);
+
+                if (_field == null) {
+                    return false;
+                }
+
+                // Array and Lists.
+                if (_field.FieldType.IsArray) {
+                    // String is "data[0]", where 0 is the object index.
+                    string _index = _paths[i + 2][5].ToString();
+
+                    _value = (_field.GetValue(_value) as Array).GetValue(int.Parse(_index));
+                    _type = _value.GetType();
+
+                    i += 2;
+                    continue;
+                }
+
+                if (_field.FieldType.IsGenericType) {
+
+                    if ((i + 1) < (_paths.Length - _ignoreCount)) {
+                        _type = _field.FieldType.GetGenericArguments()[0];
+                        i += 2;
+                    }
+
+                    continue;
+                }
+
+                if (_field != null) {
+                    _type = _field.FieldType;
+                    _value = _field.GetValue(_value);
+                } else {
+                    // Not found.
+                    _field = null;
+                    return false;
+                }
+            }
+
+            return true;
+        }
         #endregion
 
         #region Field Reflection
@@ -260,18 +277,14 @@ namespace EnhancedEditor.Editor
         /// </summary>
         /// <param name="_field"><see cref="FieldInfo"/> to get type.</param>
         /// <returns>Field object type.</returns>
-        public static Type GetFieldInfoType(FieldInfo _field)
-        {
+        public static Type GetFieldInfoType(FieldInfo _field) {
             Type _type = _field.FieldType;
-            if (_type.IsArray)
-            {
+            if (_type.IsArray) {
                 _type = _type.GetElementType();
 
                 if (_type.IsGenericType)
                     _type = _type.GetGenericArguments()[0];
-            }
-            else if (_type.IsGenericType)
-            {
+            } else if (_type.IsGenericType) {
                 _type = _type.GetGenericArguments()[0];
             }
 
@@ -313,8 +326,7 @@ namespace EnhancedEditor.Editor
         /// </summary>
         /// <typeparam name="T">Asset type to find.</typeparam>
         /// <returns>All found assets guid.</returns>
-        public static string[] FindAssetsGUID<T>() where T : Object
-        {
+        public static string[] FindAssetsGUID<T>() where T : Object {
             string _filter = $"t:{typeof(T).Name}";
             return AssetDatabase.FindAssets(_filter);
         }
@@ -324,8 +336,7 @@ namespace EnhancedEditor.Editor
         /// </summary>
         /// <typeparam name="T">Asset type to find.</typeparam>
         /// <returns>All found assets path.</returns>
-        public static string[] FindAssets<T>() where T : Object
-        {
+        public static string[] FindAssets<T>() where T : Object {
             string[] _guids = FindAssetsGUID<T>();
             return Array.ConvertAll(_guids, AssetDatabase.GUIDToAssetPath);
         }
@@ -335,11 +346,9 @@ namespace EnhancedEditor.Editor
         /// </summary>
         /// <typeparam name="T">Asset type to load.</typeparam>
         /// <returns>Array of all loaded assets.</returns>
-        public static T[] LoadAssets<T>() where T : Object
-        {
+        public static T[] LoadAssets<T>() where T : Object {
             string[] _guids = FindAssetsGUID<T>();
-            return Array.ConvertAll(_guids, (a) =>
-            {
+            return Array.ConvertAll(_guids, (a) => {
                 return AssetDatabase.LoadAssetAtPath<T>(AssetDatabase.GUIDToAssetPath(a));
             });
         }
@@ -350,11 +359,9 @@ namespace EnhancedEditor.Editor
         /// <typeparam name="T">Asset type to load.</typeparam>
         /// <param name="_asset">Loaded asset.</param>
         /// <returns>True if an asset of this type could be found and loaded, false otherwise.</returns>
-        public static bool LoadMainAsset<T>(out T _asset) where T : Object
-        {
+        public static bool LoadMainAsset<T>(out T _asset) where T : Object {
             string[] _guids = FindAssetsGUID<T>();
-            if (_guids.Length != 0)
-            {
+            if (_guids.Length != 0) {
                 string _guid = _guids[0];
                 _asset = AssetDatabase.LoadAssetAtPath<T>(AssetDatabase.GUIDToAssetPath(_guid));
 
@@ -386,8 +393,7 @@ namespace EnhancedEditor.Editor
         /// </summary>
         /// <param name="_type">Type to check.</param>
         /// <returns>True if this type is a component or an interface, false otherwise.</returns>
-        public static bool IsComponentOrInterface(Type _type)
-        {
+        public static bool IsComponentOrInterface(Type _type) {
             bool _isPickable = _type.IsInterface || _type.IsSubclassOf(typeof(Component));
             return _isPickable;
         }
@@ -397,10 +403,20 @@ namespace EnhancedEditor.Editor
         /// </summary>
         /// <param name="_type">Type to check.</param>
         /// <returns>True if this type is either a component or a game object, false otherwise.</returns>
-        public static bool IsSceneObject(Type _type)
-        {
+        public static bool IsSceneObject(Type _type) {
             bool _isPickable = (_type == typeof(GameObject)) || _type.IsSubclassOf(typeof(Component));
             return _isPickable;
+        }
+        #endregion
+
+        #region Menu Command
+        /// <summary>
+        /// Ping the selected object in the project or hierarchy window.
+        /// </summary>
+        [MenuItem("CONTEXT/ScriptableObject/Ping Asset", false, 499)]
+        [MenuItem("CONTEXT/Component/Ping Game Object", false, 999)]
+        public static void PingObject(MenuCommand _command) {
+            EditorGUIUtility.PingObject(_command.context);
         }
         #endregion
 
@@ -414,13 +430,11 @@ namespace EnhancedEditor.Editor
 
         // -----------------------
 
-        private static void OnBeforeAssembliesReload()
-        {
+        private static void OnBeforeAssembliesReload() {
             SessionState.SetBool(ReloadingAssembliesKey, true);
         }
 
-        private static void OnAfterAssembliesReload()
-        {
+        private static void OnAfterAssembliesReload() {
             SessionState.SetBool(ReloadingAssembliesKey, false);
         }
         #endregion

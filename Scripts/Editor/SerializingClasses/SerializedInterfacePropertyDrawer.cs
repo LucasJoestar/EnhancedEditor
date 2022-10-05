@@ -21,7 +21,7 @@ namespace EnhancedEditor.Editor {
 
         // -----------------------
 
-        protected override float GetDefaultHeight(SerializedProperty _property, GUIContent _label) {
+        internal protected override float GetDefaultHeight(SerializedProperty _property, GUIContent _label) {
             SerializedProperty _gameObjectProperty = _property.FindPropertyRelative("gameObject");
 
             Rect _position = EnhancedEditorGUIUtility.GetViewControlRect();
@@ -30,7 +30,7 @@ namespace EnhancedEditor.Editor {
             return _height;
         }
 
-        protected override float OnEnhancedGUI(Rect _position, SerializedProperty _property, GUIContent _label) {
+        internal protected override float OnEnhancedGUI(Rect _position, SerializedProperty _property, GUIContent _label) {
             // Register this property to cache its interface type.
             string _key = _property.propertyPath;
 

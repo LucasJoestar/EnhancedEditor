@@ -7,15 +7,38 @@
 using System;
 using UnityEngine;
 
-namespace EnhancedEditor
-{
+namespace EnhancedEditor {
     /// <summary>
     /// Contains multiple <see cref="Component"/>-related extension methods.
     /// </summary>
-	public static class ComponentExtensions
-    {
-        #region Content
-#if !UNITY_2019_2_OR_NEWER
+	public static class ComponentExtensions {
+        #region Extended Behaviour
+        /// <summary>
+        /// Get the <see cref="ExtendedBehaviour"/> attached to this component <see cref="GameObject"/>.
+        /// </summary>
+        /// <param name="_component">This component to get the <see cref="ExtendedBehaviour"/> from.</param>
+        /// <returns>The <see cref="ExtendedBehaviour"/> attached to this component <see cref="GameObject"/>.</returns>
+        public static ExtendedBehaviour GetExtendedBehaviour(this Component _component) {
+            return _component.GetComponent<ExtendedBehaviour>();
+        }
+
+        /// <summary>
+        /// Get all <see cref="Tag"/> assigned to this component <see cref="GameObject"/>.
+        /// </summary>
+        /// <param name="_component">This component to get the tags from.</param>
+        /// <returns>The <see cref="TagGroup"/> containing all tag assigned to this component <see cref="GameObject"/>.</returns>
+        public static TagGroup GetTags(this Component _component) {
+            if (_component.TryGetComponent(out ExtendedBehaviour _behaviour)) {
+                return _behaviour.Tags;
+            }
+
+            _component.LogWarning($"No {typeof(ExtendedBehaviour).Name} could be found on the object \'{_component.gameObject.name}\'.");
+            return new TagGroup();
+        }
+        #endregion
+
+        #region Utility
+        #if !UNITY_2019_2_OR_NEWER
         /// <summary>
         /// Gets the component of the specified type, if it exists.<br/>
         /// TryGetComponent will attempt to retrieve the component of the given type.The notable difference compared to
@@ -36,7 +59,7 @@ namespace EnhancedEditor
             _component = _source.GetComponent(type);
             return _component != null;
         }
-#endif
+        #endif
         #endregion
     }
 }

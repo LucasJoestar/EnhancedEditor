@@ -50,9 +50,10 @@ namespace EnhancedEditor
         #endregion
 
         #region Getter / Setter
+        private const BindingFlags GetMemberFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance
+                                                  | BindingFlags.GetField | BindingFlags.GetProperty | BindingFlags.InvokeMethod;
+
         private static readonly object[] setMethodValueParameters = new object[] { null };
-        private static readonly BindingFlags getMemberFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance
-                                                            | BindingFlags.GetField | BindingFlags.GetProperty | BindingFlags.InvokeMethod;
 
         // -----------------------
 
@@ -65,7 +66,7 @@ namespace EnhancedEditor
         /// <returns>True if this member value was successfully retrieved, false otherwise.</returns>
         public bool GetValue(object _object, Type _objectType, out T _value)
         {
-            MemberInfo[] _members = _objectType.GetMember(Name, getMemberFlags);
+            MemberInfo[] _members = _objectType.GetMember(Name, GetMemberFlags);
             object _objectValue;
 
             for (int _i = 0; _i < _members.Length; _i++)
@@ -126,7 +127,7 @@ namespace EnhancedEditor
         /// <returns>True if this member value was successfully set, false otherwise.</returns>
         public bool SetValue(object _object, Type _objectType, T _value)
         {
-            MemberInfo[] _members = _objectType.GetMember(Name, getMemberFlags);
+            MemberInfo[] _members = _objectType.GetMember(Name, GetMemberFlags);
             object _convertedValue;
 
             for (int _i = 0; _i < _members.Length; _i++)

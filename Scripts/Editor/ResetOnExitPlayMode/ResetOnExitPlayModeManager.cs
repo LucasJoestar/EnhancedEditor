@@ -15,14 +15,46 @@ namespace EnhancedEditor.Editor {
     /// <see cref="ResetOnExitPlayModeAttribute"/>-related manager class. 
     /// </summary>
     internal static class ResetOnExitPlayModeManager {
+        #region Serialization Wrappers
+        [Serializable]
+        private class JsonWrapper {
+            public List<ObjectWrapper> Objects = new List<ObjectWrapper>();
+        }
+
+        [Serializable]
+        private class ObjectWrapper {
+            public string AssetPath = string.Empty;
+            public string Json = string.Empty;
+
+            // -----------------------
+
+            public ObjectWrapper(string _path, string _value) {
+                AssetPath = _path;
+                Json = _value;
+            }
+        }
+        #endregion
+
         #region Play Mode State Changed
-        private const string SaveFormat = "ROEPM_{0}";
+        private const string MainKey = "ResetOnExitPlayMode_MainKey";
+        private const string RefreshKey = "ResetOnExitPlayMode_RefreshKey";
 
         // -----------------------
 
         [InitializeOnLoadMethod]
         private static void Initialize() {
+            if (EditorApplication.isPlayingOrWillChangePlaymode) {
+                return;
+            }
+
             EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
+
+            // Deserialize content if needed, then save its value.
+            if (EditorPrefs.GetBool(RefreshKey, false)) {
+                DeserializeObjects();
+            }
+
+            SerializeObjects();
         }
 
         private static void OnPlayModeStateChanged(PlayModeStateChange _mode) {
@@ -33,6 +65,7 @@ namespace EnhancedEditor.Editor {
 
                 case PlayModeStateChange.ExitingEditMode:
                     SerializeObjects();
+                    EditorPrefs.SetBool(RefreshKey, true);
                     break;
 
                 default:
@@ -41,23 +74,39 @@ namespace EnhancedEditor.Editor {
         }
 
         private static void SerializeObjects() {
+            JsonWrapper _json = new JsonWrapper();
+
             foreach (Type _type in GetObjectTypes()) {
                 foreach (ScriptableObject _object in LoadObjects(_type)) {
-                    SessionState.SetString(string.Format(SaveFormat, AssetDatabase.GetAssetPath(_object)), EditorJsonUtility.ToJson(_object));
+                    _json.Objects.Add(new ObjectWrapper(AssetDatabase.GetAssetPath(_object), EditorJsonUtility.ToJson(_object)));
                 }
             }
+
+            EditorPrefs.SetString(MainKey, EditorJsonUtility.ToJson(_json));
         }
 
         private static void DeserializeObjects() {
+            string _json = EditorPrefs.GetString(MainKey, string.Empty);
+            if (string.IsNullOrEmpty(_json)) {
+                return;
+            }
+
+            JsonWrapper _wrapper = new JsonWrapper();
+            EditorJsonUtility.FromJsonOverwrite(_json, _wrapper);
+
             foreach (Type _type in GetObjectTypes()) {
                 foreach (ScriptableObject _object in LoadObjects(_type)) {
-                    string _json = SessionState.GetString(string.Format(SaveFormat, AssetDatabase.GetAssetPath(_object)), string.Empty);
+                    string _path = AssetDatabase.GetAssetPath(_object);
+                    int _index = _wrapper.Objects.FindIndex(o => o.AssetPath == _path);
 
-                    if (!string.IsNullOrEmpty(_json)) {
-                        EditorJsonUtility.FromJsonOverwrite(_json, _object);
+                    if (_index != -1) {
+                        EditorJsonUtility.FromJsonOverwrite(_wrapper.Objects[_index].Json, _object);
+                        _wrapper.Objects.RemoveAt(_index);
                     }
                 }
             }
+
+            EditorPrefs.SetBool(RefreshKey, false);
         }
         #endregion
 

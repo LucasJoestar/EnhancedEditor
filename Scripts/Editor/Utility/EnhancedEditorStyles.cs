@@ -7,13 +7,11 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace EnhancedEditor.Editor
-{
+namespace EnhancedEditor.Editor {
     /// <summary>
     /// Contains multiple <see cref="GUIStyle"/> to be used for <see cref="GUI"/> controls.
     /// </summary>
-	public static class EnhancedEditorStyles
-    {
+	public static class EnhancedEditorStyles {
         #region Common Styles
         /// <summary>
         /// Simple button style.
@@ -205,88 +203,74 @@ namespace EnhancedEditor.Editor
 
         // -----------------------
 
-        private static GUIStyle GetStyle(GUIStyle _style)
-        {
-            if (!isInitialized)
-            {
+        private static GUIStyle GetStyle(GUIStyle _style) {
+            if (!isInitialized) {
                 #region Common
                 // Button.
                 button = new GUIStyle("Button");
 
                 // Full size button.
-                fullSizeButton = new GUIStyle("Button")
-                {
+                fullSizeButton = new GUIStyle("Button") {
                     padding = new RectOffset(),
                 };
 
                 // Rich text.
-                richText = new GUIStyle(EditorStyles.label)
-                {
+                richText = new GUIStyle(EditorStyles.label) {
                     richText = true
                 };
 
                 // Bold rich text.
-                boldRichText = new GUIStyle(EditorStyles.boldLabel)
-                {
+                boldRichText = new GUIStyle(EditorStyles.boldLabel) {
                     richText = true
                 };
 
                 // Centered label.
-                centeredLabel = new GUIStyle(EditorStyles.label)
-                {
+                centeredLabel = new GUIStyle(EditorStyles.label) {
                     alignment = TextAnchor.MiddleCenter
                 };
 
                 // Bold centered label.
-                boldCenteredLabel = new GUIStyle(EditorStyles.boldLabel)
-                {
+                boldCenteredLabel = new GUIStyle(EditorStyles.boldLabel) {
                     alignment = TextAnchor.MiddleCenter
                 };
 
                 // Word wrapped label.
-                wordWrappedLabel = new GUIStyle(EditorStyles.label)
-                {
+                wordWrappedLabel = new GUIStyle(EditorStyles.label) {
                     wordWrap = true
                 };
 
                 // Bold word wrapped label.
-                boldWordWrappedLabel = new GUIStyle(EditorStyles.boldLabel)
-                {
+                boldWordWrappedLabel = new GUIStyle(EditorStyles.boldLabel) {
                     wordWrap = true
                 };
 
                 // Word wrapped rich text.
-                wordWrappedRichText = new GUIStyle(EditorStyles.label)
-                {
+                wordWrappedRichText = new GUIStyle(EditorStyles.label) {
                     richText = true,
                     wordWrap = true
                 };
 
                 // Bold word wrapped rich text.
-                boldWordWrappedRichText = new GUIStyle(EditorStyles.boldLabel)
-                {
+                boldWordWrappedRichText = new GUIStyle(EditorStyles.boldLabel) {
                     richText = true,
                     wordWrap = true
                 };
 
                 // Text area.
-                textArea = new GUIStyle(EditorStyles.textArea)
-                {
+                textArea = new GUIStyle(EditorStyles.textArea) {
                     richText = true,
                     wordWrap = true
                 };
 
                 // Big word wrapped centered label.
-                bigWordWrappedCenteredLabel = new GUIStyle(EditorStyles.label)
-                {
+                bigWordWrappedCenteredLabel = new GUIStyle(EditorStyles.label) {
                     alignment = TextAnchor.MiddleCenter,
                     fontSize = 24,
                     wordWrap = true
                 };
 
                 // Left aligned toolbar button.
-                leftAlignedToolbarButton = new GUIStyle(EditorStyles.toolbarButton)
-                {
+                leftAlignedToolbarButton = new GUIStyle(EditorStyles.toolbarButton) {
                     alignment = TextAnchor.MiddleLeft
                 };
 
@@ -297,20 +281,17 @@ namespace EnhancedEditor.Editor
                 dropShadowLabel = new GUIStyle("PreOverlayLabel");
 
                 // Drop shaow centered label.
-                dropShadowCenteredLabel = new GUIStyle(dropShadowLabel)
-                {
+                dropShadowCenteredLabel = new GUIStyle(dropShadowLabel) {
                     alignment = TextAnchor.MiddleCenter
                 };
 
                 // Link label.
-                linkLabel = new GUIStyle(EditorStyles.whiteLabel)
-                {
+                linkLabel = new GUIStyle(EditorStyles.whiteLabel) {
                     fontStyle = FontStyle.Bold
                 };
 
                 // Centered Popup.
-                centeredPopup = new GUIStyle(EditorStyles.popup)
-                {
+                centeredPopup = new GUIStyle(EditorStyles.popup) {
                     alignment = TextAnchor.MiddleCenter,
                     fixedHeight = 0,
                     stretchWidth = false
@@ -322,8 +303,7 @@ namespace EnhancedEditor.Editor
 
                 #region Multi Tags
                 // Multi-Tags related styles.
-                cnCountBadge = new GUIStyle("CN CountBadge")
-                {
+                cnCountBadge = new GUIStyle("CN CountBadge") {
                     fontStyle = FontStyle.Bold,
                 };
 
@@ -333,8 +313,7 @@ namespace EnhancedEditor.Editor
 
                 #region Toolbar
                 // Global toolbar control.
-                toolbarControl = new GUIStyle("AppCommand")
-                {
+                toolbarControl = new GUIStyle("AppCommand") {
                     fixedWidth = 0f
                 };
 
@@ -343,18 +322,15 @@ namespace EnhancedEditor.Editor
                 toolbarButtonRight = new GUIStyle("AppToolbarButtonRight");
 
                 // Toolbar packed commands.
-                toolbarCommandLeft = new GUIStyle("AppCommandLeft")
-                {
+                toolbarCommandLeft = new GUIStyle("AppCommandLeft") {
                     fixedWidth = 0f
                 };
 
-                toolbarCommandMid = new GUIStyle("AppCommandMid")
-                {
+                toolbarCommandMid = new GUIStyle("AppCommandMid") {
                     fixedWidth = 0f
                 };
 
-                toolbarCommandRight = new GUIStyle("AppCommandRight")
-                {
+                toolbarCommandRight = new GUIStyle("AppCommandRight") {
                     fixedWidth = 0f
                 };
 
@@ -364,14 +340,14 @@ namespace EnhancedEditor.Editor
                 // Toolbar label is defined by the characteristic colors of toolbar buttons.
                 toolbarLabel = new GUIStyle(EditorStyles.label);
 
-                toolbarLabel.active.textColor =     toolbarButtonLeft.active.textColor;
-                toolbarLabel.onActive.textColor =   toolbarButtonLeft.onActive.textColor;
-                toolbarLabel.focused.textColor =    toolbarButtonLeft.focused.textColor;
-                toolbarLabel.onFocused.textColor =  toolbarButtonLeft.onFocused.textColor;
-                toolbarLabel.hover.textColor =      toolbarButtonLeft.hover.textColor;
-                toolbarLabel.onHover.textColor =    toolbarButtonLeft.onHover.textColor;
-                toolbarLabel.normal.textColor =     toolbarButtonLeft.normal.textColor;
-                toolbarLabel.onNormal.textColor =   toolbarButtonLeft.onNormal.textColor;
+                toolbarLabel.active.textColor = toolbarButtonLeft.active.textColor;
+                toolbarLabel.onActive.textColor = toolbarButtonLeft.onActive.textColor;
+                toolbarLabel.focused.textColor = toolbarButtonLeft.focused.textColor;
+                toolbarLabel.onFocused.textColor = toolbarButtonLeft.onFocused.textColor;
+                toolbarLabel.hover.textColor = toolbarButtonLeft.hover.textColor;
+                toolbarLabel.onHover.textColor = toolbarButtonLeft.onHover.textColor;
+                toolbarLabel.normal.textColor = toolbarButtonLeft.normal.textColor;
+                toolbarLabel.onNormal.textColor = toolbarButtonLeft.onNormal.textColor;
 
                 toolbarLabel.fixedHeight = toolbarControl.fixedHeight;
                 #endregion

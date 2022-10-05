@@ -229,7 +229,7 @@ namespace EnhancedEditor.Editor
         /// <param name="_property"><see cref="SerializedProperty"/> to specify the height for.</param>
         /// <param name="_label">Label displayed in front of the property.</param>
         /// <returns>Total height to be used to draw this property field.</returns>
-        protected virtual float GetDefaultHeight(SerializedProperty _property, GUIContent _label)
+        internal protected virtual float GetDefaultHeight(SerializedProperty _property, GUIContent _label)
         {
             EnhancedEditorGUIUtility.Repaint(_property.serializedObject);
             return EditorGUIUtility.singleLineHeight;
@@ -243,13 +243,9 @@ namespace EnhancedEditor.Editor
         /// <param name="_property"><see cref="SerializedProperty"/> to draw a field for.</param>
         /// <param name="_label">Label displayed in front of the field.</param>
         /// <returns>Total height used to draw this property field.</returns>
-        protected virtual float OnEnhancedGUI(Rect _position, SerializedProperty _property, GUIContent _label)
+        internal protected virtual float OnEnhancedGUI(Rect _position, SerializedProperty _property, GUIContent _label)
         {
-            float _height = _position.height
-                          = EditorGUI.GetPropertyHeight(_property, _label, true);
-
-            EditorGUI.PropertyField(_position, _property, _label, true);
-            return _height;
+            return EnhancedEditorGUI.EnhancedPropertyField(_position, _property, _label);
         }
         #endregion
     }

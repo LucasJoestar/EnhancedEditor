@@ -23,7 +23,7 @@ namespace EnhancedEditor.Editor
             {
                 _maxValue = _attribute.MaxValue;
             }
-            else if (!_attribute.MaxMember.Value.GetValue(SerializedProperty.serializedObject, out _maxValue))
+            else if (!_attribute.MaxMember.Value.GetValue(SerializedProperty, out _maxValue))
                 return;
 
             EnhancedEditorUtility.CeilSerializedPropertyValue(SerializedProperty, _maxValue);

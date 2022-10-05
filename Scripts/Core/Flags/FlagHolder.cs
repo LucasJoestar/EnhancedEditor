@@ -57,7 +57,7 @@ namespace EnhancedEditor {
 
                 for (int i = 0; i < _lastIndex; i++) {
                     if (_last.guid == Flags[i].guid) {
-                        _last.guid = Flag.GenerateGuid();
+                        _last.guid = EnhancedUtility.GenerateGUID();
                         i = 0;
                     }
                 }

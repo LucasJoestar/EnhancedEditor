@@ -4,14 +4,16 @@
 //
 // ============================================================================ //
 
+using System;
 using UnityEngine;
 
 namespace EnhancedEditor
 {
     /// <summary>
-    /// Specifies a new label to be used for this field in the inspector.
+    /// Specifies a new label to be used for this field in the inspector, or for a class using <see cref="SerializedType{T}"/>.
     /// </summary>
-	public class DisplayNameAttribute : EnhancedPropertyAttribute
+    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property | AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
+    public class DisplayNameAttribute : EnhancedPropertyAttribute
     {
         #region Global Members
         /// <summary>

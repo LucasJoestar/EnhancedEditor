@@ -746,7 +746,7 @@ namespace EnhancedEditor.Editor
         #endregion
 
         #region Utility
-        private readonly BindingFlags getMethodBindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
+        private const BindingFlags GetMethodBindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
 
         // -----------------------
 
@@ -935,7 +935,7 @@ namespace EnhancedEditor.Editor
                     continue;
                 }
 
-                MethodInfo[] _methodInfos = _type.GetMethods(getMethodBindingFlags);
+                MethodInfo[] _methodInfos = _type.GetMethods(GetMethodBindingFlags);
                 foreach (MethodInfo _methodInfo in _methodInfos)
                 {
                     // Only get non-internal methods from custom scripts, and public void ones among other components.

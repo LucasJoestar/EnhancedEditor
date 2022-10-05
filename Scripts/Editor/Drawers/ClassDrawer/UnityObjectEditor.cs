@@ -69,7 +69,7 @@ namespace EnhancedEditor.Editor
         #endregion
 
         #region Editor Content
-        private static readonly BindingFlags methodInfoFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
+        private const BindingFlags MethodInfoFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
 
         private UnityObjectDrawer[] objectDrawers = new UnityObjectDrawer[] { };
         private MethodDrawerGroup[] methodDrawerGroups = new MethodDrawerGroup[] { };
@@ -112,7 +112,7 @@ namespace EnhancedEditor.Editor
 
             // Do the same for method attributes.
             {
-                MethodInfo[] _allMethods = _type.GetMethods(methodInfoFlags);
+                MethodInfo[] _allMethods = _type.GetMethods(MethodInfoFlags);
                 var _methodDrawers = EnhancedDrawerUtility.GetMethodDrawers();
 
                 foreach (MethodInfo _method in _allMethods)

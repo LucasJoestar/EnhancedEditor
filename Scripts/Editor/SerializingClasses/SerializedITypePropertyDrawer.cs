@@ -15,14 +15,14 @@ namespace EnhancedEditor.Editor {
     /// Custom <see cref="SerializedType{T}"/> drawer.
     /// </summary>
     [CustomPropertyDrawer(typeof(SerializedType<>), true)]
-    public class SerializedITypePropertyDrawer : EnhancedPropertyEditor {
+    public class SerializedTypePropertyDrawer : EnhancedPropertyEditor {
         #region Drawer Content
         private const int CacheLimit = 25;
         private static readonly Dictionary<string, GUIContent[]> interfaceInfos = new Dictionary<string, GUIContent[]>();
 
         // -----------------------
 
-        protected override float OnEnhancedGUI(Rect _position, SerializedProperty _property, GUIContent _label) {
+        internal protected override float OnEnhancedGUI(Rect _position, SerializedProperty _property, GUIContent _label) {
             // Register this property to cache its selectable type values.
             string _key = _property.propertyPath;
 
@@ -36,7 +36,7 @@ namespace EnhancedEditor.Editor {
                 List<GUIContent> _temp = new List<GUIContent>();
 
                 if (_property.FindPropertyRelative("canBeBaseType").boolValue) {
-                    _temp.Add(new GUIContent(_baseType.Name, _baseType.GetReflectionName()));
+                    AddType(_temp, _baseType);
                 }
 
                 // Register all derived types.
@@ -44,8 +44,8 @@ namespace EnhancedEditor.Editor {
                 foreach (var _assembly in _assemblies) {
                     Type[] _types = _assembly.GetTypes();
                     foreach (var _type in _types) {
-                        if (!_type.IsAbstract && _type.IsSubclassOf(_baseType)) {
-                            _temp.Add(new GUIContent(_type.Name, _type.GetReflectionName()));
+                        if (!_type.IsDefined(typeof(EtherealAttribute), false) && _type.IsSubclassOf(_baseType)) {
+                            AddType(_temp, _type);
                         }
                     }
                 }
@@ -75,6 +75,21 @@ namespace EnhancedEditor.Editor {
             }
 
             return _height;
+
+            // ----- Local Method ----- \\
+
+            void AddType(List<GUIContent> _temp, Type _type) {
+                if (_type.IsAbstract) {
+                    return;
+                }
+
+                DisplayNameAttribute _attribute = _type.GetCustomAttribute<DisplayNameAttribute>();
+                string _label = (_attribute != null)
+                              ? _attribute.Label.text
+                              : ObjectNames.NicifyVariableName(_type.Name);
+
+                _temp.Add(new GUIContent(_label, _type.GetReflectionName()));
+            }
         }
         #endregion
     }

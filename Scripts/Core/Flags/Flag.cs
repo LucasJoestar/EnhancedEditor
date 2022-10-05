@@ -181,7 +181,7 @@ namespace EnhancedEditor {
         public string Name = "\'New Flag\'";
         #endif
 
-        [SerializeField] internal int guid = GenerateGuid();
+        [SerializeField] internal int guid = EnhancedUtility.GenerateGUID();
         [SerializeField] internal bool value = false;
 
         /// <summary>
@@ -239,16 +239,6 @@ namespace EnhancedEditor {
         /// </summary>
         public void Invert() {
             Value = !value;
-        }
-        #endregion
-
-        #region Utility
-        /// <summary>
-        /// Generates a new guid to be used for a <see cref="Flag"/>.
-        /// </summary>
-        /// <returns>Generated guid value.</returns>
-        public static int GenerateGuid() {
-            return Guid.NewGuid().GetHashCode();
         }
         #endregion
     }

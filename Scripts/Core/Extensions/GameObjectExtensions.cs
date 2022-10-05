@@ -30,6 +30,15 @@ namespace EnhancedEditor
             return _gameObject.AddComponent<T>();
         }
 
+        /// <param name="_componentType">The type of component to add.</param>
+        /// <inheritdoc cref="AddComponentIfNone{T}(GameObject)"/>
+        public static Component AddComponentIfNone(this GameObject _gameObject, Type _componentType) {
+            if (_gameObject.TryGetComponent(_componentType, out Component _component))
+                return _component;
+
+            return _gameObject.AddComponent(_componentType);
+        }
+
         #if !UNITY_2019_2_OR_NEWER
         /// <summary>
         /// Gets the component of the specified type, if it exists.<br/>
@@ -51,7 +60,7 @@ namespace EnhancedEditor
             _component = _gameObject.GetComponent(type);
             return _component != null;
         }
-        #endif
+#endif
         #endregion
     }
 }

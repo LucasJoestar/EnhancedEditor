@@ -19,6 +19,10 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 #endif
 
+#if LOCALIZATION_ENABLED
+using UnityEngine.Localization;
+#endif
+
 namespace EnhancedEditor.Editor
 {
     /// <summary>
@@ -90,6 +94,11 @@ namespace EnhancedEditor.Editor
             [SerializeField] internal InputAction increaseTimeScale = new InputAction();
             [SerializeField] internal InputAction resetTimeScale = new InputAction();
             [SerializeField] internal InputAction decreaseTimeScale = new InputAction();
+            #endif
+
+            #if LOCALIZATION_ENABLED
+            [SerializeField] internal bool autoSetupLocale = false;
+            [SerializeField] internal Locale defaultLocale = null;
             #endif
         }
 
@@ -345,6 +354,7 @@ namespace EnhancedEditor.Editor
         private static readonly GUIContent globalHeaderGUI = new GUIContent("Global Settings:", "Project global settings, shared between users.");
         private static readonly GUIContent coreSceneHeaderGUI = new GUIContent("Core Scene System", "Settings related to the Core Scene system.");
         private static readonly GUIContent chronosHeaderGUI = new GUIContent("Chronos Runtime Inputs", "Input shortcuts related to the chronos tool.");
+        private static readonly GUIContent localizationHeaderGUI = new GUIContent("Localization", "Localization plugin related local settings.");
         private static readonly GUIContent shortcutsGUI = new GUIContent("Editor Shortcuts", "Edit all Enhanced Editor-related editor shortcuts.");
 
         private static readonly GUIContent autoManagedResourceDirectoryGUI = new GUIContent("Managed Resource Dir.",
@@ -386,6 +396,11 @@ namespace EnhancedEditor.Editor
         private static SerializedProperty decreaseTimeScaleProperty = null;
         #endif
 
+        #if LOCALIZATION_ENABLED
+        private static SerializedProperty autoSetupLocale = null;
+        private static SerializedProperty defaultLocale = null;
+        #endif
+
         private static SerializedProperty autoManagedResourceDirectoryProperty = null;
         private static SerializedProperty instanceTrackerDirectoryProperty = null;
         private static SerializedProperty scriptTemplateDirectoryProperty = null;
@@ -411,6 +426,11 @@ namespace EnhancedEditor.Editor
                 increaseTimeScaleProperty = _userSettings.FindPropertyRelative("increaseTimeScale");
                 resetTimeScaleProperty = _userSettings.FindPropertyRelative("resetTimeScale");
                 decreaseTimeScaleProperty = _userSettings.FindPropertyRelative("decreaseTimeScale");
+                #endif
+
+                #if ENABLE_INPUT_SYSTEM
+                autoSetupLocale = _userSettings.FindPropertyRelative("autoSetupLocale");
+                defaultLocale = _userSettings.FindPropertyRelative("defaultLocale");
                 #endif
 
                 autoManagedResourceDirectoryProperty = serializedObject.FindProperty("AutoManagedResourceDirectory");
@@ -487,6 +507,19 @@ namespace EnhancedEditor.Editor
 
                     EditorGUILayout.PrefixLabel(decreaseTimeScaleGUI);
                     EditorGUILayout.PropertyField(decreaseTimeScaleProperty);
+                    #endif
+
+                    #if LOCALIZATION_ENABLED
+                    GUILayout.Space(10f);
+
+                    // Localization settings.
+                    EditorGUILayout.LabelField(localizationHeaderGUI, EditorStyles.boldLabel);
+
+                    EditorGUILayout.PropertyField(autoSetupLocale);
+
+                    if (autoSetupLocale.boolValue) {
+                        EditorGUILayout.PropertyField(defaultLocale);
+                    }
                     #endif
 
                     #if UNITY_2019_1_OR_NEWER

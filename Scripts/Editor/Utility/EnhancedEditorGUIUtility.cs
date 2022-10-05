@@ -5,17 +5,36 @@
 // ============================================================================ //
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
-namespace EnhancedEditor.Editor
-{
+namespace EnhancedEditor.Editor {
+    /// <summary>
+    /// All available valide command names from <see cref="Event.commandName"/>.
+    /// </summary>
+    public enum ValidateCommand {
+        None = 0,
+        Copy,
+        Cut,
+        Paste,
+        Delete,
+        SoftDelete,
+        Duplicate,
+        FrameSelected,
+        FrameSelectedWithLock,
+        SelectAll,
+        Find,
+        FocusProjectWindow,
+
+        Unknown = 31
+    }
+
     /// <summary>
     /// Contains multiple editor-related GUI utility methods, variables and properties.
     /// </summary>
-    public static class EnhancedEditorGUIUtility
-    {
+    public static class EnhancedEditorGUIUtility {
         #region Global Editor Variables
         /// <summary>
         /// Default size (for both width and height) used to draw an asset preview (in pixels).
@@ -35,7 +54,7 @@ namespace EnhancedEditor.Editor
         /// <summary>
         /// Width used to draw various mini icons (in pixels).
         /// </summary>
-        public const float MiniIconWidth = 17f;
+        public const float MiniIconWidth = 18f;
 
         /// <summary>
         /// Default width of the lines surrounding the label of a section (in pixels).
@@ -73,6 +92,12 @@ namespace EnhancedEditor.Editor
                                                                               new Color(0f, .5f, 1f, .25f));
 
         /// <summary>
+        /// Color used for various GUI feedback controls.
+        /// </summary>
+        public static readonly EditorColor GUIFeedbackColor = new EditorColor(new Color(.2f, .341f, .85f),
+                                                                              new Color(.2f, .341f, .85f));
+
+        /// <summary>
         /// Color used for link labels, when the mouse is not hover.
         /// </summary>
         public static readonly EditorColor LinkLabelNormalColor = new EditorColor(new Color(0f, .235f, .533f, 1f),
@@ -96,10 +121,8 @@ namespace EnhancedEditor.Editor
         /// <summary>
         /// Current editor GUI background color, depending on whether currently using the light theme or the dark theme.
         /// </summary>
-        public static Color GUIThemeBackgroundColor
-        {
-            get
-            {
+        public static Color GUIThemeBackgroundColor {
+            get {
                 Color _color = EditorGUIUtility.isProSkin
                                 ? DarkThemeGUIBackgroundColor
                                 : LightThemeGUIBackgroundColor;
@@ -121,8 +144,7 @@ namespace EnhancedEditor.Editor
         /// </summary>
         /// <param name="_property"><see cref="SerializedProperty"/> to get label from.</param>
         /// <returns>Label associated with the property.</returns>
-        public static GUIContent GetPropertyLabel(SerializedProperty _property)
-        {
+        public static GUIContent GetPropertyLabel(SerializedProperty _property) {
             string _name = ObjectNames.NicifyVariableName(_property.name);
 
             propertylabelGUI.text = _name;
@@ -132,8 +154,7 @@ namespace EnhancedEditor.Editor
         }
 
         /// <inheritdoc cref="GetLabelGUI(string, string)"/>
-        public static GUIContent GetLabelGUI(string _label)
-        {
+        public static GUIContent GetLabelGUI(string _label) {
             return GetLabelGUI(_label, string.Empty);
         }
 
@@ -143,8 +164,7 @@ namespace EnhancedEditor.Editor
         /// <param name="_label"><see cref="GUIContent"/> text label.</param>
         /// <param name="_tooltip"><see cref="GUIContent"/> tooltip.</param>
         /// <returns><see cref="GUIContent"/> to use.</returns>
-        public static GUIContent GetLabelGUI(string _label, string _tooltip)
-        {
+        public static GUIContent GetLabelGUI(string _label, string _tooltip) {
             labelGUI.text = _label;
             labelGUI.tooltip = _tooltip;
             labelGUI.image = null;
@@ -159,20 +179,16 @@ namespace EnhancedEditor.Editor
         /// <param name="_messageType">The type of message.</param>
         /// <param name="_width">The total width to use to draw the help box.</param>
         /// <returns>Total height that will be used to draw this help box.</returns>
-        public static float GetHelpBoxHeight(string _message, UnityEditor.MessageType _messageType, float _width)
-        {
+        public static float GetHelpBoxHeight(string _message, UnityEditor.MessageType _messageType, float _width) {
             GUIContent _label;
-            if (_messageType != UnityEditor.MessageType.None)
-            {
+            if (_messageType != UnityEditor.MessageType.None) {
                 _label = helpBoxGUI;
                 _label.text = _message;
 
                 // Load an icon that will help calculate the help box height.
                 if (_label.image == null)
                     _label.image = EditorGUIUtility.FindTexture("console.infoicon");
-            }
-            else
-            {
+            } else {
                 _label = GetLabelGUI(_message);
             }
 
@@ -181,14 +197,54 @@ namespace EnhancedEditor.Editor
         }
         #endregion
 
+        #region GUI Calculs
+        /// <inheritdoc cref="ClampLabelWidth(string, float, GUIStyle)"/>
+        public static string ClampLabelWidth(string _label, float _maxWidth) {
+            return ClampLabelWidth(_label, _maxWidth, EditorStyles.label);
+        }
+
+        /// <inheritdoc cref="ClampLabelWidth(GUIContent, float, GUIStyle)"/>
+        public static string ClampLabelWidth(string _label, float _maxWidth, GUIStyle _style) {
+            return ClampLabelWidth(GetLabelGUI(_label), _maxWidth, _style).text;
+        }
+
+        /// <inheritdoc cref="ClampLabelWidth(GUIContent, float, GUIStyle)"/>
+        public static GUIContent ClampLabelWidth(GUIContent _label, float _maxWidth) {
+            return ClampLabelWidth(_label, _maxWidth, EditorStyles.label);
+        }
+
+        /// <summary>
+        /// Clamps the length of a specific label so that it does not exceed a specific width.
+        /// </summary>
+        /// <param name="_label">The label to clamp.</param>
+        /// <param name="_maxWidth">Maximum allowed width.</param>
+        /// <param name="_style">The <see cref="GUIStyle"/> used to draw the label.</param>
+        /// <returns>The clamped label.</returns>
+        public static GUIContent ClampLabelWidth(GUIContent _label, float _maxWidth, GUIStyle _style) {
+            int _count = 0;
+            float _width = 0f;
+            string _text = _label.text;
+
+            float _emptyWidth = _style.CalcSize(GUIContent.none).x;
+
+            while ((_width < _maxWidth) && (_count < _text.Length)) {
+                _label.text = _text[_count].ToString();
+                _width += _style.CalcSize(_label).x - _emptyWidth;
+
+                _count++;
+            }
+
+            _label.text = _text.Substring(0, _count);
+            return _label;
+        }
+        #endregion
+
         #region Rect and Position
         /// <summary>
         /// The current screen width, scaled by the device dpi.
         /// </summary>
-        public static float ScreenWidth
-        {
-            get
-            {
+        public static float ScreenWidth {
+            get {
                 float _width = Mathf.RoundToInt(Screen.width / ScreenScale);
                 return _width;
             }
@@ -197,10 +253,8 @@ namespace EnhancedEditor.Editor
         /// <summary>
         /// The current screen height, scaled by the device dpi.
         /// </summary>
-        public static float ScreenHeight
-        {
-            get
-            {
+        public static float ScreenHeight {
+            get {
                 float _width = Mathf.RoundToInt(Screen.height / ScreenScale);
                 return _width;
             }
@@ -209,10 +263,8 @@ namespace EnhancedEditor.Editor
         /// <summary>
         /// The actual editor scale depending on the screen device dpi.
         /// </summary>
-        public static float ScreenScale
-        {
-            get
-            {
+        public static float ScreenScale {
+            get {
                 float _scale = Screen.dpi / 96f;
                 return _scale;
             }
@@ -224,8 +276,7 @@ namespace EnhancedEditor.Editor
         /// Note that its y position is always equal to 0.
         /// </summary>
         /// <returns>The default rect to use for an Editor control on this view.</returns>
-        public static Rect GetViewControlRect()
-        {
+        public static Rect GetViewControlRect() {
             // Left offset is equal to 18 pixels, and right offset to 5.
             Rect _position = new Rect()
             {
@@ -245,150 +296,22 @@ namespace EnhancedEditor.Editor
         /// <param name="_position">Position on screen to focus.</param>
         /// <param name="_scrollAreaSize">The size of the scroll area on screen.</param>
         /// <returns>Focused scroll value on position.</returns>
-        public static Vector2 FocusScrollOnPosition(Vector2 _scroll, Rect _position, Vector2 _scrollAreaSize)
-        {
+        public static Vector2 FocusScrollOnPosition(Vector2 _scroll, Rect _position, Vector2 _scrollAreaSize) {
             // Horizontal focus.
-            if (_scroll.x > _position.x)
-            {
+            if (_scroll.x > _position.x) {
                 _scroll.x = _position.x;
-            }
-            else if ((_scroll.x + _scrollAreaSize.x) < _position.xMax)
-            {
+            } else if ((_scroll.x + _scrollAreaSize.x) < _position.xMax) {
                 _scroll.x = _position.xMax - _scrollAreaSize.x;
             }
 
             // Vertical focus.
-            if (_scroll.y > _position.y)
-            {
+            if (_scroll.y > _position.y) {
                 _scroll.y = _position.y;
-            }
-            else if ((_scroll.y + _scrollAreaSize.y) < _position.yMax)
-            {
+            } else if ((_scroll.y + _scrollAreaSize.y) < _position.yMax) {
                 _scroll.y = _position.yMax - _scrollAreaSize.y;
             }
 
             return _scroll;
-        }
-        #endregion
-
-        #region Control ID
-        private static readonly List<int> controlsID = new List<int>();
-
-        private static int controldIDIndex = -1;
-        private static int activeIDCount = 0;
-
-        // -----------------------
-
-        /// <inheritdoc cref="GetControlID(GUIContent, FocusType, Rect)"/>
-        public static int GetControlID(FocusType _focusType)
-        {
-            GUIContent _label = GUIContent.none;
-            return GetControlID(_label, _focusType);
-        }
-
-        /// <inheritdoc cref="GetControlID(GUIContent, FocusType, Rect)"/>
-        public static int GetControlID(FocusType _focusType, Rect _position)
-        {
-            GUIContent _label = GUIContent.none;
-            return GetControlID(_label, _focusType, _position); ;
-        }
-
-        /// <inheritdoc cref="GetControlID(GUIContent, FocusType, Rect)"/>
-        public static int GetControlID(GUIContent _label, FocusType _focusType)
-        {
-            Rect _position = Rect.zero;
-            return GetControlID(_label, _focusType, _position);
-        }
-
-        /// <summary>
-        /// Works pretty much like <see cref="GUIUtility.GetControlID(GUIContent, FocusType, Rect)"/>,
-        /// except that the ID is guaranteed to never equal -1.
-        /// <para/>
-        /// <inheritdoc cref="GUIUtility.GetControlID(GUIContent, FocusType, Rect)" path="/summary"/>
-        /// </summary>
-        /// <param name="_label">Label acting as a hint to ensure correct matching of IDs to controls.</param>
-        /// <param name="_focusType">Control <see cref="FocusType"/>.</param>
-        /// <param name="_position">Rectangle on the screen where the control is drawn.</param>
-        /// <returns>Guaranteed not equal to -1 control ID.</returns>
-        public static int GetControlID(GUIContent _label, FocusType _focusType, Rect _position)
-        {
-            int _id = GUIUtility.GetControlID(_label, _focusType, _position);
-            return DoControlID(_id);
-        }
-
-        /// <inheritdoc cref="GetControlID(int, FocusType, Rect)"/>
-        public static int GetControlID(int _hint, FocusType _focusType)
-        {
-            Rect _position = Rect.zero;
-            return GetControlID(_hint, _focusType, _position);
-        }
-
-        /// <summary>
-        /// Works pretty much like <see cref="GUIUtility.GetControlID(int, FocusType, Rect)"/>,
-        /// except that the ID is guaranteed to never equal -1.
-        /// <para/>
-        /// <inheritdoc cref="GUIUtility.GetControlID(int, FocusType, Rect)" path="/summary"/>
-        /// </summary>
-        /// <param name="_hint">Hint to help ensure correct matching of IDs to controls.</param>
-        /// <inheritdoc cref="GetControlID(GUIContent, FocusType, Rect)"/>
-        public static int GetControlID(int _hint, FocusType _focusType, Rect _position)
-        {
-            int _id = GUIUtility.GetControlID(_hint, _focusType, _position);
-            return DoControlID(_id);
-        }
-
-        // -----------------------
-
-        private static int DoControlID(int _id)
-        {
-            /* Sometimes, with some special events (like EventType.Used), the returned id may be equal to -1.
-             * However, this unwanted behaviour breaks many enhanced controls (like dynamic height ones),
-             * as all following ids are then also equal to -1, and their associated registered value cannot be properly retrieved.
-             * 
-             * So let's store all previous event ids, and replace undesired values with them.
-             * (You can reactivate the following debugs if you want to understand the default behaviour).
-            */
-
-            //Debug.Log("ID => " + _id + " | " + Event.current.type);
-
-            if (_id == -1)
-            {
-                // Unregistered id.
-                if (controlsID.Count == 0)
-                    return -1;
-
-                // Invalid.
-                controldIDIndex = (controldIDIndex < activeIDCount)
-                                ? (controldIDIndex + 1)
-                                : 0;
-
-                _id = controlsID[controldIDIndex];
-            }
-            else if ((controldIDIndex != -1) && (_id < controlsID[controldIDIndex]))
-            {
-                // Restart.
-                activeIDCount = controldIDIndex;
-
-                controldIDIndex = 0;
-                controlsID[controldIDIndex] = _id;
-            }
-            else
-            {
-                // Increment.
-                controldIDIndex++;
-                if (controldIDIndex == controlsID.Count)
-                {
-                    controlsID.Add(_id);
-                }
-                else
-                {
-                    controlsID[controldIDIndex] = _id;
-                }
-            }
-
-            //Debug.LogWarning("ID => " + _id + " | " + Event.current.type);
-
-            return _id;
         }
         #endregion
 
@@ -398,14 +321,76 @@ namespace EnhancedEditor.Editor
         // -----------------------
 
         /// <summary>
+        /// Get the current <see cref="Event.commandName"/> type on this position.
+        /// </summary>
+        /// <returns>This position event command type</returns>
+        public static ValidateCommand ValidateCommand(Rect _position, out Event _event) {
+            if (_position.Event(out _event) != EventType.ValidateCommand) {
+                return Editor.ValidateCommand.None;
+            }
+
+            return ValidateCommand(out _event);
+        }
+
+        /// <summary>
+        /// Get the current <see cref="Event.commandName"/> type.
+        /// </summary>
+        /// <returns>The event command type</returns>
+        public static ValidateCommand ValidateCommand(out Event _event) {
+            _event = Event.current;
+
+            if (_event.type != EventType.ValidateCommand) {
+                return Editor.ValidateCommand.None;
+            }
+
+            switch (_event.commandName) {
+                case "Copy":
+                    return Editor.ValidateCommand.Copy;
+
+                case "Cut":
+                    return Editor.ValidateCommand.Cut;
+
+                case "Paste":
+                    return Editor.ValidateCommand.Paste;
+
+                case "Delete":
+                    return Editor.ValidateCommand.Delete;
+
+                case "SoftDelete":
+                    return Editor.ValidateCommand.SoftDelete;
+
+                case "Duplicate":
+                    return Editor.ValidateCommand.Duplicate;
+
+                case "FrameSelected":
+                    return Editor.ValidateCommand.FrameSelected;
+
+                case "FrameSelectedWithLock":
+                    return Editor.ValidateCommand.FrameSelectedWithLock;
+
+                case "SelectAll":
+                    return Editor.ValidateCommand.SelectAll;
+
+                case "Find":
+                    return Editor.ValidateCommand.Find;
+
+                case "FocusProjectWindow":
+                    return Editor.ValidateCommand.FocusProjectWindow;
+
+                default:
+                    break;
+            }
+
+            return Editor.ValidateCommand.Unknown;
+        }
+
+        /// <summary>
         /// Did the user just performed a context click on this position?
         /// </summary>
         /// <param name="_position"><inheritdoc cref="DocumentationMethod(Rect)" path="/param[@name='_position']"/></param>
         /// <returns>True if the user performed a context click here, false otherwise.</returns>
-        public static bool ContextClick(Rect _position)
-        {
-            if (_position.Event(out Event _event) == EventType.ContextClick)
-            {
+        public static bool ContextClick(Rect _position) {
+            if (_position.Event(out Event _event) == EventType.ContextClick) {
                 _event.Use();
                 return true;
             }
@@ -418,10 +403,8 @@ namespace EnhancedEditor.Editor
         /// </summary>
         /// <param name="_position"><inheritdoc cref="DocumentationMethod(Rect)" path="/param[@name='_position']"/></param>
         /// <returns>True if the user clicked here, false otherwise.</returns>
-        public static bool MouseDown(Rect _position)
-        {
-            if (_position.Event(out Event _event) == EventType.MouseDown)
-            {
+        public static bool MouseDown(Rect _position) {
+            if (_position.Event(out Event _event) == EventType.MouseDown) {
                 _event.Use();
                 return true;
             }
@@ -434,10 +417,8 @@ namespace EnhancedEditor.Editor
         /// </summary>
         /// <param name="_position"><inheritdoc cref="DocumentationMethod(Rect)" path="/param[@name='_position']"/></param>
         /// <returns>True if the user released this mouse button here, false otherwise.</returns>
-        public static bool MainMouseUp(Rect _position)
-        {
-            if ((_position.Event(out Event _event) == EventType.MouseUp) && (_event.button == 0))
-            {
+        public static bool MainMouseUp(Rect _position) {
+            if ((_position.Event(out Event _event) == EventType.MouseUp) && (_event.button == 0)) {
                 _event.Use();
                 return true;
             }
@@ -450,10 +431,8 @@ namespace EnhancedEditor.Editor
         /// </summary>
         /// <param name="_position"><inheritdoc cref="DocumentationMethod(Rect)" path="/param[@name='_position']"/></param>
         /// <returns>True if the user performed a deselection click here, false otherwise.</returns>
-        public static bool DeselectionClick(Rect _position)
-        {
-            if ((_position.Event(out Event _event) == EventType.MouseDown) && !_event.control && !_event.shift && (_event.button == 0))
-            {
+        public static bool DeselectionClick(Rect _position) {
+            if ((_position.Event(out Event _event) == EventType.MouseDown) && !_event.control && !_event.shift && (_event.button == 0)) {
                 _event.Use();
                 return true;
             }
@@ -466,14 +445,11 @@ namespace EnhancedEditor.Editor
         /// <br/> Works with up and down arrows.
         /// </summary>
         /// <returns>-1 for up, 1 for down, 0 otherwise.</returns>
-        public static int VerticalKeys()
-        {
+        public static int VerticalKeys() {
             Event _event = Event.current;
 
-            if (_event.type == EventType.KeyDown)
-            {
-                switch (_event.keyCode)
-                {
+            if (_event.type == EventType.KeyDown) {
+                switch (_event.keyCode) {
                     case KeyCode.UpArrow:
                         _event.Use();
                         return -1;
@@ -495,14 +471,11 @@ namespace EnhancedEditor.Editor
         /// <br/> Works with left and right arrows.
         /// </summary>
         /// <returns>-1 for left, 1 for right, 0 otherwise.</returns>
-        public static int HorizontalSelectionKeys()
-        {
+        public static int HorizontalSelectionKeys() {
             Event _event = Event.current;
 
-            if (_event.type == EventType.KeyDown)
-            {
-                switch (_event.keyCode)
-                {
+            if (_event.type == EventType.KeyDown) {
+                switch (_event.keyCode) {
                     case KeyCode.LeftArrow:
                         _event.Use();
                         return -1;
@@ -522,20 +495,17 @@ namespace EnhancedEditor.Editor
         /// <summary>
         /// Selects multiple elements of an array according to the user's mouse inputs.
         /// </summary>
-        /// <param name="_position"><inheritdoc cref="DocumentationMethod(Rect, Array, Predicate{int}, Action{int, bool})" path="/param[@name='_position']"/></param>
-        /// <param name="_array"><inheritdoc cref="DocumentationMethod(Rect, Array, Predicate{int}, Action{int, bool})" path="/param[@name='_array']"/></param>
+        /// <param name="_position"><inheritdoc cref="DocumentationMethod(Rect, IList, Predicate{int}, Action{int, bool})" path="/param[@name='_position']"/></param>
+        /// <param name="_collection"><inheritdoc cref="DocumentationMethod(Rect, IList, Predicate{int}, Action{int, bool})" path="/param[@name='_collection']"/></param>
         /// <param name="_index">Index of the current array element.</param>
-        /// <param name="_isSelected"><inheritdoc cref="DocumentationMethod(Rect, Array, Predicate{int}, Action{int, bool})" path="/param[@name='_isSelected']"/></param>
-        /// <param name="_onSelect"><inheritdoc cref="DocumentationMethod(Rect, Array, Predicate{int}, Action{int, bool})" path="/param[@name='_onSelect']"/></param>
+        /// <param name="_isSelected"><inheritdoc cref="DocumentationMethod(Rect, IList, Predicate{int}, Action{int, bool})" path="/param[@name='_isSelected']"/></param>
+        /// <param name="_onSelect"><inheritdoc cref="DocumentationMethod(Rect, IList, Predicate{int}, Action{int, bool})" path="/param[@name='_onSelect']"/></param>
         /// <returns>True if the user performed a click to select element(s) here, false otherwise.</returns>
-        public static bool MultiSelectionClick(Rect _position, Array _array, int _index, Predicate<int> _isSelected, Action<int, bool> _onSelect)
-        {
+        public static bool MultiSelectionClick(Rect _position, IList _collection, int _index, Predicate<int> _isSelected, Action<int, bool> _onSelect) {
             // Only select on mouse down or on selected element mouse up.
             bool _isMouseUpSelection = false;
-            if (_position.Event(out Event _event) != EventType.MouseDown)
-            {
-                if ((_position.Event() != EventType.MouseUp) || (_event.button != 0) || (_event.mousePosition != mouseDownPosition))
-                {
+            if (_position.Event(out Event _event) != EventType.MouseDown) {
+                if ((_position.Event() != EventType.MouseUp) || (_event.button != 0) || (_event.mousePosition != mouseDownPosition)) {
                     if (_event.type == EventType.MouseDrag)
                         mouseDownPosition = Vector2.zero;
 
@@ -546,66 +516,50 @@ namespace EnhancedEditor.Editor
             }
 
             // Mouse up helper update.
-            if (!_isMouseUpSelection && _isSelected(_index))
-            {
+            if (!_isMouseUpSelection && _isSelected(_index)) {
                 mouseDownPosition = _event.mousePosition;
+                _event.Use();
                 return true;
-            }
-            else
+            } else
                 mouseDownPosition = Vector2.zero;
 
-            if (_event.shift)
-            {
+            if (_event.shift) {
                 int _firstIndex = -1;
                 int _lastIndex = -1;
 
                 // Find first index.
-                for (int _i = 0; _i < _array.Length; _i++)
-                {
-                    if (_isSelected(_i) || (_i == _index))
-                    {
+                for (int _i = 0; _i < _collection.Count; _i++) {
+                    if (_isSelected(_i) || (_i == _index)) {
                         _firstIndex = _i;
                         break;
                     }
                 }
 
                 // Find last index.
-                for (int _i = _array.Length; _i-- > 0;)
-                {
-                    if (_isSelected(_i) || (_i == _index))
-                    {
+                for (int _i = _collection.Count; _i-- > 0;) {
+                    if (_isSelected(_i) || (_i == _index)) {
                         _lastIndex = _i + 1;
                         break;
                     }
                 }
 
                 // Select all elements between indexes.
-                if (_index == _firstIndex)
-                {
-                    for (int _i = _lastIndex; _i-- > _firstIndex;)
-                    {
+                if (_index == _firstIndex) {
+                    for (int _i = _lastIndex; _i-- > _firstIndex;) {
+                        _onSelect(_i, true);
+                    }
+                } else {
+                    for (int _i = _firstIndex; _i < _lastIndex; _i++) {
                         _onSelect(_i, true);
                     }
                 }
-                else
-                {
-                    for (int _i = _firstIndex; _i < _lastIndex; _i++)
-                    {
-                        _onSelect(_i, true);
-                    }
-                }
-            }
-            else if (_event.control)
-            {
+            } else if (_event.control) {
                 // Inverse selected state.
                 bool _selected = _isSelected(_index);
                 _onSelect(_index, !_selected);
-            }
-            else if (!_isSelected(_index) || (_event.button == 0))
-            {
+            } else if (!_isSelected(_index) || (_event.button == 0)) {
                 // Unselect every element except this one.
-                for (int _i = 0; _i < _array.Length; _i++)
-                {
+                for (int _i = 0; _i < _collection.Count; _i++) {
                     bool _selected = _i == _index;
                     _onSelect(_i, _selected);
                 }
@@ -618,35 +572,30 @@ namespace EnhancedEditor.Editor
         /// <summary>
         /// Selects multiple elements of an array according to the user's vertical inputs.
         /// </summary>
-        /// <param name="_array"><inheritdoc cref="DocumentationMethod(Rect, Array, Predicate{int}, Action{int, bool})" path="/param[@name='_array']"/></param>
-        /// <param name="_isSelected"><inheritdoc cref="DocumentationMethod(Rect, Array, Predicate{int}, Action{int, bool})" path="/param[@name='_isSelected']"/></param>
+        /// <param name="_collection"><inheritdoc cref="DocumentationMethod(Rect, IList Predicate{int}, Action{int, bool})" path="/param[@name='_collection']"/></param>
+        /// <param name="_isSelected"><inheritdoc cref="DocumentationMethod(Rect, IList, Predicate{int}, Action{int, bool})" path="/param[@name='_isSelected']"/></param>
         /// <param name="_canBeSelected">Used to know if a specific element can be selected.</param>
-        /// <param name="_onSelect"><inheritdoc cref="DocumentationMethod(Rect, Array, Predicate{int}, Action{int, bool})" path="/param[@name='_onSelect']"/></param>
+        /// <param name="_onSelect"><inheritdoc cref="DocumentationMethod(Rect, IList, Predicate{int}, Action{int, bool})" path="/param[@name='_onSelect']"/></param>
         /// <param name="_lastSelectedIndex">Index of the last selected element. Use -1 if no element is currently selected.</param>
         /// <returns>True if the user pressed a key to select element(s), from otherwise.</returns>
-        public static bool VerticalMultiSelectionKeys(Array _array, Predicate<int> _isSelected, Predicate<int> _canBeSelected, Action<int, bool> _onSelect, int _lastSelectedIndex)
-        {
+        public static bool VerticalMultiSelectionKeys(IList _collection, Predicate<int> _isSelected, Predicate<int> _canBeSelected, Action<int, bool> _onSelect, int _lastSelectedIndex) {
             // Do not select anything on an empty array.
-            if (_array.Length == 0)
+            if (_collection.Count == 0)
                 return false;
 
-            if ((_lastSelectedIndex > -1) && ((_lastSelectedIndex >= _array.Length) || !_canBeSelected(_lastSelectedIndex)))
+            if ((_lastSelectedIndex > -1) && ((_lastSelectedIndex >= _collection.Count) || !_canBeSelected(_lastSelectedIndex)))
                 _lastSelectedIndex = -1;
 
             // Get selection value.
             int _switch = VerticalKeys();
-            switch (_switch)
-            {
-                case -1:
-                {
+            switch (_switch) {
+                case -1: {
                     // Find first selected element if none.
                     if (_lastSelectedIndex > -1)
                         break;
 
-                    for (int _i = 0; _i < _array.Length; _i++)
-                    {
-                        if (_isSelected(_i))
-                        {
+                    for (int _i = 0; _i < _collection.Count; _i++) {
+                        if (_isSelected(_i)) {
                             _lastSelectedIndex = _i;
                             break;
                         }
@@ -654,16 +603,13 @@ namespace EnhancedEditor.Editor
                 }
                 break;
 
-                case 1:
-                {
+                case 1: {
                     // Find last selected element if none.
                     if (_lastSelectedIndex > -1)
                         break;
 
-                    for (int _i = _array.Length; _i-- > 0;)
-                    {
-                        if (_isSelected(_i))
-                        {
+                    for (int _i = _collection.Count; _i-- > 0;) {
+                        if (_isSelected(_i)) {
                             _lastSelectedIndex = _i;
                             break;
                         }
@@ -676,24 +622,18 @@ namespace EnhancedEditor.Editor
             }
 
             // If no element is selected, then simply selected one.
-            if (_lastSelectedIndex < 0)
-            {
+            if (_lastSelectedIndex < 0) {
                 int _index, _limit;
-                if (_switch == 1)
-                {
-                    _index = _array.Length - 1;
+                if (_switch == 1) {
+                    _index = _collection.Count - 1;
                     _limit = -1;
-                }
-                else
-                {
+                } else {
                     _index = 0;
-                    _limit = _array.Length;
+                    _limit = _collection.Count;
                 }
 
-                for (int _i = _index; _i != _limit; _i -= _switch)
-                {
-                    if (_canBeSelected(_i))
-                    {
+                for (int _i = _index; _i != _limit; _i -= _switch) {
+                    if (_canBeSelected(_i)) {
                         _onSelect(_index, true);
                         break;
                     }
@@ -703,62 +643,48 @@ namespace EnhancedEditor.Editor
             }
 
             Event _event = Event.current;
-            if (_event.shift || _event.control)
-            {
+            if (_event.shift || _event.control) {
                 // Multi-selection.
                 int _firstIndex = -1;
                 int _lastIndex = -1;
 
                 // Find first index.
-                for (int _i = 0; _i < _array.Length; _i++)
-                {
-                    if (_isSelected(_i))
-                    {
+                for (int _i = 0; _i < _collection.Count; _i++) {
+                    if (_isSelected(_i)) {
                         _firstIndex = _i;
                         break;
                     }
                 }
 
                 // Find last index.
-                for (int _i = _array.Length; _i-- > 0;)
-                {
-                    if (_isSelected(_i))
-                    {
+                for (int _i = _collection.Count; _i-- > 0;) {
+                    if (_isSelected(_i)) {
                         _lastIndex = _i + 1;
                         break;
                     }
                 }
 
                 // Select elements.
-                if (_switch == -1)
-                {
+                if (_switch == -1) {
                     bool _increase = _lastSelectedIndex == _firstIndex;
-                    if (_increase)
-                    {
+                    if (_increase) {
                         int _index = GetNewSelectedIndex();
                         for (int _i = _lastIndex; _i-- > _index;)
                             _onSelect(_i, true);
-                    }
-                    else
-                    {
+                    } else {
                         for (int _i = _firstIndex; _i < _lastSelectedIndex; _i++)
                             _onSelect(_i, true);
 
                         for (int _i = _lastSelectedIndex; _i < _lastIndex; _i++)
                             _onSelect(_i, false);
                     }
-                }
-                else
-                {
+                } else {
                     bool _increase = _lastSelectedIndex == (_lastIndex - 1);
-                    if (_increase)
-                    {
+                    if (_increase) {
                         int _index = GetNewSelectedIndex() + 1;
                         for (int _i = _firstIndex; _i < _index; _i++)
                             _onSelect(_i, true);
-                    }
-                    else
-                    {
+                    } else {
                         for (int _i = _firstIndex; _i < (_lastSelectedIndex + 1); _i++)
                             _onSelect(_i, false);
 
@@ -766,14 +692,11 @@ namespace EnhancedEditor.Editor
                             _onSelect(_i, true);
                     }
                 }
-            }
-            else
-            {
+            } else {
                 // Select this element only.
                 int _index = GetNewSelectedIndex();
 
-                for (int _i = 0; _i < _array.Length; _i++)
-                {
+                for (int _i = 0; _i < _collection.Count; _i++) {
                     bool _selected = _i == _index;
                     _onSelect(_i, _selected);
                 }
@@ -783,14 +706,11 @@ namespace EnhancedEditor.Editor
 
             // ----- Local Method ----- \\
 
-            int GetNewSelectedIndex()
-            {
+            int GetNewSelectedIndex() {
                 int _index = _lastSelectedIndex;
-                while (true)
-                {
+                while (true) {
                     _index += _switch;
-                    if ((_index == -1) || (_index == _array.Length))
-                    {
+                    if ((_index == -1) || (_index == _collection.Count)) {
                         _index = _lastSelectedIndex;
                         break;
                     }
@@ -804,18 +724,133 @@ namespace EnhancedEditor.Editor
         }
         #endregion
 
+        #region Control ID
+        private static readonly List<int> controlsID = new List<int>();
+
+        private static int controldIDIndex = -1;
+        private static int activeIDCount = 0;
+
+        private static int lastID = 0;
+
+        // -----------------------
+
+        /// <inheritdoc cref="GetControlID(GUIContent, FocusType, Rect)"/>
+        public static int GetControlID(FocusType _focusType) {
+            GUIContent _label = GUIContent.none;
+            return GetControlID(_label, _focusType);
+        }
+
+        /// <inheritdoc cref="GetControlID(GUIContent, FocusType, Rect)"/>
+        public static int GetControlID(FocusType _focusType, Rect _position) {
+            GUIContent _label = GUIContent.none;
+            return GetControlID(_label, _focusType, _position);
+            ;
+        }
+
+        /// <inheritdoc cref="GetControlID(GUIContent, FocusType, Rect)"/>
+        public static int GetControlID(GUIContent _label, FocusType _focusType) {
+            Rect _position = Rect.zero;
+            return GetControlID(_label, _focusType, _position);
+        }
+
+        /// <summary>
+        /// Works pretty much like <see cref="GUIUtility.GetControlID(GUIContent, FocusType, Rect)"/>,
+        /// except that the ID is guaranteed to never equal -1.
+        /// <para/>
+        /// <inheritdoc cref="GUIUtility.GetControlID(GUIContent, FocusType, Rect)" path="/summary"/>
+        /// </summary>
+        /// <param name="_label">Label acting as a hint to ensure correct matching of IDs to controls.</param>
+        /// <param name="_focusType">Control <see cref="FocusType"/>.</param>
+        /// <param name="_position">Rectangle on the screen where the control is drawn.</param>
+        /// <returns>Guaranteed not equal to -1 control ID.</returns>
+        public static int GetControlID(GUIContent _label, FocusType _focusType, Rect _position) {
+            int _id = GUIUtility.GetControlID(_label, _focusType, _position);
+            return DoControlID(_id);
+        }
+
+        /// <inheritdoc cref="GetControlID(int, FocusType, Rect)"/>
+        public static int GetControlID(int _hint, FocusType _focusType) {
+            Rect _position = Rect.zero;
+            return GetControlID(_hint, _focusType, _position);
+        }
+
+        /// <summary>
+        /// Works pretty much like <see cref="GUIUtility.GetControlID(int, FocusType, Rect)"/>,
+        /// except that the ID is guaranteed to never equal -1.
+        /// <para/>
+        /// <inheritdoc cref="GUIUtility.GetControlID(int, FocusType, Rect)" path="/summary"/>
+        /// </summary>
+        /// <param name="_hint">Hint to help ensure correct matching of IDs to controls.</param>
+        /// <inheritdoc cref="GetControlID(GUIContent, FocusType, Rect)"/>
+        public static int GetControlID(int _hint, FocusType _focusType, Rect _position) {
+            int _id = GUIUtility.GetControlID(_hint, _focusType, _position);
+            return DoControlID(_id);
+        }
+
+        // -----------------------
+
+        private static int DoControlID(int _id) {
+            /* Sometimes, with some special events (like EventType.Used), the returned id may be equal to -1.
+             * However, this unwanted behaviour breaks many enhanced controls (like dynamic height ones),
+             * as all following ids are then also equal to -1, and their associated registered value cannot be properly retrieved.
+             * 
+             * So let's store all previous event ids, and replace undesired values with them.
+             * (You can reactivate the following debugs if you want to understand the default behaviour).
+            */
+
+            //Debug.Log("ID => " + _id + " | " + Event.current.type);
+
+            if (_id == -1) {
+                // Unregistered id.
+                if (controlsID.Count == 0)
+                    return -1;
+
+                // Invalid.
+                controldIDIndex = (controldIDIndex < activeIDCount)
+                                ? (controldIDIndex + 1)
+                                : 0;
+
+                _id = controlsID[controldIDIndex];
+            } else if ((controldIDIndex != -1) && (_id < controlsID[controldIDIndex])) {
+                // Restart.
+                activeIDCount = controldIDIndex;
+
+                controldIDIndex = 0;
+                controlsID[controldIDIndex] = _id;
+            } else {
+                // Increment.
+                controldIDIndex++;
+                if (controldIDIndex == controlsID.Count) {
+                    controlsID.Add(_id);
+                } else {
+                    controlsID[controldIDIndex] = _id;
+                }
+            }
+
+            //Debug.LogWarning("ID => " + _id + " | " + Event.current.type);
+
+            lastID = _id;
+            return _id;
+        }
+
+        /// <summary>
+        /// Get the id returned by the last control request.
+        /// </summary>
+        /// <returns></returns>
+        public static int GetLastControlID() {
+            return lastID;
+        }
+        #endregion
+
         #region Utility
         /// <summary>
         /// Repaints all editors associated with a specific <see cref="SerializedObject"/>.
         /// </summary>
         /// <param name="_object"><see cref="SerializedObject"/> to repaint associated editor(s).</param>
-        public static void Repaint(SerializedObject _object)
-        {
+        public static void Repaint(SerializedObject _object) {
             UnityEditor.Editor[] _editors = ActiveEditorTracker.sharedTracker.activeEditors;
-            foreach (UnityEditor.Editor _editor in _editors)
-            {
-                if (_editor.serializedObject == _object)
-                {
+            foreach (UnityEditor.Editor _editor in _editors) {
+                if (_editor.serializedObject == _object) {
                     _editor.Repaint();
                 }
             }
@@ -827,10 +862,10 @@ namespace EnhancedEditor.Editor
         /// This method is for documentation only, used by inheriting its parameters documentation to centralize it in one place.
         /// </summary>
         /// <param name="_position">Rectangle on the screen where to check for user actions.</param>
-        /// <param name="_array">Array of all selectable elements.</param>
+        /// <param name="_collection">Collection of all selectable elements.</param>
         /// <param name="_isSelected">Used to know if a specific element is selected.</param>
         /// <param name="_onSelect">Callback when selecting an element.</param>
-        internal static void DocumentationMethod(Rect _position, Array _array, Predicate<int> _isSelected, Action<int, bool> _onSelect) { }
+        internal static void DocumentationMethod(Rect _position, IList _collection, Predicate<int> _isSelected, Action<int, bool> _onSelect) { }
         #endregion
     }
 }

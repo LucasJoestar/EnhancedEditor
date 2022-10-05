@@ -46,19 +46,19 @@ namespace EnhancedEditor.Editor
 
         private static bool foldout = false;
         #elif EDITOR_TOOLBAR
-        private static readonly BindingFlags reflectionFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
+        private const BindingFlags ReflectionFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
         private static readonly Assembly editorAssembly = typeof(UnityEditor.Editor).Assembly;
 
         private static readonly Type toolbarType = editorAssembly.GetType("UnityEditor.Toolbar");
         private static readonly Type guiViewType = editorAssembly.GetType("UnityEditor.GUIView");
         private static readonly Type iWindowBackendType = editorAssembly.GetType("UnityEditor.IWindowBackend");
 
-        private static readonly PropertyInfo windowBackendInfo = guiViewType.GetProperty("windowBackend", reflectionFlags);
-        private static readonly PropertyInfo visualTreeInfo = iWindowBackendType.GetProperty("visualTree", reflectionFlags);
-        private static readonly FieldInfo onGUIHandlerInfo = typeof(IMGUIContainer).GetField("m_OnGUIHandler", reflectionFlags);
+        private static readonly PropertyInfo windowBackendInfo = guiViewType.GetProperty("windowBackend", ReflectionFlags);
+        private static readonly PropertyInfo visualTreeInfo = iWindowBackendType.GetProperty("visualTree", ReflectionFlags);
+        private static readonly FieldInfo onGUIHandlerInfo = typeof(IMGUIContainer).GetField("m_OnGUIHandler", ReflectionFlags);
         private static readonly MethodInfo repaintInfo = typeof(VisualElement).GetMethod("MarkDirtyRepaint");
 
-        private static readonly FieldInfo toolCountInfo = toolbarType.GetField("k_ToolCount", reflectionFlags);
+        private static readonly FieldInfo toolCountInfo = toolbarType.GetField("k_ToolCount", ReflectionFlags);
 
         private static readonly int toolCount = 7;
         private static ScriptableObject toolbar = null;

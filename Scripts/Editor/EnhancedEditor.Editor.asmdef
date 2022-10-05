@@ -3,7 +3,8 @@
     "rootNamespace": "",
     "references": [
         "EnhancedEditor",
-        "Unity.InputSystem"
+        "Unity.InputSystem",
+        "Unity.Localization"
     ],
     "includePlatforms": [
         "Editor"
@@ -19,6 +20,11 @@
             "name": "com.unity.inputsystem",
             "expression": "",
             "define": "INPUT_SYSTEM_PACKAGE"
+        },
+        {
+            "name": "com.unity.localization",
+            "expression": "",
+            "define": "LOCALIZATION_ENABLED"
         }
     ],
     "noEngineReferences": false

@@ -23,7 +23,7 @@ namespace EnhancedEditor.Editor
             {
                 _minValue = _attribute.MinValue;
             }
-            else if (!_attribute.MinMember.Value.GetValue(SerializedProperty.serializedObject, out _minValue))
+            else if (!_attribute.MinMember.Value.GetValue(SerializedProperty, out _minValue))
                 return;
 
             EnhancedEditorUtility.FloorSerializedPropertyValue(SerializedProperty, _minValue);

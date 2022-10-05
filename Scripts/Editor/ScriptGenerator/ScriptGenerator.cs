@@ -34,8 +34,8 @@ namespace EnhancedEditor.Editor
         private const string ScriptGeneratorName = "ScriptGenerator";
         private const string ScriptGeneratorMenuName = "ScriptGeneratorMenu";
 
-        private const string ScriptCreatorSubMenu = "Assets/Create/Template C# Script/";
-        private const int MenuItemOrder = 170;
+        public const string ScriptCreatorSubMenu = "Assets/Create/Template C# Script/";
+        public const int MenuItemOrder = 170;
 
         // -----------------------
 

@@ -16,14 +16,12 @@ using UnityEngine;
 
 using Object = UnityEngine.Object;
 
-namespace EnhancedEditor.Editor
-{
+namespace EnhancedEditor.Editor {
     /// <summary>
     /// Contains multiple editor-related GUI methods and variables.
     /// </summary>
     [InitializeOnLoad]
-    public static class EnhancedEditorGUI
-    {
+    public static class EnhancedEditorGUI {
         #region GUI Buffers
         /// <summary>
         /// <see cref="Handles.color"/> buffer system. Use this to dynamically push / pop Handles colors.
@@ -39,8 +37,7 @@ namespace EnhancedEditor.Editor
         #endregion
 
         #region Initialization
-        static EnhancedEditorGUI()
-        {
+        static EnhancedEditorGUI() {
             EditorApplication.contextualPropertyMenu -= OnContextualPropertyMenu;
             EditorApplication.contextualPropertyMenu += OnContextualPropertyMenu;
         }
@@ -52,15 +49,11 @@ namespace EnhancedEditor.Editor
 
         // -----------------------
 
-        private static void OnContextualPropertyMenu(GenericMenu _menu, SerializedProperty _property)
-        {
+        private static void OnContextualPropertyMenu(GenericMenu _menu, SerializedProperty _property) {
             // TagGroup option: sort tags by their name.
-            if ((_property.type == TagGroupTypeName) && !_property.hasMultipleDifferentValues)
-            {
-                _menu.AddItem(SortTagsGUI, false, () =>
-                {
-                    if (EnhancedEditorUtility.FindSerializedObjectField(_property.serializedObject, _property.propertyPath, out FieldInfo _field))
-                    {
+            if ((_property.type == TagGroupTypeName) && !_property.hasMultipleDifferentValues) {
+                _menu.AddItem(SortTagsGUI, false, () => {
+                    if (EnhancedEditorUtility.FindSerializedPropertyField(_property, out FieldInfo _field)) {
                         // Get the direct tag group reference and sort its tags.
                         TagGroup _group = _field.GetValue(_property.serializedObject.targetObject) as TagGroup;
                         _group.SortTagsByName();
@@ -70,8 +63,7 @@ namespace EnhancedEditor.Editor
                         SerializedProperty _groupProperty = _property.Copy();
                         _groupProperty.Next(true);
 
-                        for (int _i = 0; _i < _groupProperty.arraySize; _i++)
-                        {
+                        for (int _i = 0; _i < _groupProperty.arraySize; _i++) {
                             SerializedProperty _tagProperty = _groupProperty.GetArrayElementAtIndex(_i);
                             _tagProperty.Next(true);
 
@@ -85,16 +77,12 @@ namespace EnhancedEditor.Editor
 
             // SerializedInterface option: get interface reference from object.
             if (!_property.serializedObject.isEditingMultipleObjects && _property.type.StartsWith(SerializedInterfaceTypeName)
-                && (_property.serializedObject.targetObject is Component _component))
-            {
-                _menu.AddItem(requiredGetReferenceGUI, false, () =>
-                {
-                    if (EnhancedEditorUtility.FindSerializedObjectField(_property.serializedObject, _property.propertyPath, out FieldInfo _field))
-                    {
+                && (_property.serializedObject.targetObject is Component _component)) {
+                _menu.AddItem(requiredGetReferenceGUI, false, () => {
+                    if (EnhancedEditorUtility.FindSerializedPropertyField(_property, out FieldInfo _field)) {
                         Type _type = EnhancedEditorUtility.GetFieldInfoType(_field);
 
-                        if (_component.TryGetComponent(_type, out Component _interface))
-                        {
+                        if (_component.TryGetComponent(_type, out Component _interface)) {
                             SerializedProperty _gameObjectProperty = _property.FindPropertyRelative("gameObject");
 
                             _gameObjectProperty.objectReferenceValue = _interface.gameObject;
@@ -105,8 +93,7 @@ namespace EnhancedEditor.Editor
             }
 
             // Enhanced property drawers context menu.
-            if (EnhancedPropertyEditor.propertyInfos.ContainsKey(_property.propertyPath))
-            {
+            if (EnhancedPropertyEditor.propertyInfos.ContainsKey(_property.propertyPath)) {
                 var _infos = EnhancedPropertyEditor.propertyInfos[_property.propertyPath];
                 _infos.OnContextMenu(_menu);
             }
@@ -121,8 +108,7 @@ namespace EnhancedEditor.Editor
         /// </summary>
         /// <param name="_margins">Margins on both sides of the line (in pixels).</param>
         /// <inheritdoc cref="HorizontalLine(Rect, Color)"/>
-        public static void HorizontalLine(Rect _position, Color _color, float _margins)
-        {
+        public static void HorizontalLine(Rect _position, Color _color, float _margins) {
             _position.xMin += _margins;
             _position.xMax -= _margins;
 
@@ -134,8 +120,7 @@ namespace EnhancedEditor.Editor
         /// </summary>
         /// <param name="_position"><inheritdoc cref="DocumentationMethod(Rect, GUIContent)" path="/param[@name='_position']"/></param>
         /// <param name="_color">Line color.</param>
-        public static void HorizontalLine(Rect _position, Color _color)
-        {
+        public static void HorizontalLine(Rect _position, Color _color) {
             _position = EditorGUI.IndentedRect(_position);
             EditorGUI.DrawRect(_position, _color);
         }
@@ -143,8 +128,7 @@ namespace EnhancedEditor.Editor
 
         #region Section
         /// <inheritdoc cref="Section(Rect, GUIContent, float)"/>
-        public static void Section(Rect _position, string _label, float _lineWidth = EnhancedEditorGUIUtility.SectionDefaultLineWidth)
-        {
+        public static void Section(Rect _position, string _label, float _lineWidth = EnhancedEditorGUIUtility.SectionDefaultLineWidth) {
             GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
             Section(_position, _labelGUI, _lineWidth);
         }
@@ -155,8 +139,7 @@ namespace EnhancedEditor.Editor
         /// <param name="_position"><inheritdoc cref="DocumentationMethod(Rect, GUIContent)" path="/param[@name='_position']"/></param>
         /// <param name="_label">Header label.</param>
         /// <param name="_lineWidth">Width of the lines surrounding the label (in pixels).</param>
-        public static void Section(Rect _position, GUIContent _label, float _lineWidth = EnhancedEditorGUIUtility.SectionDefaultLineWidth)
-        {
+        public static void Section(Rect _position, GUIContent _label, float _lineWidth = EnhancedEditorGUIUtility.SectionDefaultLineWidth) {
             GUIStyle _style = EnhancedEditorStyles.BoldCenteredLabel;
             Vector2 _labelSize = _style.CalcSize(_label);
             float _totalWidth = Mathf.Min(_position.width, _labelSize.x + (_lineWidth * 2f) + (EnhancedEditorGUIUtility.SectionLabelMargins * 2f));
@@ -164,8 +147,7 @@ namespace EnhancedEditor.Editor
             // Draws the horizontal lines surrounding the label (if there is enough space).
             _lineWidth = ((_totalWidth - _labelSize.x) / 2f) - EnhancedEditorGUIUtility.SectionLabelMargins;
 
-            if (_lineWidth > 0f)
-            {
+            if (_lineWidth > 0f) {
                 float _verticalSpacing = Mathf.Max(0f, (_position.height - _labelSize.y) / 2f);
                 Color _color = _style.normal.textColor;
                 Rect _temp = new Rect()
@@ -183,8 +165,7 @@ namespace EnhancedEditor.Editor
             }
 
             // Label.
-            using (var _scope = ZeroIndentScope())
-            {
+            using (var _scope = ZeroIndentScope()) {
                 EditorGUI.LabelField(_position, _label, _style);
             }
         }
@@ -197,16 +178,14 @@ namespace EnhancedEditor.Editor
 
         /// <inheritdoc cref="AssetPreviewField(Rect, SerializedProperty, GUIContent, out float, float)"/>
         public static void AssetPreviewField(Rect _position, SerializedProperty _property, out float _extraHeight,
-                                             float _previewSize = EnhancedEditorGUIUtility.AssetPreviewDefaultSize)
-        {
+                                             float _previewSize = EnhancedEditorGUIUtility.AssetPreviewDefaultSize) {
             GUIContent _label = EnhancedEditorGUIUtility.GetPropertyLabel(_property);
             AssetPreviewField(_position, _property, _label, out _extraHeight, _previewSize);
         }
 
         /// <inheritdoc cref="AssetPreviewField(Rect, SerializedProperty, GUIContent, out float, float)"/>
         public static void AssetPreviewField(Rect _position, SerializedProperty _property, string _label, out float _extraHeight,
-                                             float _previewSize = EnhancedEditorGUIUtility.AssetPreviewDefaultSize)
-        {
+                                             float _previewSize = EnhancedEditorGUIUtility.AssetPreviewDefaultSize) {
             GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
             AssetPreviewField(_position, _property, _labelGUI, out _extraHeight, _previewSize);
         }
@@ -220,11 +199,9 @@ namespace EnhancedEditor.Editor
         /// <param name="_extraHeight"><inheritdoc cref="DocumentationMethodExtra(Rect, ref bool, out float, GUIStyle)" path="/param[@name='_extraHeight']"/></param>
         /// <param name="_previewSize">Size of the asset preview (in pixels).</param>
         public static void AssetPreviewField(Rect _position, SerializedProperty _property, GUIContent _label, out float _extraHeight,
-                                             float _previewSize = EnhancedEditorGUIUtility.AssetPreviewDefaultSize)
-        {
+                                             float _previewSize = EnhancedEditorGUIUtility.AssetPreviewDefaultSize) {
             // Multiple different values and incompatible property management.
-            if (_property.hasMultipleDifferentValues || (_property.propertyType != SerializedPropertyType.ObjectReference))
-            {
+            if (_property.hasMultipleDifferentValues || (_property.propertyType != SerializedPropertyType.ObjectReference)) {
                 EditorGUI.PropertyField(_position, _property, _label);
                 _extraHeight = 0f;
 
@@ -241,14 +218,12 @@ namespace EnhancedEditor.Editor
             _position.height = _extraHeight;
 
             // Asset preview field.
-            using (var _scope = new EditorGUI.PropertyScope(_position, GUIContent.none, _property))
-            {
+            using (var _scope = new EditorGUI.PropertyScope(_position, GUIContent.none, _property)) {
                 _temp = DoAssetPreviewField(_temp, _property.objectReferenceValue, ref _foldout, _previewSize);
                 EditorGUI.PropertyField(_temp, _property, _label);
 
                 // Save foldout state.
-                if (_foldout != _property.isExpanded)
-                {
+                if (_foldout != _property.isExpanded) {
                     _property.isExpanded = _foldout;
                 }
             }
@@ -258,40 +233,35 @@ namespace EnhancedEditor.Editor
 
         /// <inheritdoc cref="AssetPreviewField(Rect, GUIContent, Object, Type, bool, ref bool, out float, float)"/>
         public static Object AssetPreviewField(Rect _position, Object _object, Type _objectType, ref bool _foldout, out float _extraHeight,
-                                               float _previewSize = EnhancedEditorGUIUtility.AssetPreviewDefaultSize)
-        {
+                                               float _previewSize = EnhancedEditorGUIUtility.AssetPreviewDefaultSize) {
             bool _allowSceneObjects = true;
             return AssetPreviewField(_position, _object, _objectType, _allowSceneObjects, ref _foldout, out _extraHeight, _previewSize);
         }
 
         /// <inheritdoc cref="AssetPreviewField(Rect, GUIContent, Object, Type, bool, ref bool, out float, float)"/>
         public static Object AssetPreviewField(Rect _position, Object _object, Type _objectType, bool _allowSceneObjects, ref bool _foldout, out float _extraHeight,
-                                               float _previewSize = EnhancedEditorGUIUtility.AssetPreviewDefaultSize)
-        {
+                                               float _previewSize = EnhancedEditorGUIUtility.AssetPreviewDefaultSize) {
             GUIContent _label = GUIContent.none;
             return AssetPreviewField(_position, _label, _object, _objectType, _allowSceneObjects, ref _foldout, out _extraHeight, _previewSize);
         }
 
         /// <inheritdoc cref="AssetPreviewField(Rect, GUIContent, Object, Type, bool, ref bool, out float, float)"/>
         public static Object AssetPreviewField(Rect _position, string _label, Object _object, Type _objectType, ref bool _foldout, out float _extraHeight,
-                                               float _previewSize = EnhancedEditorGUIUtility.AssetPreviewDefaultSize)
-        {
+                                               float _previewSize = EnhancedEditorGUIUtility.AssetPreviewDefaultSize) {
             bool _allowSceneObjects = true;
             return AssetPreviewField(_position, _label, _object, _objectType, _allowSceneObjects, ref _foldout, out _extraHeight, _previewSize);
         }
 
         /// <inheritdoc cref="AssetPreviewField(Rect, GUIContent, Object, Type, bool, ref bool, out float, float)"/>
         public static Object AssetPreviewField(Rect _position, string _label, Object _object, Type _objectType, bool _allowSceneObjects, ref bool _foldout, out float _extraHeight,
-                                               float _previewSize = EnhancedEditorGUIUtility.AssetPreviewDefaultSize)
-        {
+                                               float _previewSize = EnhancedEditorGUIUtility.AssetPreviewDefaultSize) {
             GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
             return AssetPreviewField(_position, _labelGUI, _object, _objectType, _allowSceneObjects, ref _foldout, out _extraHeight, _previewSize);
         }
 
         /// <inheritdoc cref="AssetPreviewField(Rect, GUIContent, Object, Type, bool, ref bool, out float, float)"/>
         public static Object AssetPreviewField(Rect _position, GUIContent _label, Object _object, Type _objectType, ref bool _foldout, out float _extraHeight,
-                                               float _previewSize = EnhancedEditorGUIUtility.AssetPreviewDefaultSize)
-        {
+                                               float _previewSize = EnhancedEditorGUIUtility.AssetPreviewDefaultSize) {
             bool _allowSceneObjects = true;
             return AssetPreviewField(_position, _label, _object, _objectType, _allowSceneObjects, ref _foldout, out _extraHeight, _previewSize);
         }
@@ -306,8 +276,7 @@ namespace EnhancedEditor.Editor
         /// <returns><inheritdoc cref="DocumentationMethodObject(Object, Type, bool)" path="/returns"/></returns>
         /// <inheritdoc cref="AssetPreviewField(Rect, SerializedProperty, GUIContent, out float, float)"/>
         public static Object AssetPreviewField(Rect _position, GUIContent _label, Object _object, Type _objectType, bool _allowSceneObjects, ref bool _foldout, out float _extraHeight,
-                                               float _previewSize = EnhancedEditorGUIUtility.AssetPreviewDefaultSize)
-        {
+                                               float _previewSize = EnhancedEditorGUIUtility.AssetPreviewDefaultSize) {
             _position = DoAssetPreviewField(_position, _object, ref _foldout, _previewSize);
             _object = EditorGUI.ObjectField(_position, _label, _object, _objectType, _allowSceneObjects);
 
@@ -317,18 +286,15 @@ namespace EnhancedEditor.Editor
 
         // -----------------------
 
-        private static Rect DoAssetPreviewField(Rect _position, Object _object, ref bool _foldout, float _previewSize)
-        {
+        private static Rect DoAssetPreviewField(Rect _position, Object _object, ref bool _foldout, float _previewSize) {
             // Foldout.
             Rect _fieldPosition;
-            using (var _scope = ZeroIndentScope())
-            {
+            using (var _scope = ZeroIndentScope()) {
                 _fieldPosition = DrawFoldout(_position, ref _foldout);
             }
 
             // Asset preview.
-            if (_foldout)
-            {
+            if (_foldout) {
                 _position.Set
                 (
                     _fieldPosition.xMax - _previewSize,
@@ -338,22 +304,19 @@ namespace EnhancedEditor.Editor
                 );
 
                 // Catch preview null ref exception.
-                try
-                {
+                try {
                     Texture2D _preview = AssetPreview.GetAssetPreview(_object);
                     if (_preview == null)
                         _preview = Texture2D.blackTexture;
 
                     EditorGUI.DrawPreviewTexture(_position, _preview);
-                }
-                catch (NullReferenceException) { }
+                } catch (NullReferenceException) { }
             }
 
             return _fieldPosition;
         }
 
-        internal static float GetAssetPreviewExtraHeight(bool _foldout, float _previewSize)
-        {
+        internal static float GetAssetPreviewExtraHeight(bool _foldout, float _previewSize) {
             float _extraHeight = _foldout
                                ? (_previewSize + EditorGUIUtility.standardVerticalSpacing + 4f)
                                : 0f;
@@ -363,18 +326,16 @@ namespace EnhancedEditor.Editor
         #endregion
 
         #region Block
-        /// <inheritdoc cref="BlockField(Rect, SerializedProperty, GUIContent)"/>
-        public static void BlockField(Rect _position, SerializedProperty _property)
-        {
+        /// <inheritdoc cref="BlockField(Rect, SerializedProperty, GUIContent, bool)"/>
+        public static void BlockField(Rect _position, SerializedProperty _property, bool _showHeader = false) {
             GUIContent _label = EnhancedEditorGUIUtility.GetPropertyLabel(_property);
-            BlockField(_position, _property, _label);
+            BlockField(_position, _property, _label, _showHeader);
         }
 
-        /// <inheritdoc cref="BlockField(Rect, SerializedProperty, GUIContent)"/>
-        public static void BlockField(Rect _position, SerializedProperty _property, string _label)
-        {
+        /// <inheritdoc cref="BlockField(Rect, SerializedProperty, GUIContent, bool)"/>
+        public static void BlockField(Rect _position, SerializedProperty _property, string _label, bool _showHeader = false) {
             GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
-            BlockField(_position, _property, _labelGUI);
+            BlockField(_position, _property, _labelGUI, _showHeader);
         }
 
         /// <summary>
@@ -383,15 +344,10 @@ namespace EnhancedEditor.Editor
         /// <param name="_position"><inheritdoc cref="DocumentationMethod(Rect, GUIContent)" path="/param[@name='_position']"/></param>
         /// <param name="_property"><see cref="SerializedProperty"/> to make a block field for.</param>
         /// <param name="_label"><inheritdoc cref="DocumentationMethod(Rect, GUIContent)" path="/param[@name='_label']"/></param>
-        public static void BlockField(Rect _position, SerializedProperty _property, GUIContent _label)
-        {
+        public static void BlockField(Rect _position, SerializedProperty _property, GUIContent _label, bool _showHeader = false) {
             // If the property has no children, simply draw it.
-            if (!_property.hasVisibleChildren)
-            {
-                GUIContent _blockLabel = EnhancedEditorGUIUtility.GetLabelGUI(_label.text + "   ");
-                _blockLabel.tooltip = _label.tooltip;
-
-                EditorGUI.PropertyField(_position, _property, _blockLabel);
+            if (!_property.hasVisibleChildren) {
+                EditorGUI.PropertyField(_position, _property, _label);
                 return;
             }
 
@@ -402,36 +358,49 @@ namespace EnhancedEditor.Editor
             _next.NextVisible(false);
 
             // Property label header.
-            using (var _labelScope = EnhancedGUI.GUIStyleAlignment.Scope(EditorStyles.label, TextAnchor.MiddleLeft))
-            {
-                _position.height = EditorGUIUtility.singleLineHeight;
-                EditorGUI.LabelField(_position, _label);
+            if (_showHeader) {
+                using (var _labelScope = EnhancedGUI.GUIStyleAlignment.Scope(EditorStyles.label, TextAnchor.MiddleLeft)) {
+                    _position.height = EditorGUIUtility.singleLineHeight;
+                    EditorGUI.LabelField(_position, _label);
+
+                    _position.y += _position.height + EditorGUIUtility.standardVerticalSpacing;
+                }
             }
 
             // Expand the property, as it needs to be to properly get its height.
-            if (!_property.isExpanded)
-            {
+            if (!_property.isExpanded) {
                 _property.isExpanded = true;
                 EnhancedEditorGUIUtility.Repaint(_property.serializedObject);
             }
 
             _current.NextVisible(true);
 
-            // Draw each property prefix label left-sided to their value.
-            using (var _labelScope = EnhancedGUI.GUIStyleAlignment.Scope(EditorStyles.label, TextAnchor.MiddleRight))
-            using (var _indentScope = new EditorGUI.IndentLevelScope(1))
-            {
-                do
-                {
+            // If displaying the label, draw each property prefix label left-sided to their value.
+            if (_showHeader) {
+                using (var _labelScope = EnhancedGUI.GUIStyleAlignment.Scope(EditorStyles.label, TextAnchor.MiddleRight))
+                using (var _indentScope = new EditorGUI.IndentLevelScope(1)) {
+                    DrawProperty("   ");
+                }
+            } else {
+                DrawProperty(string.Empty);
+            }
+
+            // ----- Local Method ----- \\
+
+            void DrawProperty(string _additionalText) {
+                do {
                     // Break when getting outside of this property class / struct.
                     if (SerializedProperty.EqualContents(_current, _next))
                         break;
 
-                    _position.y += _position.height + EditorGUIUtility.standardVerticalSpacing;
                     _position.height = EditorGUI.GetPropertyHeight(_current, true);
 
                     _label = EnhancedEditorGUIUtility.GetPropertyLabel(_current);
-                    BlockField(_position, _current, _label);
+                    _label.text += _additionalText;
+
+                    EditorGUI.PropertyField(_position, _current, _label);
+
+                    _position.y += _position.height + EditorGUIUtility.standardVerticalSpacing;
                 } while (_current.NextVisible(false));
             }
         }
@@ -556,15 +525,13 @@ namespace EnhancedEditor.Editor
         // ===== Serialized Property ===== \\
 
         /// <inheritdoc cref="ColorPaletteField(Rect, SerializedProperty, GUIContent, out float)"/>
-        public static void ColorPaletteField(Rect _position, SerializedProperty _property, out float _extraHeight)
-        {
+        public static void ColorPaletteField(Rect _position, SerializedProperty _property, out float _extraHeight) {
             GUIContent _label = EnhancedEditorGUIUtility.GetPropertyLabel(_property);
             ColorPaletteField(_position, _property, _label, out _extraHeight);
         }
 
         /// <inheritdoc cref="ColorPaletteField(Rect, SerializedProperty, GUIContent, out float)"/>
-        public static void ColorPaletteField(Rect _position, SerializedProperty _property, string _label, out float _extraHeight)
-        {
+        public static void ColorPaletteField(Rect _position, SerializedProperty _property, string _label, out float _extraHeight) {
             GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
             ColorPaletteField(_position, _property, _labelGUI, out _extraHeight);
         }
@@ -577,11 +544,9 @@ namespace EnhancedEditor.Editor
         /// <param name="_property"><see cref="SerializedProperty"/> to make a color palette field for.</param>
         /// <param name="_label"><inheritdoc cref="DocumentationMethod(Rect, GUIContent)" path="/param[@name='_label']"/></param>
         /// <param name="_extraHeight"><inheritdoc cref="DocumentationMethodExtra(Rect, ref bool, out float, GUIStyle)" path="/param[@name='_extraHeight']"/></param>
-        public static void ColorPaletteField(Rect _position, SerializedProperty _property, GUIContent _label, out float _extraHeight)
-        {
+        public static void ColorPaletteField(Rect _position, SerializedProperty _property, GUIContent _label, out float _extraHeight) {
             // Incompatible property management.
-            if (_property.propertyType != SerializedPropertyType.Color)
-            {
+            if (_property.propertyType != SerializedPropertyType.Color) {
                 EditorGUI.PropertyField(_position, _property, _label);
                 _extraHeight = 0f;
 
@@ -602,8 +567,7 @@ namespace EnhancedEditor.Editor
             _position.height = _extraHeight;
 
             // Color palette field.
-            using (var _scope = new EditorGUI.PropertyScope(_position, GUIContent.none, _property))
-            {
+            using (var _scope = new EditorGUI.PropertyScope(_position, GUIContent.none, _property)) {
                 EditorGUI.PropertyField(_temp, _property, _label);
 
                 _temp.y += _temp.height + EditorGUIUtility.standardVerticalSpacing;
@@ -612,8 +576,7 @@ namespace EnhancedEditor.Editor
                 Color _newColor = DoColorPaletteField(_id, _temp, _label, _color);
 
                 // Save new value.
-                if (_newColor != _color)
-                {
+                if (_newColor != _color) {
                     _property.colorValue = _newColor;
                 }
             }
@@ -622,15 +585,13 @@ namespace EnhancedEditor.Editor
         // ===== Color Value ===== \\
 
         /// <inheritdoc cref="ColorPaletteField(Rect, GUIContent, Color, out float)"/>
-        public static Color ColorPaletteField(Rect _position, Color _color, out float _extraHeight)
-        {
+        public static Color ColorPaletteField(Rect _position, Color _color, out float _extraHeight) {
             GUIContent _label = GUIContent.none;
             return ColorPaletteField(_position, _label, _color, out _extraHeight);
         }
 
         /// <inheritdoc cref="ColorPaletteField(Rect, GUIContent, Color, out float)"/>
-        public static Color ColorPaletteField(Rect _position, string _label, Color _color, out float _extraHeight)
-        {
+        public static Color ColorPaletteField(Rect _position, string _label, Color _color, out float _extraHeight) {
             GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
             return ColorPaletteField(_position, _labelGUI, _color, out _extraHeight);
         }
@@ -638,8 +599,7 @@ namespace EnhancedEditor.Editor
         /// <param name="_color">The <see cref="Color"/> the field shows.</param>
         /// <returns>The <see cref="Color"/> that has been set by the user.</returns>
         /// <inheritdoc cref="ColorPaletteField(Rect, SerializedProperty, GUIContent, out float)"/>
-        public static Color ColorPaletteField(Rect _position, GUIContent _label, Color _color, out float _extraHeight)
-        {
+        public static Color ColorPaletteField(Rect _position, GUIContent _label, Color _color, out float _extraHeight) {
             int _id = EnhancedEditorGUIUtility.GetControlID(_label, FocusType.Keyboard);
             _color = EditorGUI.ColorField(_position, _label, _color);
 
@@ -652,18 +612,14 @@ namespace EnhancedEditor.Editor
 
         // -----------------------
 
-        internal static Color DoColorPaletteField(int _id, Rect _position, GUIContent _label, Color _color)
-        {
+        internal static Color DoColorPaletteField(int _id, Rect _position, GUIContent _label, Color _color) {
             ColorPalette _palette = ColorPaletteDatabase.GetControlPalette(_id, _color);
             Rect _palettePos;
 
-            if (string.IsNullOrEmpty(_label.text))
-            {
+            if (string.IsNullOrEmpty(_label.text)) {
                 _palettePos = EditorGUI.IndentedRect(_position);
                 _palettePos.xMin += PaletteMenuButtonWidth;
-            }
-            else
-            {
+            } else {
                 _palettePos = EditorGUI.PrefixLabel(_position, blankLabelGUI);
             }
 
@@ -676,15 +632,13 @@ namespace EnhancedEditor.Editor
             _palettePos.height = EditorGUIUtility.singleLineHeight;
 
             // Palette selection.
-            if (GUI.Button(_palettePos, _palette.Name, EditorStyles.popup))
-            {
+            if (GUI.Button(_palettePos, _palette.Name, EditorStyles.popup)) {
                 GenericMenu _menu = GetColorPaletteSelectionMenu(_id, _palette);
                 _menu.DropDown(_palettePos);
             }
 
             // Make sure there are always at least one color in the palette.
-            if (_palette.Count == 0)
-            {
+            if (_palette.Count == 0) {
                 ArrayUtility.Add(ref _palette.Colors, Color.white);
                 ColorPaletteDatabase.SaveChanges();
             }
@@ -696,14 +650,12 @@ namespace EnhancedEditor.Editor
             };
 
             // Get selected color.
-            if (GetSelectedColorFromPalette(_id, out Color _newColor))
-            {
+            if (GetSelectedColorFromPalette(_id, out Color _newColor)) {
                 _color = _newColor;
             }
 
             // Button to show a menu with additional options.
-            if (EditorGUI.DropdownButton(_temp, paletteMenuGUI, FocusType.Keyboard, EnhancedEditorStyles.PaneOptions))
-            {
+            if (EditorGUI.DropdownButton(_temp, paletteMenuGUI, FocusType.Keyboard, EnhancedEditorStyles.PaneOptions)) {
                 GenericMenu _menu = GetColorPaletteOptionMenu(_palette, _color);
                 _menu.DropDown(_temp);
             }
@@ -722,8 +674,7 @@ namespace EnhancedEditor.Editor
                       PaletteColorSize);
 
             // Get control scroll.
-            if (!palettesScroll.ContainsKey(_id))
-            {
+            if (!palettesScroll.ContainsKey(_id)) {
                 palettesScroll.Add(_id, new Vector2());
             }
 
@@ -731,21 +682,17 @@ namespace EnhancedEditor.Editor
             Rect _scrollPos = new Rect(_palettePos.x, _palettePos.y, _totalWidth, _temp.height);
 
             // Draw all colors within a scroll view.
-            using (var _scope = new GUI.ScrollViewScope(_palettePos, _scroll, _scrollPos))
-            {
+            using (var _scope = new GUI.ScrollViewScope(_palettePos, _scroll, _scrollPos)) {
                 palettesScroll[_id] = _scope.scrollPosition;
 
-                for (int _i = 0; _i < _palette.Count; _i++)
-                {
+                for (int _i = 0; _i < _palette.Count; _i++) {
                     Color _paletteColor = _palette.Colors[_i];
                     if (_i == _palette.Count - 1)
                         _temp.width -= 1f;
 
                     // Main click actions.
-                    if ((_temp.Event(out Event _event) == EventType.MouseDown) && (_event.button == 0))
-                    {
-                        switch (_event.clickCount)
-                        {
+                    if ((_temp.Event(out Event _event) == EventType.MouseDown) && (_event.button == 0)) {
+                        switch (_event.clickCount) {
                             // One click: set color.
                             case 1:
                                 _color = _paletteColor;
@@ -754,8 +701,7 @@ namespace EnhancedEditor.Editor
                             // Two clicks: open color picker.
                             case 2:
                                 int _index = _i;
-                                OpenColorPalettePicker(_palette, _index, (c) =>
-                                {
+                                OpenColorPalettePicker(_palette, _index, (c) => {
                                     selectedPaletteColorControlID = _id;
                                     selectedPaletteColor = c;
                                 });
@@ -768,9 +714,7 @@ namespace EnhancedEditor.Editor
                         _event.Use();
 
                         GUI.changed = true;
-                    }
-                    else if (EnhancedEditorGUIUtility.ContextClick(_temp))
-                    {
+                    } else if (EnhancedEditorGUIUtility.ContextClick(_temp)) {
                         // Context menu.
                         GenericMenu _menu = GetPaletteColorContextMenu(_id, _palette, _i);
                         _menu.DropDown(_temp);
@@ -778,7 +722,7 @@ namespace EnhancedEditor.Editor
 
                     // Palette color.
                     EditorGUI.DrawRect(_temp, _paletteColor);
-                    
+
                     _temp.x += _temp.width - 1f;
                 }
             }
@@ -786,38 +730,31 @@ namespace EnhancedEditor.Editor
             return _color;
         }
 
-        internal static float GetColorPaletteExtraHeight(int _id, Rect _position, GUIContent _label, Color _color)
-        {
+        internal static float GetColorPaletteExtraHeight(int _id, Rect _position, GUIContent _label, Color _color) {
             // Get this control associated palette and calculates its height.
             ColorPalette _palette = ColorPaletteDatabase.GetControlPalette(_id, _color);
             Rect _palettePos;
 
-            if (string.IsNullOrEmpty(_label.text))
-            {
+            if (string.IsNullOrEmpty(_label.text)) {
                 _palettePos = EditorGUI.IndentedRect(_position);
                 _palettePos.xMin += PaletteMenuButtonWidth;
-            }
-            else
-            {
+            } else {
                 _palettePos = EditorGUI.PrefixLabel(_position, blankLabelGUI);
             }
 
             float _height = EditorGUIUtility.singleLineHeight + PaletteColorSize + (EditorGUIUtility.standardVerticalSpacing * 2f) + (PaletteMargins * 2f);
             float _scrollWidth = _palettePos.width - ((PaletteMargins + 1f) * 2f);
 
-            if ((PaletteColorSize * _palette.Count) > _scrollWidth)
-            {
+            if ((PaletteColorSize * _palette.Count) > _scrollWidth) {
                 _height += EnhancedEditorGUIUtility.ScrollSize;
             }
 
             return ManageDynamicControlHeight(_label, _height);
         }
 
-        private static void OpenColorPalettePicker(ColorPalette _palette, int _colorIndex, Action<Color> _callback = null)
-        {
+        private static void OpenColorPalettePicker(ColorPalette _palette, int _colorIndex, Action<Color> _callback = null) {
             Color _color = _palette.Colors[_colorIndex];
-            EnhancedEditorUtility.ColorPicker(_color, (c) =>
-            {
+            EnhancedEditorUtility.ColorPicker(_color, (c) => {
                 Undo.RecordObject(ColorPaletteDatabase, ColorPaletteDatabase.UndoRecordTitle);
                 _palette.Colors[_colorIndex] = c;
 
@@ -836,21 +773,18 @@ namespace EnhancedEditor.Editor
         /// <param name="_palette">The <see cref="ColorPalette"/> to edit.</param>
         /// <param name="_defaultColor">Color used when adding a new color to the palette.</param>
         /// <returns><see cref="GenericMenu"/> to be displayed.</returns>
-        public static GenericMenu GetColorPaletteOptionMenu(ColorPalette _palette, Color _defaultColor)
-        {
+        public static GenericMenu GetColorPaletteOptionMenu(ColorPalette _palette, Color _defaultColor) {
             GenericMenu _menu = new GenericMenu();
 
             // Palette modifications.
-            _menu.AddItem(paletteAddColorGUI, false, () =>
-            {
+            _menu.AddItem(paletteAddColorGUI, false, () => {
                 Undo.RecordObject(ColorPaletteDatabase, ColorPaletteDatabase.UndoRecordTitle);
 
                 ArrayUtility.Add(ref _palette.Colors, _defaultColor);
                 ColorPaletteDatabase.SaveChanges();
             });
 
-            _menu.AddItem(paletteSortColorsGUI, false, () =>
-            {
+            _menu.AddItem(paletteSortColorsGUI, false, () => {
                 Undo.RecordObject(ColorPaletteDatabase, ColorPaletteDatabase.UndoRecordTitle);
 
                 Array.Sort(_palette.Colors, ColorComparer.Comparer);
@@ -860,27 +794,22 @@ namespace EnhancedEditor.Editor
             // Additional utilities.
             _menu.AddSeparator(string.Empty);
 
-            if (_palette.isPersistent)
-            {
-                _menu.AddItem(paletteRenameGUI, false, () =>
-                {
+            if (_palette.isPersistent) {
+                _menu.AddItem(paletteRenameGUI, false, () => {
                     SaveRenameColorPaletteWindow.GetWindow(_palette, true);
                 });
 
-                _menu.AddItem(paletteDeleteGUI, false, () =>
-                {
+                _menu.AddItem(paletteDeleteGUI, false, () => {
                     if (EditorUtility.DisplayDialog("Delete Color Palette",
                                                     "You are about to delete this color palette.\nAre you sure you want to do this?",
                                                     "Yes",
-                                                    "Cancel"))
-                    {
+                                                    "Cancel")) {
                         ColorPaletteDatabase.DeletePalette(_palette);
                     }
                 });
             }
 
-            _menu.AddItem(paletteSaveGUI, false, () =>
-            {
+            _menu.AddItem(paletteSaveGUI, false, () => {
                 SaveRenameColorPaletteWindow.GetWindow(_palette);
             });
 
@@ -893,13 +822,11 @@ namespace EnhancedEditor.Editor
         /// <param name="_controlID">ID of the associated control (you can get one with <see cref="EnhancedEditorGUIUtility.GetControlID(GUIContent, FocusType, Rect)"/>.</param>
         /// <param name="_palette">The <see cref="ColorPalette"/> currently selected.</param>
         /// <returns><see cref="GenericMenu"/> to display for selecting a new color palette.</returns>
-        public static GenericMenu GetColorPaletteSelectionMenu(int _controlID, ColorPalette _palette)
-        {
+        public static GenericMenu GetColorPaletteSelectionMenu(int _controlID, ColorPalette _palette) {
             GenericMenu _menu = new GenericMenu();
 
             // New palette.
-            _menu.AddItem(paletteNewGUI, false, () =>
-            {
+            _menu.AddItem(paletteNewGUI, false, () => {
                 ColorPalette _newPalette = ColorPaletteDatabase.CreatePalette();
                 SwitchPalette(_newPalette);
             });
@@ -907,14 +834,12 @@ namespace EnhancedEditor.Editor
             _menu.AddSeparator(string.Empty);
 
             // Palette selection.
-            for (int _i = 0; _i < ColorPaletteDatabase.Count; _i++)
-            {
+            for (int _i = 0; _i < ColorPaletteDatabase.Count; _i++) {
                 ColorPalette _otherPalette = ColorPaletteDatabase.Palettes[_i];
                 GUIContent _label = new GUIContent(_otherPalette.Name.Replace('_', '/'));
                 bool _isSelected = _otherPalette == _palette;
 
-                _menu.AddItem(_label, _isSelected, () =>
-                {
+                _menu.AddItem(_label, _isSelected, () => {
                     SwitchPalette(_otherPalette);
                 });
             }
@@ -923,10 +848,8 @@ namespace EnhancedEditor.Editor
 
             // ----- Local Method ----- \\
 
-            void SwitchPalette(ColorPalette _newPalette)
-            {
-                if (!_palette.isPersistent && ((_palette.Count != 2) || (_palette.Colors[0] != Color.black) || (_palette.Colors[1] != Color.white)))
-                {
+            void SwitchPalette(ColorPalette _newPalette) {
+                if (!_palette.isPersistent && ((_palette.Count != 2) || (_palette.Colors[0] != Color.black) || (_palette.Colors[1] != Color.white))) {
                     int _result = EditorUtility.DisplayDialogComplex("Unsaved Color Palette",
                                                                      "Your selected color palette has not been saved in the database.\n\n" +
                                                                      "Do you want to save it before switching?\nAll your changes will be lost otherwise.",
@@ -934,8 +857,7 @@ namespace EnhancedEditor.Editor
                                                                      "Don't Save",
                                                                      "Cancel");
 
-                    switch (_result)
-                    {
+                    switch (_result) {
                         // Save.
                         case 0:
                             SaveRenameColorPaletteWindow.GetWindow(_palette);
@@ -962,19 +884,16 @@ namespace EnhancedEditor.Editor
         /// <param name="_palette">The <see cref="ColorPalette"/> this color is from.</param>
         /// <param name="_colorIndex">Index of this color from its associated <see cref="ColorPalette"/> (<see cref="ColorPalette.Colors"/>).</param>
         /// <returns><see cref="GenericMenu"/> to be displayed.</returns>
-        public static GenericMenu GetPaletteColorContextMenu(int _controlID, ColorPalette _palette, int _colorIndex)
-        {
+        public static GenericMenu GetPaletteColorContextMenu(int _controlID, ColorPalette _palette, int _colorIndex) {
             GenericMenu _menu = new GenericMenu();
 
             // Edit.
-            _menu.AddItem(paletteEditColorGUI, false, () =>
-            {
+            _menu.AddItem(paletteEditColorGUI, false, () => {
                 OpenColorPalettePicker(_palette, _colorIndex);
             });
 
             // Select.
-            _menu.AddItem(paletteSelectColorGUI, false, () =>
-            {
+            _menu.AddItem(paletteSelectColorGUI, false, () => {
                 Color _color = _palette.Colors[_colorIndex];
 
                 selectedPaletteColorControlID = _controlID;
@@ -982,12 +901,10 @@ namespace EnhancedEditor.Editor
             });
 
             // Remove.
-            _menu.AddItem(paletteRemoveColorGUI, false, () =>
-            {
+            _menu.AddItem(paletteRemoveColorGUI, false, () => {
                 if (EditorUtility.DisplayDialog("Remove Palette Color",
                                                 "You are about to remove this color from the palette.\nAre you sure you want to do this?",
-                                                "Yes", "Cancel"))
-                {
+                                                "Yes", "Cancel")) {
                     Undo.RecordObject(ColorPaletteDatabase, ColorPaletteDatabase.UndoRecordTitle);
 
                     ArrayUtility.RemoveAt(ref _palette.Colors, _colorIndex);
@@ -1004,10 +921,8 @@ namespace EnhancedEditor.Editor
         /// <param name="_controlID">ID of the associated control (same as used for <see cref="GetPaletteColorContextMenu(int, ColorPalette, int)"/>).</param>
         /// <param name="_color">New color selected by the user.</param>
         /// <returns>True if the user selected a new color for this control, false otherwise.</returns>
-        public static bool GetSelectedColorFromPalette(int _controlID, out Color _color)
-        {
-            if ((selectedPaletteColorControlID != -1) && (selectedPaletteColorControlID == _controlID))
-            {
+        public static bool GetSelectedColorFromPalette(int _controlID, out Color _color) {
+            if ((selectedPaletteColorControlID != -1) && (selectedPaletteColorControlID == _controlID)) {
                 _color = selectedPaletteColor;
 
                 selectedPaletteColorControlID = -1;
@@ -1032,36 +947,31 @@ namespace EnhancedEditor.Editor
         // ===== Serialized Property ===== \\
 
         /// <inheritdoc cref="FolderField(Rect, SerializedProperty, GUIContent, bool, string)"/>
-        public static void FolderField(Rect _position, SerializedProperty _property, bool _allowOutsideProjectFolder = false)
-        {
+        public static void FolderField(Rect _position, SerializedProperty _property, bool _allowOutsideProjectFolder = false) {
             GUIContent _label = EnhancedEditorGUIUtility.GetPropertyLabel(_property);
             FolderField(_position, _property, _label, _allowOutsideProjectFolder);
         }
 
         /// <inheritdoc cref="FolderField(Rect, SerializedProperty, GUIContent, bool, string)"/>
-        public static void FolderField(Rect _position, SerializedProperty _property, bool _allowOutsideProjectFolder, string _folderPanelTitle)
-        {
+        public static void FolderField(Rect _position, SerializedProperty _property, bool _allowOutsideProjectFolder, string _folderPanelTitle) {
             GUIContent _label = EnhancedEditorGUIUtility.GetPropertyLabel(_property);
             FolderField(_position, _property, _label, _allowOutsideProjectFolder, _folderPanelTitle);
         }
 
         /// <inheritdoc cref="FolderField(Rect, SerializedProperty, GUIContent, bool, string)"/>
-        public static void FolderField(Rect _position, SerializedProperty _property, string _label, bool _allowOutsideProjectFolder = false)
-        {
+        public static void FolderField(Rect _position, SerializedProperty _property, string _label, bool _allowOutsideProjectFolder = false) {
             GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
             FolderField(_position, _property, _labelGUI, _allowOutsideProjectFolder);
         }
 
         /// <inheritdoc cref="FolderField(Rect, SerializedProperty, GUIContent, bool, string)"/>
-        public static void FolderField(Rect _position, SerializedProperty _property, string _label, bool _allowOutsideProjectFolder, string _folderPanelTitle)
-        {
+        public static void FolderField(Rect _position, SerializedProperty _property, string _label, bool _allowOutsideProjectFolder, string _folderPanelTitle) {
             GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
             FolderField(_position, _property, _labelGUI, _allowOutsideProjectFolder, _folderPanelTitle);
         }
 
         /// <inheritdoc cref="FolderField(Rect, SerializedProperty, GUIContent, bool, string)"/>
-        public static void FolderField(Rect _position, SerializedProperty _property, GUIContent _label, bool _allowOutsideProjectFolder = false)
-        {
+        public static void FolderField(Rect _position, SerializedProperty _property, GUIContent _label, bool _allowOutsideProjectFolder = false) {
             string _folderPanelTitle = string.Empty;
             FolderField(_position, _property, _label, _allowOutsideProjectFolder, _folderPanelTitle);
         }
@@ -1074,11 +984,9 @@ namespace EnhancedEditor.Editor
         /// <param name="_label"><inheritdoc cref="DocumentationMethod(Rect, GUIContent)" path="/param[@name='_label']"/></param>
         /// <param name="_allowOutsideProjectFolder">Allow or not to select a folder located outside the project.</param>
         /// <param name="_folderPanelTitle">Title of the folder selection panel.</param>
-        public static void FolderField(Rect _position, SerializedProperty _property, GUIContent _label, bool _allowOutsideProjectFolder, string _folderPanelTitle)
-        {
+        public static void FolderField(Rect _position, SerializedProperty _property, GUIContent _label, bool _allowOutsideProjectFolder, string _folderPanelTitle) {
             // Incompatible property management.
-            if (_property.propertyType != SerializedPropertyType.String)
-            {
+            if (_property.propertyType != SerializedPropertyType.String) {
                 EditorGUI.PropertyField(_position, _property, _label);
                 return;
             }
@@ -1091,8 +999,7 @@ namespace EnhancedEditor.Editor
                 _folderPath = FolderField(_position, _label, _folderPath, _allowOutsideProjectFolder, _folderPanelTitle);
 
                 // Save new value.
-                if (EditorGUI.EndChangeCheck())
-                {
+                if (EditorGUI.EndChangeCheck()) {
                     _property.stringValue = _folderPath;
 
                     EditorGUI.BeginProperty(_position, _label, _property);
@@ -1105,36 +1012,31 @@ namespace EnhancedEditor.Editor
         // ===== String Value ===== \\
 
         /// <inheritdoc cref="FolderField(Rect, GUIContent, string, bool, string)"/>
-        public static string FolderField(Rect _position, string _folderPath, bool _allowOutsideProjectFolder = false)
-        {
+        public static string FolderField(Rect _position, string _folderPath, bool _allowOutsideProjectFolder = false) {
             GUIContent _label = GUIContent.none;
             return FolderField(_position, _label, _folderPath, _allowOutsideProjectFolder);
         }
 
         /// <inheritdoc cref="FolderField(Rect, GUIContent, string, bool, string)"/>
-        public static string FolderField(Rect _position, string _folderPath, bool _allowOutsideProjectFolder, string _folderPanelTitle)
-        {
+        public static string FolderField(Rect _position, string _folderPath, bool _allowOutsideProjectFolder, string _folderPanelTitle) {
             GUIContent _label = GUIContent.none;
             return FolderField(_position, _label, _folderPath, _allowOutsideProjectFolder, _folderPanelTitle);
         }
 
         /// <inheritdoc cref="FolderField(Rect, GUIContent, string, bool, string)"/>
-        public static string FolderField(Rect _position, string _label, string _folderPath, bool _allowOutsideProjectFolder = false)
-        {
+        public static string FolderField(Rect _position, string _label, string _folderPath, bool _allowOutsideProjectFolder = false) {
             GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
             return FolderField(_position, _labelGUI, _folderPath, _allowOutsideProjectFolder);
         }
 
         /// <inheritdoc cref="FolderField(Rect, GUIContent, string, bool, string)"/>
-        public static string FolderField(Rect _position, string _label, string _folderPath, bool _allowOutsideProjectFolder, string _folderPanelTitle)
-        {
+        public static string FolderField(Rect _position, string _label, string _folderPath, bool _allowOutsideProjectFolder, string _folderPanelTitle) {
             GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
             return FolderField(_position, _labelGUI, _folderPath, _allowOutsideProjectFolder, _folderPanelTitle);
         }
 
         /// <inheritdoc cref="FolderField(Rect, GUIContent, string, bool, string)"/>
-        public static string FolderField(Rect _position, GUIContent _label, string _folderPath, bool _allowOutsideProjectFolder = false)
-        {
+        public static string FolderField(Rect _position, GUIContent _label, string _folderPath, bool _allowOutsideProjectFolder = false) {
             string _folderPanelTitle = string.Empty;
             return FolderField(_position, _label, _folderPath, _allowOutsideProjectFolder, _folderPanelTitle);
         }
@@ -1142,14 +1044,12 @@ namespace EnhancedEditor.Editor
         /// <param name="_folderPath">The folder path the field shows.</param>
         /// <returns>The folder path that has been set by the user.</returns>
         /// <inheritdoc cref="FolderField(Rect, SerializedProperty, GUIContent, bool, string)"/>
-        public static string FolderField(Rect _position, GUIContent _label, string _folderPath, bool _allowOutsideProjectFolder, string _folderPanelTitle)
-        {
+        public static string FolderField(Rect _position, GUIContent _label, string _folderPath, bool _allowOutsideProjectFolder, string _folderPanelTitle) {
             // Labels.
             _position = EditorGUI.PrefixLabel(_position, _label);
             _position.width -= EnhancedEditorGUIUtility.IconWidth + 2f;
 
-            using (var _scope = ZeroIndentScope())
-            {
+            using (var _scope = ZeroIndentScope()) {
                 EditorGUI.SelectableLabel(_position, _folderPath, EditorStyles.textField);
             }
 
@@ -1161,26 +1061,20 @@ namespace EnhancedEditor.Editor
             _position.x += _position.width + 2f;
             _position.width = EnhancedEditorGUIUtility.IconWidth;
 
-            if (IconButton(_position, folderButtonGUI))
-            {
+            if (IconButton(_position, folderButtonGUI)) {
                 string _fullFolderPath = _allowOutsideProjectFolder
                                         ? _folderPath
                                         : Path.Combine(dataPath, _folderPath);
 
                 string _newPath = EditorUtility.OpenFolderPanel(_folderPanelTitle, _fullFolderPath, string.Empty);
-               
-                if (!string.IsNullOrEmpty(_newPath))
-                {
+
+                if (!string.IsNullOrEmpty(_newPath)) {
                     // If the selected path is not inside the project, display an error dialog.
-                    if (!_allowOutsideProjectFolder)
-                    {
-                        if ((_newPath.Length > dataPath.Length) && _newPath.StartsWith(dataPath) && 
-                            ((_newPath[dataPath.Length] == Path.DirectorySeparatorChar) || (_newPath[dataPath.Length] == Path.AltDirectorySeparatorChar)))
-                        {
+                    if (!_allowOutsideProjectFolder) {
+                        if ((_newPath.Length > dataPath.Length) && _newPath.StartsWith(dataPath) &&
+                            ((_newPath[dataPath.Length] == Path.DirectorySeparatorChar) || (_newPath[dataPath.Length] == Path.AltDirectorySeparatorChar))) {
                             _newPath = _newPath.Remove(0, dataPath.Length + 1);
-                        }
-                        else
-                        {
+                        } else {
                             EditorUtility.DisplayDialog("Wrong Folder Location", "The selected folder cannot be assigned.\n\n" +
                                                         "The specified directory must be located inside the project. " +
                                                         "Please make sure the desired folder is located inside a valid directory and try again.", "Ok");
@@ -1246,15 +1140,13 @@ namespace EnhancedEditor.Editor
         // ===== Editor Folder - String Value ===== \\
 
         /// <inheritdoc cref="EditorFolderField(Rect, GUIContent, string, string)"/>
-        public static string EditorFolderField(Rect _position, string _folderPath, string _folderPanelTitle = DefaultEditorPanelTitle)
-        {
+        public static string EditorFolderField(Rect _position, string _folderPath, string _folderPanelTitle = DefaultEditorPanelTitle) {
             GUIContent _label = GUIContent.none;
             return EditorFolderField(_position, _label, _folderPath, _folderPanelTitle);
         }
 
         /// <inheritdoc cref="EditorFolderField(Rect, GUIContent, string, string)"/>
-        public static string EditorFolderField(Rect _position, string _label, string _folderPath, string _folderPanelTitle = DefaultEditorPanelTitle)
-        {
+        public static string EditorFolderField(Rect _position, string _label, string _folderPath, string _folderPanelTitle = DefaultEditorPanelTitle) {
             GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
             return EditorFolderField(_position, _labelGUI, _folderPath, _folderPanelTitle);
         }
@@ -1263,23 +1155,18 @@ namespace EnhancedEditor.Editor
         /// <inheritdoc cref="EditorFolderField(Rect, SerializedProperty, GUIContent, string)" path="/summary"/>
         /// </summary>
         /// <inheritdoc cref="FolderField(Rect, GUIContent, string, bool, string)"/>
-        public static string EditorFolderField(Rect _position, GUIContent _label, string _folderPath, string _folderPanelTitle = DefaultEditorPanelTitle)
-        {
+        public static string EditorFolderField(Rect _position, GUIContent _label, string _folderPath, string _folderPanelTitle = DefaultEditorPanelTitle) {
             string _newFolderPath = FolderField(_position, _label, _folderPath, false, _folderPanelTitle);
-            if (_newFolderPath != _folderPath)
-            {
+            if (_newFolderPath != _folderPath) {
                 // Unfortunately, the directory separator returned by the Unity API may be different from the one used by the system,
                 // so let's check for both standard and alternative separators.
                 if (_newFolderPath == EditorFolder ||
                     _newFolderPath.StartsWith(EditorFolder + Path.DirectorySeparatorChar) || _newFolderPath.StartsWith(EditorFolder + Path.AltDirectorySeparatorChar) ||
                     _newFolderPath.EndsWith(Path.DirectorySeparatorChar + EditorFolder) || _newFolderPath.EndsWith(Path.AltDirectorySeparatorChar + EditorFolder) ||
                     _newFolderPath.Contains(Path.DirectorySeparatorChar + EditorFolder + Path.DirectorySeparatorChar) ||
-                    _newFolderPath.Contains(Path.AltDirectorySeparatorChar + EditorFolder + Path.AltDirectorySeparatorChar))
-                {
+                    _newFolderPath.Contains(Path.AltDirectorySeparatorChar + EditorFolder + Path.AltDirectorySeparatorChar)) {
                     _folderPath = _newFolderPath;
-                }
-                else
-                {
+                } else {
                     EditorUtility.DisplayDialog("Wrong Folder Location", "The selected folder cannot be assigned.\n\n" +
                                                 "The specified directory must be located in an Editor folder. " +
                                                 "Please make sure the desired folder is located inside a valid directory and try again.", "Ok");
@@ -1294,15 +1181,13 @@ namespace EnhancedEditor.Editor
 
         #region Inline
         /// <inheritdoc cref="InlineField(Rect, SerializedProperty, GUIContent, out float)"/>
-        public static void InlineField(Rect _position, SerializedProperty _property, out float _extraHeight)
-        {
+        public static void InlineField(Rect _position, SerializedProperty _property, out float _extraHeight) {
             GUIContent _label = EnhancedEditorGUIUtility.GetPropertyLabel(_property);
             InlineField(_position, _property, _label, out _extraHeight);
         }
 
         /// <inheritdoc cref="InlineField(Rect, SerializedProperty, GUIContent, out float)"/>
-        public static void InlineField(Rect _position, SerializedProperty _property, string _label, out float _extraHeight)
-        {
+        public static void InlineField(Rect _position, SerializedProperty _property, string _label, out float _extraHeight) {
             GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
             InlineField(_position, _property, _labelGUI, out _extraHeight);
         }
@@ -1314,13 +1199,11 @@ namespace EnhancedEditor.Editor
         /// <param name="_property"><see cref="SerializedProperty"/> to make an inline field for.</param>
         /// <param name="_label"><inheritdoc cref="DocumentationMethod(Rect, GUIContent)" path="/param[@name='_label']"/></param>
         /// <param name="_extraHeight"><inheritdoc cref="DocumentationMethodExtra(Rect, ref bool, out float, GUIStyle)" path="/param[@name='_extraHeight']"/></param>
-        public static void InlineField(Rect _position, SerializedProperty _property, GUIContent _label, out float _extraHeight)
-        {
+        public static void InlineField(Rect _position, SerializedProperty _property, GUIContent _label, out float _extraHeight) {
             _extraHeight = 0f;
 
             // If the property has no children, simply draw it.
-            if (!_property.hasVisibleChildren)
-            {
+            if (!_property.hasVisibleChildren) {
                 EditorGUI.PropertyField(_position, _property, _label);
                 return;
             }
@@ -1332,10 +1215,8 @@ namespace EnhancedEditor.Editor
 
             // Get the count of all children to draw, and their required extra size.
             int _count = 0;
-            while (!SerializedProperty.EqualContents(_current, _next))
-            {
-                if (!_current.hasVisibleChildren)
-                {
+            while (!SerializedProperty.EqualContents(_current, _next)) {
+                if (!_current.hasVisibleChildren) {
                     _extraHeight = Mathf.Max(_extraHeight, EditorGUI.GetPropertyHeight(_current, false));
                     _count++;
                 }
@@ -1349,8 +1230,7 @@ namespace EnhancedEditor.Editor
             _position.height += _extraHeight;
 
             // Property field.
-            using (var _scope = new EditorGUI.PropertyScope(_position, _label, _property))
-            {
+            using (var _scope = new EditorGUI.PropertyScope(_position, _label, _property)) {
                 _temp = EditorGUI.PrefixLabel(_temp, _label);
                 _temp.width = ((_temp.width + 2f) / _count) - 2f;
 
@@ -1358,10 +1238,8 @@ namespace EnhancedEditor.Editor
                 _current.NextVisible(true);
 
                 // Draw all children of this property on one line.
-                using (var _indentScope = ZeroIndentScope())
-                {
-                    for (int _i = 0; _i < _count; _i++)
-                    {
+                using (var _indentScope = ZeroIndentScope()) {
+                    for (int _i = 0; _i < _count; _i++) {
                         EditorGUI.PropertyField(_temp, _current, GUIContent.none, false);
 
                         _temp.x += _temp.width + 2f;
@@ -1376,15 +1254,13 @@ namespace EnhancedEditor.Editor
         // ===== Serialized Property ===== \\
 
         /// <inheritdoc cref="MaxField(Rect, SerializedProperty, GUIContent, MemberValue{float})"/>
-        public static void MaxField(Rect _position, SerializedProperty _property, MemberValue<float> _maxMember)
-        {
+        public static void MaxField(Rect _position, SerializedProperty _property, MemberValue<float> _maxMember) {
             GUIContent _label = EnhancedEditorGUIUtility.GetPropertyLabel(_property);
             MaxField(_position, _property, _label, _maxMember);
         }
 
         /// <inheritdoc cref="MaxField(Rect, SerializedProperty, GUIContent, MemberValue{float})"/>
-        public static void MaxField(Rect _position, SerializedProperty _property, string _label, MemberValue<float> _maxMember)
-        {
+        public static void MaxField(Rect _position, SerializedProperty _property, string _label, MemberValue<float> _maxMember) {
             GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
             MaxField(_position, _property, _labelGUI, _maxMember);
         }
@@ -1393,11 +1269,9 @@ namespace EnhancedEditor.Editor
         /// <para/>
         /// Can either be a field, a property or a method, but its value must be convertible to <see cref="float"/>.</param>
         /// <inheritdoc cref="MaxField(Rect, SerializedProperty, GUIContent, float)"/>
-        public static void MaxField(Rect _position, SerializedProperty _property, GUIContent _label, MemberValue<float> _maxMember)
-        {
+        public static void MaxField(Rect _position, SerializedProperty _property, GUIContent _label, MemberValue<float> _maxMember) {
             // Incompatible max value management.
-            if (!_maxMember.GetValue(_property.serializedObject, out float _maxFloatValue))
-            {
+            if (!_maxMember.GetValue(_property, out float _maxFloatValue)) {
                 // Debug message.
                 Object _target = _property.serializedObject.targetObject;
                 _target.LogWarning($"Could not get the value of the class member \"{_maxMember.Name}\" in the script \"{_target.GetType()}\".");
@@ -1410,15 +1284,13 @@ namespace EnhancedEditor.Editor
         }
 
         /// <inheritdoc cref="MaxField(Rect, SerializedProperty, GUIContent, float)"/>
-        public static void MaxField(Rect _position, SerializedProperty _property, float _maxValue)
-        {
+        public static void MaxField(Rect _position, SerializedProperty _property, float _maxValue) {
             GUIContent _label = EnhancedEditorGUIUtility.GetPropertyLabel(_property);
             MaxField(_position, _property, _label, _maxValue);
         }
 
         /// <inheritdoc cref="MaxField(Rect, SerializedProperty, GUIContent, float)"/>
-        public static void MaxField(Rect _position, SerializedProperty _property, string _label, float _maxValue)
-        {
+        public static void MaxField(Rect _position, SerializedProperty _property, string _label, float _maxValue) {
             GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
             MaxField(_position, _property, _labelGUI, _maxValue);
         }
@@ -1430,16 +1302,13 @@ namespace EnhancedEditor.Editor
         /// <param name="_property"><see cref="SerializedProperty"/> to ceil value.</param>
         /// <param name="_label"><inheritdoc cref="DocumentationMethod(Rect, GUIContent)" path="/param[@name='_label']"/></param>
         /// <param name="_maxValue">Maximum allowed value.</param>
-        public static void MaxField(Rect _position, SerializedProperty _property, GUIContent _label, float _maxValue)
-        {
+        public static void MaxField(Rect _position, SerializedProperty _property, GUIContent _label, float _maxValue) {
             using (var _scope = new EditorGUI.PropertyScope(Rect.zero, GUIContent.none, _property))
-            using (var _changeCheck = new EditorGUI.ChangeCheckScope())
-            {
+            using (var _changeCheck = new EditorGUI.ChangeCheckScope()) {
                 EditorGUI.PropertyField(_position, _property, _label);
 
                 // Restrains value when changed.
-                if (_changeCheck.changed)
-                {
+                if (_changeCheck.changed) {
                     EnhancedEditorUtility.CeilSerializedPropertyValue(_property, _maxValue);
                 }
             }
@@ -1448,36 +1317,31 @@ namespace EnhancedEditor.Editor
         // ===== Float Value ===== \\
 
         /// <inheritdoc cref="MaxField(Rect, GUIContent, float, float, GUIStyle)"/>
-        public static float MaxField(Rect _position, float _value, float _maxValue)
-        {
+        public static float MaxField(Rect _position, float _value, float _maxValue) {
             GUIContent _label = GUIContent.none;
             return MaxField(_position, _label, _value, _maxValue);
         }
 
         /// <inheritdoc cref="MaxField(Rect, GUIContent, float, float, GUIStyle)"/>
-        public static float MaxField(Rect _position, string _label, float _value, float _maxValue)
-        {
+        public static float MaxField(Rect _position, string _label, float _value, float _maxValue) {
             GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
             return MaxField(_position, _labelGUI, _value, _maxValue);
         }
 
         /// <inheritdoc cref="MaxField(Rect, GUIContent, float, float, GUIStyle)"/>
-        public static float MaxField(Rect _position, GUIContent _label, float _value, float _maxValue)
-        {
+        public static float MaxField(Rect _position, GUIContent _label, float _value, float _maxValue) {
             GUIStyle _style = EditorStyles.numberField;
             return MaxField(_position, _label, _value, _maxValue, _style);
         }
 
         /// <inheritdoc cref="MaxField(Rect, GUIContent, float, float, GUIStyle)"/>
-        public static float MaxField(Rect _position, float _value, float _maxValue, GUIStyle _style)
-        {
+        public static float MaxField(Rect _position, float _value, float _maxValue, GUIStyle _style) {
             GUIContent _label = GUIContent.none;
             return MaxField(_position, _label, _value, _maxValue, _style);
         }
 
         /// <inheritdoc cref="MaxField(Rect, GUIContent, float, float, GUIStyle)"/>
-        public static float MaxField(Rect _position, string _label, float _value, float _maxValue, GUIStyle _style)
-        {
+        public static float MaxField(Rect _position, string _label, float _value, float _maxValue, GUIStyle _style) {
             GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
             return MaxField(_position, _labelGUI, _value, _maxValue, _style);
         }
@@ -1489,8 +1353,7 @@ namespace EnhancedEditor.Editor
         /// <param name="_style"><inheritdoc cref="DocumentationMethodExtra(Rect, ref bool, out float, GUIStyle)" path="/param[@name='_style']"/></param>
         /// <returns>The restrained value entered by the user.</returns>
         /// <inheritdoc cref="MaxField(Rect, SerializedProperty, GUIContent, float)"/>
-        public static float MaxField(Rect _position, GUIContent _label, float _value, float _maxValue, GUIStyle _style)
-        {
+        public static float MaxField(Rect _position, GUIContent _label, float _value, float _maxValue, GUIStyle _style) {
             _value = EditorGUI.FloatField(_position, _label, _value, _style);
             _value = Mathf.Min(_value, _maxValue);
 
@@ -1500,43 +1363,37 @@ namespace EnhancedEditor.Editor
         // ===== Int Value ===== \\
 
         /// <inheritdoc cref="MaxField(Rect, GUIContent, float, float, GUIStyle)"/>
-        public static int MaxField(Rect _position, int _value, int _maxValue)
-        {
+        public static int MaxField(Rect _position, int _value, int _maxValue) {
             GUIContent _label = GUIContent.none;
             return MaxField(_position, _label, _value, _maxValue);
         }
 
         /// <inheritdoc cref="MaxField(Rect, GUIContent, float, float, GUIStyle)"/>
-        public static int MaxField(Rect _position, string _label, int _value, int _maxValue)
-        {
+        public static int MaxField(Rect _position, string _label, int _value, int _maxValue) {
             GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
             return MaxField(_position, _labelGUI, _value, _maxValue);
         }
 
         /// <inheritdoc cref="MaxField(Rect, GUIContent, float, float, GUIStyle)"/>
-        public static int MaxField(Rect _position, GUIContent _label, int _value, int _maxValue)
-        {
+        public static int MaxField(Rect _position, GUIContent _label, int _value, int _maxValue) {
             GUIStyle _style = EditorStyles.numberField;
             return MaxField(_position, _label, _value, _maxValue, _style);
         }
 
         /// <inheritdoc cref="MaxField(Rect, GUIContent, float, float, GUIStyle)"/>
-        public static int MaxField(Rect _position, int _value, int _maxValue, GUIStyle _style)
-        {
+        public static int MaxField(Rect _position, int _value, int _maxValue, GUIStyle _style) {
             GUIContent _label = GUIContent.none;
             return MaxField(_position, _label, _value, _maxValue, _style);
         }
 
         /// <inheritdoc cref="MaxField(Rect, GUIContent, float, float, GUIStyle)"/>
-        public static int MaxField(Rect _position, string _label, int _value, int _maxValue, GUIStyle _style)
-        {
+        public static int MaxField(Rect _position, string _label, int _value, int _maxValue, GUIStyle _style) {
             GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
             return MaxField(_position, _labelGUI, _value, _maxValue, _style);
         }
 
         /// <inheritdoc cref="MaxField(Rect, GUIContent, float, float, GUIStyle)"/>
-        public static int MaxField(Rect _position, GUIContent _label, int _value, int _maxValue, GUIStyle _style)
-        {
+        public static int MaxField(Rect _position, GUIContent _label, int _value, int _maxValue, GUIStyle _style) {
             _value = EditorGUI.IntField(_position, _label, _value, _style);
             _value = Mathf.Min(_value, _maxValue);
 
@@ -1548,15 +1405,13 @@ namespace EnhancedEditor.Editor
         // ===== Serialized Property ===== \\
 
         /// <inheritdoc cref="MinField(Rect, SerializedProperty, GUIContent, MemberValue{float})"/>
-        public static void MinField(Rect _position, SerializedProperty _property, MemberValue<float> _minMember)
-        {
+        public static void MinField(Rect _position, SerializedProperty _property, MemberValue<float> _minMember) {
             GUIContent _label = EnhancedEditorGUIUtility.GetPropertyLabel(_property);
             MinField(_position, _property, _label, _minMember);
         }
 
         /// <inheritdoc cref="MinField(Rect, SerializedProperty, GUIContent, MemberValue{float})"/>
-        public static void MinField(Rect _position, SerializedProperty _property, string _label, MemberValue<float> _minMember)
-        {
+        public static void MinField(Rect _position, SerializedProperty _property, string _label, MemberValue<float> _minMember) {
             GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
             MinField(_position, _property, _labelGUI, _minMember);
         }
@@ -1565,11 +1420,9 @@ namespace EnhancedEditor.Editor
         /// <para/>
         /// Can either be a field, a property or a method, but its value must be convertible to <see cref="float"/>.</param>
         /// <inheritdoc cref="MinField(Rect, SerializedProperty, GUIContent, float)"/>
-        public static void MinField(Rect _position, SerializedProperty _property, GUIContent _label, MemberValue<float> _minMember)
-        {
+        public static void MinField(Rect _position, SerializedProperty _property, GUIContent _label, MemberValue<float> _minMember) {
             // Incompatible min value management.
-            if (!_minMember.GetValue(_property.serializedObject, out float _minFloatValue))
-            {
+            if (!_minMember.GetValue(_property, out float _minFloatValue)) {
                 // Debug message.
                 Object _target = _property.serializedObject.targetObject;
                 _target.LogWarning($"Could not get the value of the class member \"{_minMember.Name}\" in the script \"{_target.GetType()}\".");
@@ -1582,15 +1435,13 @@ namespace EnhancedEditor.Editor
         }
 
         /// <inheritdoc cref="MinField(Rect, SerializedProperty, GUIContent, float)"/>
-        public static void MinField(Rect _position, SerializedProperty _property, float _minValue)
-        {
+        public static void MinField(Rect _position, SerializedProperty _property, float _minValue) {
             GUIContent _label = EnhancedEditorGUIUtility.GetPropertyLabel(_property);
             MinField(_position, _property, _label, _minValue);
         }
 
         /// <inheritdoc cref="MinField(Rect, SerializedProperty, GUIContent, float)"/>
-        public static void MinField(Rect _position, SerializedProperty _property, string _label, float _minValue)
-        {
+        public static void MinField(Rect _position, SerializedProperty _property, string _label, float _minValue) {
             GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
             MinField(_position, _property, _labelGUI, _minValue);
         }
@@ -1602,16 +1453,13 @@ namespace EnhancedEditor.Editor
         /// <param name="_property"><see cref="SerializedProperty"/> to floor value.</param>
         /// <param name="_label"><inheritdoc cref="DocumentationMethod(Rect, GUIContent)" path="/param[@name='_label']"/></param>
         /// <param name="_minValue">Minimum allowed value.</param>
-        public static void MinField(Rect _position, SerializedProperty _property, GUIContent _label, float _minValue)
-        {
+        public static void MinField(Rect _position, SerializedProperty _property, GUIContent _label, float _minValue) {
             using (var _scope = new EditorGUI.PropertyScope(Rect.zero, GUIContent.none, _property))
-            using (var _changeCheck = new EditorGUI.ChangeCheckScope())
-            {
+            using (var _changeCheck = new EditorGUI.ChangeCheckScope()) {
                 EditorGUI.PropertyField(_position, _property, _label);
 
                 // Restrains value when changed.
-                if (_changeCheck.changed)
-                {
+                if (_changeCheck.changed) {
                     EnhancedEditorUtility.FloorSerializedPropertyValue(_property, _minValue);
                 }
             }
@@ -1620,36 +1468,31 @@ namespace EnhancedEditor.Editor
         // ===== Float Value ===== \\
 
         /// <inheritdoc cref="MinField(Rect, GUIContent, float, float, GUIStyle)"/>
-        public static float MinField(Rect _position, float _value, float _minValue)
-        {
+        public static float MinField(Rect _position, float _value, float _minValue) {
             GUIContent _label = GUIContent.none;
             return MinField(_position, _label, _value, _minValue);
         }
 
         /// <inheritdoc cref="MinField(Rect, GUIContent, float, float, GUIStyle)"/>
-        public static float MinField(Rect _position, string _label, float _value, float _minValue)
-        {
+        public static float MinField(Rect _position, string _label, float _value, float _minValue) {
             GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
             return MinField(_position, _labelGUI, _value, _minValue);
         }
 
         /// <inheritdoc cref="MinField(Rect, GUIContent, float, float, GUIStyle)"/>
-        public static float MinField(Rect _position, GUIContent _label, float _value, float _minValue)
-        {
+        public static float MinField(Rect _position, GUIContent _label, float _value, float _minValue) {
             GUIStyle _style = EditorStyles.numberField;
             return MinField(_position, _label, _value, _minValue, _style);
         }
 
         /// <inheritdoc cref="MinField(Rect, GUIContent, float, float, GUIStyle)"/>
-        public static float MinField(Rect _position, float _value, float _minValue, GUIStyle _style)
-        {
+        public static float MinField(Rect _position, float _value, float _minValue, GUIStyle _style) {
             GUIContent _label = GUIContent.none;
             return MinField(_position, _label, _value, _minValue, _style);
         }
 
         /// <inheritdoc cref="MinField(Rect, GUIContent, float, float, GUIStyle)"/>
-        public static float MinField(Rect _position, string _label, float _value, float _minValue, GUIStyle _style)
-        {
+        public static float MinField(Rect _position, string _label, float _value, float _minValue, GUIStyle _style) {
             GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
             return MinField(_position, _labelGUI, _value, _minValue, _style);
         }
@@ -1661,8 +1504,7 @@ namespace EnhancedEditor.Editor
         /// <param name="_style"><inheritdoc cref="DocumentationMethodExtra(Rect, ref bool, out float, GUIStyle)" path="/param[@name='_style']"/></param>
         /// <returns>The restrained value entered by the user.</returns>
         /// <inheritdoc cref="MinField(Rect, SerializedProperty, GUIContent, float)"/>
-        public static float MinField(Rect _position, GUIContent _label, float _value, float _minValue, GUIStyle _style)
-        {
+        public static float MinField(Rect _position, GUIContent _label, float _value, float _minValue, GUIStyle _style) {
             _value = EditorGUI.FloatField(_position, _label, _value, _style);
             _value = Mathf.Max(_value, _minValue);
 
@@ -1672,43 +1514,37 @@ namespace EnhancedEditor.Editor
         // ===== Int Value ===== \\
 
         /// <inheritdoc cref="MinField(Rect, GUIContent, float, float, GUIStyle)"/>
-        public static int MinField(Rect _position, int _value, int _minValue)
-        {
+        public static int MinField(Rect _position, int _value, int _minValue) {
             GUIContent _label = GUIContent.none;
             return MinField(_position, _label, _value, _minValue);
         }
 
         /// <inheritdoc cref="MinField(Rect, GUIContent, float, float, GUIStyle)"/>
-        public static int MinField(Rect _position, string _label, int _value, int _minValue)
-        {
+        public static int MinField(Rect _position, string _label, int _value, int _minValue) {
             GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
             return MinField(_position, _labelGUI, _value, _minValue);
         }
 
         /// <inheritdoc cref="MinField(Rect, GUIContent, float, float, GUIStyle)"/>
-        public static int MinField(Rect _position, GUIContent _label, int _value, int _minValue)
-        {
+        public static int MinField(Rect _position, GUIContent _label, int _value, int _minValue) {
             GUIStyle _style = EditorStyles.numberField;
             return MinField(_position, _label, _value, _minValue, _style);
         }
 
         /// <inheritdoc cref="MinField(Rect, GUIContent, float, float, GUIStyle)"/>
-        public static int MinField(Rect _position, int _value, int _minValue, GUIStyle _style)
-        {
+        public static int MinField(Rect _position, int _value, int _minValue, GUIStyle _style) {
             GUIContent _label = GUIContent.none;
             return MinField(_position, _label, _value, _minValue, _style);
         }
 
         /// <inheritdoc cref="MinField(Rect, GUIContent, float, float, GUIStyle)"/>
-        public static int MinField(Rect _position, string _label, int _value, int _minValue, GUIStyle _style)
-        {
+        public static int MinField(Rect _position, string _label, int _value, int _minValue, GUIStyle _style) {
             GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
             return MinField(_position, _labelGUI, _value, _minValue, _style);
         }
 
         /// <inheritdoc cref="MinField(Rect, GUIContent, float, float, GUIStyle)"/>
-        public static int MinField(Rect _position, GUIContent _label, int _value, int _minValue, GUIStyle _style)
-        {
+        public static int MinField(Rect _position, GUIContent _label, int _value, int _minValue, GUIStyle _style) {
             _value = EditorGUI.IntField(_position, _label, _value, _style);
             _value = Mathf.Max(_value, _minValue);
 
@@ -1720,15 +1556,13 @@ namespace EnhancedEditor.Editor
         // ===== Serialized Property ===== \\
 
         /// <inheritdoc cref="MinMaxField(Rect, SerializedProperty, GUIContent, MemberValue{Vector2})"/>
-        public static void MinMaxField(Rect _position, SerializedProperty _property, MemberValue<Vector2> _minMaxMember)
-        {
+        public static void MinMaxField(Rect _position, SerializedProperty _property, MemberValue<Vector2> _minMaxMember) {
             GUIContent _label = EnhancedEditorGUIUtility.GetPropertyLabel(_property);
             MinMaxField(_position, _property, _label, _minMaxMember);
         }
 
         /// <inheritdoc cref="MinMaxField(Rect, SerializedProperty, GUIContent, MemberValue{Vector2})"/>
-        public static void MinMaxField(Rect _position, SerializedProperty _property, string _label, MemberValue<Vector2> _minMaxMember)
-        {
+        public static void MinMaxField(Rect _position, SerializedProperty _property, string _label, MemberValue<Vector2> _minMaxMember) {
             GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
             MinMaxField(_position, _property, _labelGUI, _minMaxMember);
         }
@@ -1737,11 +1571,9 @@ namespace EnhancedEditor.Editor
         /// <para/>
         /// Can either be a field, a property or a method, but its value must be convertible to <see cref="Vector2"/>.</param>
         /// <inheritdoc cref="MinMaxField(Rect, SerializedProperty, GUIContent, float, float)"/>
-        public static void MinMaxField(Rect _position, SerializedProperty _property, GUIContent _label, MemberValue<Vector2> _minMaxMember)
-        {
+        public static void MinMaxField(Rect _position, SerializedProperty _property, GUIContent _label, MemberValue<Vector2> _minMaxMember) {
             // Incompatible min max value management.
-            if (!_minMaxMember.GetValue(_property.serializedObject, out Vector2 _minMaxVectorValue))
-            {
+            if (!_minMaxMember.GetValue(_property, out Vector2 _minMaxVectorValue)) {
                 // Debug message.
                 Object _target = _property.serializedObject.targetObject;
                 _target.LogWarning($"Could not get the value of the class member \"{_minMaxMember.Name}\" in the script \"{_target.GetType()}\".");
@@ -1754,15 +1586,13 @@ namespace EnhancedEditor.Editor
         }
 
         /// <inheritdoc cref="MinMaxField(Rect, SerializedProperty, GUIContent, float, float)"/>
-        public static void MinMaxField(Rect _position, SerializedProperty _property, float _minLimit, float _maxLimit)
-        {
+        public static void MinMaxField(Rect _position, SerializedProperty _property, float _minLimit, float _maxLimit) {
             GUIContent _label = EnhancedEditorGUIUtility.GetPropertyLabel(_property);
             MinMaxField(_position, _property, _label, _minLimit, _maxLimit);
         }
 
         /// <inheritdoc cref="MinMaxField(Rect, SerializedProperty, GUIContent, float, float)"/>
-        public static void MinMaxField(Rect _position, SerializedProperty _property, string _label, float _minLimit, float _maxLimit)
-        {
+        public static void MinMaxField(Rect _position, SerializedProperty _property, string _label, float _minLimit, float _maxLimit) {
             GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
             MinMaxField(_position, _property, _labelGUI, _minLimit, _maxLimit);
         }
@@ -1775,23 +1605,18 @@ namespace EnhancedEditor.Editor
         /// <param name="_label"><inheritdoc cref="DocumentationMethod(Rect, GUIContent)" path="/param[@name='_label']"/></param>
         /// <param name="_minLimit">Slider minimum allowed value.</param>
         /// <param name="_maxLimit">Slider maximum allowed value.</param>
-        public static void MinMaxField(Rect _position, SerializedProperty _property, GUIContent _label, float _minLimit, float _maxLimit)
-        {
-            using (var _scope = new EditorGUI.PropertyScope(_position, _label, _property))
-            {
-                switch (_property.propertyType)
-                {
+        public static void MinMaxField(Rect _position, SerializedProperty _property, GUIContent _label, float _minLimit, float _maxLimit) {
+            using (var _scope = new EditorGUI.PropertyScope(_position, _label, _property)) {
+                switch (_property.propertyType) {
                     // Vector2.
-                    case SerializedPropertyType.Vector2:
-                    {
+                    case SerializedPropertyType.Vector2: {
                         Vector2 _value = _property.vector2Value;
                         _property.vector2Value = MinMaxField(_position, _label, _value, _minLimit, _maxLimit);
                         break;
                     }
 
                     // Vector2Int.
-                    case SerializedPropertyType.Vector2Int:
-                    {
+                    case SerializedPropertyType.Vector2Int: {
                         Vector2Int _value = _property.vector2IntValue;
                         _property.vector2IntValue = MinMaxField(_position, _label, _value, (int)_minLimit, (int)_maxLimit);
                         break;
@@ -1808,37 +1633,32 @@ namespace EnhancedEditor.Editor
         // ===== Float Value ===== \\
 
         /// <inheritdoc cref="MinMaxField(Rect, GUIContent, Vector2, float, float)"/>
-        public static Vector2 MinMaxField(Rect _position, Vector2 _value, float _minLimit, float _maxLimit)
-        {
+        public static Vector2 MinMaxField(Rect _position, Vector2 _value, float _minLimit, float _maxLimit) {
             GUIContent _label = GUIContent.none;
             return MinMaxField(_position, _label, _value, _minLimit, _maxLimit);
         }
 
         /// <inheritdoc cref="MinMaxField(Rect, GUIContent, Vector2, float, float)"/>
-        public static Vector2 MinMaxField(Rect _position, string _label, Vector2 _value, float _minLimit, float _maxLimit)
-        {
+        public static Vector2 MinMaxField(Rect _position, string _label, Vector2 _value, float _minLimit, float _maxLimit) {
             GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
             return MinMaxField(_position, _labelGUI, _value, _minLimit, _maxLimit);
         }
 
         /// <param name="_value">Current slider value (minimum as x, maximum as y).</param>
         /// <inheritdoc cref="MinMaxField(Rect, GUIContent, float, float, float, float)"/>
-        public static Vector2 MinMaxField(Rect _position, GUIContent _label, Vector2 _value, float _minLimit, float _maxLimit)
-        {
+        public static Vector2 MinMaxField(Rect _position, GUIContent _label, Vector2 _value, float _minLimit, float _maxLimit) {
             _value = MinMaxField(_position, _label, _value.x, _value.y, _minLimit, _maxLimit);
             return _value;
         }
 
         /// <inheritdoc cref="MinMaxField(Rect, GUIContent, float, float, float, float)"/>
-        public static Vector2 MinMaxField(Rect _position, float _minValue, float _maxValue, float _minLimit, float _maxLimit)
-        {
+        public static Vector2 MinMaxField(Rect _position, float _minValue, float _maxValue, float _minLimit, float _maxLimit) {
             GUIContent _label = GUIContent.none;
             return MinMaxField(_position, _label, _minValue, _maxValue, _minLimit, _maxLimit);
         }
 
         /// <inheritdoc cref="MinMaxField(Rect, GUIContent, float, float, float, float)"/>
-        public static Vector2 MinMaxField(Rect _position, string _label, float _minValue, float _maxValue, float _minLimit, float _maxLimit)
-        {
+        public static Vector2 MinMaxField(Rect _position, string _label, float _minValue, float _maxValue, float _minLimit, float _maxLimit) {
             GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
             return MinMaxField(_position, _labelGUI, _minValue, _maxValue, _minLimit, _maxLimit);
         }
@@ -1847,8 +1667,7 @@ namespace EnhancedEditor.Editor
         /// <param name="_maxValue">Current slider maximum value.</param>
         /// <returns><see cref="Vector2"/> with min and max value respectively as x and y.</returns>
         /// <inheritdoc cref="MinMaxField(Rect, SerializedProperty, GUIContent, float, float)"/>
-        public static Vector2 MinMaxField(Rect _position, GUIContent _label, float _minValue, float _maxValue, float _minLimit, float _maxLimit)
-        {
+        public static Vector2 MinMaxField(Rect _position, GUIContent _label, float _minValue, float _maxValue, float _minLimit, float _maxLimit) {
             // Label.
             _position = EditorGUI.PrefixLabel(_position, _label);
 
@@ -1858,11 +1677,9 @@ namespace EnhancedEditor.Editor
                 width = EditorGUIUtility.fieldWidth
             };
 
-            using (var _scope = ZeroIndentScope())
-            {
+            using (var _scope = ZeroIndentScope()) {
                 float _newMinValue = EditorGUI.FloatField(_temp, _minValue);
-                if (_newMinValue != _minValue)
-                {
+                if (_newMinValue != _minValue) {
                     _minValue = Mathf.Clamp(_newMinValue, _minLimit, _maxValue);
                 }
 
@@ -1870,8 +1687,7 @@ namespace EnhancedEditor.Editor
                 _temp.x = _position.xMax - _temp.width;
 
                 float _newMaxValue = EditorGUI.FloatField(_temp, _maxValue);
-                if (_newMaxValue != _maxValue)
-                {
+                if (_newMaxValue != _maxValue) {
                     _maxValue = Mathf.Clamp(_newMaxValue, _minValue, _maxLimit);
                 }
 
@@ -1881,60 +1697,52 @@ namespace EnhancedEditor.Editor
 
                 EditorGUI.MinMaxSlider(_position, ref _minValue, ref _maxValue, _minLimit, _maxLimit);
             }
-                
+
             return new Vector2(_minValue, _maxValue);
         }
 
         // ===== Int Value ===== \\
 
         /// <inheritdoc cref="MinMaxField(Rect, GUIContent, Vector2Int, int, int)"/>
-        public static Vector2Int MinMaxField(Rect _position, Vector2Int _value, int _minLimit, int _maxLimit)
-        {
+        public static Vector2Int MinMaxField(Rect _position, Vector2Int _value, int _minLimit, int _maxLimit) {
             GUIContent _label = GUIContent.none;
             return MinMaxField(_position, _label, _value, _minLimit, _maxLimit);
         }
 
         /// <inheritdoc cref="MinMaxField(Rect, GUIContent, Vector2Int, int, int)"/>
-        public static Vector2Int MinMaxField(Rect _position, string _label, Vector2Int _value, int _minLimit, int _maxLimit)
-        {
+        public static Vector2Int MinMaxField(Rect _position, string _label, Vector2Int _value, int _minLimit, int _maxLimit) {
             GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
             return MinMaxField(_position, _labelGUI, _value, _minLimit, _maxLimit);
         }
 
         /// <param name="_value"><inheritdoc cref="MinMaxField(Rect, GUIContent, Vector2, float, float)" path="/param[@name='_value']"/></param>
         /// <inheritdoc cref="MinMaxField(Rect, GUIContent, int, int, int, int)"/>
-        public static Vector2Int MinMaxField(Rect _position, GUIContent _label, Vector2Int _value, int _minLimit, int _maxLimit)
-        {
+        public static Vector2Int MinMaxField(Rect _position, GUIContent _label, Vector2Int _value, int _minLimit, int _maxLimit) {
             _value = MinMaxField(_position, _label, _value.x, _value.y, _minLimit, _maxLimit);
             return _value;
         }
 
         /// <inheritdoc cref="MinMaxField(Rect, GUIContent, int, int, int, int)"/>
-        public static Vector2Int MinMaxField(Rect _position, int _minValue, int _maxValue, int _minLimit, int _maxLimit)
-        {
+        public static Vector2Int MinMaxField(Rect _position, int _minValue, int _maxValue, int _minLimit, int _maxLimit) {
             GUIContent _label = GUIContent.none;
             return MinMaxField(_position, _label, _minValue, _maxValue, _minLimit, _maxLimit);
         }
 
         /// <inheritdoc cref="MinMaxField(Rect, GUIContent, int, int, int, int)"/>
-        public static Vector2Int MinMaxField(Rect _position, string _label, int _minValue, int _maxValue, int _minLimit, int _maxLimit)
-        {
+        public static Vector2Int MinMaxField(Rect _position, string _label, int _minValue, int _maxValue, int _minLimit, int _maxLimit) {
             GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
             return MinMaxField(_position, _labelGUI, _minValue, _maxValue, _minLimit, _maxLimit);
         }
 
         /// <returns><see cref="Vector2Int"/> with min and max value respectively as x and y.</returns>
         /// <inheritdoc cref="MinMaxField(Rect, GUIContent, float, float, float, float)"/>
-        public static Vector2Int MinMaxField(Rect _position, GUIContent _label, int _minValue, int _maxValue, int _minLimit, int _maxLimit)
-        {
+        public static Vector2Int MinMaxField(Rect _position, GUIContent _label, int _minValue, int _maxValue, int _minLimit, int _maxLimit) {
             Vector2Int _value = new Vector2Int(_minValue, _maxValue);
-            using (var _scope = new EditorGUI.ChangeCheckScope())
-            {
+            using (var _scope = new EditorGUI.ChangeCheckScope()) {
                 Vector2 _newValue = MinMaxField(_position, _label, (float)_value.x, _value.y, _minLimit, _maxLimit);
 
                 // Only proceed to casts when the value changed.
-                if (_scope.changed)
-                {
+                if (_scope.changed) {
                     _value.Set((int)_newValue.x, (int)_newValue.y);
                 }
             }
@@ -1950,37 +1758,32 @@ namespace EnhancedEditor.Editor
         // ===== Serialized Property ===== \\
 
         /// <inheritdoc cref="PickerField(Rect, SerializedProperty, GUIContent, Type)"/>
-        public static void PickerField(Rect _position, SerializedProperty _property, Type _requiredType)
-        {
+        public static void PickerField(Rect _position, SerializedProperty _property, Type _requiredType) {
             GUIContent _label = EnhancedEditorGUIUtility.GetPropertyLabel(_property);
             PickerField(_position, _property, _label, _requiredType);
         }
 
         /// <inheritdoc cref="PickerField(Rect, SerializedProperty, GUIContent, Type)"/>
-        public static void PickerField(Rect _position, SerializedProperty _property, string _label, Type _requiredType)
-        {
+        public static void PickerField(Rect _position, SerializedProperty _property, string _label, Type _requiredType) {
             GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
             PickerField(_position, _property, _labelGUI, _requiredType);
         }
 
         /// <param name="_requiredType">Only the objects possessing this component will be assignable (must either be a component or an interface).</param>
         /// <inheritdoc cref="PickerField(Rect, SerializedProperty, GUIContent, Type[])"/>
-        public static void PickerField(Rect _position, SerializedProperty _property, GUIContent _label, Type _requiredType)
-        {
+        public static void PickerField(Rect _position, SerializedProperty _property, GUIContent _label, Type _requiredType) {
             pickerRequiredType[0] = _requiredType;
             PickerField(_position, _property, _label, pickerRequiredType);
         }
 
         /// <inheritdoc cref="PickerField(Rect, SerializedProperty, GUIContent, Type[])"/>
-        public static void PickerField(Rect _position, SerializedProperty _property, Type[] _requiredTypes)
-        {
+        public static void PickerField(Rect _position, SerializedProperty _property, Type[] _requiredTypes) {
             GUIContent _label = EnhancedEditorGUIUtility.GetPropertyLabel(_property);
             PickerField(_position, _property, _label, _requiredTypes);
         }
 
         /// <inheritdoc cref="PickerField(Rect, SerializedProperty, GUIContent, Type[])"/>
-        public static void PickerField(Rect _position, SerializedProperty _property, string _label, Type[] _requiredTypes)
-        {
+        public static void PickerField(Rect _position, SerializedProperty _property, string _label, Type[] _requiredTypes) {
             GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
             PickerField(_position, _property, _labelGUI, _requiredTypes);
         }
@@ -1994,14 +1797,12 @@ namespace EnhancedEditor.Editor
         /// <param name="_label"><inheritdoc cref="DocumentationMethod(Rect, GUIContent)" path="/param[@name='_label']"/></param>
         /// <param name="_requiredTypes">Only the objects possessing all of these required components will be assignable
         /// (must either be a component or an interface).</param>
-        public static void PickerField(Rect _position, SerializedProperty _property, GUIContent _label, Type[] _requiredTypes)
-        {
+        public static void PickerField(Rect _position, SerializedProperty _property, GUIContent _label, Type[] _requiredTypes) {
             Type _objectType;
 
             // In order for the picker to work, the property must be of object reference type and the target object type either a GameObject or a Component.
             if ((_property.propertyType != SerializedPropertyType.ObjectReference)
-               || !EnhancedEditorUtility.IsSceneObject(_objectType = EnhancedEditorUtility.GetSerializedPropertyType(_property)))
-            {
+               || !EnhancedEditorUtility.IsSceneObject(_objectType = EnhancedEditorUtility.GetSerializedPropertyType(_property))) {
                 EditorGUI.PropertyField(_position, _property, _label);
                 return;
             }
@@ -2011,20 +1812,16 @@ namespace EnhancedEditor.Editor
             bool _allowSceneObjects = !EditorUtility.IsPersistent(_property.serializedObject.targetObject);
 
             _position = DoPickerField(_position, _id, _property.objectReferenceValue, _objectType, _requiredTypes, _allowSceneObjects);
-            
+
             // Property field.
             using (var _scope = new EditorGUI.PropertyScope(Rect.zero, GUIContent.none, _property))
-            using (var _changeCheck = new EditorGUI.ChangeCheckScope())
-            {
+            using (var _changeCheck = new EditorGUI.ChangeCheckScope()) {
                 EditorGUI.PropertyField(_position, _property, _label);
 
-                if (_changeCheck.changed && ResetPickerObjectIfDontMatch(_property.objectReferenceValue, _requiredTypes))
-                {
+                if (_changeCheck.changed && ResetPickerObjectIfDontMatch(_property.objectReferenceValue, _requiredTypes)) {
                     // Reset object value when changed if it has not all required components.
                     _property.objectReferenceValue = null;
-                }
-                else if (GetPickerObject(_id, _objectType, out Object _object))
-                {
+                } else if (GetPickerObject(_id, _objectType, out Object _object)) {
                     // Get newly selected object from picker if one.
                     _property.objectReferenceValue = _object;
                 }
@@ -2034,79 +1831,68 @@ namespace EnhancedEditor.Editor
         // ===== Object Value ===== \\
 
         /// <inheritdoc cref="PickerField(Rect, GUIContent, Object, Type, Type, bool)"/>
-        public static Object PickerField(Rect _position, Object _object, Type _objectType, Type _requiredType)
-        {
+        public static Object PickerField(Rect _position, Object _object, Type _objectType, Type _requiredType) {
             bool _allowSceneObjects = true;
             return PickerField(_position, _object, _objectType, _requiredType, _allowSceneObjects);
         }
 
         /// <inheritdoc cref="PickerField(Rect, GUIContent, Object, Type, Type, bool)"/>
-        public static Object PickerField(Rect _position, Object _object, Type _objectType, Type _requiredType, bool _allowSceneObjects)
-        {
+        public static Object PickerField(Rect _position, Object _object, Type _objectType, Type _requiredType, bool _allowSceneObjects) {
             GUIContent _label = GUIContent.none;
             return PickerField(_position, _label, _object, _objectType, _requiredType, _allowSceneObjects);
         }
 
         /// <inheritdoc cref="PickerField(Rect, GUIContent, Object, Type, Type, bool)"/>
-        public static Object PickerField(Rect _position, string _label, Object _object, Type _objectType, Type _requiredType)
-        {
+        public static Object PickerField(Rect _position, string _label, Object _object, Type _objectType, Type _requiredType) {
             bool _allowSceneObjects = true;
             return PickerField(_position, _label, _object, _objectType, _requiredType, _allowSceneObjects);
         }
 
         /// <inheritdoc cref="PickerField(Rect, GUIContent, Object, Type, Type, bool)"/>
-        public static Object PickerField(Rect _position, string _label, Object _object, Type _objectType, Type _requiredType, bool _allowSceneObjects)
-        {
+        public static Object PickerField(Rect _position, string _label, Object _object, Type _objectType, Type _requiredType, bool _allowSceneObjects) {
             GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
             return PickerField(_position, _labelGUI, _object, _objectType, _requiredType, _allowSceneObjects);
         }
 
         /// <inheritdoc cref="PickerField(Rect, GUIContent, Object, Type, Type, bool)"/>
-        public static Object PickerField(Rect _position, GUIContent _label, Object _object, Type _objectType, Type _requiredType)
-        {
+        public static Object PickerField(Rect _position, GUIContent _label, Object _object, Type _objectType, Type _requiredType) {
             bool _allowSceneObjects = true;
             return PickerField(_position, _label, _object, _objectType, _requiredType, _allowSceneObjects);
         }
 
         /// <param name="_requiredType"><inheritdoc cref="PickerField(Rect, SerializedProperty, GUIContent, Type)" path="/param[@name='_requiredType']"/></param>
         /// <inheritdoc cref="PickerField(Rect, GUIContent, Object, Type, Type[], bool)"/>
-        public static Object PickerField(Rect _position, GUIContent _label, Object _object, Type _objectType, Type _requiredType, bool _allowSceneObjects)
-        {
+        public static Object PickerField(Rect _position, GUIContent _label, Object _object, Type _objectType, Type _requiredType, bool _allowSceneObjects) {
             pickerRequiredType[0] = _requiredType;
             return PickerField(_position, _label, _object, _objectType, pickerRequiredType, _allowSceneObjects);
         }
 
         /// <inheritdoc cref="PickerField(Rect, GUIContent, Object, Type, Type[], bool)"/>
-        public static Object PickerField(Rect _position, Object _object, Type _objectType, Type[] _requiredTypes)
-        {
+        public static Object PickerField(Rect _position, Object _object, Type _objectType, Type[] _requiredTypes) {
             bool _allowSceneObjects = true;
             return PickerField(_position, _object, _objectType, _requiredTypes, _allowSceneObjects);
         }
 
         /// <inheritdoc cref="PickerField(Rect, GUIContent, Object, Type, Type[], bool)"/>
-        public static Object PickerField(Rect _position, Object _object, Type _objectType, Type[] _requiredTypes, bool _allowSceneObjects)
-        {
+        public static Object PickerField(Rect _position, Object _object, Type _objectType, Type[] _requiredTypes, bool _allowSceneObjects) {
             GUIContent _label = GUIContent.none;
             return PickerField(_position, _label, _object, _objectType, _requiredTypes, _allowSceneObjects);
         }
 
         /// <inheritdoc cref="PickerField(Rect, GUIContent, Object, Type, Type[], bool)"/>
-        public static Object PickerField(Rect _position, string _label, Object _object, Type _objectType, Type[] _requiredTypes)
-        {
+        public static Object PickerField(Rect _position, string _label, Object _object, Type _objectType, Type[] _requiredTypes) {
             bool _allowSceneObjects = true;
             return PickerField(_position, _label, _object, _objectType, _requiredTypes, _allowSceneObjects);
         }
 
         /// <inheritdoc cref="PickerField(Rect, GUIContent, Object, Type, Type[], bool)"/>
-        public static Object PickerField(Rect _position, string _label, Object _object, Type _objectType, Type[] _requiredTypes, bool _allowSceneObjects)
-        {
+        public static Object PickerField(Rect _position, string _label, Object _object, Type _objectType, Type[] _requiredTypes, bool _allowSceneObjects) {
             GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
             return PickerField(_position, _labelGUI, _object, _objectType, _requiredTypes, _allowSceneObjects);
         }
 
         /// <inheritdoc cref="PickerField(Rect, GUIContent, Object, Type, Type[], bool)"/>
-        public static Object PickerField(Rect _position, GUIContent _label, Object _object, Type _objectType, Type[] _requiredTypes)
-        {
+        public static Object PickerField(Rect _position, GUIContent _label, Object _object, Type _objectType, Type[] _requiredTypes) {
             bool _allowSceneObjects = true;
             return PickerField(_position, _label, _object, _objectType, _requiredTypes, _allowSceneObjects);
         }
@@ -2116,11 +1902,9 @@ namespace EnhancedEditor.Editor
         /// <param name="_allowSceneObjects"><inheritdoc cref="DocumentationMethodObject(Object, Type, bool)" path="/param[@name='_allowSceneObjects']"/></param>
         /// <returns><inheritdoc cref="DocumentationMethodObject(Object, Type, bool)" path="/returns"/></returns>
         /// <inheritdoc cref="PickerField(Rect, SerializedProperty, GUIContent, Type[])"/>
-        public static Object PickerField(Rect _position, GUIContent _label, Object _object, Type _objectType, Type[] _requiredTypes, bool _allowSceneObjects)
-        {
+        public static Object PickerField(Rect _position, GUIContent _label, Object _object, Type _objectType, Type[] _requiredTypes, bool _allowSceneObjects) {
             // In order for the picker to work, the target object must either be a GameObject or a Component.
-            if (!EnhancedEditorUtility.IsSceneObject(_objectType))
-            {
+            if (!EnhancedEditorUtility.IsSceneObject(_objectType)) {
                 _object = EditorGUI.ObjectField(_position, _label, _object, _objectType, _allowSceneObjects);
                 return _object;
             }
@@ -2129,17 +1913,13 @@ namespace EnhancedEditor.Editor
             int _id = EnhancedEditorGUIUtility.GetControlID(_label, FocusType.Keyboard);
             _position = DoPickerField(_position, _id, _object, _objectType, _requiredTypes, _allowSceneObjects);
 
-            using (var _scope = new EditorGUI.ChangeCheckScope())
-            {
+            using (var _scope = new EditorGUI.ChangeCheckScope()) {
                 _object = EditorGUI.ObjectField(_position, _label, _object, _objectType, _allowSceneObjects);
 
-                if (_scope.changed && ResetPickerObjectIfDontMatch(_object, _requiredTypes))
-                {
+                if (_scope.changed && ResetPickerObjectIfDontMatch(_object, _requiredTypes)) {
                     // Reset object value when changed if it has not all required components.
                     _object = null;
-                }
-                else if (GetPickerObject(_id, _objectType, out Object _value))
-                {
+                } else if (GetPickerObject(_id, _objectType, out Object _value)) {
                     // Get newly selected object from picker if one.
                     _object = _value;
                 }
@@ -2150,8 +1930,7 @@ namespace EnhancedEditor.Editor
 
         // -----------------------
 
-        private static Rect DoPickerField(Rect _position, int _id, Object _object, Type _objectType, Type[] _requiredTypes, bool _allowSceneObjects)
-        {
+        private static Rect DoPickerField(Rect _position, int _id, Object _object, Type _objectType, Type[] _requiredTypes, bool _allowSceneObjects) {
             // Get adjusted field rectangle on screen.
             Rect _fieldPosition = new Rect(_position)
             {
@@ -2159,11 +1938,9 @@ namespace EnhancedEditor.Editor
             };
 
             // Reject any drag and drop operation with non eligible object.
-            if (_fieldPosition.Event(out Event _event) == EventType.DragUpdated)
-            {
+            if (_fieldPosition.Event(out Event _event) == EventType.DragUpdated) {
                 Object[] _drop = DragAndDrop.objectReferences;
-                if ((_drop.Length != 1) || ResetPickerObjectIfDontMatch(_drop[0], _requiredTypes))
-                {
+                if ((_drop.Length != 1) || ResetPickerObjectIfDontMatch(_drop[0], _requiredTypes)) {
                     DragAndDrop.visualMode = DragAndDropVisualMode.Rejected;
                     _event.Use();
                 }
@@ -2176,15 +1953,11 @@ namespace EnhancedEditor.Editor
             if (PickerButtonGUI.image == null)
                 PickerButtonGUI.image = EditorGUIUtility.FindTexture("Search Icon");
 
-            if (IconButton(_position, PickerButtonGUI))
-            {
-                if (_objectType == typeof(GameObject))
-                {
+            if (IconButton(_position, PickerButtonGUI)) {
+                if (_objectType == typeof(GameObject)) {
                     GameObject _gameObject = _object as GameObject;
                     ObjectPickerWindow.GetWindow(_id, _gameObject, _requiredTypes, _allowSceneObjects, null);
-                }
-                else
-                {
+                } else {
                     Component _component = _object as Component;
                     ObjectPickerWindow.GetWindow(_id, _component, _objectType, _requiredTypes, _allowSceneObjects, null);
                 }
@@ -2193,8 +1966,7 @@ namespace EnhancedEditor.Editor
             return _fieldPosition;
         }
 
-        internal static bool ResetPickerObjectIfDontMatch(Object _object, Type[] _requiredTypes)
-        {
+        internal static bool ResetPickerObjectIfDontMatch(Object _object, Type[] _requiredTypes) {
             if (_object == null)
                 return false;
 
@@ -2206,24 +1978,126 @@ namespace EnhancedEditor.Editor
             return _doReset;
         }
 
-        private static bool GetPickerObject(int _id, Type _type, out Object _object)
-        {
-            if (_type == typeof(GameObject))
-            {
-                if (ObjectPickerWindow.GetSelectedObject(_id, out GameObject _gameObject))
-                {
+        private static bool GetPickerObject(int _id, Type _type, out Object _object) {
+            if (_type == typeof(GameObject)) {
+                if (ObjectPickerWindow.GetSelectedObject(_id, out GameObject _gameObject)) {
                     _object = _gameObject;
                     return true;
                 }
-            }
-            else if (ObjectPickerWindow.GetSelectedObject(_id, out Component _component))
-            {
+            } else if (ObjectPickerWindow.GetSelectedObject(_id, out Component _component)) {
                 _object = _component;
                 return true;
             }
 
             _object = null;
             return false;
+        }
+        #endregion
+
+        #region Popup
+        private const int PopupCacheLimit = 10;
+        private static readonly Dictionary<string, GUIContent[]> popupInfos = new Dictionary<string, GUIContent[]>();
+
+        // -----------------------
+
+        /// <inheritdoc cref="PopupField(Rect, SerializedProperty, GUIContent, MemberValue{IList{string}})"/>
+        public static void PopupField(Rect _position, SerializedProperty _property, MemberValue<IList<string>> _optionMember) {
+            GUIContent _label = EnhancedEditorGUIUtility.GetPropertyLabel(_property);
+            PopupField(_position, _property, _label, _optionMember);
+        }
+
+        /// <inheritdoc cref="PopupField(Rect, SerializedProperty, GUIContent, MemberValue{IList{string}})"/>
+        public static void PopupField(Rect _position, SerializedProperty _property, string _label, MemberValue<IList<string>> _optionMember) {
+            GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
+            PopupField(_position, _property, _labelGUI, _optionMember);
+        }
+
+        /// <param name="_optionMember"><inheritdoc cref="PopupAttribute.OptionMember" path="/summary"/></param>
+        /// <inheritdoc cref="PopupField(Rect, SerializedProperty, GUIContent, MemberValue{IList{string}})"/>
+        public static void PopupField(Rect _position, SerializedProperty _property, GUIContent _label, MemberValue<IList<string>> _optionMember) {
+            // Incompatible option member management.
+            if (!_optionMember.GetValue(_property, out IList<string> _rawOptions)) {
+                Object _target = _property.serializedObject.targetObject;
+                _target.LogWarning($"Could not get the value of the class member \"{_optionMember.Name}\" in the script \"{_target.GetType()}\".");
+
+                EditorGUI.PropertyField(_position, _property, _label);
+                return;
+            }
+
+            PopupField(_position, _property, _label, GetPopupOptions(_property, _rawOptions));
+        }
+
+        /// <inheritdoc cref="PopupField(Rect, SerializedProperty, GUIContent, GUIContent[])"/>
+        public static void PopupField(Rect _position, SerializedProperty _property, GUIContent[] _options) {
+            GUIContent _label = EnhancedEditorGUIUtility.GetPropertyLabel(_property);
+            PopupField(_position, _property, _label, _options);
+        }
+
+        /// <inheritdoc cref="PopupField(Rect, SerializedProperty, GUIContent, GUIContent[])"/>
+        public static void PopupField(Rect _position, SerializedProperty _property, string _label, GUIContent[] _options) {
+            GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
+            PopupField(_position, _property, _labelGUI, _options);
+        }
+
+        /// <summary>
+        /// Draws a popup selection field for a specific <see cref="SerializedProperty"/> (must be of <see cref="int"/> value type).
+        /// </summary>
+        /// <param name="_position"><inheritdoc cref="DocumentationMethod(Rect, GUIContent)" path="/param[@name='_position']"/></param>
+        /// <param name="_property">The <see cref="SerializedProperty"/> to draw a popup field for.</param>
+        /// <param name="_label"><inheritdoc cref="DocumentationMethod(Rect, GUIContent)" path="/param[@name='_label']"/></param>
+        /// <param name="_options">The array of displayed options in the popup.</param>
+        public static void PopupField(Rect _position, SerializedProperty _property, GUIContent _label, GUIContent[] _options) {
+            // Incompatible property management.
+            if (_property.propertyType != SerializedPropertyType.Integer) {
+                EditorGUI.PropertyField(_position, _property, _label);
+                return;
+            }
+
+            // Popup field.
+            using (var _scope = new EditorGUI.PropertyScope(_position, _label, _property)) {
+                int _value = _property.intValue;
+                int _newValue = EditorGUI.Popup(_position, _label, _value, _options);
+
+                if (_newValue != _value) {
+                    _property.intValue = _newValue;
+                }
+            }
+        }
+
+        // -----------------------
+
+        private static GUIContent[] GetPopupOptions(SerializedProperty _property, IList<string> _options) {
+            int _count = _options.Count;
+
+            // Cache popup options to minimize allocation.
+            string _key = _property.propertyPath;
+            if (!popupInfos.TryGetValue(_key, out GUIContent[] _optionsGUI)) {
+                // Clear cache on limit reach.
+                if (popupInfos.Count > PopupCacheLimit) {
+                    popupInfos.Clear();
+                }
+
+                InitializePopupOptions(ref _optionsGUI, _count);
+                popupInfos.Add(_key, _optionsGUI);
+            } else if (_optionsGUI.Length != _count) {
+                // Options buffer resize and fill.
+                InitializePopupOptions(ref _optionsGUI, _count);
+                popupInfos[_key] = _optionsGUI;
+            }
+
+            // Update options label.
+            for (int i = 0; i < _count; i++) {
+                _optionsGUI[i].text = _options[i];
+            }
+
+            return _optionsGUI;
+        }
+
+        private static void InitializePopupOptions(ref GUIContent[] _options, int _length) {
+            _options = new GUIContent[_length];
+            for (int i = 0; i < _length; i++) {
+                _options[i] = new GUIContent();
+            }
         }
         #endregion
 
@@ -2241,16 +2115,14 @@ namespace EnhancedEditor.Editor
         // ===== Serialized Property ===== \\
 
         /// <inheritdoc cref="PrecisionSliderField(Rect, SerializedProperty, GUIContent, float, float, float, out float)"/>
-        public static void PrecisionSliderField(Rect _position, SerializedProperty _property, float _minValue, float _maxValue, float _precision, out float _extraHeight)
-        {
+        public static void PrecisionSliderField(Rect _position, SerializedProperty _property, float _minValue, float _maxValue, float _precision, out float _extraHeight) {
             GUIContent _label = EnhancedEditorGUIUtility.GetPropertyLabel(_property);
             PrecisionSliderField(_position, _property, _label, _minValue, _maxValue, _precision, out _extraHeight);
         }
 
         /// <inheritdoc cref="PrecisionSliderField(Rect, SerializedProperty, GUIContent, float, float, float, out float)"/>
         public static void PrecisionSliderField(Rect _position, SerializedProperty _property, string _label, float _minValue, float _maxValue, float _precision,
-                                                out float _extraHeight)
-        {
+                                                out float _extraHeight) {
             GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
             PrecisionSliderField(_position, _property, _labelGUI, _minValue, _maxValue, _precision, out _extraHeight);
         }
@@ -2266,11 +2138,9 @@ namespace EnhancedEditor.Editor
         /// <param name="_precision">Extra slider precision. This represents half of the difference between its minimum and maximum value.</param>
         /// <param name="_extraHeight"><inheritdoc cref="DocumentationMethodExtra(Rect, ref bool, out float, GUIStyle)" path="/param[@name='_extraHeight']"/></param>
         public static void PrecisionSliderField(Rect _position, SerializedProperty _property, GUIContent _label, float _minValue, float _maxValue, float _precision,
-                                                out float _extraHeight)
-        {
+                                                out float _extraHeight) {
             // Incompatible property management.
-            if (!ArrayUtility.Contains(PrecisionSliderCompatibleTypes, _property.propertyType))
-            {
+            if (!ArrayUtility.Contains(PrecisionSliderCompatibleTypes, _property.propertyType)) {
                 EditorGUI.PropertyField(_position, _property, _label);
                 _extraHeight = 0f;
 
@@ -2286,17 +2156,14 @@ namespace EnhancedEditor.Editor
 
             // Precision slider.
             using (var _scope = new EditorGUI.PropertyScope(_position, _label, _property))
-            using (var _changeCheck = new EditorGUI.ChangeCheckScope())
-            {
-                switch (_property.propertyType)
-                {
+            using (var _changeCheck = new EditorGUI.ChangeCheckScope()) {
+                switch (_property.propertyType) {
                     // Int.
                     case SerializedPropertyType.Integer:
                         int _int = _property.intValue;
                         _int = PrecisionSliderField(_temp, _label, _int, (int)_minValue, (int)_maxValue, (int)_precision, ref _foldout, out _);
 
-                        if (_changeCheck.changed)
-                        {
+                        if (_changeCheck.changed) {
                             _property.intValue = _int;
                         }
                         break;
@@ -2306,8 +2173,7 @@ namespace EnhancedEditor.Editor
                         float _float = _property.floatValue;
                         _float = PrecisionSliderField(_temp, _label, _float, _minValue, _maxValue, _precision, ref _foldout, out _);
 
-                        if (_changeCheck.changed)
-                        {
+                        if (_changeCheck.changed) {
                             _property.floatValue = _float;
                         }
                         break;
@@ -2317,8 +2183,7 @@ namespace EnhancedEditor.Editor
                 }
 
                 // Save foldout state.
-                if (_foldout != _property.isExpanded)
-                {
+                if (_foldout != _property.isExpanded) {
                     _property.isExpanded = _foldout;
                 }
             }
@@ -2327,16 +2192,14 @@ namespace EnhancedEditor.Editor
         // ===== Float Value ===== \\
 
         /// <inheritdoc cref="PrecisionSliderField(Rect, GUIContent, float, float, float, float, ref bool, out float)"/>
-        public static float PrecisionSliderField(Rect _position, float _value, float _minValue, float _maxValue, float _precision, ref bool _foldout, out float _extraHeight)
-        {
+        public static float PrecisionSliderField(Rect _position, float _value, float _minValue, float _maxValue, float _precision, ref bool _foldout, out float _extraHeight) {
             GUIContent _label = GUIContent.none;
             return PrecisionSliderField(_position, _label, _value, _minValue, _maxValue, _precision, ref _foldout, out _extraHeight);
         }
 
         /// <inheritdoc cref="PrecisionSliderField(Rect, GUIContent, float, float, float, float, ref bool, out float)"/>
         public static float PrecisionSliderField(Rect _position, string _label, float _value, float _minValue, float _maxValue, float _precision, ref bool _foldout,
-                                                 out float _extraHeight)
-        {
+                                                 out float _extraHeight) {
             GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
             return PrecisionSliderField(_position, _labelGUI, _value, _minValue, _maxValue, _precision, ref _foldout, out _extraHeight);
         }
@@ -2346,8 +2209,7 @@ namespace EnhancedEditor.Editor
         /// <returns>New slider value set by the user.</returns>
         /// <inheritdoc cref="PrecisionSliderField(Rect, SerializedProperty, GUIContent, float, float, float, out float)"/>
         public static float PrecisionSliderField(Rect _position, GUIContent _label, float _value, float _minValue, float _maxValue, float _precision, ref bool _foldout,
-                                                 out float _extraHeight)
-        {
+                                                 out float _extraHeight) {
             _value = DoPrecisionSliderField(_position, _label, _value, _minValue, _maxValue, _precision, ref _foldout, false);
             _extraHeight = GetPrecisionSliderExtraHeight(_foldout);
 
@@ -2357,24 +2219,21 @@ namespace EnhancedEditor.Editor
         // ===== Int Value ===== \\
 
         /// <inheritdoc cref="PrecisionSliderField(Rect, GUIContent, int, int, int, int, ref bool, out float)"/>
-        public static int PrecisionSliderField(Rect _position, int _value, int _minValue, int _maxValue, int _precision, ref bool _foldout, out float _extraHeight)
-        {
+        public static int PrecisionSliderField(Rect _position, int _value, int _minValue, int _maxValue, int _precision, ref bool _foldout, out float _extraHeight) {
             GUIContent _label = GUIContent.none;
             return PrecisionSliderField(_position, _label, _value, _minValue, _maxValue, _precision, ref _foldout, out _extraHeight);
         }
 
         /// <inheritdoc cref="PrecisionSliderField(Rect, GUIContent, int, int, int, int, ref bool, out float)"/>
         public static int PrecisionSliderField(Rect _position, string _label, int _value, int _minValue, int _maxValue, int _precision, ref bool _foldout,
-                                               out float _extraHeight)
-        {
+                                               out float _extraHeight) {
             GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
             return PrecisionSliderField(_position, _labelGUI, _value, _minValue, _maxValue, _precision, ref _foldout, out _extraHeight);
         }
 
         /// <inheritdoc cref="PrecisionSliderField(Rect, GUIContent, float, float, float, float, ref bool, out float)"/>
         public static int PrecisionSliderField(Rect _position, GUIContent _label, int _value, int _minValue, int _maxValue, int _precision, ref bool _foldout,
-                                               out float _extraHeight)
-        {
+                                               out float _extraHeight) {
             float _newValue = DoPrecisionSliderField(_position, _label, _value, _minValue, _maxValue, _precision, ref _foldout, true);
             _extraHeight = GetPrecisionSliderExtraHeight(_foldout);
 
@@ -2384,12 +2243,10 @@ namespace EnhancedEditor.Editor
         // -----------------------
 
         private static float DoPrecisionSliderField(Rect _position, GUIContent _label, float _value, float _minValue, float _maxValue, float _precision, ref bool _foldout,
-                                                    bool _roundValue)
-        {
+                                                    bool _roundValue) {
             // Get a unique id for this control, used to track its precision slider reference value.
             int _id = EnhancedEditorGUIUtility.GetControlID(_label, FocusType.Keyboard);
-            if (!precisionSliders.ContainsKey(_id))
-            {
+            if (!precisionSliders.ContainsKey(_id)) {
                 precisionSliders.Add(_id, new Vector2(_value, _value));
             }
 
@@ -2397,20 +2254,17 @@ namespace EnhancedEditor.Editor
             _position = EditorGUI.PrefixLabel(_position, _label);
 
             // Foldout & main slider.
-            using (var _scope = ZeroIndentScope())
-            {
+            using (var _scope = ZeroIndentScope()) {
                 _position = DrawFoldout(_position, ref _foldout);
                 _value = EditorGUI.Slider(_position, _value, _minValue, _maxValue);
 
-                if (_roundValue)
-                {
+                if (_roundValue) {
                     _value = Mathf.Round(_value);
                 }
             }
 
             // Precision slider.
-            if (_foldout)
-            {
+            if (_foldout) {
                 _position.y += _position.height + EditorGUIUtility.standardVerticalSpacing;
                 _position.height = EditorGUIUtility.singleLineHeight;
 
@@ -2423,16 +2277,14 @@ namespace EnhancedEditor.Editor
                 float _min = Mathf.Max(_minValue, precisionSliders[_id].x - _precision);
                 float _max = Mathf.Min(_maxValue, precisionSliders[_id].x + _precision);
 
-                using (var _scope = ZeroIndentScope())
-                {
+                using (var _scope = ZeroIndentScope()) {
                     EditorGUI.SelectableLabel(_temp, _min.ToString(), EditorStyles.numberField);
 
                     _temp.x = _position.xMax - _temp.width;
                     EditorGUI.SelectableLabel(_temp, _max.ToString(), EditorStyles.numberField);
 
                     // If the value changed outside of the precision slider, reset its reference value.
-                    if (precisionSliders[_id].y != _value)
-                    {
+                    if (precisionSliders[_id].y != _value) {
                         precisionSliders[_id] = new Vector2(_value, _value);
                     }
 
@@ -2441,12 +2293,11 @@ namespace EnhancedEditor.Editor
                     _position.xMax -= _temp.width + 5f;
 
                     _value = GUI.HorizontalSlider(_position, _value, _min, _max);
-                    if (_roundValue)
-                    {
+                    if (_roundValue) {
                         _value = Mathf.Round(_value);
                     }
                 }
-                    
+
                 // Update this precision slider reference value.
                 precisionSliders[_id] = new Vector2(precisionSliders[_id].x, _value);
             }
@@ -2454,8 +2305,7 @@ namespace EnhancedEditor.Editor
             return _value;
         }
 
-        internal static float GetPrecisionSliderExtraHeight(bool _foldout)
-        {
+        internal static float GetPrecisionSliderExtraHeight(bool _foldout) {
             float _extraHeight = _foldout
                                ? (EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing)
                                : 0f;
@@ -2471,15 +2321,13 @@ namespace EnhancedEditor.Editor
         // ===== Serialized Property ===== \\
 
         /// <inheritdoc cref="ProgressBar(Rect, SerializedProperty, GUIContent, MemberValue{float}, Color, bool)"/>
-        public static void ProgressBar(Rect _position, SerializedProperty _property, MemberValue<float> _maxMember, Color _color, bool _isEditable = false)
-        {
+        public static void ProgressBar(Rect _position, SerializedProperty _property, MemberValue<float> _maxMember, Color _color, bool _isEditable = false) {
             GUIContent _label = EnhancedEditorGUIUtility.GetPropertyLabel(_property);
             ProgressBar(_position, _property, _label, _maxMember, _color, _isEditable);
         }
 
         /// <inheritdoc cref="ProgressBar(Rect, SerializedProperty, GUIContent, MemberValue{float}, Color, bool)"/>
-        public static void ProgressBar(Rect _position, SerializedProperty _property, string _label, MemberValue<float> _maxMember, Color _color, bool _isEditable = false)
-        {
+        public static void ProgressBar(Rect _position, SerializedProperty _property, string _label, MemberValue<float> _maxMember, Color _color, bool _isEditable = false) {
             GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
             ProgressBar(_position, _property, _labelGUI, _maxMember, _color, _isEditable);
         }
@@ -2489,11 +2337,9 @@ namespace EnhancedEditor.Editor
         /// <para/>
         /// Can either be a field, a property or a method, but its value must be convertible to <see cref="float"/>.</param>
         /// <inheritdoc cref="ProgressBar(Rect, SerializedProperty, GUIContent, float, Color, bool)"/>
-        public static void ProgressBar(Rect _position, SerializedProperty _property, GUIContent _label, MemberValue<float> _maxMember, Color _color, bool _isEditable = false)
-        {
+        public static void ProgressBar(Rect _position, SerializedProperty _property, GUIContent _label, MemberValue<float> _maxMember, Color _color, bool _isEditable = false) {
             // Incompatible max value management.
-            if (!_maxMember.GetValue(_property.serializedObject, out float _maxFloatValue))
-            {
+            if (!_maxMember.GetValue(_property, out float _maxFloatValue)) {
                 // Debug message.
                 Object _target = _property.serializedObject.targetObject;
                 _target.LogWarning($"Could not get the value of the class member \"{_maxMember.Name}\" in the script \"{_target.GetType()}\".");
@@ -2506,15 +2352,13 @@ namespace EnhancedEditor.Editor
         }
 
         /// <inheritdoc cref="ProgressBar(Rect, SerializedProperty, GUIContent, float, Color, bool)"/>
-        public static void ProgressBar(Rect _position, SerializedProperty _property, float _maxValue, Color _color, bool _isEditable = false)
-        {
+        public static void ProgressBar(Rect _position, SerializedProperty _property, float _maxValue, Color _color, bool _isEditable = false) {
             GUIContent _label = EnhancedEditorGUIUtility.GetPropertyLabel(_property);
             ProgressBar(_position, _property, _label, _maxValue, _color, _isEditable);
         }
 
         /// <inheritdoc cref="ProgressBar(Rect, SerializedProperty, GUIContent, float, Color, bool)"/>
-        public static void ProgressBar(Rect _position, SerializedProperty _property, string _label, float _maxValue, Color _color, bool _isEditable = false)
-        {
+        public static void ProgressBar(Rect _position, SerializedProperty _property, string _label, float _maxValue, Color _color, bool _isEditable = false) {
             GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
             ProgressBar(_position, _property, _labelGUI, _maxValue, _color, _isEditable);
         }
@@ -2528,21 +2372,17 @@ namespace EnhancedEditor.Editor
         /// <param name="_maxValue">Maximum bar value, used to determine its filled amount. Minimum value is always 0.</param>
         /// <param name="_color">Progress bar color.</param>
         /// <param name="_isEditable">Is this progress bar value editable (draggable) by users?</param>
-        public static void ProgressBar(Rect _position, SerializedProperty _property, GUIContent _label, float _maxValue, Color _color, bool _isEditable = false)
-        {
+        public static void ProgressBar(Rect _position, SerializedProperty _property, GUIContent _label, float _maxValue, Color _color, bool _isEditable = false) {
             // Incompatible property management.
-            if (!EnhancedEditorUtility.GetSerializedPropertyValueAsSingle(_property, out float _value))
-            {
+            if (!EnhancedEditorUtility.GetSerializedPropertyValueAsSingle(_property, out float _value)) {
                 EditorGUI.PropertyField(_position, _property, _label);
                 return;
             }
 
             // Progress bar.
-            using (var _scope = new EditorGUI.PropertyScope(_position, _label, _property))
-            {
+            using (var _scope = new EditorGUI.PropertyScope(_position, _label, _property)) {
                 float _newValue = DoProgressBar(_position, _label, _value, _maxValue, _color, _isEditable, _property.hasMultipleDifferentValues);
-                if (_newValue != _value)
-                {
+                if (_newValue != _value) {
                     EnhancedEditorUtility.SetSerializedPropertyValueAsSingle(_property, _newValue);
                 }
             }
@@ -2551,17 +2391,15 @@ namespace EnhancedEditor.Editor
         // ===== Float Value ===== \\
 
         /// <inheritdoc cref="ProgressBar(Rect, GUIContent, float, float, Color, bool)"/>
-        public static float ProgressBar(Rect _position, float _value, float _maxValue, Color _color, bool _isEditable = false)
-        {
+        public static float ProgressBar(Rect _position, float _value, float _maxValue, Color _color, bool _isEditable = false) {
             GUIContent _label = GUIContent.none;
-            return ProgressBar (_position, _label, _value, _maxValue, _color, _isEditable);
+            return ProgressBar(_position, _label, _value, _maxValue, _color, _isEditable);
         }
 
         /// <inheritdoc cref="ProgressBar(Rect, GUIContent, float, float, Color, bool)"/>
-        public static float ProgressBar(Rect _position, string _label, float _value, float _maxValue, Color _color, bool _isEditable = false)
-        {
+        public static float ProgressBar(Rect _position, string _label, float _value, float _maxValue, Color _color, bool _isEditable = false) {
             GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
-            return ProgressBar (_position, _labelGUI, _value, _maxValue, _color, _isEditable);
+            return ProgressBar(_position, _labelGUI, _value, _maxValue, _color, _isEditable);
         }
 
         /// <summary>
@@ -2570,8 +2408,7 @@ namespace EnhancedEditor.Editor
         /// <param name="_value">Progress bar filled amount.</param>
         /// <returns>New bar value (filled amount) if editable, or the same value otherwise.</returns>
         /// <inheritdoc cref="ProgressBar(Rect, SerializedProperty, GUIContent, float, Color, bool)"/>
-        public static float ProgressBar(Rect _position, GUIContent _label, float _value, float _maxValue, Color _color, bool _isEditable = false)
-        {
+        public static float ProgressBar(Rect _position, GUIContent _label, float _value, float _maxValue, Color _color, bool _isEditable = false) {
             _value = DoProgressBar(_position, _label, _value, _maxValue, _color, _isEditable, false);
             return _value;
         }
@@ -2579,30 +2416,26 @@ namespace EnhancedEditor.Editor
         // ===== Int Value ===== \\
 
         /// <inheritdoc cref="ProgressBar(Rect, GUIContent, int, int, Color, bool)"/>
-        public static int ProgressBar(Rect _position, int _value, int _maxValue, Color _color, bool _isEditable = false)
-        {
+        public static int ProgressBar(Rect _position, int _value, int _maxValue, Color _color, bool _isEditable = false) {
             GUIContent _label = GUIContent.none;
             return ProgressBar(_position, _label, _value, _maxValue, _color, _isEditable);
         }
 
         /// <inheritdoc cref="ProgressBar(Rect, GUIContent, int, int, Color, bool)"/>
-        public static int ProgressBar(Rect _position, string _label, int _value, int _maxValue, Color _color, bool _isEditable = false)
-        {
+        public static int ProgressBar(Rect _position, string _label, int _value, int _maxValue, Color _color, bool _isEditable = false) {
             GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
             return ProgressBar(_position, _labelGUI, _value, _maxValue, _color, _isEditable);
         }
 
         /// <inheritdoc cref="ProgressBar(Rect, GUIContent, float, float, Color, bool)"/>
-        public static int ProgressBar(Rect _position, GUIContent _label, int _value, int _maxValue, Color _color, bool _isEditable = false)
-        {
+        public static int ProgressBar(Rect _position, GUIContent _label, int _value, int _maxValue, Color _color, bool _isEditable = false) {
             float _newValue = DoProgressBar(_position, _label, _value, _maxValue, _color, _isEditable, false);
             return Mathf.RoundToInt(_newValue);
         }
 
         // -----------------------
 
-        private static float DoProgressBar(Rect _position, GUIContent _label, float _value, float _maxValue, Color _color, bool _isEditable, bool _hasDifferentValues)
-        {
+        private static float DoProgressBar(Rect _position, GUIContent _label, float _value, float _maxValue, Color _color, bool _isEditable, bool _hasDifferentValues) {
             _position = EditorGUI.IndentedRect(_position);
 
             // First, draw filled bar portion.
@@ -2616,8 +2449,7 @@ namespace EnhancedEditor.Editor
             EditorGUI.DrawRect(_temp, _color);
 
             // Then, draw empty portion (if not fully filled).
-            if (_temp.width < _position.width)
-            {
+            if (_temp.width < _position.width) {
                 _temp.x += _temp.width;
                 _temp.width = _position.width - _temp.width;
 
@@ -2630,8 +2462,7 @@ namespace EnhancedEditor.Editor
                         : ($"[{_label.text}]" +
                            $"{((_position.height > (EditorGUIUtility.singleLineHeight * 2f)) ? "\n" : "     ")}");
 
-            if (!_hasDifferentValues)
-            {
+            if (!_hasDifferentValues) {
                 string _valueString = (_value == (int)_value)
                                     ? _value.ToString()
                                     : $"{_value:n2}";
@@ -2641,8 +2472,7 @@ namespace EnhancedEditor.Editor
                                        : $"{_maxValue:n2}";
 
                 _label.text += $"{_valueString} / {_maxValueString}";
-            }
-            else
+            } else
                 _label.text += "-";
 
             // Draw a middle-centered label in shadow style, for better readability.
@@ -2658,27 +2488,22 @@ namespace EnhancedEditor.Editor
             int _controlID = EnhancedEditorGUIUtility.GetControlID(FocusType.Passive, _position);
 
             // Allow the users to drag the progress bar actual value.
-            if (!isDraggingProgressBar)
-            {
+            if (!isDraggingProgressBar) {
                 _temp.x -= 5f;
                 _temp.width = 10f;
 
                 // Change cursor when at the edge of filled bar.
                 EditorGUIUtility.AddCursorRect(_temp, MouseCursor.ResizeHorizontal);
-                if ((_event.GetTypeForControl(_controlID) == EventType.MouseDown) && _temp.Contains(_event.mousePosition))
-                {
+                if ((_event.GetTypeForControl(_controlID) == EventType.MouseDown) && _temp.Contains(_event.mousePosition)) {
                     GUIUtility.hotControl = _controlID;
                     draggingProgressBarControlID = _controlID;
                     isDraggingProgressBar = true;
 
                     _event.Use();
                 }
-            }
-            else if (_controlID == draggingProgressBarControlID)
-            {
+            } else if (_controlID == draggingProgressBarControlID) {
                 EditorGUIUtility.AddCursorRect(_position, MouseCursor.ResizeHorizontal);
-                if (_event.GetTypeForControl(_controlID) == EventType.MouseDrag)
-                {
+                if (_event.GetTypeForControl(_controlID) == EventType.MouseDrag) {
                     // Update progress bar value on drag.
                     GUIUtility.hotControl = _controlID;
                     GUI.changed = true;
@@ -2687,9 +2512,7 @@ namespace EnhancedEditor.Editor
                     _value = Mathf.Clamp(_value, 0f, _maxValue);
 
                     _event.Use();
-                }
-                else if (_event.GetTypeForControl(_controlID) == EventType.MouseUp)
-                {
+                } else if (_event.GetTypeForControl(_controlID) == EventType.MouseUp) {
                     // Stop dragging on mouse button release.
                     GUIUtility.hotControl = 0;
                     isDraggingProgressBar = false;
@@ -2704,36 +2527,31 @@ namespace EnhancedEditor.Editor
 
         #region Readonly
         /// <inheritdoc cref="ReadonlyField(Rect, SerializedProperty, GUIContent, bool, bool)"/>
-        public static void ReadonlyField(Rect _position, SerializedProperty _property)
-        {
+        public static void ReadonlyField(Rect _position, SerializedProperty _property) {
             bool _includeChildren = false;
             ReadonlyField(_position, _property, _includeChildren);
         }
 
         /// <inheritdoc cref="ReadonlyField(Rect, SerializedProperty, GUIContent, bool, bool)"/>
-        public static void ReadonlyField(Rect _position, SerializedProperty _property, bool _includeChildren, bool _useRadioToggle = false)
-        {
+        public static void ReadonlyField(Rect _position, SerializedProperty _property, bool _includeChildren, bool _useRadioToggle = false) {
             GUIContent _label = EnhancedEditorGUIUtility.GetPropertyLabel(_property);
             ReadonlyField(_position, _property, _label, _includeChildren, _useRadioToggle);
         }
 
         /// <inheritdoc cref="ReadonlyField(Rect, SerializedProperty, GUIContent, bool, bool)"/>
-        public static void ReadonlyField(Rect _position, SerializedProperty _property, string _label)
-        {
+        public static void ReadonlyField(Rect _position, SerializedProperty _property, string _label) {
             bool _includeChildren = false;
             ReadonlyField(_position, _property, _label, _includeChildren);
         }
 
         /// <inheritdoc cref="ReadonlyField(Rect, SerializedProperty, GUIContent, bool, bool)"/>
-        public static void ReadonlyField(Rect _position, SerializedProperty _property, string _label, bool _includeChildren, bool _useRadioToggle = false)
-        {
+        public static void ReadonlyField(Rect _position, SerializedProperty _property, string _label, bool _includeChildren, bool _useRadioToggle = false) {
             GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
             ReadonlyField(_position, _property, _labelGUI, _includeChildren, _useRadioToggle);
         }
 
         /// <inheritdoc cref="ReadonlyField(Rect, SerializedProperty, GUIContent, bool, bool)"/>
-        public static void ReadonlyField(Rect _position, SerializedProperty _property, GUIContent _label)
-        {
+        public static void ReadonlyField(Rect _position, SerializedProperty _property, GUIContent _label) {
             bool _includeChildren = false;
             ReadonlyField(_position, _property, _label, _includeChildren);
         }
@@ -2746,16 +2564,11 @@ namespace EnhancedEditor.Editor
         /// <param name="_label"><inheritdoc cref="DocumentationMethod(Rect, GUIContent)" path="/param[@name='_label']"/></param>
         /// <param name="_includeChildren">If true the property including children is drawn; otherwise only the control itself (such as only a foldout but nothing below it).</param>
         /// <param name="_useRadioToggle">Determines if using a radio-style toggle with boolean properties or not.</param>
-        public static void ReadonlyField(Rect _position, SerializedProperty _property, GUIContent _label, bool _includeChildren, bool _useRadioToggle = false)
-        {
-            using (var _scope = EnhancedGUI.GUIEnabled.Scope(false))
-            {
-                if ((_property.propertyType == SerializedPropertyType.Boolean) && _useRadioToggle)
-                {
+        public static void ReadonlyField(Rect _position, SerializedProperty _property, GUIContent _label, bool _includeChildren, bool _useRadioToggle = false) {
+            using (var _scope = EnhancedGUI.GUIEnabled.Scope(false)) {
+                if ((_property.propertyType == SerializedPropertyType.Boolean) && _useRadioToggle) {
                     EditorGUI.Toggle(_position, _label, _property.boolValue, EditorStyles.radioButton);
-                }
-                else
-                {
+                } else {
                     EditorGUI.PropertyField(_position, _property, _label, _includeChildren);
                 }
             }
@@ -2773,15 +2586,13 @@ namespace EnhancedEditor.Editor
         // ===== Serialized Property ===== \\
 
         /// <inheritdoc cref="RequiredField(Rect, SerializedProperty, GUIContent, out float)"/>
-        public static void RequiredField(Rect _position, SerializedProperty _property, out float _extraHeight)
-        {
+        public static void RequiredField(Rect _position, SerializedProperty _property, out float _extraHeight) {
             GUIContent _label = EnhancedEditorGUIUtility.GetPropertyLabel(_property);
             RequiredField(_position, _property, _label, out _extraHeight);
         }
 
         /// <inheritdoc cref="RequiredField(Rect, SerializedProperty, GUIContent, out float)"/>
-        public static void RequiredField(Rect _position, SerializedProperty _property, string _label, out float _extraHeight)
-        {
+        public static void RequiredField(Rect _position, SerializedProperty _property, string _label, out float _extraHeight) {
             GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
             RequiredField(_position, _property, _labelGUI, out _extraHeight);
         }
@@ -2794,11 +2605,9 @@ namespace EnhancedEditor.Editor
         /// <param name="_property"><see cref="SerializedProperty"/> to draw a required field for (should be of object reference type).</param>
         /// <param name="_label"><inheritdoc cref="DocumentationMethod(Rect, GUIContent)" path="/param[@name='_label']"/></param>
         /// <param name="_extraHeight"><inheritdoc cref="DocumentationMethodExtra(Rect, ref bool, out float, GUIStyle)" path="/param[@name='_extraHeight']"/></param>
-        public static void RequiredField(Rect _position, SerializedProperty _property, GUIContent _label, out float _extraHeight)
-        {
+        public static void RequiredField(Rect _position, SerializedProperty _property, GUIContent _label, out float _extraHeight) {
             // Multiple different values and incompatible property management.
-            if (_property.hasMultipleDifferentValues || (_property.propertyType != SerializedPropertyType.ObjectReference))
-            {
+            if (_property.hasMultipleDifferentValues || (_property.propertyType != SerializedPropertyType.ObjectReference)) {
                 EditorGUI.PropertyField(_position, _property, _label);
                 _extraHeight = 0f;
 
@@ -2817,8 +2626,7 @@ namespace EnhancedEditor.Editor
             // Context click menu (only on the help box).
             Rect _helpBox = EditorGUI.IndentedRect(_position);
 
-            if (EnhancedEditorGUIUtility.ContextClick(_helpBox))
-            {
+            if (EnhancedEditorGUIUtility.ContextClick(_helpBox)) {
                 GenericMenu _menu = new GenericMenu();
                 AddRequiredUtilityToMenu(_id, _property, _menu);
 
@@ -2826,14 +2634,12 @@ namespace EnhancedEditor.Editor
             }
 
             // Required field.
-            using (var _scope = new EditorGUI.PropertyScope(_position, GUIContent.none, _property))
-            {
+            using (var _scope = new EditorGUI.PropertyScope(_position, GUIContent.none, _property)) {
                 _temp.y += _extraHeight;
                 EditorGUI.PropertyField(_temp, _property, _label);
 
                 // Set new object value.
-                if (GetRequiredObject(_id, _property, out _object))
-                {
+                if (GetRequiredObject(_id, _property, out _object)) {
                     _property.objectReferenceValue = _object;
                 }
             }
@@ -2842,36 +2648,31 @@ namespace EnhancedEditor.Editor
         // ===== Object Value ===== \\
 
         /// <inheritdoc cref="RequiredField(Rect, GUIContent, Object, Type, bool, out float)"/>
-        public static Object RequiredField(Rect _position, Object _object, Type _objectType, out float _extraHeight)
-        {
+        public static Object RequiredField(Rect _position, Object _object, Type _objectType, out float _extraHeight) {
             bool _allowSceneObjects = true;
             return RequiredField(_position, _object, _objectType, _allowSceneObjects, out _extraHeight);
         }
 
         /// <inheritdoc cref="RequiredField(Rect, GUIContent, Object, Type, bool, out float)"/>
-        public static Object RequiredField(Rect _position, Object _object, Type _objectType, bool _allowSceneObjects, out float _extraHeight)
-        {
+        public static Object RequiredField(Rect _position, Object _object, Type _objectType, bool _allowSceneObjects, out float _extraHeight) {
             GUIContent _label = GUIContent.none;
             return RequiredField(_position, _label, _object, _objectType, _allowSceneObjects, out _extraHeight);
         }
 
         /// <inheritdoc cref="RequiredField(Rect, GUIContent, Object, Type, bool, out float)"/>
-        public static Object RequiredField(Rect _position, string _label, Object _object, Type _objectType, out float _extraHeight)
-        {
+        public static Object RequiredField(Rect _position, string _label, Object _object, Type _objectType, out float _extraHeight) {
             bool _allowSceneObjects = true;
             return RequiredField(_position, _label, _object, _objectType, _allowSceneObjects, out _extraHeight);
         }
 
         /// <inheritdoc cref="RequiredField(Rect, GUIContent, Object, Type, bool, out float)"/>
-        public static Object RequiredField(Rect _position, string _label, Object _object, Type _objectType, bool _allowSceneObjects, out float _extraHeight)
-        {
+        public static Object RequiredField(Rect _position, string _label, Object _object, Type _objectType, bool _allowSceneObjects, out float _extraHeight) {
             GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
             return RequiredField(_position, _labelGUI, _object, _objectType, _allowSceneObjects, out _extraHeight);
         }
 
         /// <inheritdoc cref="RequiredField(Rect, GUIContent, Object, Type, bool, out float)"/>
-        public static Object RequiredField(Rect _position, GUIContent _label, Object _object, Type _objectType, out float _extraHeight)
-        {
+        public static Object RequiredField(Rect _position, GUIContent _label, Object _object, Type _objectType, out float _extraHeight) {
             bool _allowSceneObjects = true;
             return RequiredField(_position, _label, _object, _objectType, _allowSceneObjects, out _extraHeight);
         }
@@ -2885,8 +2686,7 @@ namespace EnhancedEditor.Editor
         /// <param name="_allowSceneObjects"><inheritdoc cref="DocumentationMethodObject(Object, Type, bool)" path="/param[@name='_allowSceneObjects']"/></param>
         /// <returns><inheritdoc cref="DocumentationMethodObject(Object, Type, bool)" path="/returns"/></returns>
         /// <inheritdoc cref="RequiredField(Rect, SerializedProperty, GUIContent, out float)"/>
-        public static Object RequiredField(Rect _position, GUIContent _label, Object _object, Type _objectType, bool _allowSceneObjects, out float _extraHeight)
-        {
+        public static Object RequiredField(Rect _position, GUIContent _label, Object _object, Type _objectType, bool _allowSceneObjects, out float _extraHeight) {
             _extraHeight = RequiredHelpBox(_position, _label, _object);
             _position.y += _extraHeight;
 
@@ -2903,8 +2703,7 @@ namespace EnhancedEditor.Editor
         /// <param name="_label">Label displayed in front of the field (used in the help box to indicate which field is concerned).</param>
         /// <param name="_object">If null, a required help box will be drawn.</param>
         /// <returns>The total height used to draw additional GUI controls. Use this to increment your GUI position.</returns>
-        public static float RequiredHelpBox(Rect _position, GUIContent _label, Object _object)
-        {
+        public static float RequiredHelpBox(Rect _position, GUIContent _label, Object _object) {
             if (!PrepareRequiredHelpBox(ref _position, _label, _object, out string _message))
                 return 0f;
 
@@ -2915,8 +2714,7 @@ namespace EnhancedEditor.Editor
             return _height;
         }
 
-        internal static float GetRequiredExtraHeight(Rect _position, GUIContent _label, Object _object)
-        {
+        internal static float GetRequiredExtraHeight(Rect _position, GUIContent _label, Object _object) {
             float _height = PrepareRequiredHelpBox(ref _position, _label, _object, out _)
                           ? _position.height
                           : 0f;
@@ -2924,10 +2722,8 @@ namespace EnhancedEditor.Editor
             return _height;
         }
 
-        private static bool PrepareRequiredHelpBox(ref Rect _position, GUIContent _label, Object _object, out string _message)
-        {
-            if (_object != null)
-            {
+        private static bool PrepareRequiredHelpBox(ref Rect _position, GUIContent _label, Object _object, out string _message) {
+            if (_object != null) {
                 _position.height = ManageDynamicControlHeight(_label, 0f);
                 _message = string.Empty;
 
@@ -2946,23 +2742,18 @@ namespace EnhancedEditor.Editor
             return true;
         }
 
-        internal static void AddRequiredUtilityToMenu(int _id, SerializedProperty _property, GenericMenu _menu)
-        {
+        internal static void AddRequiredUtilityToMenu(int _id, SerializedProperty _property, GenericMenu _menu) {
             // This menu item can only be used on a GameObject component.
-            if (!_property.serializedObject.isEditingMultipleObjects && (_property.serializedObject.targetObject is Component))
-            {
+            if (!_property.serializedObject.isEditingMultipleObjects && (_property.serializedObject.targetObject is Component)) {
                 selectedRequiredID = _id;
-                _menu.AddItem(requiredGetReferenceGUI, false, () =>
-                {
+                _menu.AddItem(requiredGetReferenceGUI, false, () => {
                     selectRequiredObject = true;
                 });
             }
         }
 
-        internal static bool GetRequiredObject(int _id, SerializedProperty _property, out Object _object)
-        {
-            if (selectRequiredObject && (selectedRequiredID == _id) && GetRequiredObject(_property, out _object))
-            {
+        internal static bool GetRequiredObject(int _id, SerializedProperty _property, out Object _object) {
+            if (selectRequiredObject && (selectedRequiredID == _id) && GetRequiredObject(_property, out _object)) {
                 selectRequiredObject = false;
                 return true;
             }
@@ -2972,7 +2763,7 @@ namespace EnhancedEditor.Editor
         }
 
         internal static bool GetRequiredObject(SerializedProperty _property, out Object _object) {
-            if (EnhancedEditorUtility.FindSerializedObjectField(_property.serializedObject, _property.propertyPath, out FieldInfo _field)) {
+            if (EnhancedEditorUtility.FindSerializedPropertyField(_property, out FieldInfo _field)) {
                 Component _component = _property.serializedObject.targetObject as Component;
                 Type _type = _field.FieldType;
 
@@ -3002,15 +2793,13 @@ namespace EnhancedEditor.Editor
         // ===== Serialized Property ===== \\
 
         /// <inheritdoc cref="SceneAssetField(Rect, SerializedProperty, GUIContent)"/>
-        public static void SceneAssetField(Rect _position, SerializedProperty _property)
-        {
+        public static void SceneAssetField(Rect _position, SerializedProperty _property) {
             GUIContent _label = EnhancedEditorGUIUtility.GetPropertyLabel(_property);
             SceneAssetField(_position, _property, _label);
         }
 
         /// <inheritdoc cref="SceneAssetField(Rect, SerializedProperty, GUIContent)"/>
-        public static void SceneAssetField(Rect _position, SerializedProperty _property, string _label)
-        {
+        public static void SceneAssetField(Rect _position, SerializedProperty _property, string _label) {
             GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
             SceneAssetField(_position, _property, _labelGUI);
         }
@@ -3021,20 +2810,17 @@ namespace EnhancedEditor.Editor
         /// <param name="_position"><inheritdoc cref="DocumentationMethod(Rect, GUIContent)" path="/param[@name='_position']"/></param>
         /// <param name="_property"><see cref="SerializedProperty"/> to draw a scene asset field for.</param>
         /// <param name="_label"><inheritdoc cref="DocumentationMethod(Rect, GUIContent)" path="/param[@name='_label']"/></param>
-        public static void SceneAssetField(Rect _position, SerializedProperty _property, GUIContent _label)
-        {
+        public static void SceneAssetField(Rect _position, SerializedProperty _property, GUIContent _label) {
             SerializedProperty _guidProperty = _property.Copy();
 
             // Incompatible property management.
-            if ((_guidProperty.type != SceneAssetTypeName) || !_guidProperty.Next(true))
-            {
+            if ((_guidProperty.type != SceneAssetTypeName) || !_guidProperty.Next(true)) {
                 EditorGUI.PropertyField(_position, _property, _label);
                 return;
             }
 
             string _guid = _guidProperty.stringValue;
-            if (_property.propertyPath.Contains("Array."))
-            {
+            if (_property.propertyPath.Contains("Array.")) {
                 string _path = AssetDatabase.GUIDToAssetPath(_guid);
                 string _name = string.IsNullOrEmpty(_path)
                              ? "None"
@@ -3044,8 +2830,7 @@ namespace EnhancedEditor.Editor
             }
 
             // Property field.
-            using (var _scope = new EditorGUI.PropertyScope(_position, _label, _property))
-            {
+            using (var _scope = new EditorGUI.PropertyScope(_position, _label, _property)) {
                 _guidProperty.stringValue = DoSceneAssetField(_position, _label, _guid);
             }
         }
@@ -3053,58 +2838,49 @@ namespace EnhancedEditor.Editor
         // ===== Scene Asset Value ===== \\
 
         /// <inheritdoc cref="SceneAssetField(Rect, GUIContent, SceneAsset)"/>
-        public static void SceneAssetField(Rect _position, SceneAsset _sceneAsset)
-        {
+        public static void SceneAssetField(Rect _position, SceneAsset _sceneAsset) {
             GUIContent _label = GUIContent.none;
             SceneAssetField(_position, _label, _sceneAsset);
         }
 
         /// <inheritdoc cref="SceneAssetField(Rect, GUIContent, SceneAsset)"/>
-        public static void SceneAssetField(Rect _position, string _label, SceneAsset _sceneAsset)
-        {
+        public static void SceneAssetField(Rect _position, string _label, SceneAsset _sceneAsset) {
             GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
             SceneAssetField(_position, _labelGUI, _sceneAsset);
         }
 
         /// <param name="_sceneAsset">The <see cref="SceneAsset"/> the field shows.</param>
         /// <inheritdoc cref="SceneAssetField(Rect, SerializedProperty, GUIContent)"/>
-        public static void SceneAssetField(Rect _position, GUIContent _label, SceneAsset _sceneAsset)
-        {
+        public static void SceneAssetField(Rect _position, GUIContent _label, SceneAsset _sceneAsset) {
             string _guid = _sceneAsset.guid;
             _sceneAsset.guid = DoSceneAssetField(_position, _label, _guid);
         }
 
         // -----------------------
 
-        private static string DoSceneAssetField(Rect _position, GUIContent _label, string _sceneGUID)
-        {
+        private static string DoSceneAssetField(Rect _position, GUIContent _label, string _sceneGUID) {
             // Loads the database to ensure that one exist in the project.
             var _database = BuildSceneDatabase.Database;
 
             // Get the scene asset from registered guid.
             string _path = AssetDatabase.GUIDToAssetPath(_sceneGUID);
             UnityEditor.SceneAsset _scene;
-            
-            if (string.IsNullOrEmpty(_path))
-            {
+
+            if (string.IsNullOrEmpty(_path)) {
                 _scene = null;
 
-                if (!string.IsNullOrEmpty(_sceneGUID))
-                {
+                if (!string.IsNullOrEmpty(_sceneGUID)) {
                     _sceneGUID = string.Empty;
                     GUI.changed = true;
                 }
-            }
-            else
+            } else
                 _scene = AssetDatabase.LoadAssetAtPath<UnityEditor.SceneAsset>(_path);
 
             // Scene asset field.
-            using (var _changeCheck = new EditorGUI.ChangeCheckScope())
-            {
+            using (var _changeCheck = new EditorGUI.ChangeCheckScope()) {
                 _scene = EditorGUI.ObjectField(_position, _label, _scene, typeof(UnityEditor.SceneAsset), false) as UnityEditor.SceneAsset;
 
-                if (_changeCheck.changed)
-                {
+                if (_changeCheck.changed) {
                     _sceneGUID = (_scene != null)
                                  ? AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(_scene))
                                  : string.Empty;
@@ -3121,36 +2897,31 @@ namespace EnhancedEditor.Editor
         // ===== Serialized Property ===== \\
 
         /// <inheritdoc cref="TextArea(Rect, SerializedProperty, GUIContent, bool, out float)"/>
-        public static void TextArea(Rect _position, SerializedProperty _property, out float _totalHeight)
-        {
+        public static void TextArea(Rect _position, SerializedProperty _property, out float _totalHeight) {
             GUIContent _label = EnhancedEditorGUIUtility.GetPropertyLabel(_property);
             TextArea(_position, _property, _label, out _totalHeight);
         }
 
         /// <inheritdoc cref="TextArea(Rect, SerializedProperty, GUIContent, bool, out float)"/>
-        public static void TextArea(Rect _position, SerializedProperty _property, bool _isWide, out float _totalHeight)
-        {
+        public static void TextArea(Rect _position, SerializedProperty _property, bool _isWide, out float _totalHeight) {
             GUIContent _label = EnhancedEditorGUIUtility.GetPropertyLabel(_property);
             TextArea(_position, _property, _label, _isWide, out _totalHeight);
         }
 
         /// <inheritdoc cref="TextArea(Rect, SerializedProperty, GUIContent, bool, out float)"/>
-        public static void TextArea(Rect _position, SerializedProperty _property, string _label, out float _totalHeight)
-        {
+        public static void TextArea(Rect _position, SerializedProperty _property, string _label, out float _totalHeight) {
             GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
             TextArea(_position, _property, _labelGUI, out _totalHeight);
         }
 
         /// <inheritdoc cref="TextArea(Rect, SerializedProperty, GUIContent, bool, out float)"/>
-        public static void TextArea(Rect _position, SerializedProperty _property, string _label, bool _isWide, out float _totalHeight)
-        {
+        public static void TextArea(Rect _position, SerializedProperty _property, string _label, bool _isWide, out float _totalHeight) {
             GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
             TextArea(_position, _property, _labelGUI, _isWide, out _totalHeight);
         }
 
         /// <inheritdoc cref="TextArea(Rect, SerializedProperty, GUIContent, bool, out float)"/>
-        public static void TextArea(Rect _position, SerializedProperty _property, GUIContent _label, out float _totalHeight)
-        {
+        public static void TextArea(Rect _position, SerializedProperty _property, GUIContent _label, out float _totalHeight) {
             bool _isWide = false;
             TextArea(_position, _property, _label, _isWide, out _totalHeight);
         }
@@ -3163,11 +2934,9 @@ namespace EnhancedEditor.Editor
         /// <param name="_label"><inheritdoc cref="DocumentationMethod(Rect, GUIContent)" path="/param[@name='_label']"/></param>
         /// <param name="_isWide">If true, the text area will take the full width available on the given position.</param>
         /// <param name="_totalHeight"><inheritdoc cref="DocumentationMethodTotal(Rect, out float)" path="/param[@name='_totalHeight']"/></param>
-        public static void TextArea(Rect _position, SerializedProperty _property, GUIContent _label, bool _isWide, out float _totalHeight)
-        {
+        public static void TextArea(Rect _position, SerializedProperty _property, GUIContent _label, bool _isWide, out float _totalHeight) {
             // Incompatible property management.
-            if (_property.propertyType != SerializedPropertyType.String)
-            {
+            if (_property.propertyType != SerializedPropertyType.String) {
                 EditorGUI.PropertyField(_position, _property, _label);
                 _totalHeight = _position.height;
 
@@ -3181,13 +2950,11 @@ namespace EnhancedEditor.Editor
 
             // Text area.
             using (var _scope = new EditorGUI.PropertyScope(_position, _label, _property))
-            using (var _changeCheck = new EditorGUI.ChangeCheckScope())
-            {
+            using (var _changeCheck = new EditorGUI.ChangeCheckScope()) {
                 _text = DoTextArea(_position, _label, _text, _isWide);
 
                 // Save new value.
-                if (_changeCheck.changed)
-                {
+                if (_changeCheck.changed) {
                     _property.stringValue = _text;
                 }
             }
@@ -3196,36 +2963,31 @@ namespace EnhancedEditor.Editor
         // ===== String Value ===== \\
 
         /// <inheritdoc cref="TextArea(Rect, GUIContent, string, bool, out float)"/>
-        public static string TextArea(Rect _position, string _text, out float _totalHeight)
-        {
+        public static string TextArea(Rect _position, string _text, out float _totalHeight) {
             GUIContent _label = GUIContent.none;
             return TextArea(_position, _label, _text, out _totalHeight);
         }
 
         /// <inheritdoc cref="TextArea(Rect, GUIContent, string, bool, out float)"/>
-        public static string TextArea(Rect _position, string _text, bool _isWide, out float _totalHeight)
-        {
+        public static string TextArea(Rect _position, string _text, bool _isWide, out float _totalHeight) {
             GUIContent _label = GUIContent.none;
             return TextArea(_position, _label, _text, _isWide, out _totalHeight);
         }
 
         /// <inheritdoc cref="TextArea(Rect, GUIContent, string, bool, out float)"/>
-        public static string TextArea(Rect _position, string _label, string _text, out float _totalHeight)
-        {
+        public static string TextArea(Rect _position, string _label, string _text, out float _totalHeight) {
             GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
             return TextArea(_position, _labelGUI, _text, out _totalHeight);
         }
 
         /// <inheritdoc cref="TextArea(Rect, GUIContent, string, bool, out float)"/>
-        public static string TextArea(Rect _position, string _label, string _text, bool _isWide, out float _totalHeight)
-        {
+        public static string TextArea(Rect _position, string _label, string _text, bool _isWide, out float _totalHeight) {
             GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
             return TextArea(_position, _labelGUI, _text, _isWide, out _totalHeight);
         }
 
         /// <inheritdoc cref="TextArea(Rect, GUIContent, string, bool, out float)"/>
-        public static string TextArea(Rect _position, GUIContent _label, string _text, out float _totalHeight)
-        {
+        public static string TextArea(Rect _position, GUIContent _label, string _text, out float _totalHeight) {
             bool _isWide = false;
             return TextArea(_position, _label, _text, _isWide, out _totalHeight);
         }
@@ -3233,8 +2995,7 @@ namespace EnhancedEditor.Editor
         /// <param name="_text">The text to edit.</param>
         /// <returns>The text entered by the user.</returns>
         /// <inheritdoc cref="TextArea(Rect, SerializedProperty, GUIContent, bool, out float)"/>
-        public static string TextArea(Rect _position, GUIContent _label, string _text, bool _isWide, out float _totalHeight)
-        {
+        public static string TextArea(Rect _position, GUIContent _label, string _text, bool _isWide, out float _totalHeight) {
             _position.height = _totalHeight
                              = GetTextAreaTotalHeight(_position, _label, _text, _isWide);
 
@@ -3244,39 +3005,32 @@ namespace EnhancedEditor.Editor
 
         // -----------------------
 
-        private static string DoTextArea(Rect _position, GUIContent _label, string _text, bool _isWide)
-        {
-            if (_isWide)
-            {
+        private static string DoTextArea(Rect _position, GUIContent _label, string _text, bool _isWide) {
+            if (_isWide) {
                 Rect _temp = new Rect(_position)
                 {
                     height = EditorGUIUtility.singleLineHeight
                 };
-                
+
                 EditorGUI.LabelField(_temp, _label);
 
                 _position.yMin += _temp.height + EditorGUIUtility.standardVerticalSpacing;
                 _text = EditorGUI.TextArea(_position, _text, EnhancedEditorStyles.TextArea);
-            }
-            else
-            {
+            } else {
                 _position = EditorGUI.PrefixLabel(_position, _label);
-                using (var _scope = ZeroIndentScope())
-                {
+                using (var _scope = ZeroIndentScope()) {
                     _text = EditorGUI.TextArea(_position, _text, EnhancedEditorStyles.TextArea);
                 }
             }
-            
+
             return _text;
         }
 
-        internal static float GetTextAreaTotalHeight(Rect _position, GUIContent _label, string _text, bool _isWide)
-        {
+        internal static float GetTextAreaTotalHeight(Rect _position, GUIContent _label, string _text, bool _isWide) {
             GUIContent _labelGUI = _label;
             float _height = 0f;
 
-            if (_isWide)
-            {
+            if (_isWide) {
                 _labelGUI = GUIContent.none;
                 _height = EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
             }
@@ -3290,15 +3044,13 @@ namespace EnhancedEditor.Editor
 
         #region Validation Member
         /// <inheritdoc cref="ValidationMemberField(Rect, SerializedProperty, GUIContent, MemberValue{object})"/>
-        public static void ValidationMemberField(Rect _position, SerializedProperty _property, MemberValue<object> _validationMember)
-        {
+        public static void ValidationMemberField(Rect _position, SerializedProperty _property, MemberValue<object> _validationMember) {
             GUIContent _label = EnhancedEditorGUIUtility.GetPropertyLabel(_property);
             ValidationMemberField(_position, _property, _label, _validationMember);
         }
 
         /// <inheritdoc cref="ValidationMemberField(Rect, SerializedProperty, GUIContent, MemberValue{object})"/>
-        public static void ValidationMemberField(Rect _position, SerializedProperty _property, string _label, MemberValue<object> _validationMember)
-        {
+        public static void ValidationMemberField(Rect _position, SerializedProperty _property, string _label, MemberValue<object> _validationMember) {
             GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
             ValidationMemberField(_position, _property, _labelGUI, _validationMember);
         }
@@ -3315,15 +3067,12 @@ namespace EnhancedEditor.Editor
         /// <param name="_validationMember">Class member to set whenever this field value is changed.
         /// <para/>
         /// Can either be a field, a property or a one argument method, but it must be of the same type as this field.</param>
-        public static void ValidationMemberField(Rect _position, SerializedProperty _property, GUIContent _label, MemberValue<object> _validationMember)
-        {
+        public static void ValidationMemberField(Rect _position, SerializedProperty _property, GUIContent _label, MemberValue<object> _validationMember) {
             using (var _scope = new EditorGUI.PropertyScope(Rect.zero, GUIContent.none, _property))
-            using (var _changeCheck = new EditorGUI.ChangeCheckScope())
-            {
+            using (var _changeCheck = new EditorGUI.ChangeCheckScope()) {
                 EditorGUI.PropertyField(_position, _property, _label);
 
-                if (_changeCheck.changed)
-                {
+                if (_changeCheck.changed) {
                     // First, apply modifications to update the target object(s) value.
                     _property.serializedObject.ApplyModifiedProperties();
 
@@ -3335,15 +3084,12 @@ namespace EnhancedEditor.Editor
 
         // -----------------------
 
-        internal static void SetValidationMemberValue(SerializedProperty _property, MemberValue<object> _validationMember)
-        {
-            SerializedObject _object = _property.serializedObject;
+        internal static void SetValidationMemberValue(SerializedProperty _property, MemberValue<object> _validationMember) {
             MemberValue<object> _propertyMember = _property.name;
 
-            if (!_propertyMember.GetValue(_object, out object _value) || !_validationMember.SetValue(_object, _value))
-            {
+            if (!_propertyMember.GetValue(_property, out object _value) || !_validationMember.SetValue(_property, _value)) {
                 // Debug message.
-                Object _target = _object.targetObject;
+                Object _target = _property.serializedObject.targetObject;
                 _target.LogWarning($"Could not assign the value \"{_value}\" to the class member \"{_validationMember.Name}\" in the script \"{_target.GetType()}\".");
             }
         }
@@ -3357,15 +3103,13 @@ namespace EnhancedEditor.Editor
         // ===== Serialized Property ===== \\
 
         /// <inheritdoc cref="TagField(Rect, SerializedProperty, GUIContent)"/>
-        public static void TagField(Rect _position, SerializedProperty _property)
-        {
+        public static void TagField(Rect _position, SerializedProperty _property) {
             GUIContent _label = EnhancedEditorGUIUtility.GetPropertyLabel(_property);
             TagField(_position, _property, _label);
         }
 
         /// <inheritdoc cref="TagField(Rect, SerializedProperty, GUIContent)"/>
-        public static void TagField(Rect _position, SerializedProperty _property, string _label)
-        {
+        public static void TagField(Rect _position, SerializedProperty _property, string _label) {
             GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
             TagField(_position, _property, _labelGUI);
         }
@@ -3376,21 +3120,18 @@ namespace EnhancedEditor.Editor
         /// <param name="_position"><inheritdoc cref="DocumentationMethod(Rect, GUIContent)" path="/param[@name='_position']"/></param>
         /// <param name="_property"><see cref="SerializedProperty"/> to make a tag field for.</param>
         /// <param name="_label"><inheritdoc cref="DocumentationMethod(Rect, GUIContent)" path="/param[@name='_label']"/></param>
-        public static void TagField(Rect _position, SerializedProperty _property, GUIContent _label)
-        {
+        public static void TagField(Rect _position, SerializedProperty _property, GUIContent _label) {
             SerializedProperty _tagProperty = _property.Copy();
 
             // Incompatible property management.
-            if ((_tagProperty.type != TagTypeName) || !_tagProperty.Next(true))
-            {
+            if ((_tagProperty.type != TagTypeName) || !_tagProperty.Next(true)) {
                 EditorGUI.PropertyField(_position, _property, _label);
                 return;
             }
-            
+
             // Tag field.
             using (var _scope = new EditorGUI.PropertyScope(_position, _label, _property))
-            using (var _changeCheck = new EditorGUI.ChangeCheckScope())
-            {
+            using (var _changeCheck = new EditorGUI.ChangeCheckScope()) {
                 // When the property as multiple different values, display the default unknown tag.
                 long _id = _tagProperty.hasMultipleDifferentValues
                          ? -1
@@ -3400,8 +3141,7 @@ namespace EnhancedEditor.Editor
                 _tag = TagField(_position, _label, _tag);
 
                 // Save new value.
-                if (_changeCheck.changed)
-                {
+                if (_changeCheck.changed) {
                     _tagProperty.longValue = _tag.ID;
                 }
             }
@@ -3410,15 +3150,13 @@ namespace EnhancedEditor.Editor
         // ===== Tag ===== \\
 
         /// <inheritdoc cref="TagField(Rect, GUIContent, Tag)"/>
-        public static Tag TagField(Rect _position, Tag _tag)
-        {
+        public static Tag TagField(Rect _position, Tag _tag) {
             GUIContent _label = GUIContent.none;
             return TagField(_position, _label, _tag);
         }
 
         /// <inheritdoc cref="TagField(Rect, GUIContent, Tag)"/>
-        public static Tag TagField(Rect _position, string _label, Tag _tag)
-        {
+        public static Tag TagField(Rect _position, string _label, Tag _tag) {
             GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
             return TagField(_position, _labelGUI, _tag);
         }
@@ -3426,8 +3164,7 @@ namespace EnhancedEditor.Editor
         /// <param name="_tag">The tag the field shows.</param>
         /// <returns>The tag that has been set by the user.</returns>
         /// <inheritdoc cref="TagField(Rect, SerializedProperty, GUIContent)"/>
-        public static Tag TagField(Rect _position, GUIContent _label, Tag _tag)
-        {
+        public static Tag TagField(Rect _position, GUIContent _label, Tag _tag) {
             // Label.
             _position = EditorGUI.PrefixLabel(_position, _label);
 
@@ -3438,34 +3175,29 @@ namespace EnhancedEditor.Editor
             _label = EnhancedEditorGUIUtility.GetLabelGUI(_data.Name);
             _position.width = EnhancedEditorStyles.CNCountBadge.CalcSize(_label).x;
 
-            using (var _scope = EnhancedGUI.GUIBackgroundColor.Scope(_data.Color))
-            {
-                using (var _indentScope = ZeroIndentScope())
-                {
+            using (var _scope = EnhancedGUI.GUIBackgroundColor.Scope(_data.Color)) {
+                using (var _indentScope = ZeroIndentScope()) {
                     EditorGUI.LabelField(_position, _label, EnhancedEditorStyles.CNCountBadge);
                 }
             }
 
             // Select a new tag using a custom generic menu instead of a classic popup.
-            if (EnhancedEditorGUIUtility.MainMouseUp(_position))
-            {
+            if (EnhancedEditorGUIUtility.MainMouseUp(_position)) {
                 GenericMenu _menu = GetTagSelectionMenu(_id, _data);
                 _menu.DropDown(_position);
             }
 
             // Context menu.
-            if (EnhancedEditorGUIUtility.ContextClick(_position))
-            {
+            if (EnhancedEditorGUIUtility.ContextClick(_position)) {
                 GenericMenu _menu = GetTagContextMenu(_data);
                 _menu.ShowAsContext();
             }
 
             // Get newly selected tag from menu.
-            if (GetSelectedTag(_id, out Tag _newTag))
-            {
+            if (GetSelectedTag(_id, out Tag _newTag)) {
                 _tag = _newTag;
             }
-            
+
             return _tag;
         }
         #endregion
@@ -3477,15 +3209,13 @@ namespace EnhancedEditor.Editor
         // ===== Serialized Property ===== \\
 
         /// <inheritdoc cref="TagGroupField(Rect, SerializedProperty, GUIContent, out float)"/>
-        public static void TagGroupField(Rect _position, SerializedProperty _property, out float _extraHeight)
-        {
+        public static void TagGroupField(Rect _position, SerializedProperty _property, out float _extraHeight) {
             GUIContent _label = EnhancedEditorGUIUtility.GetPropertyLabel(_property);
             TagGroupField(_position, _property, _label, out _extraHeight);
         }
 
         /// <inheritdoc cref="TagGroupField(Rect, SerializedProperty, GUIContent, out float)"/>
-        public static void TagGroupField(Rect _position, SerializedProperty _property, string _label, out float _extraHeight)
-        {
+        public static void TagGroupField(Rect _position, SerializedProperty _property, string _label, out float _extraHeight) {
             GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
             TagGroupField(_position, _property, _labelGUI, out _extraHeight);
         }
@@ -3497,13 +3227,11 @@ namespace EnhancedEditor.Editor
         /// <param name="_property"><see cref="SerializedProperty"/> to make a tag group field for.</param>
         /// <param name="_label"><inheritdoc cref="DocumentationMethod(Rect, GUIContent)" path="/param[@name='_label']"/></param>
         /// <param name="_extraHeight"><inheritdoc cref="DocumentationMethodExtra(Rect, ref bool, out float, GUIStyle)" path="/param[@name='_extraHeight']"/></param>
-        public static void TagGroupField(Rect _position, SerializedProperty _property, GUIContent _label, out float _extraHeight)
-        {
+        public static void TagGroupField(Rect _position, SerializedProperty _property, GUIContent _label, out float _extraHeight) {
             SerializedProperty _tagGroup = _property.Copy();
 
             // Incompatible property management.
-            if ((_tagGroup.type != TagGroupTypeName) || !_tagGroup.Next(true) || !_tagGroup.isArray)
-            {
+            if ((_tagGroup.type != TagGroupTypeName) || !_tagGroup.Next(true) || !_tagGroup.isArray) {
                 EditorGUI.PropertyField(_position, _property, _label);
                 _extraHeight = 0f;
 
@@ -3511,10 +3239,8 @@ namespace EnhancedEditor.Editor
             }
 
             // On property multiple different values, draw the unknown non-editable tag. 
-            if (_tagGroup.hasMultipleDifferentValues)
-            {
-                using (var _scope = new EditorGUI.PropertyScope(_position, _label, _property))
-                {
+            if (_tagGroup.hasMultipleDifferentValues) {
+                using (var _scope = new EditorGUI.PropertyScope(_position, _label, _property)) {
                     // Label.
                     _position = EditorGUI.PrefixLabel(_position, _label);
 
@@ -3524,19 +3250,17 @@ namespace EnhancedEditor.Editor
                     _label = EnhancedEditorGUIUtility.GetLabelGUI(_data.Name);
                     _position.width = EnhancedEditorStyles.CNCountBadge.CalcSize(_label).x;
 
-                    using (var _indentScope = ZeroIndentScope())
-                    {
+                    using (var _indentScope = ZeroIndentScope()) {
                         EditorGUI.LabelField(_position, _label, EnhancedEditorStyles.CNCountBadge);
                     }
                 }
-                
+
                 _extraHeight = 0f;
                 return;
             }
 
             // Resize the content array if it is too small. Do not reallocate a new array for each call.
-            if (tagGroupContent.Count < _tagGroup.arraySize)
-            {
+            if (tagGroupContent.Count < _tagGroup.arraySize) {
                 tagGroupContent.Resize(_tagGroup.arraySize);
             }
 
@@ -3546,22 +3270,19 @@ namespace EnhancedEditor.Editor
             Rect _changedTagPos = default;
 
             // As total position height is not defined yet, do not specify it.
-            using (var _scope = new EditorGUI.PropertyScope(Rect.zero, _label, _property))
-            {
+            using (var _scope = new EditorGUI.PropertyScope(Rect.zero, _label, _property)) {
                 Rect _fieldPosition = EditorGUI.PrefixLabel(_position, _label);
                 Rect _temp = new Rect(_fieldPosition);
 
                 // Draw each tag in the group.
-                for (int _i = 0; _i < _tagGroup.arraySize; _i++)
-                {
+                for (int _i = 0; _i < _tagGroup.arraySize; _i++) {
                     SerializedProperty _tagProperty = _tagGroup.GetArrayElementAtIndex(_i);
                     _tagProperty.Next(true);
 
                     Tag _tag = new Tag(_tagProperty.longValue);
 
                     // Remove the tag if it is not referencing a valid data.
-                    if (!_tag.GetData(out TagData _data))
-                    {
+                    if (!_tag.GetData(out TagData _data)) {
                         _tagGroup.DeleteArrayElementAtIndex(_i);
                         _i--;
 
@@ -3569,18 +3290,14 @@ namespace EnhancedEditor.Editor
                     }
 
                     // Tag modifications.
-                    using (var _changeCheck = new EditorGUI.ChangeCheckScope())
-                    {
+                    using (var _changeCheck = new EditorGUI.ChangeCheckScope()) {
                         int _id = EnhancedEditorGUIUtility.GetControlID(_label, FocusType.Keyboard);
-                        if (DrawTagGroupElement(_fieldPosition, ref _temp, ref _tag))
-                        {
+                        if (DrawTagGroupElement(_fieldPosition, ref _temp, ref _tag)) {
                             // Open the tag selection menu.
                             _changedTagControlID = _id;
                             _changedTagPos = _temp;
                             _changedTagID = _tag.ID;
-                        }
-                        else if (_changeCheck.changed || GetSelectedTag(_id, out _tag))
-                        {
+                        } else if (_changeCheck.changed || GetSelectedTag(_id, out _tag)) {
                             // New tag value.
                             _tagProperty.longValue = _tag.ID;
                         }
@@ -3591,14 +3308,12 @@ namespace EnhancedEditor.Editor
                 }
 
                 // Remove undesired content.
-                for (int _i = _tagGroup.arraySize; _i < tagGroupContent.Count; _i++)
-                {
+                for (int _i = _tagGroup.arraySize; _i < tagGroupContent.Count; _i++) {
                     tagGroupContent[_i] = null;
                 }
 
                 // Only display the tag selection menu after all the group content has been registered.
-                if (_changedTagControlID != -1)
-                {
+                if (_changedTagControlID != -1) {
                     GenericMenu _menu = GetTagSelectionMenu(_changedTagControlID, MultiTags.GetTag(_changedTagID), tagGroupContent);
                     _menu.DropDown(_changedTagPos);
 
@@ -3606,8 +3321,7 @@ namespace EnhancedEditor.Editor
                 }
 
                 // Add tag button.
-                if (DrawTagGroupAddButton(_fieldPosition, ref _temp, tagGroupContent, out long _tagID))
-                {
+                if (DrawTagGroupAddButton(_fieldPosition, ref _temp, tagGroupContent, out long _tagID)) {
                     int _index = _tagGroup.arraySize;
                     _tagGroup.InsertArrayElementAtIndex(_index);
 
@@ -3628,51 +3342,42 @@ namespace EnhancedEditor.Editor
         // ===== Tag Group ===== \\
 
         /// <inheritdoc cref="TagGroupField(Rect, GUIContent, TagGroup, out float)"/>
-        public static void TagGroupField(Rect _position, TagGroup _group, out float _extraHeight)
-        {
+        public static void TagGroupField(Rect _position, TagGroup _group, out float _extraHeight) {
             GUIContent _label = GUIContent.none;
             TagGroupField(_position, _label, _group, out _extraHeight);
         }
 
         /// <inheritdoc cref="TagGroupField(Rect, GUIContent, TagGroup, out float)"/>
-        public static void TagGroupField(Rect _position, string _label, TagGroup _group, out float _extraHeight)
-        {
+        public static void TagGroupField(Rect _position, string _label, TagGroup _group, out float _extraHeight) {
             GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
             TagGroupField(_position, _labelGUI, _group, out _extraHeight);
         }
 
         /// <param name="_group"><see cref="TagGroup"/> to edit.</param>
         /// <inheritdoc cref="TagGroupField(Rect, SerializedProperty, GUIContent, out float)"/>
-        public static void TagGroupField(Rect _position, GUIContent _label, TagGroup _group, out float _extraHeight)
-        {
+        public static void TagGroupField(Rect _position, GUIContent _label, TagGroup _group, out float _extraHeight) {
             // Label.
             Rect _fieldPosition = EditorGUI.PrefixLabel(_position, _label);
             Rect _temp = new Rect(_fieldPosition);
 
             // Draw each tag in the group.
-            for (int _i = 0; _i < _group.Length; _i++)
-            {
+            for (int _i = 0; _i < _group.Length; _i++) {
                 Tag _tag = _group[_i];
 
                 // Remove the tag if it is not referencing a valid data.
-                if (!_tag.GetData(out TagData _data))
-                {
+                if (!_tag.GetData(out TagData _data)) {
                     _group.RemoveTag(_tag);
                     continue;
                 }
 
                 // Tag modifications.
-                using (var _changeCheck = new EditorGUI.ChangeCheckScope())
-                {
+                using (var _changeCheck = new EditorGUI.ChangeCheckScope()) {
                     int _id = EnhancedEditorGUIUtility.GetControlID(_label, FocusType.Keyboard);
-                    if (DrawTagGroupElement(_fieldPosition, ref _temp, ref _tag))
-                    {
+                    if (DrawTagGroupElement(_fieldPosition, ref _temp, ref _tag)) {
                         // Open the tag selection menu.
                         GenericMenu _menu = GetTagSelectionMenu(_id, _data, _group.GetData());
                         _menu.DropDown(_temp);
-                    }
-                    else if (_changeCheck.changed || GetSelectedTag(_id, out _tag))
-                    {
+                    } else if (_changeCheck.changed || GetSelectedTag(_id, out _tag)) {
                         // New tag value.
                         _group[_i] = _tag;
                     }
@@ -3682,8 +3387,7 @@ namespace EnhancedEditor.Editor
             }
 
             // Add tag button.
-            if (DrawTagGroupAddButton(_fieldPosition, ref _temp, _group.GetData(), out long _tagID))
-            {
+            if (DrawTagGroupAddButton(_fieldPosition, ref _temp, _group.GetData(), out long _tagID)) {
                 Tag _tag = new Tag(_tagID);
                 _group.AddTag(_tag);
             }
@@ -3692,15 +3396,11 @@ namespace EnhancedEditor.Editor
             _position.yMax = _temp.yMax;
 
             // Group context menu.
-            if (EnhancedEditorGUIUtility.ContextClick(_position))
-            {
+            if (EnhancedEditorGUIUtility.ContextClick(_position)) {
                 GenericMenu _menu = new GenericMenu();
-                if (_group.Length > 1)
-                {
+                if (_group.Length > 1) {
                     _menu.AddItem(SortTagsGUI, false, _group.SortTagsByName);
-                }
-                else
-                {
+                } else {
                     _menu.AddDisabledItem(SortTagsGUI);
                 }
 
@@ -3710,12 +3410,10 @@ namespace EnhancedEditor.Editor
 
         // -----------------------
 
-        private static bool DrawTagGroupElement(Rect _totalPosition, ref Rect _temp, ref Tag _tag)
-        {
+        private static bool DrawTagGroupElement(Rect _totalPosition, ref Rect _temp, ref Tag _tag) {
             // Tag.
             TagData _data = _tag.GetData();
-            if (DrawTagGroupElement(_totalPosition, ref _temp, _data))
-            {
+            if (DrawTagGroupElement(_totalPosition, ref _temp, _data)) {
                 _tag.ID = -1;
             }
 
@@ -3723,8 +3421,7 @@ namespace EnhancedEditor.Editor
             return EnhancedEditorGUIUtility.MainMouseUp(_temp);
         }
 
-        internal static bool DrawTagGroupElement(Rect _totalPosition, ref Rect _temp, TagData _tag)
-        {
+        internal static bool DrawTagGroupElement(Rect _totalPosition, ref Rect _temp, TagData _tag) {
             // Label and position calculs.
             GUIContent _label = EnhancedEditorGUIUtility.GetLabelGUI(_tag.name);
             _temp.width = EnhancedEditorStyles.CNCountBadge.CalcSize(_label).x + EnhancedEditorGUIUtility.OlStyleSize;
@@ -3732,10 +3429,8 @@ namespace EnhancedEditor.Editor
 
             // Tag.
             Rect _tagTemp = new Rect(_temp);
-            using (var _scope = EnhancedGUI.GUIBackgroundColor.Scope(_tag.Color))
-            {
-                using (var _indentScope = ZeroIndentScope())
-                {
+            using (var _scope = EnhancedGUI.GUIBackgroundColor.Scope(_tag.Color)) {
+                using (var _indentScope = ZeroIndentScope()) {
                     EditorGUI.LabelField(_temp, GUIContent.none, EnhancedEditorStyles.CNCountBadge);
 
                     _tagTemp.width -= EnhancedEditorGUIUtility.OlStyleSize;
@@ -3749,15 +3444,13 @@ namespace EnhancedEditor.Editor
             _tagTemp.width = EnhancedEditorGUIUtility.OlStyleSize;
 
             bool _remove = false;
-            if (GUI.Button(_tagTemp, GUIContent.none, EnhancedEditorStyles.OlMinus))
-            {
+            if (GUI.Button(_tagTemp, GUIContent.none, EnhancedEditorStyles.OlMinus)) {
                 _remove = true;
                 GUI.changed = true;
             }
 
             // Context menu.
-            if (EnhancedEditorGUIUtility.ContextClick(_temp))
-            {
+            if (EnhancedEditorGUIUtility.ContextClick(_temp)) {
                 GenericMenu _menu = GetTagContextMenu(_tag);
                 _menu.ShowAsContext();
             }
@@ -3765,8 +3458,7 @@ namespace EnhancedEditor.Editor
             return _remove;
         }
 
-        private static bool DrawTagGroupAddButton(Rect _totalPosition, ref Rect _temp, List<TagData> _groupContent, out long _tagID)
-        {
+        private static bool DrawTagGroupAddButton(Rect _totalPosition, ref Rect _temp, List<TagData> _groupContent, out long _tagID) {
             _temp.y -= 1f;
             _temp.width = EnhancedEditorGUIUtility.OlStyleSize;
             _temp = GetGUIPosition(_totalPosition, _temp);
@@ -3774,15 +3466,13 @@ namespace EnhancedEditor.Editor
             int _id = EnhancedEditorGUIUtility.GetControlID(FocusType.Keyboard, _temp);
 
             // Add button.
-            if (GUI.Button(_temp, GUIContent.none, EnhancedEditorStyles.OlPlus))
-            {
+            if (GUI.Button(_temp, GUIContent.none, EnhancedEditorStyles.OlPlus)) {
                 GenericMenu _menu = GetTagSelectionMenu(_id, null, _groupContent);
                 _menu.DropDown(_temp);
             }
 
             // Get selected tag from menu.
-            if (GetSelectedTag(_id, out Tag _tag))
-            {
+            if (GetSelectedTag(_id, out Tag _tag)) {
                 _tagID = _tag.ID;
                 return true;
             }
@@ -3791,13 +3481,11 @@ namespace EnhancedEditor.Editor
             return false;
         }
 
-        internal static float GetTagGroupExtraHeight(Rect _position, SerializedProperty _property, GUIContent _label)
-        {
+        internal static float GetTagGroupExtraHeight(Rect _position, SerializedProperty _property, GUIContent _label) {
             SerializedProperty _tagGroup = _property.Copy();
 
             // Incompatible property management.
-            if (_tagGroup.hasMultipleDifferentValues || (_tagGroup.type != TagGroupTypeName) || !_tagGroup.Next(true) || !_tagGroup.isArray)
-            {
+            if (_tagGroup.hasMultipleDifferentValues || (_tagGroup.type != TagGroupTypeName) || !_tagGroup.Next(true) || !_tagGroup.isArray) {
                 return 0f;
             }
 
@@ -3805,8 +3493,7 @@ namespace EnhancedEditor.Editor
             Rect _temp = new Rect(_position);
 
             // Get total group position.
-            for (int _i = 0; _i < _tagGroup.arraySize; _i++)
-            {
+            for (int _i = 0; _i < _tagGroup.arraySize; _i++) {
                 SerializedProperty _tagProperty = _tagGroup.GetArrayElementAtIndex(_i);
                 _tagProperty.Next(true);
 
@@ -3839,8 +3526,7 @@ namespace EnhancedEditor.Editor
         // -----------------------
 
         /// <inheritdoc cref="GetTagSelectionMenu(int, TagData, List{TagData})"/>
-        public static GenericMenu GetTagSelectionMenu(int _id, TagData _selectedTag)
-        {
+        public static GenericMenu GetTagSelectionMenu(int _id, TagData _selectedTag) {
             return GetTagSelectionMenu(_id, _selectedTag, null);
         }
 
@@ -3853,29 +3539,21 @@ namespace EnhancedEditor.Editor
         /// <param name="_selectedTag">The tag currently selected (to highlight in menu). Null if none.</param>
         /// <param name="_unselectableTags">All tags that can not be selected by the user. Null if none.</param>
         /// <returns><see cref="GenericMenu"/> to display for selecting a new tag.</returns>
-        public static GenericMenu GetTagSelectionMenu(int _id, TagData _selectedTag, List<TagData> _unselectableTags)
-        {
+        public static GenericMenu GetTagSelectionMenu(int _id, TagData _selectedTag, List<TagData> _unselectableTags) {
             GenericMenu _menu = new GenericMenu();
             selectedTagControlID = _id;
 
-            foreach (TagData _tag in MultiTags.Database.tags)
-            {
+            foreach (TagData _tag in MultiTags.Database.tags) {
                 GUIContent _label = new GUIContent(_tag.Name.Replace('_', '/'));
-                if (_tag == _selectedTag)
-                {
+                if (_tag == _selectedTag) {
                     // Selected tag.
                     _menu.AddItem(_label, true, () => { });
-                }
-                else if ((_unselectableTags != null) && _unselectableTags.Contains(_tag))
-                {
+                } else if ((_unselectableTags != null) && _unselectableTags.Contains(_tag)) {
                     // Unselectable tag.
                     _menu.AddDisabledItem(_label, false);
-                }
-                else
-                {
+                } else {
                     // Selectable tag.
-                    _menu.AddItem(_label, false, () =>
-                    {
+                    _menu.AddItem(_label, false, () => {
                         selectedTag = _tag;
                     });
                 }
@@ -3883,13 +3561,11 @@ namespace EnhancedEditor.Editor
 
             // Additional menu utilities.
             _menu.AddSeparator(string.Empty);
-            _menu.AddItem(createTagGUI, false, () =>
-            {
+            _menu.AddItem(createTagGUI, false, () => {
                 MultiTagsWindow.CreateTagWindow.GetWindow();
             });
 
-            _menu.AddItem(openMultiTagsWindowGUI, false, () =>
-            {
+            _menu.AddItem(openMultiTagsWindowGUI, false, () => {
                 MultiTagsWindow.GetWindow();
             });
 
@@ -3901,18 +3577,14 @@ namespace EnhancedEditor.Editor
         /// </summary>
         /// <param name="_tag">Selected tag.</param>
         /// <returns><see cref="GenericMenu"/> to be displayed.</returns>
-        public static GenericMenu GetTagContextMenu(TagData _tag)
-        {
+        public static GenericMenu GetTagContextMenu(TagData _tag) {
             GenericMenu _menu = new GenericMenu();
-            _menu.AddItem(renameTagGUI, false, () =>
-            {
+            _menu.AddItem(renameTagGUI, false, () => {
                 MultiTagsWindow.RenameTagWindow.GetWindow(_tag);
             });
 
-            _menu.AddItem(setTagColorGUI, false, () =>
-            {
-                EnhancedEditorUtility.ColorPicker(_tag.Color, (Color _color) =>
-                {
+            _menu.AddItem(setTagColorGUI, false, () => {
+                EnhancedEditorUtility.ColorPicker(_tag.Color, (Color _color) => {
                     MultiTags.SetTagColor(_tag.ID, _color);
                     InternalEditorUtility.RepaintAllViews();
                 });
@@ -3929,10 +3601,8 @@ namespace EnhancedEditor.Editor
         /// <param name="_id">ID of the associated control (same as used for the selection menu).</param>
         /// <param name="_tag">Tag selected by the user.</param>
         /// <returns>True if the user selected a new tag from the selection menu, false otherwise.</returns>
-        public static bool GetSelectedTag(int _id, out Tag _tag)
-        {
-            if ((selectedTagControlID == _id) && (selectedTag != null))
-            {
+        public static bool GetSelectedTag(int _id, out Tag _tag) {
+            if ((selectedTagControlID == _id) && (selectedTag != null)) {
                 _tag = new Tag(selectedTag.ID);
                 selectedTag = null;
 
@@ -4523,7 +4193,7 @@ namespace EnhancedEditor.Editor
             if (IconButton(_buttonPosition, flagButtonGUI)) {
                 FlagPickerWindow.GetWindow(_id, _getFlagGroup.Invoke());
             }
-            
+
             return FlagPickerWindow.GetSelectedFlagGroup(_id, out _group);
         }
 
@@ -4559,8 +4229,7 @@ namespace EnhancedEditor.Editor
 
         #region Background Line
         /// <inheritdoc cref="BackgroundLine(Rect, bool, int, Color, Color)"/>
-        public static void BackgroundLine(Rect _position, bool _isSelected, int _index)
-        {
+        public static void BackgroundLine(Rect _position, bool _isSelected, int _index) {
             Color _selectedColor = EnhancedEditorGUIUtility.GUISelectedColor;
             Color _peerColor = EnhancedEditorGUIUtility.GUIPeerLineColor;
 
@@ -4579,14 +4248,10 @@ namespace EnhancedEditor.Editor
         /// <param name="_index">Index of this line.</param>
         /// <param name="_selectedColor">Color used to draw selected lines.</param>
         /// <param name="_peerColor">Color used to draw peer lines.</param>
-        public static void BackgroundLine(Rect _position, bool _isSelected, int _index, Color _selectedColor, Color _peerColor)
-        {
-            if (_isSelected)
-            {
+        public static void BackgroundLine(Rect _position, bool _isSelected, int _index, Color _selectedColor, Color _peerColor) {
+            if (_isSelected) {
                 EditorGUI.DrawRect(_position, _selectedColor);
-            }
-            else if ((_index % 2) == 0)
-            {
+            } else if ((_index % 2) == 0) {
                 EditorGUI.DrawRect(_position, _peerColor);
             }
         }
@@ -4600,7 +4265,7 @@ namespace EnhancedEditor.Editor
         // -----------------------
 
         /// <summary>
-        /// Draws an horizontal dotted line.
+        /// Draws an horizontal dotted line, starting from left to right..
         /// </summary>
         /// <param name="_position">Position on the screen where to draw the line.</param>
         /// <param name="_size">Line dot size.</param>
@@ -4621,7 +4286,25 @@ namespace EnhancedEditor.Editor
         }
 
         /// <summary>
-        /// Draws a vertical dotted line.
+        /// Draws an inverted horizontal dotted line, start from right to left.
+        /// </summary>
+        /// <inheritdoc cref="HorizontalDottedLine(Rect, float, float, float)"/>
+        public static void InvertedHorizontalDottedLine(Rect _position, float _size = DotSize, float _space = DotSpace, float _thickness = DotThickness) {
+            _position.height = _thickness;
+
+            while (_position.width > _size) {
+                Rect _temp = new Rect(_position) {
+                    xMin = _position.xMax - _size
+                };
+
+                _position.width -= _size + _space;
+
+                EditorGUI.DrawRect(_temp, SuperColor.Grey.Get());
+            }
+        }
+
+        /// <summary>
+        /// Draws a vertical dotted line, starting from top to bottom.
         /// </summary>
         /// <inheritdoc cref="HorizontalDottedLine(Rect, float, float, float)"/>
         public static void VerticalDottedLine(Rect _position, float _size = DotSize, float _space = DotSpace, float _thickness = DotThickness) {
@@ -4637,31 +4320,102 @@ namespace EnhancedEditor.Editor
                 EditorGUI.DrawRect(_temp, SuperColor.Grey.Get());
             }
         }
+
+        /// <summary>
+        /// Draws an inverted vertical dotted line, start from bottom to top.
+        /// </summary>
+        /// <inheritdoc cref="HorizontalDottedLine(Rect, float, float, float)"/>
+        public static void InvertedVerticalDottedLine(Rect _position, float _size = DotSize, float _space = DotSpace, float _thickness = DotThickness) {
+            _position.width = _thickness;
+
+            while (_position.height > _size) {
+                Rect _temp = new Rect(_position) {
+                    yMin = _position.yMax - _size
+                };
+
+                _position.height -= _size + _space;
+
+                EditorGUI.DrawRect(_temp, SuperColor.Grey.Get());
+            }
+        }
+        #endregion
+
+        #region Drag and Drop
+        private static GUIContent dropGUI = null;
+
+        // -----------------------
+
+        /// <summary>
+        /// Draws a line indicating that a drag and drop can be performed at a specific position.
+        /// </summary>
+        /// <param name="_position"><inheritdoc cref="DocumentationMethod(Rect, GUIContent)" path="/param[@name='_position']"/></param>
+        public static void DropHereLine(Rect _position) {
+            if (dropGUI == null) {
+                dropGUI = EditorGUIUtility.IconContent("PR DropHere2");
+            }
+
+            Rect _temp = new Rect(_position) {
+                xMin = _position.x + 10f,
+                height = 2f
+            };
+
+            EditorGUI.DrawRect(_temp, EnhancedEditorGUIUtility.GUIFeedbackColor);
+
+            _temp.x = _position.x;
+            _temp.y -= (EditorGUIUtility.singleLineHeight / 2f) - 1f;
+            _temp.height = EditorGUIUtility.singleLineHeight;
+
+            EditorGUI.LabelField(_temp, dropGUI);
+        }
         #endregion
 
         #region Editable Label
+        /// <inheritdoc cref="EditableLabel(Rect, string, GUIStyle, GUIStyle)"/>
+        public static string EditableLabel(Rect _position, string _label) {
+            return EditableLabel(_position, _label, EditorStyles.label, EditorStyles.textField);
+        }
+
+        /// <param name="_label">The editable text to be displayed.</param>
+        /// <inheritdoc cref="EditableLabel(Rect, string, string, GUIStyle, GUIStyle)"/>
+        public static string EditableLabel(Rect _position, string _label, GUIStyle _readonlyStyle, GUIStyle _editableStyle) {
+            return EditableLabel(_position, _label, _label, _readonlyStyle, _editableStyle);
+        }
+
+        /// <inheritdoc cref="EditableLabel(Rect, string, string, GUIStyle, GUIStyle)"/>
+        public static string EditableLabel(Rect _position, string _readonlyLabel, string _editableLabel) {
+            return EditableLabel(_position, _readonlyLabel, _editableLabel, EditorStyles.label, EditorStyles.textField);
+        }
+
         /// <summary>
-        /// Makes a field for label that becomes modifiable when the user focus on it.
+        /// Makes a field for a label that becomes editable when focused.
         /// </summary>
         /// <param name="_position"><inheritdoc cref="DocumentationMethod(Rect, GUIContent)" path="/param[@name='_position']"/></param>
-        /// <param name="_text">Editable text to display.</param>
-        /// <returns>New text value.</returns>
-        public static string EditableLabel(Rect _position, string _text) {
+        /// <param name="_readonlyLabel">The label to be displayed when this field has no focused.</param>
+        /// <param name="_editableLabel">The label to be displayed and edited when this field has focus.</param>
+        /// <param name="_readonlyStyle">Optional <see cref="GUIStyle"/> used to display the non editing label.</param>
+        /// <param name="_editableStyle">Optional <see cref="GUIStyle"/> used to display the editing label.</param>
+        /// <returns>New label text value entered by the user.</returns>
+        public static string EditableLabel(Rect _position, string _readonlyLabel, string _editableLabel, GUIStyle _readonlyStyle, GUIStyle _editableStyle) {
             string _id = EnhancedEditorGUIUtility.GetControlID(FocusType.Keyboard, _position).ToString();
+            string _newLabel;
+
+            Event _event = Event.current;
             GUI.SetNextControlName(_id);
 
-            bool _isEdited = GUI.GetNameOfFocusedControl() == _id;
+            bool _isEditing = (GUI.GetNameOfFocusedControl() == _id) || (_position.Contains(_event.mousePosition) && (_event.clickCount > 1));
 
-            GUIStyle _style = _isEdited ? EditorStyles.textField : EditorStyles.label;
-            string _newText = EditorGUI.DelayedTextField(_position, _text, _style);
+            if (_isEditing) {
+                _newLabel = EditorGUI.DelayedTextField(_position, _editableLabel, _editableStyle);
+            } else {
+                EditorGUI.LabelField(_position, _readonlyLabel, _readonlyStyle);
+                _newLabel = _editableLabel;
+            }
 
             // Unfocus control on Return or Escape key.
-            Event _event = Event.current;
-
-            if (_isEdited && _event.isKey) {
+            if (_isEditing && _event.isKey) {
                 if (_event.keyCode == KeyCode.Escape) {
                     UnfocusControl();
-                    return _text;
+                    return _editableLabel;
                 }
 
                 if (_event.keyCode == KeyCode.Return) {
@@ -4669,7 +4423,7 @@ namespace EnhancedEditor.Editor
                 }
             }
 
-            return _newText;
+            return _newLabel;
         }
 
         // -----------------------
@@ -4680,10 +4434,131 @@ namespace EnhancedEditor.Editor
         }
         #endregion
 
+        #region Enhanced Property
+        private const BindingFlags FieldFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+
+        private static readonly FieldInfo drawerType =           typeof(CustomPropertyDrawer).GetField("m_Type", FieldFlags);
+        private static readonly FieldInfo drawerUseForChildren = typeof(CustomPropertyDrawer).GetField("m_UseForChildren", FieldFlags);
+        private static readonly FieldInfo drawerFieldInfo =      typeof(PropertyDrawer).GetField("m_FieldInfo", FieldFlags);
+
+        private static readonly Dictionary<Type, EnhancedPropertyEditor> drawers = new Dictionary<Type, EnhancedPropertyEditor>();
+
+        // -----------------------
+
+        /// <inheritdoc cref="EnhancedPropertyField(Rect, SerializedProperty, GUIContent, bool)"/>
+        public static float EnhancedPropertyField(Rect _position, SerializedProperty _property, bool _includeChildren = true) {
+            GUIContent _label = EnhancedEditorGUIUtility.GetPropertyLabel(_property);
+            return EnhancedPropertyField(_position, _property, _label, _includeChildren);
+        }
+
+        /// <inheritdoc cref="EnhancedPropertyField(Rect, SerializedProperty, GUIContent, bool)"/>
+        public static float EnhancedPropertyField(Rect _position, SerializedProperty _property, string _label, bool _includeChildren = true) {
+            GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
+            return EnhancedPropertyField(_position, _property, _labelGUI, _includeChildren);
+        }
+
+        /// <summary>
+        /// Draws the default field for a <see cref="SerializedProperty"/> using the associated <see cref="EnhancedPropertyEditor"/> if one.
+        /// </summary>
+        /// <param name="_position"><inheritdoc cref="DocumentationMethod(Rect, GUIContent)" path="/param[@name='_position']"/></param>
+        /// <param name="_property">The <see cref="SerializedProperty"/> to draw the associated field.</param>
+        /// <param name="_label"><inheritdoc cref="DocumentationMethod(Rect, GUIContent)" path="/param[@name='_label']"/></param>
+        /// <param name="_includeChildren">If true the property including children is drawn; otherwise only the control itself (such as only a foldout but nothing below it).</param>
+        /// <returns><inheritdoc cref="DocumentationMethodTotal(Rect, out float)" path="/param[@name='_totalHeight']"/></returns>
+        public static float EnhancedPropertyField(Rect _position, SerializedProperty _property, GUIContent _label, bool _includeChildren = true) {
+            Type _type = EnhancedEditorUtility.GetSerializedPropertyType(_property);
+            EnhancedPropertyEditor _editor = null;
+
+            if ((_type != null) && !drawers.TryGetValue(_type, out _editor)) {
+                if (EnhancedEditorUtility.FindSerializedPropertyField(_property, out FieldInfo _field)) {
+                    // Get all custom drawers in the project, and retrieve the one with the closest type from the editing property.
+                    var _drawers = TypeCache.GetTypesWithAttribute<CustomPropertyDrawer>();
+                    Pair<Type, Type> _bestDrawer = new Pair<Type, Type>(null, null);
+
+                    foreach (Type _drawer in _drawers) {
+                        if (!_drawer.IsSubclassOf(typeof(EnhancedPropertyEditor))) {
+                            continue;
+                        }
+
+                        CustomPropertyDrawer _attribute = _drawer.GetCustomAttribute<CustomPropertyDrawer>(false);
+                        if (_attribute == null) {
+                            continue;
+                        }
+
+                        Type _target = drawerType.GetValue(_attribute) as Type;
+
+                        // If the drawer type is the same as this property, then use it.
+                        if (_target == _type) {
+                            _bestDrawer = new Pair<Type, Type>(_drawer, _target);
+                            break;
+                        }
+
+                        // If the drawer can be used for children, use it if its type is the closest one from the property.
+                        if (_type.IsSubclassOf(_target) && (bool)drawerUseForChildren.GetValue(_attribute) && ((_bestDrawer.First == null) || _target.IsSubclassOf(_bestDrawer.Second))) {
+                            _bestDrawer = new Pair<Type, Type>(_drawer, _target);
+                        }
+                    }
+
+                    // If an associated drawer was found, create a new instance of it to be used.
+                    if (_bestDrawer.First != null) {
+                        _editor = Activator.CreateInstance(_bestDrawer.First) as EnhancedPropertyEditor;
+                        drawerFieldInfo.SetValue(_editor, _field);
+                    }
+                }
+
+                drawers.Add(_type, _editor);
+            }
+
+            // Draw default editor.
+            if (_editor != null) {
+                return _editor.OnEnhancedGUI(_position, _property, _label);
+            }
+
+            float _height = _position.height
+                          = EditorGUI.GetPropertyHeight(_property, _label, _includeChildren);
+
+            EditorGUI.PropertyField(_position, _property, _label, _includeChildren);
+            return _height;
+        }
+        #endregion
+
+        #region Icon Button
+        /// <inheritdoc cref="IconButton(Rect, GUIContent, GUIStyle, float)"/>
+        public static bool IconButton(Rect _position, GUIContent _icon, float _margins = 0f) {
+            GUIStyle _style = EnhancedEditorStyles.Button;
+            return IconButton(_position, _icon, _style, _margins);
+        }
+
+        /// <summary>
+        /// Draws a full-size icon button.
+        /// </summary>
+        /// <param name="_position"><inheritdoc cref="DocumentationMethod(Rect, GUIContent)" path="/param[@name='_position']"/></param>
+        /// <param name="_icon">The icon to draw on the button.</param>
+        /// <param name="_style"><inheritdoc cref="DocumentationMethodExtra(Rect, ref bool, out float, GUIStyle)" path="/param[@name='_style']"/></param>
+        /// <param name="_margins">Margins on each side of the icon.</param>
+        /// <returns>True if the user clicked the button, false otherwise.</returns>
+        public static bool IconButton(Rect _position, GUIContent _icon, GUIStyle _style, float _margins = 0f) {
+            // Draw the icon outside of the button to avoid dealing with its margins.
+            bool _click = GUI.Button(_position, GUIContent.none, _style);
+            GUIStyle _labelStyle = GUI.skin.label;
+
+            using (var _scope = EnhancedGUI.GUIStyleAlignment.Scope(_labelStyle, TextAnchor.MiddleCenter)) {
+                _position.width -= _margins;
+                _position.height -= _margins;
+
+                _position.x += _margins / 2f;
+                _position.y += _margins / 2f;
+
+                GUI.Label(_position, _icon, _labelStyle);
+            }
+
+            return _click;
+        }
+        #endregion
+
         #region Link Label
         /// <inheritdoc cref="LinkLabel(Rect, GUIContent, string)"/>
-        public static void LinkLabel(Rect _position, string _label, string _url)
-        {
+        public static void LinkLabel(Rect _position, string _label, string _url) {
             GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
             LinkLabel(_position, _labelGUI, _url);
         }
@@ -4694,26 +4569,23 @@ namespace EnhancedEditor.Editor
         /// <param name="_position"><inheritdoc cref="DocumentationMethod(Rect, GUIContent)" path="/param[@name='_position']"/></param>
         /// <param name="_label">Label to display.</param>
         /// <param name="_url">Redirection url.</param>
-        public static void LinkLabel(Rect _position, GUIContent _label, string _url)
-        {
+        public static void LinkLabel(Rect _position, GUIContent _label, string _url) {
             GUIStyle _style = EnhancedEditorStyles.LinkLabel;
             _position.width = _style.CalcSize(_label).x;
 
             Color _color = _position.Contains(Event.current.mousePosition)
                                             ? EnhancedEditorGUIUtility.LinkLabelActiveColor
                                             : EnhancedEditorGUIUtility.LinkLabelNormalColor;
-            
+
             EditorGUIUtility.AddCursorRect(_position, MouseCursor.Link);
             UnderlinedLabel(_position, _label, _color, _style);
 
-            if (EnhancedEditorGUIUtility.MainMouseUp(_position))
-            {
+            if (EnhancedEditorGUIUtility.MainMouseUp(_position)) {
                 Application.OpenURL(_url);
             }
 
             // For the label color to be correctly displayed, constantly repaint the GUI (but only on repaint event).
-            if (Event.current.type == EventType.Repaint)
-            {
+            if (Event.current.type == EventType.Repaint) {
                 GUI.changed = true;
             }
         }
@@ -4721,50 +4593,43 @@ namespace EnhancedEditor.Editor
 
         #region Underlined Label
         /// <inheritdoc cref="UnderlinedLabel(Rect, GUIContent, Color, GUIStyle)"/>
-        public static void UnderlinedLabel(Rect _position, string _label)
-        {
+        public static void UnderlinedLabel(Rect _position, string _label) {
             GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
             UnderlinedLabel(_position, _labelGUI);
         }
 
         /// <inheritdoc cref="UnderlinedLabel(Rect, GUIContent, Color, GUIStyle)"/>
-        public static void UnderlinedLabel(Rect _position, string _label, Color _color)
-        {
+        public static void UnderlinedLabel(Rect _position, string _label, Color _color) {
             GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
             UnderlinedLabel(_position, _labelGUI, _color);
         }
 
         /// <inheritdoc cref="UnderlinedLabel(Rect, GUIContent, Color, GUIStyle)"/>
-        public static void UnderlinedLabel(Rect _position, string _label, GUIStyle _style)
-        {
+        public static void UnderlinedLabel(Rect _position, string _label, GUIStyle _style) {
             GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
             UnderlinedLabel(_position, _labelGUI, _style);
         }
 
         /// <inheritdoc cref="UnderlinedLabel(Rect, GUIContent, Color, GUIStyle)"/>
-        public static void UnderlinedLabel(Rect _position, string _label, Color _color, GUIStyle _style)
-        {
+        public static void UnderlinedLabel(Rect _position, string _label, Color _color, GUIStyle _style) {
             GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
             UnderlinedLabel(_position, _labelGUI, _color, _style);
         }
 
         /// <inheritdoc cref="UnderlinedLabel(Rect, GUIContent, Color, GUIStyle)"/>
-        public static void UnderlinedLabel(Rect _position, GUIContent _label)
-        {
+        public static void UnderlinedLabel(Rect _position, GUIContent _label) {
             GUIStyle _style = EditorStyles.label;
             UnderlinedLabel(_position, _label, _style);
         }
 
         /// <inheritdoc cref="UnderlinedLabel(Rect, GUIContent, Color, GUIStyle)"/>
-        public static void UnderlinedLabel(Rect _position, GUIContent _label, Color _color)
-        {
+        public static void UnderlinedLabel(Rect _position, GUIContent _label, Color _color) {
             GUIStyle _style = EditorStyles.label;
             UnderlinedLabel(_position, _label, _color, _style);
         }
 
         /// <inheritdoc cref="UnderlinedLabel(Rect, GUIContent, Color, GUIStyle)"/>
-        public static void UnderlinedLabel(Rect _position, GUIContent _label, GUIStyle _style)
-        {
+        public static void UnderlinedLabel(Rect _position, GUIContent _label, GUIStyle _style) {
             Color _color = Color.white;
             UnderlinedLabel(_position, _label, _color, _style);
         }
@@ -4776,20 +4641,18 @@ namespace EnhancedEditor.Editor
         /// <param name="_label">Label to display.</param>
         /// <param name="_color">Color of the label.</param>
         /// <param name="_style"><inheritdoc cref="DocumentationMethodExtra(Rect, ref bool, out float, GUIStyle)" path="/param[@name='_style']"/></param>
-        public static void UnderlinedLabel(Rect _position, GUIContent _label, Color _color, GUIStyle _style)
-        {
-            using (var _scope = EnhancedGUI.GUIColor.Scope(_color))
-            {
+        public static void UnderlinedLabel(Rect _position, GUIContent _label, Color _color, GUIStyle _style) {
+            using (var _scope = EnhancedGUI.GUIColor.Scope(_color)) {
                 EditorGUI.LabelField(_position, _label, _style);
             }
 
-            _position = new Rect()
-            {
+            _position = new Rect() {
                 x = EditorGUI.IndentedRect(_position).x,
                 y = _position.y + _position.height,
                 height = 1f,
                 width = _style.CalcSize(_label).x
-            }; ;
+            };
+            ;
 
             _color *= _style.normal.textColor;
             EditorGUI.DrawRect(_position, _color);
@@ -4803,14 +4666,12 @@ namespace EnhancedEditor.Editor
         /// <param name="_position"><inheritdoc cref="DocumentationMethod(Rect, GUIContent)" path="/param[@name='_position']"/></param>
         /// <param name="_texture">Texture to display.</param>
         /// <returns>Total height used to draw the texture.</returns>
-        public static float Texture(Rect _position, Texture2D _texture)
-        {
+        public static float Texture(Rect _position, Texture2D _texture) {
             // No texture, no draw.
             if (_texture == null)
                 return ManageDynamicControlHeight(GUIContent.none, 0f);
 
-            try
-            {
+            try {
                 // Remove scroll size on width to avoid jitter.
                 float _scrollSize = EnhancedEditorGUIUtility.ScrollSize + 5f;
 
@@ -4826,9 +4687,7 @@ namespace EnhancedEditor.Editor
 
                 GUI.Label(_position, _texture);
                 return ManageDynamicControlHeight(GUIContent.none, _height);
-            }
-            catch (MissingReferenceException)
-            {
+            } catch (MissingReferenceException) {
                 return 0f;
             }
         }
@@ -4840,8 +4699,7 @@ namespace EnhancedEditor.Editor
         // -----------------------
 
         /// <inheritdoc cref="ToolbarSearchField(string, Rect, string)"/>
-        public static string ToolbarSearchField(Rect _position, string _searchFilter)
-        {
+        public static string ToolbarSearchField(Rect _position, string _searchFilter) {
             string _controlName = EnhancedEditorGUIUtility.GetControlID(147, FocusType.Keyboard).ToString();
             return ToolbarSearchField(_controlName, _position, _searchFilter);
         }
@@ -4853,18 +4711,15 @@ namespace EnhancedEditor.Editor
         /// <param name="_position"><inheritdoc cref="DocumentationMethod(Rect, GUIContent)" path="/param[@name='_position']"/></param>
         /// <param name="_searchFilter">The search filter the field shows.</param>
         /// <returns>The search filter that has been set by the user.</returns>
-        public static string ToolbarSearchField(string _controlName, Rect _position, string _searchFilter)
-        {
+        public static string ToolbarSearchField(string _controlName, Rect _position, string _searchFilter) {
             Event _event;
             Rect _buttonRect = new Rect(_position);
             _buttonRect.xMin = _buttonRect.xMax - ToolbarSearchFieldCancelWidth;
 
             // Clears filter on cancel button click.
-            if (!string.IsNullOrEmpty(_searchFilter))
-            {
+            if (!string.IsNullOrEmpty(_searchFilter)) {
                 EditorGUIUtility.AddCursorRect(_buttonRect, MouseCursor.Arrow);
-                if (_buttonRect.Event(out _event) == EventType.MouseUp)
-                {
+                if (_buttonRect.Event(out _event) == EventType.MouseUp) {
                     _searchFilter = string.Empty;
 
                     GUI.FocusControl(string.Empty);
@@ -4887,15 +4742,13 @@ namespace EnhancedEditor.Editor
             _event = Event.current;
 
             if (_isFocused && !_position.Contains(_event.mousePosition) &&
-                ((_event.type == EventType.MouseDown) || ((_event.type == EventType.Used) && (_event.clickCount != 0) && string.IsNullOrEmpty(GUI.GetNameOfFocusedControl()))))
-            {
+                ((_event.type == EventType.MouseDown) || ((_event.type == EventType.Used) && (_event.clickCount != 0) && string.IsNullOrEmpty(GUI.GetNameOfFocusedControl())))) {
                 GUI.FocusControl(string.Empty);
                 GUI.changed = true;
             }
 
             // Only display the cancel button when the search filter is non empty.
-            if (!string.IsNullOrEmpty(_searchFilter))
-            {
+            if (!string.IsNullOrEmpty(_searchFilter)) {
                 GUI.Button(_buttonRect, GUIContent.none, EnhancedEditorStyles.ToolbarSearchFieldCancel);
             }
 
@@ -4916,8 +4769,7 @@ namespace EnhancedEditor.Editor
         /// <param name="_selectedOption">The index of the sorting option the field shows.</param>
         /// <param name="_doSortAscending">Is the sorting mode in ascending or in descending order?</param>
         /// <param name="_sortingOptions">An array of text, image and tooltips for the sorting options.</param>
-        public static void ToolbarSortOptions(Rect _position, ref int _selectedOption, ref bool _doSortAscending, GUIContent[] _sortingOptions)
-        {
+        public static void ToolbarSortOptions(Rect _position, ref int _selectedOption, ref bool _doSortAscending, GUIContent[] _sortingOptions) {
             // Sorting option.
             _position.xMax -= EnhancedEditorGUIUtility.IconWidth;
             _selectedOption = EditorGUI.Popup(_position, _selectedOption, _sortingOptions, EditorStyles.toolbarDropDown);
@@ -4926,8 +4778,7 @@ namespace EnhancedEditor.Editor
             _position.x += _position.width;
             _position.width = EnhancedEditorGUIUtility.IconWidth;
 
-            if (GUI.Button(_position, _doSortAscending ? sortDescendingGUI : sortAscendingGUI, EditorStyles.toolbarButton))
-            {
+            if (GUI.Button(_position, _doSortAscending ? sortDescendingGUI : sortAscendingGUI, EditorStyles.toolbarButton)) {
                 _doSortAscending = !_doSortAscending;
             }
         }
@@ -4941,8 +4792,7 @@ namespace EnhancedEditor.Editor
 
         // -----------------------
 
-        internal static Rect InvisiblePrefixLabel(Rect _position, GUIContent _label)
-        {
+        internal static Rect InvisiblePrefixLabel(Rect _position, GUIContent _label) {
             GUIContent _prefixLabel = string.IsNullOrEmpty(_label.text)
                                     ? GUIContent.none
                                     : blankLabelGUI;
@@ -4951,20 +4801,17 @@ namespace EnhancedEditor.Editor
             return _position;
         }
 
-        internal static float ManageDynamicControlHeight(GUIContent _label, float _height)
-        {
+        internal static float ManageDynamicControlHeight(GUIContent _label, float _height) {
             // Get control id and register it.
             int _id = EnhancedEditorGUIUtility.GetControlID(_label, FocusType.Keyboard);
-            if (!dynamicGUIControlHeight.ContainsKey(_id))
-            {
+            if (!dynamicGUIControlHeight.ContainsKey(_id)) {
                 dynamicGUIControlHeight.Add(_id, _height);
             }
 
             // Only save its height on non layout event.
             EventType _eventType = Event.current.type;
 
-            if ((_eventType != EventType.Layout) && (_eventType != EventType.Used) && (dynamicGUIControlHeight[_id] != _height))
-            {
+            if ((_eventType != EventType.Layout) && (_eventType != EventType.Used) && (dynamicGUIControlHeight[_id] != _height)) {
                 dynamicGUIControlHeight[_id] = _height;
 
                 // When the height has changed, set the GUI state as dirty to force repaint it.
@@ -4975,34 +4822,7 @@ namespace EnhancedEditor.Editor
             return dynamicGUIControlHeight[_id];
         }
 
-        internal static bool IconButton(Rect _position, GUIContent _icon, float _margins = 0f)
-        {
-            GUIStyle _style = EnhancedEditorStyles.Button;
-            return IconButton(_position, _icon, _style, _margins);
-        }
-
-        internal static bool IconButton(Rect _position, GUIContent _icon, GUIStyle _style, float _margins = 0f)
-        {
-            // Draw the icon outside of the button to avoid dealing with its margins.
-            bool _click = GUI.Button(_position, GUIContent.none, _style);
-            GUIStyle _labelStyle = GUI.skin.label;
-
-            using (var _scope = EnhancedGUI.GUIStyleAlignment.Scope(_labelStyle, TextAnchor.MiddleCenter))
-            {
-                _position.width -= _margins;
-                _position.height -= _margins;
-
-                _position.x += _margins / 2f;
-                _position.y += _margins / 2f;
-
-                GUI.Label(_position, _icon, _labelStyle);
-            }
-
-            return _click;
-        }
-
-        private static Rect DrawFoldout(Rect _position, ref bool _foldout)
-        {
+        private static Rect DrawFoldout(Rect _position, ref bool _foldout) {
             Rect _fieldPosition = new Rect(_position);
             {
                 float _foldoutWidth = EnhancedEditorGUIUtility.FoldoutWidth;
@@ -5017,11 +4837,9 @@ namespace EnhancedEditor.Editor
             return _fieldPosition;
         }
 
-        private static Rect GetGUIPosition(Rect _totalPosition, Rect _temp)
-        {
+        private static Rect GetGUIPosition(Rect _totalPosition, Rect _temp) {
             // Update a rect Y position if its width is too large for the screen.
-            if ((_temp.xMax > (_totalPosition.xMax - 5f)) && (_temp.x > _totalPosition.x))
-            {
+            if ((_temp.xMax > (_totalPosition.xMax - 5f)) && (_temp.x > _totalPosition.x)) {
                 _temp.x = _totalPosition.x;
                 _temp.y += _temp.height + EditorGUIUtility.standardVerticalSpacing;
             }
@@ -5029,8 +4847,7 @@ namespace EnhancedEditor.Editor
             return _temp;
         }
 
-        internal static EditorGUI.IndentLevelScope ZeroIndentScope()
-        {
+        internal static EditorGUI.IndentLevelScope ZeroIndentScope() {
             int _indentLevel = EditorGUI.indentLevel;
             var _scope = new EditorGUI.IndentLevelScope(-_indentLevel);
 
@@ -5069,8 +4886,7 @@ namespace EnhancedEditor.Editor
         /// <summary>
         /// Utility window used to save or rename a <see cref="ColorPalette"/>.
         /// </summary>
-        public class SaveRenameColorPaletteWindow : EditorWindow
-        {
+        public class SaveRenameColorPaletteWindow : EditorWindow {
             /// <summary>
             /// Creates and shows a new <see cref="SaveRenameColorPaletteWindow"/> instance,
             /// used to save or rename a color palette in the project.
@@ -5078,8 +4894,7 @@ namespace EnhancedEditor.Editor
             /// <param name="_palette"><see cref="ColorPalette"/> to save or rename.</param>
             /// <param name="_doRename">If true, the palette will be renamed instead of saved in the database.</param>
             /// <returns><see cref="SaveRenameColorPaletteWindow"/> instance on screen.</returns>
-            public static SaveRenameColorPaletteWindow GetWindow(ColorPalette _palette, bool _doRename = false)
-            {
+            public static SaveRenameColorPaletteWindow GetWindow(ColorPalette _palette, bool _doRename = false) {
                 string _title = _doRename
                               ? "Rename Color Palette"
                               : "Save Color Palette";
@@ -5116,8 +4931,7 @@ namespace EnhancedEditor.Editor
 
             // -----------------------
 
-            private void OnGUI()
-            {
+            private void OnGUI() {
                 Undo.RecordObject(this, UndoRecordTitle);
 
                 // Palette name.
@@ -5133,35 +4947,25 @@ namespace EnhancedEditor.Editor
                 GUILayout.Space(3f);
 
                 // Invalid name mangement.
-                if (string.IsNullOrEmpty(_value))
-                {
+                if (string.IsNullOrEmpty(_value)) {
                     DrawHelpBox(EmptyNameMessage, UnityEditor.MessageType.Error);
-                }
-                else if (Array.Exists(ColorPaletteDatabase.Palettes, (p) => p.Name == _value))
-                {
+                } else if (Array.Exists(ColorPaletteDatabase.Palettes, (p) => p.Name == _value)) {
                     DrawHelpBox(ExistingPaletteMessage, UnityEditor.MessageType.Info);
-                }
-                else
-                {
+                } else {
                     // Save palette button.
                     DrawTooltipHelpBox();
 
-                    _position = new Rect()
-                    {
+                    _position = new Rect() {
                         x = position.width - 55f,
                         y = _position.y + _position.height + 10f,
                         width = 50f,
                         height = 25f
                     };
 
-                    if (GUI.Button(_position, savePaletteGUI))
-                    {
-                        if (doRename)
-                        {
+                    if (GUI.Button(_position, savePaletteGUI)) {
+                        if (doRename) {
                             colorPalette.Name = paletteName;
-                        }
-                        else
-                        {
+                        } else {
                             ColorPaletteDatabase.SavePalette(colorPalette, paletteName);
                         }
 
@@ -5171,8 +4975,7 @@ namespace EnhancedEditor.Editor
 
                 // ----- Local Methods ----- \\
 
-                void DrawHelpBox(string _message, UnityEditor.MessageType _messageType)
-                {
+                void DrawHelpBox(string _message, UnityEditor.MessageType _messageType) {
                     Rect _temp = new Rect()
                     {
                         x = 5f,
@@ -5184,8 +4987,7 @@ namespace EnhancedEditor.Editor
                     EditorGUI.HelpBox(_temp, _message, _messageType);
                 }
 
-                void DrawTooltipHelpBox()
-                {
+                void DrawTooltipHelpBox() {
                     Rect _temp = new Rect()
                     {
                         x = 5f,

@@ -429,7 +429,7 @@ namespace EnhancedEditor.Editor
                 _newShape = Undo.AddComponent((target as Component).gameObject, _newType);
             }
 
-            EditorUtility.CopySerialized(target, _newShape);
+            EnhancedUtility.CopyObjectContent(target, _newShape);
 
             Undo.DestroyObjectImmediate(target);
 

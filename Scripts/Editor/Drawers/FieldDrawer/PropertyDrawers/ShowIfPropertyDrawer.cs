@@ -19,7 +19,7 @@ namespace EnhancedEditor.Editor
         public override bool OnBeforeGUI(Rect _position, SerializedProperty _property, GUIContent _label, out float _height)
         {
             ShowIfAttribute _attribute = Attribute as ShowIfAttribute;
-            bool _hide = _attribute.ConditionMember.GetValue(_property.serializedObject, out bool _value) && (_value != _attribute.ConditionType.Get());
+            bool _hide = _attribute.ConditionMember.GetValue(_property, out bool _value) && (_value != _attribute.ConditionType.Get());
 
             _height = 0f;
             return _hide;

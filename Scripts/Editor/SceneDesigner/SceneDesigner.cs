@@ -353,7 +353,7 @@ namespace EnhancedEditor.Editor
         private static string[] folders = new string[] { };
 
         private static Vector2 scroll = new Vector2();
-        private bool hasFocus = false;
+        private new bool hasFocus = false;
 
         // -----------------------
 
