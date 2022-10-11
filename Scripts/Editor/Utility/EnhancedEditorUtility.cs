@@ -32,15 +32,12 @@ namespace EnhancedEditor.Editor {
             AssemblyReloadEvents.afterAssemblyReload += OnAfterAssembliesReload;
 
             #if LOCALIZATION_ENABLED
-            // Default locale setup.
+            // Project locale setup.
             var _settings = EnhancedEditorSettings.Settings.UserSettings;
 
-            if ((LocalizationSettings.SelectedLocale == null) && _settings.autoSetupLocale && (_settings.defaultLocale != null)) {
-                LocalizationSettings.SelectedLocale = _settings.defaultLocale;
-                Debug.Log("Set Locale => " + _settings.defaultLocale.name);
+            if (LocalizationSettings.SelectedLocale == null) {
+                LocalizationSettings.SelectedLocale = LocalizationSettings.ProjectLocale;
             }
-
-            Debug.Log("Init");
             #endif
         }
         #endregion
@@ -207,6 +204,40 @@ namespace EnhancedEditor.Editor {
                 default:
                     break;
             }
+        }
+
+        /// <summary>
+        /// Finds the <see cref="SerializedProperty"/> with a specific name from another source <see cref="SerializedProperty"/>.
+        /// </summary>
+        /// <param name="_sourceProperty">The source <see cref="SerializedProperty"/> to get the other property from.</param>
+        /// <param name="_propertyName">The name of the property to find.</param>
+        /// <param name="_property">The found <see cref="SerializedProperty"/> (null if none)</param>
+        /// <returns>True if the property was successfully found, false otherwise.</returns>
+        public static bool FindSerializedProperty(SerializedProperty _sourceProperty, string _propertyName, out SerializedProperty _property) {
+            SerializedObject _object = _sourceProperty.serializedObject;
+
+            string[] _fullPath = _sourceProperty.propertyPath.Split('.');
+            string _path = string.Empty;
+            int _count = 0;
+
+            while (_count < _fullPath.Length) {
+                _property = _object.FindProperty($"{_path}{_propertyName}");
+
+                if (_property != null) {
+                    return true;
+                }
+
+                if (_count == 0) {
+                    _path = $"{_fullPath[_count]}.";
+                } else {
+                    _path = $"{_path}{_fullPath[_count]}.";
+                }
+
+                _count++;
+            }
+
+            _property = null;
+            return false;
         }
 
         /// <summary>

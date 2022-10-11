@@ -4,7 +4,8 @@
     "references": [
         "EnhancedEditor",
         "Unity.InputSystem",
-        "Unity.Localization"
+        "Unity.Localization",
+        "Unity.Localization.Editor"
     ],
     "includePlatforms": [
         "Editor"

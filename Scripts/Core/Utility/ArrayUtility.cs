@@ -164,6 +164,28 @@ namespace EnhancedEditor
         }
 
         /// <summary>
+        /// Shift an element of an array at a specific index to a new index.
+        /// </summary>
+        /// <param name="_array">The array to shift elements from.</param>
+        /// <param name="_oldIndex">Current index of the element to shift.</param>
+        /// <param name="_newIndex">New destination index of the element to shift.</param>
+        public static void ShiftElement<T>(T[] _array, int _oldIndex, int _newIndex) {
+            if ((_oldIndex == _newIndex) || (_newIndex < 0) || _newIndex >= (_array.Length)) {
+                return;
+            }
+
+            T _element = _array[_oldIndex];
+
+            if (_newIndex < _oldIndex) {
+                Array.Copy(_array, _newIndex, _array, _newIndex + 1, _oldIndex - _newIndex);
+            } else {
+                Array.Copy(_array, _oldIndex + 1, _array, _oldIndex, _newIndex - _oldIndex);
+            }
+
+            _array[_newIndex] = _element;
+        }
+
+        /// <summary>
         /// Assigns a specific value to all elements of an array.
         /// </summary>
         /// <typeparam name="T">Array element type.</typeparam>

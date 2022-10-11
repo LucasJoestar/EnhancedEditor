@@ -120,7 +120,7 @@ namespace EnhancedEditor {
             for (int i = 0; i < _values.Length; i++) {
                 int _value = _values[i];
                 if (Array.FindIndex(Values, (v) => v.First == _value) == -1) {
-                    AddValue(i);
+                    AddValue(_value);
                 }
             }
         }

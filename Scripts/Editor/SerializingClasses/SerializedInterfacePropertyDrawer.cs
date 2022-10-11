@@ -40,7 +40,7 @@ namespace EnhancedEditor.Editor {
                     interfaceInfos.Clear();
                 }
 
-                _interfaceType = EnhancedEditorUtility.GetFieldInfoType(fieldInfo);
+                _interfaceType = EnhancedEditorUtility.GetFieldInfoType(GetFieldInfo(_property));
                 interfaceInfos.Add(_key, _interfaceType);
             }
 
@@ -49,8 +49,7 @@ namespace EnhancedEditor.Editor {
             _position.height = EditorGUIUtility.singleLineHeight;
 
             float _extraHeight = EnhancedEditorGUI.RequiredHelpBox(_position, _label, _gameObjectProperty.objectReferenceValue);
-            Rect _temp = new Rect(_position)
-            {
+            Rect _temp = new Rect(_position) {
                 height = _extraHeight
             };
 

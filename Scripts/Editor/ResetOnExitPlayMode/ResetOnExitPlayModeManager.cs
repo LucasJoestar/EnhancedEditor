@@ -43,7 +43,7 @@ namespace EnhancedEditor.Editor {
 
         [InitializeOnLoadMethod]
         private static void Initialize() {
-            if (EditorApplication.isPlayingOrWillChangePlaymode) {
+            if (EditorApplication.isPlaying) {
                 return;
             }
 

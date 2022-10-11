@@ -19,13 +19,7 @@ namespace EnhancedEditor.Editor
         public override bool OnGUI(Rect _position, SerializedProperty _property, GUIContent _label, out float _height)
         {
             BlockAttribute _attribute = Attribute as BlockAttribute;
-
-            EnhancedEditorGUI.BlockField(_position, _property, _label, _attribute.ShowHeader);
-            _height = EditorGUI.GetPropertyHeight(_property, true);
-
-            if (!_attribute.ShowHeader) {
-                _height -= EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
-            }
+            EnhancedEditorGUI.BlockField(_position, _property, _label, out _height, _attribute.ShowHeader);
 
             return true;
         }

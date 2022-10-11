@@ -76,6 +76,26 @@ namespace EnhancedEditor {
         }
         #endregion
 
+        #region Type
+        /// <summary>
+        /// Checks if an object is compatible with a given type, and cast it if it does.
+        /// </summary>
+        /// <typeparam name="T">The type of the object to check.</typeparam>
+        /// <typeparam name="U">The compatibility type to get the object value.</typeparam>
+        /// <param name="_object">The object to check.</param>
+        /// <param name="_value">The casted object value (if succeeded)</param>
+        /// <returns>True if the object is compatible and was successfully casted, false otherwise.</returns>
+        public static bool IsType<T, U>(T _object, out U _value) {
+            if (_object is U _type) {
+                _value = _type;
+                return true;
+            }
+
+            _value = default;
+            return false;
+        }
+        #endregion
+
         #region Generation
         /// <summary>
         /// Generates a new int GUID.

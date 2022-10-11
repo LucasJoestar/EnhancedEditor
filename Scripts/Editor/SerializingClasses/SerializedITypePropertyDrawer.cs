@@ -32,23 +32,26 @@ namespace EnhancedEditor.Editor {
                     interfaceInfos.Clear();
                 }
 
-                Type _baseType = EnhancedEditorUtility.GetFieldInfoType(fieldInfo);
+                Type _baseType = EnhancedEditorUtility.GetFieldInfoType(GetFieldInfo(_property));
                 List<GUIContent> _temp = new List<GUIContent>();
 
-                if (_property.FindPropertyRelative("canBeBaseType").boolValue) {
-                    AddType(_temp, _baseType);
-                }
+                SerializedTypeConstraint _constraints = (SerializedTypeConstraint)_property.FindPropertyRelative("constraints").intValue;
 
                 // Register all derived types.
                 Assembly[] _assemblies = AppDomain.CurrentDomain.GetAssemblies();
                 foreach (var _assembly in _assemblies) {
                     Type[] _types = _assembly.GetTypes();
+
                     foreach (var _type in _types) {
                         if (!_type.IsDefined(typeof(EtherealAttribute), false) && _type.IsSubclassOf(_baseType)) {
-                            AddType(_temp, _type);
+                            AddType(_temp, _type, _constraints);
                         }
                     }
                 }
+
+                if (_constraints.HasFlag(SerializedTypeConstraint.BaseType)) {
+                    AddType(_temp, _baseType, _constraints);
+                }                
 
                 _selectableTypes = _temp.ToArray();
                 interfaceInfos.Add(_key, _selectableTypes);
@@ -78,8 +81,8 @@ namespace EnhancedEditor.Editor {
 
             // ----- Local Method ----- \\
 
-            void AddType(List<GUIContent> _temp, Type _type) {
-                if (_type.IsAbstract) {
+            void AddType(List<GUIContent> _temp, Type _type, SerializedTypeConstraint _constraints) {
+                if (_type.IsAbstract && !_constraints.HasFlag(SerializedTypeConstraint.Abstract)) {
                     return;
                 }
 

@@ -196,23 +196,25 @@ namespace EnhancedEditor.Editor {
         #endregion
 
         #region Block
-        /// <inheritdoc cref="BlockField(SerializedProperty, GUIContent, GUILayoutOption[])"/>
-        public static void BlockField(SerializedProperty _property, params GUILayoutOption[] _options) {
+        /// <inheritdoc cref="BlockField(SerializedProperty, GUIContent, bool, GUILayoutOption[])"/>
+        public static void BlockField(SerializedProperty _property, bool _showHeader = false, params GUILayoutOption[] _options) {
             GUIContent _label = EnhancedEditorGUIUtility.GetPropertyLabel(_property);
-            BlockField(_property, _label, _options);
+            BlockField(_property, _label, _showHeader, _options);
         }
 
-        /// <inheritdoc cref="BlockField(SerializedProperty, GUIContent, GUILayoutOption[])"/>
-        public static void BlockField(SerializedProperty _property, string _label, params GUILayoutOption[] _options) {
+        /// <inheritdoc cref="BlockField(SerializedProperty, GUIContent, bool, GUILayoutOption[])"/>
+        public static void BlockField(SerializedProperty _property, string _label, bool _showHeader = false, params GUILayoutOption[] _options) {
             GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
-            BlockField(_property, _labelGUI, _options);
+            BlockField(_property, _labelGUI, _showHeader, _options);
         }
 
         /// <param name="_options"><inheritdoc cref="DocumentationMethod(GUILayoutOption[])" path="/param[@name='_options']"/></param>
-        /// <inheritdoc cref="EnhancedEditorGUI.BlockField(Rect, SerializedProperty, GUIContent)"/>
-        public static void BlockField(SerializedProperty _property, GUIContent _label, params GUILayoutOption[] _options) {
-            Rect _position = GetPosition(true, EditorGUI.GetPropertyHeight(_property, true), _options);
-            EnhancedEditorGUI.BlockField(_position, _property, _label);
+        /// <inheritdoc cref="EnhancedEditorGUI.BlockField(Rect, SerializedProperty, GUIContent, out float, bool)"/>
+        public static void BlockField(SerializedProperty _property, GUIContent _label, bool _showHeader = false, params GUILayoutOption[] _options) {
+            Rect _position = GetPosition(true, 0f, _options);
+            EnhancedEditorGUI.BlockField(_position, _property, _label, out float _totalHeight, _showHeader);
+
+            IncrementPosition(_totalHeight);
         }
         #endregion
 
@@ -306,6 +308,29 @@ namespace EnhancedEditor.Editor {
 
             IncrementPosition(_extraHeight);
             return _color;
+        }
+        #endregion
+
+        #region Duo
+        /// <inheritdoc cref="DuoField(SerializedProperty, GUIContent, string, float, GUILayoutOption[])"/>
+        public static void DuoField(SerializedProperty _property, string _secondPropertyName, float _secondPropertyWidth, params GUILayoutOption[] _options) {
+            GUIContent _label = EnhancedEditorGUIUtility.GetPropertyLabel(_property);
+            DuoField(_property, _label, _secondPropertyName, _secondPropertyWidth, _options);
+        }
+
+        /// <inheritdoc cref="DuoField(SerializedProperty, GUIContent, string, float, GUILayoutOption[])"/>
+        public static void DuoField(SerializedProperty _property, string _label, string _secondPropertyName, float _secondPropertyWidth, params GUILayoutOption[] _options) {
+            GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
+            DuoField(_property, _labelGUI, _secondPropertyName, _secondPropertyWidth, _options);
+        }
+
+        /// <param name="_options"><inheritdoc cref="DocumentationMethod(GUILayoutOption[])" path="/param[@name='_options']"/></param>
+        /// <inheritdoc cref="EnhancedEditorGUI.DuoField(Rect, SerializedProperty, GUIContent, string, float, out float)"/>
+        public static void DuoField(SerializedProperty _property, GUIContent _label, string _secondPropertyName, float _secondPropertyWidth, params GUILayoutOption[] _options) {
+            Rect _position = GetPosition(_options);
+            EnhancedEditorGUI.DuoField(_position, _property, _label, _secondPropertyName, _secondPropertyWidth, out float _extraHeight);
+
+            IncrementPosition(_extraHeight);
         }
         #endregion
 

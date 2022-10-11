@@ -7,6 +7,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 
@@ -133,9 +134,12 @@ namespace EnhancedEditor.Editor {
         #endregion
 
         #region GUI Content
-        private static readonly GUIContent propertylabelGUI = new GUIContent(GUIContent.none);
+        private const int PropertyLabelCacheLimit = 100;
+
         private static readonly GUIContent labelGUI = new GUIContent(GUIContent.none);
         private static readonly GUIContent helpBoxGUI = new GUIContent();
+
+        private static readonly Dictionary<string, GUIContent> propertyLabelGUI = new Dictionary<string, GUIContent>();
 
         // -----------------------
 
@@ -145,12 +149,27 @@ namespace EnhancedEditor.Editor {
         /// <param name="_property"><see cref="SerializedProperty"/> to get label from.</param>
         /// <returns>Label associated with the property.</returns>
         public static GUIContent GetPropertyLabel(SerializedProperty _property) {
-            string _name = ObjectNames.NicifyVariableName(_property.name);
+            // Cache label.
+            string _path = _property.propertyPath;
 
-            propertylabelGUI.text = _name;
-            propertylabelGUI.tooltip = _property.tooltip;
+            if (!propertyLabelGUI.TryGetValue(_path, out GUIContent _label)) {
+                DisplayNameAttribute _attribute;
 
-            return propertylabelGUI;
+                // Clear cache.
+                if (propertyLabelGUI.Count > PropertyLabelCacheLimit) {
+                    propertyLabelGUI.Clear();
+                }
+
+                if (EnhancedEditorUtility.FindSerializedPropertyField(_property, out FieldInfo _info) && (_attribute = _info.GetCustomAttribute<DisplayNameAttribute>()) != null) {
+                    _label = new GUIContent(_attribute.Label.text, string.IsNullOrEmpty(_attribute.Label.tooltip) ? _property.tooltip : _attribute.Label.tooltip);
+                } else {
+                    _label = new GUIContent(ObjectNames.NicifyVariableName(_property.name), _property.tooltip);
+                }
+
+                propertyLabelGUI.Add(_path, _label);
+            }
+
+            return _label;
         }
 
         /// <inheritdoc cref="GetLabelGUI(string, string)"/>

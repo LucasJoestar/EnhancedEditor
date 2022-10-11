@@ -17,7 +17,7 @@ namespace EnhancedEditor.Editor {
         #region Drawer Content
         internal protected override float OnEnhancedGUI(Rect _position, SerializedProperty _property, GUIContent _label) {
             // Make sure the target class have at least two generic arguments.
-            Type[] _arguments = fieldInfo.FieldType.GetGenericArguments();
+            Type[] _arguments = GetFieldInfo(_property).FieldType.GetGenericArguments();
 
             if (_arguments.Length < 2) {
                 EditorGUI.PropertyField(_position, _property, _label);
@@ -43,7 +43,9 @@ namespace EnhancedEditor.Editor {
 
                     for (int i = 0; i < _arrayProperty.arraySize; i++) {
                         SerializedProperty _valueProperty = _arrayProperty.GetArrayElementAtIndex(i).FindPropertyRelative("Second");
-                        EditorGUI.PropertyField(_position, _valueProperty, EnhancedEditorGUIUtility.GetLabelGUI(_names[i]));
+
+                        _position.height = EditorGUI.GetPropertyHeight(_valueProperty, true);
+                        EditorGUI.PropertyField(_position, _valueProperty, EnhancedEditorGUIUtility.GetLabelGUI(_names[i]), true);
 
                         // Position increment.
                         IncrementPosition();
@@ -54,7 +56,7 @@ namespace EnhancedEditor.Editor {
             // ----- Local Method ----- \\
 
             void IncrementPosition() {
-                float _spacing = EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
+                float _spacing = _position.height + EditorGUIUtility.standardVerticalSpacing;
 
                 _height += _spacing;
                 _position.y += _spacing;

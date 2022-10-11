@@ -82,13 +82,13 @@ namespace EnhancedEditor.Editor
             string _path = _property.propertyPath;
 
             // Repaint on next frame if not yet initialized.
-            if (!propertyInfos.ContainsKey(_path))
+            if (!propertyInfos.TryGetValue(_path, out PropertyInfos _infos))
             {
                 float _height = GetDefaultHeight(_property, _label);
                 return _height;
             }
 
-            return propertyInfos[_path].Height;
+            return _infos.Height;
         }
 
         public override sealed void OnGUI(Rect _position, SerializedProperty _property, GUIContent _label)
@@ -96,7 +96,7 @@ namespace EnhancedEditor.Editor
             string _path = _property.propertyPath;
 
             // Property initialization.
-            if (!propertyInfos.ContainsKey(_path))
+            if (!propertyInfos.TryGetValue(_path, out PropertyInfos _infos))
             {
                 // Data clear.
                 if (propertyInfos.Count > CacheLimit)
@@ -105,22 +105,16 @@ namespace EnhancedEditor.Editor
                     GC.Collect();
                 }
 
-                PropertyInfos _newInfos = new PropertyInfos(_property, fieldInfo);
-                propertyInfos.Add(_path, _newInfos);
+                _infos = new PropertyInfos(_property, GetFieldInfo(_property));
+                propertyInfos.Add(_path, _infos);
             }
 
             float _yOrigin = _position.y;
             _position.height = EditorGUIUtility.singleLineHeight;
 
             // For some unknown reasons, the property label may be set to an empty string when using certain APIs (like GetPropertyHeight).
-            // To ensure its viability, get it from another reference.
-            GUIContent _tempLabel = EnhancedEditorGUIUtility.GetPropertyLabel(_property);
-            if (_tempLabel.text == _label.text)
-            {
-                _label = _tempLabel;
-            }
-
-            var _infos = propertyInfos[_path];
+            // To ensure its viability, use another reference.
+            _label = new GUIContent(_label);
 
             // Constantly repaint for the drawers who need it.
             if (_infos.RequireConstantRepaint)
@@ -212,10 +206,7 @@ namespace EnhancedEditor.Editor
             void CalculateFullHeight()
             {
                 float _height = _position.y - _yOrigin;
-                if (_height != 0f)
-                {
-                    _height -= EditorGUIUtility.standardVerticalSpacing;
-                }
+                _height -= EditorGUIUtility.standardVerticalSpacing;
 
                 _infos.Height = _height;
             }
@@ -246,6 +237,23 @@ namespace EnhancedEditor.Editor
         internal protected virtual float OnEnhancedGUI(Rect _position, SerializedProperty _property, GUIContent _label)
         {
             return EnhancedEditorGUI.EnhancedPropertyField(_position, _property, _label);
+        }
+        #endregion
+
+        #region Utility
+        /// <summary>
+        /// Get the <see cref="FieldInfo"/> associated with a specific <see cref="SerializedProperty"/>.
+        /// <br/> The <see cref="PropertyDrawer.fieldInfo"/> can be wrong when using the same attribute on multiple fields,
+        /// due to <see cref="PropertyDrawer"/> cache.
+        /// </summary>
+        /// <param name="_property">The <see cref="SerializedProperty"/> to get the associated field info.</param>
+        /// <returns>The <see cref="FieldInfo"/> associated with this property.</returns>
+        public FieldInfo GetFieldInfo(SerializedProperty _property) {
+            if (!EnhancedEditorUtility.FindSerializedPropertyField(_property, out FieldInfo _field)) {
+                _field = fieldInfo;
+            }
+
+            return _field;
         }
         #endregion
     }

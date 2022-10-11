@@ -326,16 +326,16 @@ namespace EnhancedEditor.Editor {
         #endregion
 
         #region Block
-        /// <inheritdoc cref="BlockField(Rect, SerializedProperty, GUIContent, bool)"/>
-        public static void BlockField(Rect _position, SerializedProperty _property, bool _showHeader = false) {
+        /// <inheritdoc cref="BlockField(Rect, SerializedProperty, GUIContent, out float, bool)"/>
+        public static void BlockField(Rect _position, SerializedProperty _property, out float _totalHeight, bool _showHeader = false) {
             GUIContent _label = EnhancedEditorGUIUtility.GetPropertyLabel(_property);
-            BlockField(_position, _property, _label, _showHeader);
+            BlockField(_position, _property, _label, out _totalHeight, _showHeader);
         }
 
-        /// <inheritdoc cref="BlockField(Rect, SerializedProperty, GUIContent, bool)"/>
-        public static void BlockField(Rect _position, SerializedProperty _property, string _label, bool _showHeader = false) {
+        /// <inheritdoc cref="BlockField(Rect, SerializedProperty, GUIContent, out float, bool)"/>
+        public static void BlockField(Rect _position, SerializedProperty _property, string _label, out float _totalHeight, bool _showHeader = false) {
             GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
-            BlockField(_position, _property, _labelGUI, _showHeader);
+            BlockField(_position, _property, _labelGUI, out _totalHeight, _showHeader);
         }
 
         /// <summary>
@@ -344,9 +344,13 @@ namespace EnhancedEditor.Editor {
         /// <param name="_position"><inheritdoc cref="DocumentationMethod(Rect, GUIContent)" path="/param[@name='_position']"/></param>
         /// <param name="_property"><see cref="SerializedProperty"/> to make a block field for.</param>
         /// <param name="_label"><inheritdoc cref="DocumentationMethod(Rect, GUIContent)" path="/param[@name='_label']"/></param>
-        public static void BlockField(Rect _position, SerializedProperty _property, GUIContent _label, bool _showHeader = false) {
+        public static void BlockField(Rect _position, SerializedProperty _property, GUIContent _label, out float _totalHeight, bool _showHeader = false) {
+
             // If the property has no children, simply draw it.
             if (!_property.hasVisibleChildren) {
+                _position.height = _totalHeight
+                                 = EditorGUIUtility.singleLineHeight;
+
                 EditorGUI.PropertyField(_position, _property, _label);
                 return;
             }
@@ -357,14 +361,16 @@ namespace EnhancedEditor.Editor {
             SerializedProperty _next = _property.Copy();
             _next.NextVisible(false);
 
+            float _origin = _position.y;
+
             // Property label header.
             if (_showHeader) {
                 using (var _labelScope = EnhancedGUI.GUIStyleAlignment.Scope(EditorStyles.label, TextAnchor.MiddleLeft)) {
                     _position.height = EditorGUIUtility.singleLineHeight;
                     EditorGUI.LabelField(_position, _label);
-
-                    _position.y += _position.height + EditorGUIUtility.standardVerticalSpacing;
                 }
+            } else {
+                _position.y -= _position.height + EditorGUIUtility.standardVerticalSpacing;
             }
 
             // Expand the property, as it needs to be to properly get its height.
@@ -375,32 +381,30 @@ namespace EnhancedEditor.Editor {
 
             _current.NextVisible(true);
 
-            // If displaying the label, draw each property prefix label left-sided to their value.
+            // Property.
             if (_showHeader) {
-                using (var _labelScope = EnhancedGUI.GUIStyleAlignment.Scope(EditorStyles.label, TextAnchor.MiddleRight))
                 using (var _indentScope = new EditorGUI.IndentLevelScope(1)) {
-                    DrawProperty("   ");
+                    DrawProperty();
                 }
             } else {
-                DrawProperty(string.Empty);
+                DrawProperty();
             }
+
+            _totalHeight = ManageDynamicControlHeight(_property, _position.yMax - _origin);
 
             // ----- Local Method ----- \\
 
-            void DrawProperty(string _additionalText) {
+            void DrawProperty() {
                 do {
                     // Break when getting outside of this property class / struct.
                     if (SerializedProperty.EqualContents(_current, _next))
                         break;
 
+                    _position.y += _position.height + EditorGUIUtility.standardVerticalSpacing;
                     _position.height = EditorGUI.GetPropertyHeight(_current, true);
 
                     _label = EnhancedEditorGUIUtility.GetPropertyLabel(_current);
-                    _label.text += _additionalText;
-
-                    EditorGUI.PropertyField(_position, _current, _label);
-
-                    _position.y += _position.height + EditorGUIUtility.standardVerticalSpacing;
+                    EditorGUI.PropertyField(_position, _current, _label, true);
                 } while (_current.NextVisible(false));
             }
         }
@@ -749,7 +753,7 @@ namespace EnhancedEditor.Editor {
                 _height += EnhancedEditorGUIUtility.ScrollSize;
             }
 
-            return ManageDynamicControlHeight(_label, _height);
+            return ManageDynamicControlHeight(_id, _height);
         }
 
         private static void OpenColorPalettePicker(ColorPalette _palette, int _colorIndex, Action<Color> _callback = null) {
@@ -934,6 +938,81 @@ namespace EnhancedEditor.Editor {
 
             _color = default;
             return false;
+        }
+        #endregion
+
+        #region Duo
+        private const int DuoCacheLimit = 20;
+        private const string DuoGUIFormat = "{0} / {1}";
+
+        private static readonly Dictionary<string, string> duoPropertyCache = new Dictionary<string, string>();
+
+        // -----------------------
+
+        /// <inheritdoc cref="DuoField(Rect, SerializedProperty, GUIContent, string, float, out float)"/>
+        public static void DuoField(Rect _position, SerializedProperty _property, string _secondPropertyName, float _secondPropertyWidth, out float _extraHeight) {
+            GUIContent _label = EnhancedEditorGUIUtility.GetPropertyLabel(_property);
+            DuoField(_position, _property, _label, _secondPropertyName, _secondPropertyWidth, out _extraHeight);
+        }
+
+        /// <inheritdoc cref="DuoField(Rect, SerializedProperty, GUIContent, string, float, out float)"/>
+        public static void DuoField(Rect _position, SerializedProperty _property, string _label, string _secondPropertyName, float _secondPropertyWidth, out float _extraHeight) {
+            GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
+            DuoField(_position, _property, _labelGUI, _secondPropertyName, _secondPropertyWidth, out _extraHeight);
+        }
+
+        /// <summary>
+        /// Retrieves a second <see cref="SerializedProperty"/> from the first one, and draw both of them next to each other.
+        /// </summary>
+        /// <param name="_position"><inheritdoc cref="DocumentationMethod(Rect, GUIContent)" path="/param[@name='_position']"/></param>
+        /// <param name="_property">The first <see cref="SerializedProperty"/> to draw, and used to retrieve the second one.</param>
+        /// <param name="_label">The label to display for this property.</param>
+        /// <param name="_secondPropertyName">The name of the second poperty to retrieve and draw next to the first one.</param>
+        /// <param name="_secondPropertyWidth">The width used to draw the second property (in pixels).</param>
+        /// <param name="_extraHeight"><inheritdoc cref="DocumentationMethodExtra(Rect, ref bool, out float, GUIStyle)" path="/param[@name='_extraHeight']"/></param>
+        public static void DuoField(Rect _position, SerializedProperty _property, GUIContent _label, string _secondPropertyName, float _secondPropertyWidth, out float _extraHeight) {
+            SerializedProperty _secondProperty;
+            string _path = _property.propertyPath;
+
+            // Cache second property full path.
+            if (!duoPropertyCache.TryGetValue(_path, out string _secondPropertyPath)) {
+                // Clear cache.
+                if (duoPropertyCache.Count > DuoCacheLimit) {
+                    duoPropertyCache.Clear();
+                }
+
+                _secondPropertyPath = EnhancedEditorUtility.FindSerializedProperty(_property, _secondPropertyName, out _secondProperty) ? _secondProperty.propertyPath : string.Empty;
+                duoPropertyCache.Add(_path, _secondPropertyPath);
+            } else {
+                _secondProperty = _property.serializedObject.FindProperty(_secondPropertyPath);
+            }
+
+            // Missing property management.
+            if (_secondProperty == null) {
+                EditorGUI.PropertyField(_position, _property, _label);
+                _extraHeight = 0f;
+
+                return;
+            }
+
+            // Prefix label.
+            _label = EnhancedEditorGUIUtility.GetLabelGUI(string.Format(DuoGUIFormat, _label.text, EnhancedEditorGUIUtility.GetPropertyLabel(_secondProperty).text));
+            Rect _temp = EditorGUI.PrefixLabel(_position, _label);
+
+            _temp.width -= _secondPropertyWidth;
+            _temp.height = Mathf.Max(EditorGUI.GetPropertyHeight(_property), EditorGUI.GetPropertyHeight(_secondProperty));
+
+            // Draw both properties.
+            using (ZeroIndentScope()) {
+                EditorGUI.PropertyField(_temp, _property, GUIContent.none);
+
+                _temp.xMin = _temp.xMax + 5f;
+                _temp.xMax = _position.xMax;
+
+                EditorGUI.PropertyField(_temp, _secondProperty, GUIContent.none);
+            }
+
+            _extraHeight = ManageDynamicControlHeight(_property, _temp.height - _position.height);
         }
         #endregion
 
@@ -1226,7 +1305,7 @@ namespace EnhancedEditor.Editor {
 
             Rect _temp = new Rect(_position);
 
-            _extraHeight = ManageDynamicControlHeight(_label, _extraHeight - _position.height);
+            _extraHeight = ManageDynamicControlHeight(_property, _extraHeight - _position.height);
             _position.height += _extraHeight;
 
             // Property field.
@@ -3332,7 +3411,7 @@ namespace EnhancedEditor.Editor {
                 }
 
                 // Finally, register the total property position.
-                _extraHeight = ManageDynamicControlHeight(_label, _temp.yMax - _position.yMax);
+                _extraHeight = ManageDynamicControlHeight(_property, _temp.yMax - _position.yMax);
                 _position.yMax = _temp.yMax;
 
                 using (new EditorGUI.PropertyScope(_position, GUIContent.none, _property)) { }
@@ -4441,7 +4520,7 @@ namespace EnhancedEditor.Editor {
         private static readonly FieldInfo drawerUseForChildren = typeof(CustomPropertyDrawer).GetField("m_UseForChildren", FieldFlags);
         private static readonly FieldInfo drawerFieldInfo =      typeof(PropertyDrawer).GetField("m_FieldInfo", FieldFlags);
 
-        private static readonly Dictionary<Type, EnhancedPropertyEditor> drawers = new Dictionary<Type, EnhancedPropertyEditor>();
+        private static readonly Dictionary<string, EnhancedPropertyEditor> drawers = new Dictionary<string, EnhancedPropertyEditor>();
 
         // -----------------------
 
@@ -4466,11 +4545,12 @@ namespace EnhancedEditor.Editor {
         /// <param name="_includeChildren">If true the property including children is drawn; otherwise only the control itself (such as only a foldout but nothing below it).</param>
         /// <returns><inheritdoc cref="DocumentationMethodTotal(Rect, out float)" path="/param[@name='_totalHeight']"/></returns>
         public static float EnhancedPropertyField(Rect _position, SerializedProperty _property, GUIContent _label, bool _includeChildren = true) {
-            Type _type = EnhancedEditorUtility.GetSerializedPropertyType(_property);
-            EnhancedPropertyEditor _editor = null;
+            string _path = _property.propertyPath;
 
-            if ((_type != null) && !drawers.TryGetValue(_type, out _editor)) {
-                if (EnhancedEditorUtility.FindSerializedPropertyField(_property, out FieldInfo _field)) {
+            if (!drawers.TryGetValue(_path, out EnhancedPropertyEditor _editor)) {
+                Type _type = EnhancedEditorUtility.GetSerializedPropertyType(_property);
+
+                if ((_type != null) && EnhancedEditorUtility.FindSerializedPropertyField(_property, out FieldInfo _field)) {
                     // Get all custom drawers in the project, and retrieve the one with the closest type from the editing property.
                     var _drawers = TypeCache.GetTypesWithAttribute<CustomPropertyDrawer>();
                     Pair<Type, Type> _bestDrawer = new Pair<Type, Type>(null, null);
@@ -4506,7 +4586,7 @@ namespace EnhancedEditor.Editor {
                     }
                 }
 
-                drawers.Add(_type, _editor);
+                drawers.Add(_path, _editor);
             }
 
             // Draw default editor.
@@ -4514,11 +4594,8 @@ namespace EnhancedEditor.Editor {
                 return _editor.OnEnhancedGUI(_position, _property, _label);
             }
 
-            float _height = _position.height
-                          = EditorGUI.GetPropertyHeight(_property, _label, _includeChildren);
-
             EditorGUI.PropertyField(_position, _property, _label, _includeChildren);
-            return _height;
+            return EditorGUI.GetPropertyHeight(_property, _label, _includeChildren);
         }
         #endregion
 
@@ -4792,18 +4869,20 @@ namespace EnhancedEditor.Editor {
 
         // -----------------------
 
-        internal static Rect InvisiblePrefixLabel(Rect _position, GUIContent _label) {
-            GUIContent _prefixLabel = string.IsNullOrEmpty(_label.text)
-                                    ? GUIContent.none
-                                    : blankLabelGUI;
-
-            _position = EditorGUI.PrefixLabel(_position, _prefixLabel);
-            return _position;
+        internal static float ManageDynamicControlHeight(GUIContent _label, float _height) {
+            // Get control id.
+            int _id = EnhancedEditorGUIUtility.GetControlID(_label, FocusType.Keyboard);
+            return ManageDynamicControlHeight(_id, _height);
         }
 
-        internal static float ManageDynamicControlHeight(GUIContent _label, float _height) {
-            // Get control id and register it.
-            int _id = EnhancedEditorGUIUtility.GetControlID(_label, FocusType.Keyboard);
+        internal static float ManageDynamicControlHeight(SerializedProperty _property, float _height) {
+            // Get property id.
+            int _id = _property.propertyPath.GetHashCode();
+            return ManageDynamicControlHeight(_id, _height);
+        }
+
+        internal static float ManageDynamicControlHeight(int _id, float _height) {
+            // Id registration
             if (!dynamicGUIControlHeight.ContainsKey(_id)) {
                 dynamicGUIControlHeight.Add(_id, _height);
             }
@@ -4820,6 +4899,17 @@ namespace EnhancedEditor.Editor {
 
             // Get saved control height.
             return dynamicGUIControlHeight[_id];
+        }
+
+        // -----------------------
+
+        internal static Rect InvisiblePrefixLabel(Rect _position, GUIContent _label) {
+            GUIContent _prefixLabel = string.IsNullOrEmpty(_label.text)
+                                    ? GUIContent.none
+                                    : blankLabelGUI;
+
+            _position = EditorGUI.PrefixLabel(_position, _prefixLabel);
+            return _position;
         }
 
         private static Rect DrawFoldout(Rect _position, ref bool _foldout) {
@@ -4847,7 +4937,7 @@ namespace EnhancedEditor.Editor {
             return _temp;
         }
 
-        internal static EditorGUI.IndentLevelScope ZeroIndentScope() {
+        public static EditorGUI.IndentLevelScope ZeroIndentScope() {
             int _indentLevel = EditorGUI.indentLevel;
             var _scope = new EditorGUI.IndentLevelScope(-_indentLevel);
 

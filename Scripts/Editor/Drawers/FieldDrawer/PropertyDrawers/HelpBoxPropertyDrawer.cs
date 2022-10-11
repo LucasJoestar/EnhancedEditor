@@ -18,18 +18,18 @@ namespace EnhancedEditor.Editor
         #region Drawer Content
         public override bool OnBeforeGUI(Rect _position, SerializedProperty _property, GUIContent _label, out float _height)
         {
-            _height = DrawHelpBox(_position, true);
+            _height = DrawHelpBox(_position, _property, true);
             return false;
         }
 
         public override void OnAfterGUI(Rect _position, SerializedProperty _property, GUIContent _label, out float _height)
         {
-            _height = DrawHelpBox(_position, false);
+            _height = DrawHelpBox(_position, _property, false);
         }
 
         // -----------------------
 
-        private float DrawHelpBox(Rect _position, bool _isAbove)
+        private float DrawHelpBox(Rect _position, SerializedProperty _property, bool _isAbove)
         {
             HelpBoxAttribute _attribute = Attribute as HelpBoxAttribute;
             if (_isAbove != _attribute.IsAbove)
@@ -41,7 +41,7 @@ namespace EnhancedEditor.Editor
 
             float _height = EnhancedEditorGUIUtility.GetHelpBoxHeight(_message, _messageType, _position.width);
             _position.height = _height
-                             = EnhancedEditorGUI.ManageDynamicControlHeight(_attribute.Label, _height);
+                             = EnhancedEditorGUI.ManageDynamicControlHeight(_property, _height);
             
             EditorGUI.HelpBox(_position, _message, _messageType);
             return _height;
