@@ -11,179 +11,116 @@
 #endif
 
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 
-#if ENABLE_INPUT_SYSTEM
-using UnityEngine.InputSystem;
-#endif
+using SettingDelegate = System.Action;
 
-namespace EnhancedEditor.Editor
-{
+namespace EnhancedEditor.Editor {
+    /// <summary>
+    /// <see cref="EnhancedEditorSettings"/>-related project settings base class.
+    /// <br/> Inherit from this to create your own project settings.
+    /// </summary>
+    [Serializable]
+    public abstract class EnhancedEditorProjectSetting {
+        #region Global Members
+        /// <summary>
+        /// The unique identifier of this setting.
+        /// </summary>
+        public int GUID = 0;
+
+        // -----------------------
+
+        public EnhancedEditorProjectSetting(int _guid) {
+            GUID = _guid;
+        }
+        #endregion
+    }
+
+    /// <summary>
+    /// <see cref="EnhancedEditorProjectSetting"/> for a simple <see cref="bool"/>.
+    /// </summary>
+    [Serializable]
+    public class BooleanProjectSetting : EnhancedEditorProjectSetting {
+        #region Global Members
+        /// <summary>
+        /// This setting value.
+        /// </summary>
+        public bool Value =true;
+
+        // -----------------------
+
+        /// <inheritdoc cref="BooleanProjectSetting"/>
+        public BooleanProjectSetting(int _guid, bool _value) : base(_guid) {
+            Value = _value;
+        }
+        #endregion
+    }
+
+    /// <summary>
+    /// <see cref="EnhancedEditorProjectSetting"/> for a folder path.
+    /// </summary>
+    [Serializable]
+    public class FolderProjectSetting : EnhancedEditorProjectSetting {
+        #region Global Members
+        /// <summary>
+        /// Default folder value.
+        /// </summary>
+        public string DefaultValue = string.Empty;
+
+        /// <summary>
+        /// If true, restricts this folder to this project only.
+        /// </summary>
+        public bool InProjectOnly = true;
+
+        /// <summary>
+        /// This folder value.
+        /// </summary>
+        public string Folder = string.Empty;
+
+        // -----------------------
+
+        /// <inheritdoc cref="FolderProjectSetting"/>
+        public FolderProjectSetting(int _guid, string _defaultValue, bool _inProjectOnly) : base(_guid) {
+            DefaultValue = _defaultValue;
+            InProjectOnly = _inProjectOnly;
+
+            Folder = _defaultValue;
+        }
+        #endregion
+    }
+
     /// <summary>
     /// <see cref="EnhancedEditor"/>-related preferences settings.
     /// <para/>
     /// Note that these settings should not be called from a <see cref="ScriptableObject"/> constructor, due to Unity preferences limitations.
     /// </summary>
-    [NonEditable("Please use the Preferences window to edit these settings.")]
-	public class EnhancedEditorSettings : ScriptableObject
-    {
-        #region Settings Data
-        public const string AutoManagedResourceDefaultDirectory = "EnhancedEditor/AutoManagedResources";
-        public const string InstanceTrackerDefaultDirectory = "EnhancedEditor/Editor/InstanceTrackers";
-        public const string ScriptTemplateDefaultDirectory = "EnhancedEditor/Editor/ScriptTemplates";
-        public const int AutosaveDefaultInterval = 300;
-
-        public static string BuildDefaultDirectory
-        {
-            get
-            {
-                string _directory = Path.Combine(Path.GetDirectoryName(Application.dataPath), "Builds");
-                return _directory.Replace(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-            }
+    [NonEditable("Please use the Preferences/Project Settings windows to edit these settings.")]
+    #pragma warning disable IDE0051
+    public class EnhancedEditorSettings : ScriptableObject {
+        #region Styles
+        private static class Styles {
+            public static readonly GUIContent PreferencesButtonGUI = new GUIContent(EditorGUIUtility.FindTexture("d_Settings"), "Opens the EnhancedEditor user preferences.");
+            public static readonly GUIContent ProjectSettingsButtonGUI = new GUIContent(EditorGUIUtility.FindTexture("d_Settings"), "Opens the EnhancedEditor project settings.");
         }
-
-        /// <summary>
-        /// User-dependant <see cref="EnhancedEditor"/> settings.
-        /// </summary>
-        [Serializable]
-        public class EditorUserSettings
-        {
-            [NonSerialized] internal bool isInitialized = false;
-
-            [SerializeField] private string buildDirectory = string.Empty;
-
-            /// <summary>
-            /// The directory where to build and look for existing builds of the game from the <see cref="BuildPipelineWindow"/>.
-            /// </summary>
-            public string BuildDirectory
-            {
-                get
-                {
-                    if (string.IsNullOrEmpty(buildDirectory))
-                    {
-                        buildDirectory = BuildDefaultDirectory;
-                    }
-
-                    return buildDirectory;
-                }
-                set
-                {
-                    buildDirectory = value;
-                }
-            }
-
-            /// <summary>
-            /// Time interval (in seconds) between two autosave.
-            /// <br/> Autosave can be toggled from the main editor toolbar.
-            /// </summary>
-            [SerializeField] public int AutosaveInterval = AutosaveDefaultInterval;
-
-            /// <summary>
-            /// All folders used to select objects to place in the scene using the <see cref="SceneDesigner"/>.
-            /// </summary>
-            [SerializeField, Enhanced, Folder] public string[] SceneDesignerFolders = new string[] { };
-
-            #if ENABLE_INPUT_SYSTEM
-            // Chronos-related inputs.
-            [SerializeField] internal InputAction increaseTimeScale = new InputAction();
-            [SerializeField] internal InputAction resetTimeScale = new InputAction();
-            [SerializeField] internal InputAction decreaseTimeScale = new InputAction();
-            #endif
-        }
-
-        // -----------------------
-
-        /// <inheritdoc cref="EditorUserSettings"/>
-        [SerializeField] private EditorUserSettings userSettings = new EditorUserSettings();
-
-        /// <inheritdoc cref="userSettings"/>
-        public EditorUserSettings UserSettings
-        {
-            get
-            {
-                if (!userSettings.isInitialized)
-                {
-                    // Load and initialize settings.
-                    string _data = EditorPrefs.GetString(PrefsKey, string.Empty);
-                    if (!string.IsNullOrEmpty(_data))
-                    {
-                        JsonUtility.FromJsonOverwrite(_data, userSettings);
-                    }
-                    else
-                    {
-                        userSettings = new EditorUserSettings();
-
-                        #if ENABLE_INPUT_SYSTEM
-                        if (Keyboard.current != null)
-                        {
-                            userSettings.increaseTimeScale.AddBinding(Keyboard.current.numpadPlusKey);
-                            userSettings.resetTimeScale.AddBinding(Keyboard.current.numpadMultiplyKey);
-                            userSettings.decreaseTimeScale.AddBinding(Keyboard.current.numpadMinusKey);
-                        }
-                        #endif
-                    }
-
-                    if (string.IsNullOrEmpty(userSettings.BuildDirectory))
-                    {
-                        userSettings.BuildDirectory = BuildDefaultDirectory;
-                    }
-
-                    userSettings.isInitialized = true;
-                }
-
-
-                return userSettings;
-            }
-        }
-
-        /// <summary>
-        /// The directory in the project where are created all auto-managed resources.
-        /// </summary>
-        public string AutoManagedResourceDirectory = AutoManagedResourceDefaultDirectory;
-
-        /// <summary>
-        /// The directory in the project where are created all instance trackers (must be in an Editor folder).
-        /// </summary>
-        public string InstanceTrackerDirectory = InstanceTrackerDefaultDirectory;
-
-        /// <summary>
-        /// The directory in the project where are stored all script templates.
-        /// </summary>
-        public string ScriptTemplateDirectory = ScriptTemplateDefaultDirectory;
-
-        /// <summary>
-        /// The core scene to load when entering play mode.
-        /// <br/> Works only in editor.
-        /// </summary>
-        public SceneAsset CoreScene = new SceneAsset();
-
-        /// <summary>
-        /// Indicates whether the core scene is enabled and should be loaded when entering play mode.
-        /// </summary>
-        public bool IsCoreSceneEnabled = false;
         #endregion
 
-        #region Behaviour
-        private const double SaveInterval = 2d;
+        #region Global Members
         private const string DefaultSettingsDirectory = "EnhancedEditor/Editor/Settings/";
 
-        private static string PrefsKey => $"{Application.productName}_EnhancedEditorPreferences";
-
         private static EnhancedEditorSettings settings = null;
-        private static double lastSaveTime = 0d;
 
         /// <inheritdoc cref="EnhancedEditorSettings"/>
-        public static EnhancedEditorSettings Settings
-        {
-            get
-            {
-                if ((settings == null) && !EnhancedEditorUtility.LoadMainAsset(out settings))
-                {
+        public static EnhancedEditorSettings Settings {
+            get {
+                if ((settings == null) && !EnhancedEditorUtility.LoadMainAsset(out settings)) {
                     string _path = Path.Combine(Application.dataPath, DefaultSettingsDirectory);
-                    if (!Directory.Exists(_path))
+                    if (!Directory.Exists(_path)) {
                         Directory.CreateDirectory(_path);
+                    }
 
                     _path = Path.Combine("Assets", DefaultSettingsDirectory, $"EnhancedEditorSettings.asset");
                     settings = CreateInstance<EnhancedEditorSettings>();
@@ -196,115 +133,73 @@ namespace EnhancedEditor.Editor
             }
         }
 
-        // -----------------------
-
-        private void OnValidate()
-        {
-            double _time = EditorApplication.timeSinceStartup;
-            if (((_time - lastSaveTime) > SaveInterval) && !EditorApplication.isPlayingOrWillChangePlaymode && !EditorApplication.isCompiling && !EnhancedEditorUtility.isReloadingAssemblies)
-            {
-                SaveSettings();
-            }
-        }
-
-        public void SaveSettings()
-        {
-            string _allDatas = JsonUtility.ToJson(this);
-            if (SessionState.GetString(PrefsKey, string.Empty) == _allDatas)
-                return;
-
-            SessionState.SetString(PrefsKey, _allDatas);
-
-            // Use EditorPrefs for user-dependant settings.
-            string _data = JsonUtility.ToJson(UserSettings);
-            EditorPrefs.SetString(PrefsKey, _data);
-
-            EditorAutosave.SetSaveInterval(userSettings.AutosaveInterval);
-
-            #if ENABLE_INPUT_SYSTEM
-            // Save chronos inputs.
-            PlayerPrefs.SetString(Chronos.IncreaseInputKey, JsonUtility.ToJson(userSettings.increaseTimeScale));
-            PlayerPrefs.SetString(Chronos.ResetInputKey, JsonUtility.ToJson(userSettings.resetTimeScale));
-            PlayerPrefs.SetString(Chronos.DecreaseInputKey, JsonUtility.ToJson(userSettings.decreaseTimeScale));
-            #endif
-
-            lastSaveTime = EditorApplication.timeSinceStartup;
-            userSettings = new EditorUserSettings();
-
-            EnhancedEditorUtility.SaveAsset(this);
-        }
+        [SerializeReference] private EnhancedEditorProjectSetting[] projectSettings = new EnhancedEditorProjectSetting[] { };
         #endregion
 
-        #region Settings Provider
-        public const string PreferencesPath = "Preferences/EnhancedEditor";
-        public const string PreferencesLabel = "Enhanced Editor";
-        public static readonly string[] Keywords = new string[]
-                                                        {
-                                                            "Enhanced",
-                                                            "Editor",
-                                                            "Build Pipeline",
-                                                            "Resource",
-                                                            "Instance Tracker",
-                                                            "Autosave"
-                                                        };
+        #region Settings Utility
+        /// <summary>
+        /// Get the setting associated with a specific guid.
+        /// </summary>
+        /// <param name="_guid">The guid to get the associated setting.</param>
+        /// <param name="_setting">The setting associated with the guid.</param>
+        /// <returns>True if the associated setting could be found, false otherwise.</returns>
+        public bool GetProjectSetting<T>(int _guid, out T _setting) where T : EnhancedEditorProjectSetting {
+            int _index = Array.FindIndex(projectSettings, s => s.GUID == _guid);
 
-        // -----------------------
+            if ((_index != -1) && (projectSettings[_index] is T _temp)) {
+                _setting = _temp;
+                return true;
+            }
 
-        [SettingsProvider]
-        #pragma warning disable IDE0051
-        private static SettingsProvider CreateSettingsProvider()
-        {
-            SettingsProvider _provider = new SettingsProvider(PreferencesPath, SettingsScope.User)
-            {
-                label = PreferencesLabel,
-                keywords = Keywords,
-                
-                guiHandler = (string _searchContext) =>
-                {
-                    GUILayout.Space(10f);
+            _setting = null;
+            return false;
+        }
 
-                    EnhancedEditorSettings _settings = Settings;
-                    DrawPreferences(_settings);
-                },
-            };
-
-            return _provider;
+        /// <summary>
+        /// Adds a new project setting to these settings.
+        /// </summary>
+        /// <param name="_setting">The new project setting to add.</param>
+        public void AddProjectSetting(EnhancedEditorProjectSetting _setting) {
+            ArrayUtility.Add(ref projectSettings, _setting);
         }
         #endregion
 
         #region Menu Navigation
-        private static readonly GUIContent toolbarButtonGUI = new GUIContent(string.Empty, "Opens the EnhancedEditor preferences settings.");
+        public const string MenuPath = InternalUtility.MenuItemPath + "Settings/";
 
         // -----------------------
 
         /// <summary>
         /// Opens the Preferences window with the <see cref="EnhancedEditor"/> settings already selected.
         /// </summary>
-        [MenuItem(InternalUtility.MenuItemPath + "Preferences", false, -50), Button(SuperColor.Green, IsDrawnOnTop = false)]
-        public static EditorWindow OpenPreferencesSettings()
-        {
+        [MenuItem(MenuPath + "Preferences", false, -50), Button(SuperColor.Green, IsDrawnOnTop = false)]
+        public static EditorWindow OpenPreferences() {
             EditorWindow _preferences = SettingsService.OpenUserPreferences(PreferencesPath);
             return _preferences;
+        }
+
+        /// <summary>
+        /// Opens the Project Settings window with the <see cref="EnhancedEditor"/> settings already selected.
+        /// </summary>
+        [MenuItem(MenuPath + "Project Settings", false, -50), Button(SuperColor.Green, IsDrawnOnTop = false)]
+        public static EditorWindow OpenProjectSettings() {
+            EditorWindow _projectSettings = SettingsService.OpenProjectSettings(ProjectSettingsPath);
+            return _projectSettings;
         }
 
         /// <summary>
         /// Main editor toolbar extension used to open the <see cref="EnhancedEditor"/> preferences settings.
         /// </summary>
         [EditorToolbarRightExtension(Order = 500)]
-        #pragma warning disable IDE0051
-        private static void OpenPreferencesToolbarExtension()
-        {
-            LoadIcon();
-
+        private static void OpenPreferencesToolbarExtension() {
             #if SCENEVIEW_TOOLBAR
             GUILayout.Space(10f);
             #elif EDITOR_TOOLBAR
             GUILayout.FlexibleSpace();
             #endif
 
-            if (EnhancedEditorToolbar.Button(toolbarButtonGUI, GUILayout.Width(32f)))
-            {
-                OpenPreferencesSettings();
+            if (EnhancedEditorToolbar.Button(Styles.PreferencesButtonGUI, GUILayout.Width(32f))) {
+                OpenPreferences();
             }
 
             #if EDITOR_TOOLBAR
@@ -314,191 +209,116 @@ namespace EnhancedEditor.Editor
 
         // -----------------------
 
-        public static void DrawPreferencesButton(Rect _position)
-        {
-            LoadIcon();
-
-            if (EnhancedEditorGUI.IconButton(_position, toolbarButtonGUI))
-            {
-                OpenPreferencesSettings();
+        /// <summary>
+        /// Draws a button to open the Enhanced Editor preferences window.
+        /// </summary>
+        public static void DrawPreferencesButton(Rect _position) {
+            if (EnhancedEditorGUI.IconButton(_position, Styles.PreferencesButtonGUI)) {
+                OpenPreferences();
             }
         }
 
-        private static void LoadIcon()
-        {
-            if (toolbarButtonGUI.image == null)
-                toolbarButtonGUI.image = EditorGUIUtility.FindTexture("d_Settings");
+        /// <summary>
+        /// Draws a button to open the Enhanced Editor project settings window.
+        /// </summary>
+        public static void DrawProjectSettingsButton(Rect _position) {
+            if (EnhancedEditorGUI.IconButton(_position, Styles.ProjectSettingsButtonGUI)) {
+                OpenPreferences();
+            }
+        }
+        #endregion
+
+        #region Settings Providers
+        public const string ProjectSettingsPath = "Project/Enhanced Editor";
+        public const string PreferencesPath = "Preferences/Enhanced Editor";
+
+        public const string ProjectSettingsLabel = "Enhanced Editor";
+        public const string PreferencesGlobalLabel = "Enhanced Editor";
+
+        public static readonly string[] PreferencesKeywords = new string[] {
+                                                                "Enhanced",
+                                                                "Editor",
+                                                                "Autosave",
+                                                                "Build Pipeline",
+                                                                "Chronos",
+                                                                "Scene Designer",
+                                                            };
+
+
+        public static readonly string[] ProjectSettingsKeywords = new string[] {
+                                                                    "Enhanced",
+                                                                    "Editor",
+                                                                    "Core Scene",
+                                                                    "Resource",
+                                                                    "Instance Tracker",
+                                                                    "Script Template",
+                                                                };
+
+        // -----------------------
+
+        [SettingsProvider]
+        private static SettingsProvider CreateUserSettingsProvider() {
+            SettingsProvider _provider = new SettingsProvider(PreferencesPath, SettingsScope.User) {
+                label = PreferencesGlobalLabel,
+                keywords = PreferencesKeywords,
+
+                guiHandler = (string _searchContext) => {
+                    GUILayout.Space(10f);
+                    DrawUserPreferences();
+                },
+            };
+
+            return _provider;
+        }
+
+        [SettingsProvider]
+        private static SettingsProvider CreateProjectSettingsProvider() {
+            SettingsProvider _provider = new SettingsProvider(ProjectSettingsPath, SettingsScope.Project) {
+                label = ProjectSettingsLabel,
+                keywords = ProjectSettingsKeywords,
+
+                guiHandler = (string _searchContext) => {
+                    GUILayout.Space(10f);
+                    DrawProjectSettings();
+                },
+            };
+
+            return _provider;
         }
         #endregion
 
         #region GUI Draw
-        private const string UndoRecordTitle = "EnhancedEditor Settings Change";
+        public const string ProjectSettingsRecordTitle = "EnhancedEditor Settings Change";
+        public const string EditorPrefsPath = "EnhancedEditor/";
 
-        private const string AutoManagedResourceDirectoryPanelTitle = "Auto-Managed Resources Default Directory";
-        private const string InstanceTrackerDirectoryPanelTitle = "Instance Trackers Directory";
-        private const string ScriptTemplateDirectoryPanelTitle = "Script Templates Directory";
-        private const string BuildDirectoryPanelTitle = "Build Directory";
+        private static List<SettingDelegate> preferencesDrawers = new List<SettingDelegate>();
+        private static List<SettingDelegate> projectSettingsDrawers = new List<SettingDelegate>();
 
-        private const string CoreSceneMessage = "The Core Scene system allows to always load a specific scene first when entering play mode in the editor.";
-
-        private static readonly GUIContent localHeaderGUI = new GUIContent("User Settings:", "User-dependant settings.");
-        private static readonly GUIContent globalHeaderGUI = new GUIContent("Global Settings:", "Project global settings, shared between users.");
-        private static readonly GUIContent coreSceneHeaderGUI = new GUIContent("Core Scene System", "Settings related to the Core Scene system.");
-        private static readonly GUIContent chronosHeaderGUI = new GUIContent("Chronos Runtime Inputs", "Input shortcuts related to the chronos tool.");
         private static readonly GUIContent shortcutsGUI = new GUIContent("Editor Shortcuts", "Edit all Enhanced Editor-related editor shortcuts.");
 
-        private static readonly GUIContent autoManagedResourceDirectoryGUI = new GUIContent("Managed Resource Dir.",
-                                                                                            "Directory in the project where are created all auto-managed resources.");
-
-        private static readonly GUIContent instanceTrackerDirectoryGUI = new GUIContent("Instance Tracker Dir.",
-                                                                                        "Directory in the project where are created all instance trackers.");
-
-        private static readonly GUIContent scriptTemplateDirectoryGUI = new GUIContent("Script Template Dir.",
-                                                                                       "Directory in the project where are stored all script templates.");
-
-        private static readonly GUIContent buildDirectoryGUI = new GUIContent("Build Directory",
-                                                                              "Directory where to build and look for existing builds of the game from the BuildPipelineWindow.");
-
-        private static readonly GUIContent autosaveIntervalGUI = new GUIContent("Autosave Interval",
-                                                                                "Time interval (in seconds) between two autosave. Autosave can be toggled from the main editor toolbar.");
-
-        private static readonly GUIContent sceneDesignerFoldersGUI = new GUIContent("Scene Designer Folders",
-                                                                                    "All folders displayed to select objects to place in the scene using the Scene Designer.");
-
-        private static readonly GUIContent increaseTimeScaleGUI = new GUIContent("Increase Time Scale", "Input used to increase the game time scale at runtime.");
-        private static readonly GUIContent resetTimeScaleGUI = new GUIContent("Reset Time Scale", "Input used to reset the game time scale at runtime.");
-        private static readonly GUIContent decreaseTimeScaleGUI = new GUIContent("Decrease Time Scale", "Input used to decrease the game time scale at runtime.");
-
-        private static readonly GUIContent coreSceneGUI = new GUIContent("Core Scene", "The core scene to load when entering play mode.");
-        private static readonly GUIContent isCoreSceneEnabledGUI = new GUIContent("Enabled", "Enables / Disables to core scene system.");
-
         // -----------------------
 
-        private static SerializedObject serializedObject = null;
+        public static void DrawUserPreferences() {
+            // Load drawers.
+            GetDelegates<EnhancedEditorPreferencesAttribute>(preferencesDrawers);
 
-        private static SerializedProperty buildDirectoryProperty = null;
-        private static SerializedProperty autosaveIntervalProperty = null;
-        private static SerializedProperty sceneDesignerFoldersProperty = null;
+            // Draw preferences.
+            using (var _scope = new GUILayout.HorizontalScope()) {
+                GUILayout.Space(10f);
 
-        #if ENABLE_INPUT_SYSTEM
-        private static SerializedProperty increaseTimeScaleProperty = null;
-        private static SerializedProperty resetTimeScaleProperty = null;
-        private static SerializedProperty decreaseTimeScaleProperty = null;
-        #endif
-
-        private static SerializedProperty autoManagedResourceDirectoryProperty = null;
-        private static SerializedProperty instanceTrackerDirectoryProperty = null;
-        private static SerializedProperty scriptTemplateDirectoryProperty = null;
-        private static SerializedProperty coreSceneProperty = null;
-        private static SerializedProperty coreSceneGUIDProperty = null;
-        private static SerializedProperty isCoreSceneEnabledProperty = null;
-
-        // -----------------------
-
-        private static void DrawPreferences(EnhancedEditorSettings _settings)
-        {
-            if ((serializedObject == null) || (!_settings.userSettings.isInitialized)) {
-                var _loadUserSettings = _settings.UserSettings;
-
-                serializedObject = new SerializedObject(settings);
-                SerializedProperty _userSettings = serializedObject.FindProperty("userSettings");
-
-                buildDirectoryProperty = _userSettings.FindPropertyRelative("buildDirectory");
-                autosaveIntervalProperty = _userSettings.FindPropertyRelative("AutosaveInterval");
-                sceneDesignerFoldersProperty = _userSettings.FindPropertyRelative("SceneDesignerFolders");
-
-                #if ENABLE_INPUT_SYSTEM
-                increaseTimeScaleProperty = _userSettings.FindPropertyRelative("increaseTimeScale");
-                resetTimeScaleProperty = _userSettings.FindPropertyRelative("resetTimeScale");
-                decreaseTimeScaleProperty = _userSettings.FindPropertyRelative("decreaseTimeScale");
-                #endif
-
-                autoManagedResourceDirectoryProperty = serializedObject.FindProperty("AutoManagedResourceDirectory");
-                instanceTrackerDirectoryProperty = serializedObject.FindProperty("InstanceTrackerDirectory");
-                scriptTemplateDirectoryProperty = serializedObject.FindProperty("ScriptTemplateDirectory");
-                coreSceneProperty = serializedObject.FindProperty("CoreScene");
-                coreSceneGUIDProperty = coreSceneProperty.FindPropertyRelative("guid");
-                isCoreSceneEnabledProperty = serializedObject.FindProperty("IsCoreSceneEnabled");
-            }
-
-            Undo.RecordObject(_settings, UndoRecordTitle);
-
-            using (var _scope = new GUILayout.HorizontalScope())
-            {
-                GUILayout.Space(7f);
-                using (var _verticalScope = new GUILayout.VerticalScope())
-                using (var _changeCheck = new EditorGUI.ChangeCheckScope())
-                {
-                    DrawUserSettings();
-
-                    GUILayout.Space(15f);
-                    DrawGlobalSettings();
-
-                    // Save on any change.
-                    if (_changeCheck.changed)
-                    {
-                        serializedObject.ApplyModifiedProperties();
-                        settings.SaveSettings();
+                using (var _verticalScope = new GUILayout.VerticalScope()) {
+                    foreach (SettingDelegate _delegate in preferencesDrawers) {
+                        _delegate();
                     }
-                }
-            }
-        }
-
-        private static void DrawUserSettings()
-        {
-            EnhancedEditorGUILayout.UnderlinedLabel(localHeaderGUI, EditorStyles.boldLabel);
-            GUILayout.Space(2f);
-
-            using (var _scope = new GUILayout.HorizontalScope())
-            {
-                GUILayout.Space(15f);
-
-                using (var _verticalScope = new GUILayout.VerticalScope())
-                {
-
-                    // Build dirctory.
-                    EnhancedEditorGUILayout.FolderField(buildDirectoryProperty, buildDirectoryGUI, true, BuildDirectoryPanelTitle);
-
-                    // Autosave interval.
-                    EnhancedEditorGUILayout.MinField(autosaveIntervalProperty, autosaveIntervalGUI, 5);
-
-                    GUILayout.Space(5f);
-
-                    // Scene Designer folders.
-                    EditorGUILayout.PropertyField(sceneDesignerFoldersProperty, sceneDesignerFoldersGUI);
-
-                    GUILayout.Space(5f);
-
-                    #if ENABLE_INPUT_SYSTEM
-                    GUILayout.Space(10f);
-
-                    // Chronos inputs.
-                    EditorGUILayout.LabelField(chronosHeaderGUI, EditorStyles.boldLabel);
-
-                    EditorGUILayout.PrefixLabel(increaseTimeScaleGUI);
-                    EditorGUILayout.PropertyField(increaseTimeScaleProperty);
-
-                    GUILayout.Space(3f);
-
-                    EditorGUILayout.PrefixLabel(resetTimeScaleGUI);
-                    EditorGUILayout.PropertyField(resetTimeScaleProperty);
-
-                    GUILayout.Space(3f);
-
-                    EditorGUILayout.PrefixLabel(decreaseTimeScaleGUI);
-                    EditorGUILayout.PropertyField(decreaseTimeScaleProperty);
-                    #endif
 
                     #if UNITY_2019_1_OR_NEWER
-                    GUILayout.Space(5f);
+                    GUILayout.Space(10f);
 
                     // Editor shortcuts.
-                    using (var _horizontalScope = new GUILayout.HorizontalScope())
-                    {
+                    using (var _horizontalScope = new GUILayout.HorizontalScope()) {
                         GUILayout.FlexibleSpace();
 
-                        if (GUILayout.Button(shortcutsGUI, GUILayout.MaxWidth(120f)))
-                        {
+                        if (GUILayout.Button(shortcutsGUI, GUILayout.MaxWidth(120f))) {
                             EditorApplication.ExecuteMenuItem("Edit/Shortcuts...");
                         }
                     }
@@ -507,32 +327,54 @@ namespace EnhancedEditor.Editor
             }
         }
 
-        private static void DrawGlobalSettings()
-        {
-            EnhancedEditorGUILayout.UnderlinedLabel(globalHeaderGUI, EditorStyles.boldLabel);
-            GUILayout.Space(3f);
+        public static void DrawProjectSettings() {
+            // Load drawers.
+            GetDelegates<EnhancedEditorProjectSettingsAttribute>(projectSettingsDrawers);
 
-            // Auto-managed resource directory.
-            EnhancedEditorGUILayout.FolderField(autoManagedResourceDirectoryProperty, autoManagedResourceDirectoryGUI, false, AutoManagedResourceDirectoryPanelTitle);
+            EnhancedEditorSettings _settings = Settings;
 
-            // Instance trackers dirctory.
-            EnhancedEditorGUILayout.EditorFolderField(instanceTrackerDirectoryProperty, instanceTrackerDirectoryGUI, InstanceTrackerDirectoryPanelTitle);
+            // Draw project settings.
+            using (var _scope = new GUILayout.HorizontalScope()) {
+                GUILayout.Space(10f);
 
-            // Script templates dirctory.
-            EnhancedEditorGUILayout.FolderField(scriptTemplateDirectoryProperty, scriptTemplateDirectoryGUI, false, ScriptTemplateDirectoryPanelTitle);
+                using (var _verticalScope = new GUILayout.VerticalScope())
+                using (var _changeCheck = new EditorGUI.ChangeCheckScope()) {
+                    Undo.RecordObject(_settings, ProjectSettingsRecordTitle);
 
-            GUILayout.Space(15f);
+                    foreach (SettingDelegate _delegate in projectSettingsDrawers) {
+                        _delegate();
+                    }
 
-            // Core scene system.
-            EditorGUILayout.LabelField(coreSceneHeaderGUI, EditorStyles.boldLabel);
+                    if (_changeCheck.changed) {
+                        EnhancedEditorUtility.SaveAsset(_settings);
+                    }
+                }
+            }
+        }
 
-            EnhancedEditorGUILayout.SceneAssetField(coreSceneProperty, coreSceneGUI);
-            if (!string.IsNullOrEmpty(coreSceneGUIDProperty.stringValue))
-            {
-                EditorGUILayout.PropertyField(isCoreSceneEnabledProperty, isCoreSceneEnabledGUI);
+        // -----------------------
+
+        private static void GetDelegates<T>(List<SettingDelegate> _delegates) where T : EnhancedEditorSettingsAttribute {
+            if (_delegates.Count != 0) {
+                return;
             }
 
-            EditorGUILayout.HelpBox(CoreSceneMessage, UnityEditor.MessageType.Info);
+            var _methods = TypeCache.GetMethodsWithAttribute<T>();
+            List<MethodInfo> _drawers = new List<MethodInfo>();
+
+            foreach (var _method in _methods) {
+                if (_method.IsStatic && (_method.GetParameters().Length == 0)) {
+                    _drawers.Add(_method);
+                }
+            }
+
+            _drawers.Sort((a, b) => {
+                return a.GetCustomAttribute<T>().Order.CompareTo(b.GetCustomAttribute<T>().Order);
+            });
+
+            foreach (MethodInfo _drawer in _drawers) {
+                _delegates.Add(_drawer.CreateDelegate(typeof(SettingDelegate)) as SettingDelegate);
+            }
         }
         #endregion
     }

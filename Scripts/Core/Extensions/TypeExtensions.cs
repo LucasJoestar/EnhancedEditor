@@ -30,6 +30,25 @@ namespace EnhancedEditor {
         public static bool IsSameOrSubclass(this Type _derived, Type _base) {
             return (_derived == _base) || _derived.IsSubclassOf(_base);
         }
+
+        /// <summary>
+        /// Get if a specific <see cref="Type"/> is a subclass of another <see cref="Type"/>, even if it is generic.
+        /// </summary>
+        /// <param name="_derived">The potential derived type.</param>
+        /// <param name="_base">The potential base type.</param>
+        /// <returns>True if the derived type is a subclass of the base, false otherwise.</returns>
+        public static bool IsSubclassOfGeneric(this Type _derived, Type _base) {
+            while ((_derived != null) && (_derived != typeof(object))) {
+                var cur = _derived.IsGenericType ? _derived.GetGenericTypeDefinition() : _derived;
+                if (_base == cur) {
+                    return true;
+                }
+
+                _derived = _derived.BaseType;
+            }
+
+            return false;
+        }
         #endregion
     }
 }

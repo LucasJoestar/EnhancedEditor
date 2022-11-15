@@ -55,7 +55,7 @@ namespace EnhancedEditor.Editor
             get
             {
                 // Get directory path.
-                string _value = EnhancedEditorSettings.Settings.AutoManagedResourceDirectory;
+                string _value = AutoManagedResourceUtility.DirectorySetting.Folder;
                 if (IsEditorOnly)
                 {
                     _value = Path.Combine(_value, EditorFolder);
@@ -199,6 +199,41 @@ namespace EnhancedEditor.Editor
 
             ArrayUtility.Add(ref resources, _resource);
             return _resource;
+        }
+        #endregion
+    }
+
+    /// <summary>
+    /// <see cref="AutoManagedResource{T}"/>-related utility class.
+    /// </summary>
+    public static class AutoManagedResourceUtility {
+        #region Project Settings
+        public const string AutoManagedResourceDefaultDirectory = "EnhancedEditor/AutoManagedResources";
+        private const string DirectoryPanelTitle = "Auto-Managed Resources Default Directory";
+        private static readonly int settingGUID = "AutoManagedResourceDirectory".GetHashCode();
+
+        private static readonly GUIContent directoryGUI = new GUIContent("Managed Resource Dir.",
+                                                                         "Directory in the project where are created all auto-managed resources.");
+
+        public static FolderProjectSetting DirectorySetting {
+            get {
+                EnhancedEditorSettings _editorSettings = EnhancedEditorSettings.Settings;
+
+                if (!_editorSettings.GetProjectSetting(settingGUID, out FolderProjectSetting _setting)) {
+                    _setting = new FolderProjectSetting(settingGUID, AutoManagedResourceDefaultDirectory, true);
+                    _editorSettings.AddProjectSetting(_setting);
+                }
+
+                return _setting;
+            }
+        }
+
+        // -----------------------
+
+        [EnhancedEditorProjectSettings(Order = 10)]
+        private static void DrawProjectSetting() {
+            FolderProjectSetting _setting = DirectorySetting;
+            _setting.Folder = EnhancedEditorGUILayout.FolderField(directoryGUI, _setting.Folder, false, DirectoryPanelTitle);
         }
         #endregion
     }

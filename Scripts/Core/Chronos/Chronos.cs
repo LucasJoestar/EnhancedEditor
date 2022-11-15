@@ -4,10 +4,10 @@
 //
 // ============================================================================ //
 
+using System;
 using UnityEngine;
 
 #if ENABLE_INPUT_SYSTEM && CHRONOS_INPUTS
-using System;
 using UnityEngine.InputSystem;
 #endif
 
@@ -32,6 +32,12 @@ namespace EnhancedEditor
                                                                 1f,
                                                                 2f, 4f, 8f, 16f, 32f
                                                             };
+
+        /// <summary>
+        /// Delegate used to set the game global chronos factor.
+        /// <br/> Override this callback to implement a different behaviour.
+        /// </summary>
+        public static Action<float> OnSetChronos = (c) => Time.timeScale = c;
 
         // -----------------------
 
@@ -81,7 +87,7 @@ namespace EnhancedEditor
         public static void Increase()
         {
             int _index = Mathf.Min(GetChronosValueIndex() + 1, chronosValues.Length - 1);
-            Time.timeScale = chronosValues[_index];
+            SetChronos(chronosValues[_index]);
         }
 
         /// <summary>
@@ -89,7 +95,7 @@ namespace EnhancedEditor
         /// </summary>
         public static void Reset()
         {
-            Time.timeScale = 1f;
+            SetChronos(1f);
         }
 
         /// <summary>
@@ -98,10 +104,14 @@ namespace EnhancedEditor
         public static void Decrease()
         {
             int _index = Mathf.Max(GetChronosValueIndex() - 1, 0);
-            Time.timeScale = chronosValues[_index];
+            SetChronos(chronosValues[_index]);
         }
 
         // -----------------------
+
+        private static void SetChronos(float _chronos) {
+            OnSetChronos?.Invoke(_chronos);
+        }
 
         private static int GetChronosValueIndex()
         {

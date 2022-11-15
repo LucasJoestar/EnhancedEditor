@@ -5,6 +5,8 @@
 // ============================================================================ //
 
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using UnityEditor;
@@ -33,8 +35,6 @@ namespace EnhancedEditor.Editor {
 
             #if LOCALIZATION_ENABLED
             // Project locale setup.
-            var _settings = EnhancedEditorSettings.Settings.UserSettings;
-
             if (LocalizationSettings.SelectedLocale == null) {
                 LocalizationSettings.SelectedLocale = LocalizationSettings.ProjectLocale;
             }
@@ -88,14 +88,22 @@ namespace EnhancedEditor.Editor {
         /// Get the object type of a specific <see cref="SerializedProperty"/>.
         /// </summary>
         /// <param name="_property"><see cref="SerializedProperty"/> to get type from.</param>
-        /// <returns>Property object type.</returns>
-        public static Type GetSerializedPropertyType(SerializedProperty _property) {
+        /// <param name="_type">Property object type.</param>
+        /// <returns>True if the property object type could be found, false otherwise.</returns>
+        public static bool GetSerializedPropertyType(SerializedProperty _property, out Type _type) {
             if (FindSerializedPropertyField(_property, out FieldInfo _field)) {
-                Type _type = _field.FieldType;
-                return _type.IsGenericType ? _type.GetGenericTypeDefinition() : _field.FieldType;
+                _type = _field.FieldType;
+                _type = _type.IsGenericType ? _type.GetGenericTypeDefinition()
+                                            : _type.IsArray ? _type.GetElementType()
+                                                            : _field.FieldType;
+
+                return true;
             }
 
-            return null;
+            Debug.LogWarning($"SerializedProperty type at path \'{_property.propertyPath}\' could not be found");
+
+            _type = null;
+            return false;
         }
 
         /// <summary>
@@ -266,31 +274,34 @@ namespace EnhancedEditor.Editor {
                     return false;
                 }
 
-                // Array and Lists.
-                if (_field.FieldType.IsArray) {
-                    // String is "data[0]", where 0 is the object index.
-                    string _index = _paths[i + 2][5].ToString();
-
-                    _value = (_field.GetValue(_value) as Array).GetValue(int.Parse(_index));
-                    _type = _value.GetType();
+                // Collection.
+                if (_field.FieldType.IsArray && ((i + 2) < _paths.Length)) {
+                    _value = (_field.GetValue(_value) as Array).GetValue(GetPathIndex(_paths[i + 2]));
+                    _type = (_value != null)
+                          ? _value.GetType()
+                          : _field.FieldType.GetElementType();
 
                     i += 2;
                     continue;
                 }
 
-                if (_field.FieldType.IsGenericType) {
+                // List.
+                if (_field.FieldType.IsGenericType && (_field.FieldType.GetGenericTypeDefinition() == typeof(List<>)) && ((i + 2) < _paths.Length)) {
 
-                    if ((i + 1) < (_paths.Length - _ignoreCount)) {
-                        _type = _field.FieldType.GetGenericArguments()[0];
-                        i += 2;
-                    }
+                    _value = (_field.GetValue(_value) as IList)[GetPathIndex(_paths[i + 2])];
+                    _type = (_value != null)
+                          ? _value.GetType()
+                          : _field.FieldType.GetElementType();
 
+                    i += 2;
                     continue;
                 }
 
                 if (_field != null) {
-                    _type = _field.FieldType;
                     _value = _field.GetValue(_value);
+                    _type = (_value != null)
+                          ? _value.GetType()
+                          : _field.FieldType;
                 } else {
                     // Not found.
                     _field = null;
@@ -299,6 +310,16 @@ namespace EnhancedEditor.Editor {
             }
 
             return true;
+
+            // ----- Local Method ----- \\
+
+            int GetPathIndex(string _path) {
+                // String is "data[0]", where 0 is the object index.
+                int _startIndex = _path.IndexOf('[') + 1;
+                string _index = _path.Substring(_startIndex, _path.IndexOf(']') - _startIndex).ToString();
+
+                return int.Parse(_index);
+            }
         }
         #endregion
 
@@ -376,7 +397,7 @@ namespace EnhancedEditor.Editor {
         /// Loads all assets of a specific type in the project.
         /// </summary>
         /// <typeparam name="T">Asset type to load.</typeparam>
-        /// <returns>Array of all loaded assets.</returns>
+        /// <returns>Collection of all loaded assets.</returns>
         public static T[] LoadAssets<T>() where T : Object {
             string[] _guids = FindAssetsGUID<T>();
             return Array.ConvertAll(_guids, (a) => {

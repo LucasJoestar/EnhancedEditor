@@ -154,7 +154,7 @@ namespace EnhancedEditor.Editor
                 // If no specific property field has been drawn, draw default one.
                 if (!_isDrawn)
                 {
-                    float _height = OnEnhancedGUI(_position, _property, _label);
+                    float _height = DrawEnhancedProperty(_position, _property, _label);
                     IncreasePosition(_height);
 
                     _position.height = EditorGUIUtility.singleLineHeight;
@@ -214,6 +214,10 @@ namespace EnhancedEditor.Editor
         #endregion
 
         #region Default Behaviour
+        private static readonly Dictionary<string, float> defaultPropertyHeight = new Dictionary<string, float>();
+
+        // -----------------------
+
         /// <summary>
         /// Override this to specify the height to use for a specific property.
         /// </summary>
@@ -222,21 +226,53 @@ namespace EnhancedEditor.Editor
         /// <returns>Total height to be used to draw this property field.</returns>
         internal protected virtual float GetDefaultHeight(SerializedProperty _property, GUIContent _label)
         {
+            if (defaultPropertyHeight.TryGetValue(GetID(_property), out float _height)) {
+                return _height;
+            }
+
             EnhancedEditorGUIUtility.Repaint(_property.serializedObject);
             return EditorGUIUtility.singleLineHeight;
+        }
+
+        /// <summary>
+        /// Draws this enhanced property and cache its total height.
+        /// </summary>
+        /// <param name="_position">Rectangle on the screen to draw within.</param>
+        /// <param name="_property"><see cref="SerializedProperty"/> to draw a field for.</param>
+        /// <param name="_label">Label displayed in front of the field.</param>
+        /// <returns>Total height used to draw this property field.</returns>
+        internal float DrawEnhancedProperty(Rect _position, SerializedProperty _property, GUIContent _label) {
+            float _height = OnEnhancedGUI(_position, _property, _label);
+            string _id = GetID(_property);
+
+            if (!defaultPropertyHeight.ContainsKey(_id)) {
+                if (defaultPropertyHeight.Count > CacheLimit) {
+                    propertyInfos.Clear();
+                }
+
+                defaultPropertyHeight.Add(_id, _height);
+            } else {
+                defaultPropertyHeight[_id] = _height;
+            }
+
+            return _height;
         }
 
         /// <summary>
         /// Replacement method for <see cref="OnGUI(Rect, SerializedProperty, GUIContent)"/>.
         /// <br/> Height has to be specified as returned value.
         /// </summary>
-        /// <param name="_position">Rectangle on the screen to draw within.</param>
-        /// <param name="_property"><see cref="SerializedProperty"/> to draw a field for.</param>
-        /// <param name="_label">Label displayed in front of the field.</param>
-        /// <returns>Total height used to draw this property field.</returns>
-        internal protected virtual float OnEnhancedGUI(Rect _position, SerializedProperty _property, GUIContent _label)
+        /// <inheritdoc cref="DrawEnhancedProperty(Rect, SerializedProperty, GUIContent)"/>
+        protected virtual float OnEnhancedGUI(Rect _position, SerializedProperty _property, GUIContent _label)
         {
-            return EnhancedEditorGUI.EnhancedPropertyField(_position, _property, _label);
+            _position.height = EditorGUI.GetPropertyHeight(_property, _label);
+            return EnhancedEditorGUI.EnhancedPropertyField(_position,  _property, _label);
+        }
+
+        // -----------------------
+
+        private string GetID(SerializedProperty _property) {
+            return _property.propertyPath + _property.serializedObject.targetObject.GetInstanceID().ToString();
         }
         #endregion
 

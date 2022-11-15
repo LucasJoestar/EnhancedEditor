@@ -2,14 +2,23 @@
 // 
 // Notes:
 //
-//  • Custom editor to add content scenes into the build.
-//
 // ============================================================================ //
 
+using System;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+
 namespace EnhancedEditor {
+    /// <summary>
+    /// Default empty <see cref="SceneBundle"/> behaviour.
+    /// </summary>
+    [Serializable, DisplayName("<None>")]
+    public class DefaultSceneBundleBehaviour : SceneBundleBehaviour { }
+
     /// <summary>
     /// <see cref="ScriptableObject"/> used to group multiple scenes in a single bundle,
     /// which can then be used to easily load and unload these scenes together at once.
@@ -18,17 +27,39 @@ namespace EnhancedEditor {
     [CreateAssetMenu(fileName = "NewSceneBundle", menuName = "Enhanced Editor/Scene Bundle", order = 190)]
     public class SceneBundle : ScriptableObject {
         #region Global Members
+        [Section("Scene Bundle")]
+
+        [SerializeField]
+        private SerializedType<SceneBundleBehaviour> behaviourType = new SerializedType<SceneBundleBehaviour>(SerializedTypeConstraint.None, typeof(DefaultSceneBundleBehaviour));
+
+        [Space(10f)]
+
         /// <summary>
         /// All scenes included in this bundle.
         /// </summary>
         public SceneAsset[] Scenes = new SceneAsset[] { };
 
-        [Space(5f), HelpBox("Index of the scene to set active once loaded. Use -1 to leave it as it is.", MessageType.Info)]
+        [Space(5f), HelpBox("Index of the scene to set active once loaded. Use -1 to leave it as it is.", MessageType.Info, false)]
         [SerializeField, Enhanced, ValidationMember("ActiveSceneIndex")] private int activeSceneIndex = 0;
 
         #if UNITY_EDITOR
         [SerializeField, Space(5f), Enhanced, EnhancedTextArea(true)] private string comment = string.Empty;
         #endif
+
+        [Space(10f), HorizontalLine(SuperColor.Grey, 1f), Space(10f)]
+
+        [SerializeReference, Enhanced, ShowIf("ShowBehaviour"), Block] public SceneBundleBehaviour Behaviour = new DefaultSceneBundleBehaviour();
+
+        /// <summary>
+        /// An empty class only displays its name in the inspector.
+        /// <br/> To avoid it, only draw the class content if non-default type.
+        /// </summary>
+        #pragma warning disable IDE0051
+        private bool ShowBehaviour {
+            get { return Behaviour.GetType() != typeof(DefaultSceneBundleBehaviour); }
+        }
+
+        // -----------------------
 
         /// <summary>
         /// Index of the scene to set active once loaded.
@@ -66,10 +97,11 @@ namespace EnhancedEditor {
         /// <returns><see cref="UnloadBundleAsyncOperation"/> used to determine when the operation has completed.</returns>
         [Button(ActivationMode.Play, SuperColor.Crimson, IsDrawnOnTop = false)]
         public UnloadBundleAsyncOperation UnloadAsync(UnloadSceneOptions _options = UnloadSceneOptions.None) {
-            if (Scenes.Length == 0)
-                return new UnloadBundleAsyncOperation();
-
-            UnloadBundleAsyncOperation _operation = new UnloadBundleAsyncOperation(this, _options);
+            UnloadBundleAsyncOperation _operation = (Scenes.Length != 0) 
+                                                  ? new UnloadBundleAsyncOperation(this, _options)
+                                                  : new UnloadBundleAsyncOperation();
+            
+            Behaviour.OnUnloadAsyncBundle(this, _operation, _options);
             return _operation;
         }
         #endregion
@@ -89,10 +121,11 @@ namespace EnhancedEditor {
         /// <param name="_parameters"><inheritdoc cref="Load(LoadSceneParameters)" path="/param[@name='_parameters']"/></param>
         /// <returns><see cref="LoadBundleAsyncOperation"/> used to determine when the operation has completed.</returns>
         public LoadBundleAsyncOperation LoadAsync(LoadSceneParameters _parameters) {
-            if (Scenes.Length == 0)
-                return new LoadBundleAsyncOperation();
+            LoadBundleAsyncOperation _operation = (Scenes.Length != 0)
+                                                ? new LoadBundleAsyncOperation(this, _parameters)
+                                                : new LoadBundleAsyncOperation();
 
-            LoadBundleAsyncOperation _operation = new LoadBundleAsyncOperation(this, _parameters);
+            Behaviour.OnLoadAsyncBundle(this, _operation, _parameters);
             return _operation;
         }
         #endregion
@@ -120,6 +153,8 @@ namespace EnhancedEditor {
                 LoadScene(_i);
             }
 
+            Behaviour.OnLoadBundle(this, _parameters);
+
             // ----- Local Method ----- \\
 
             void LoadScene(int _index) {
@@ -130,6 +165,34 @@ namespace EnhancedEditor {
                 }
             }
         }
+        #endregion
+
+        #region Editor Utility
+        #if UNITY_EDITOR
+        private void Awake() {
+            RefreshBehaviour();
+        }
+
+        private void OnValidate() {
+            RefreshBehaviour();
+        }
+
+        // -----------------------
+
+        private void RefreshBehaviour() {
+            if (Application.isPlaying) {
+                return;
+            }
+
+            // Create a new behaviour if its type changed.
+            if (behaviourType.Type != Behaviour.GetType()) {
+                var _behaviour = Activator.CreateInstance(behaviourType.Type);
+                Behaviour = EnhancedUtility.CopyObjectContent(Behaviour, _behaviour) as SceneBundleBehaviour;
+
+                EditorUtility.SetDirty(this);
+            }
+        }
+        #endif
         #endregion
     }
 }

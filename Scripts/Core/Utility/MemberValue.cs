@@ -83,6 +83,7 @@ namespace EnhancedEditor
                         {
                             return true;
                         }
+
                         break;
 
                     // Method.
@@ -112,6 +113,12 @@ namespace EnhancedEditor
                     default:
                         break;
                 }
+            }
+
+            // Try with the base type.
+            _objectType = _objectType.BaseType;
+            if (_objectType != null) {
+                return GetValue(_object, _objectType, out _value);
             }
 
             _value = default;

@@ -89,7 +89,7 @@ namespace EnhancedEditor.Editor
 
         private const string DisplayedIconsFormat = "Displayed Icons: {0}";
         private const string SizeFormat = "Size: {0}x{1}";
-        private const string CodeSnippetInfo = "You can use one of the following code snippets to load this icon:";
+        private const string CodeSnippetInfo = "You can use one of the following code snippets to load this Icon:";
 
         private readonly string[] codeSnippetFormats = new string[]
                                                             {
@@ -104,11 +104,11 @@ namespace EnhancedEditor.Editor
                                                                 new GUIContent("Sort by size", "Sort the icons by their size."),
                                                             };
 
-        private readonly GUIContent iconNameHeaderGUI = new GUIContent("Name:", "Name of the selected icon.");
+        private readonly GUIContent iconNameHeaderGUI = new GUIContent("Name:", "Name of the selected Icon.");
         private readonly GUIContent copyCodeGUI = new GUIContent("Copy", "Copy this code snippet.");
-        private readonly GUIContent iconNameGUI = new GUIContent(string.Empty, "Name of this icon.");
+        private readonly GUIContent iconNameGUI = new GUIContent(string.Empty, "Name of this Icon.");
         private readonly GUIContent iconContentGUI = new GUIContent();
-        private readonly GUIContent sizeGUI = new GUIContent(string.Empty, "Size of this icon.");
+        private readonly GUIContent sizeGUI = new GUIContent(string.Empty, "Size of this Icon.");
         private readonly GUIContent[] tabsGUI = new GUIContent[]
                                                             {
                                                                 new GUIContent("All Icons"),
@@ -169,7 +169,7 @@ namespace EnhancedEditor.Editor
 
                 if ((_content != null) && (_content.image != null))
                 {
-                    // Remove the dark theme prefix of the icon, as it will load the same anyway.
+                    // Remove the dark theme prefix of the Icon, as it will load the same anyway.
                     if (_iconName.StartsWith("d_"))
                         _iconName = _iconName.Remove(0, 2);
 
@@ -194,7 +194,7 @@ namespace EnhancedEditor.Editor
             FilterIcons();
             SelectIcon(selectedIcon);
 
-            // Load icon size value.
+            // Load Icon size value.
             sizeSlider = EditorPrefs.GetFloat(SizeSliderKey, sizeSlider);
 
             // Repaint on undo / redo operations.

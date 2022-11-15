@@ -24,11 +24,14 @@ namespace EnhancedEditor.Editor
     public static class EditorAutosave
     {
         #region Global Members
+        private const float DefaultSaveInterval = 300f;
+
         private const float ButtonEnabledWidth = 60f;
         private const float ButtonDisabledWidth = 32f;
         private const float MinSaveInterval = 5f;
-        private const double UpdateMaxInterval = .5f;
+        private const float UpdateMaxInterval = .5f;
 
+        private const string EditorPrefKey = EnhancedEditorSettings.EditorPrefsPath + "Autosave";
         private const string EnabledKey = "AutosaveEnabled";
         private const string RemainingTimeKey = "AutosaveRemainingTime";
 
@@ -52,7 +55,7 @@ namespace EnhancedEditor.Editor
             enableGUI.image = EditorGUIUtility.FindTexture("Record On");
             disableGUI.image = EditorGUIUtility.FindTexture("SaveAs");
 
-            saveInterval = EnhancedEditorSettings.Settings.UserSettings.AutosaveInterval + .5f;
+            saveInterval = EditorPrefs.GetFloat(EditorPrefKey, DefaultSaveInterval) + UpdateMaxInterval;
 
             // Loads session values.
             isEnabled = SessionState.GetBool(EnabledKey, isEnabled);
@@ -61,17 +64,6 @@ namespace EnhancedEditor.Editor
         #endregion
 
         #region Behaviour
-        /// <summary>
-        /// Set the time interval between two autosave.
-        /// </summary>
-        /// <param name="_saveInterval">New autosave time interval (in seconds).</param>
-        public static void SetSaveInterval(float _saveInterval)
-        {
-            _saveInterval = Mathf.Max(MinSaveInterval, _saveInterval);
-            saveInterval = saveRemainingTime
-                         = _saveInterval + .5f;
-        }
-
         private static void Update()
         {
             // Do not save in play mode, as it wouldn't be any useful.
@@ -96,7 +88,29 @@ namespace EnhancedEditor.Editor
         }
         #endregion
 
-        #region GUI Draw
+        #region User Preferences
+        private static readonly GUIContent autosaveIntervalGUI = new GUIContent("Autosave Interval",
+                                                                                "Time interval (in seconds) between two autosave. Autosave can be toggled from the main editor toolbar.");
+
+        // -----------------------
+
+        [EnhancedEditorPreferences(Order = 10)]
+        private static void DrawPreferences() {
+            // Autosave interval.
+            float _interval = saveInterval - UpdateMaxInterval;
+            float _newInterval = EnhancedEditorGUILayout.MinField(autosaveIntervalGUI, _interval, MinSaveInterval);
+
+            if (_newInterval != _interval) {
+                _newInterval = Mathf.Max(MinSaveInterval, _newInterval);
+                saveInterval = saveRemainingTime
+                             = _newInterval + UpdateMaxInterval;
+
+                EditorPrefs.SetFloat(EditorPrefKey, _newInterval);
+            }
+        }
+        #endregion
+
+        #region Toolbar Extension
         [EditorToolbarLeftExtension(Order = -25)]
         #pragma warning disable IDE0051
         private static void OnGUI()

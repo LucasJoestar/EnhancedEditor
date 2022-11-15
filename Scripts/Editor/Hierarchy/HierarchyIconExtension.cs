@@ -9,7 +9,7 @@ using UnityEngine;
 
 namespace EnhancedEditor.Editor {
     /// <summary>
-    /// Hierarchy window extension class used to draw an icon next to a <see cref="GameObject"/>.
+    /// Hierarchy window extension class used to draw an Icon next to a <see cref="GameObject"/>.
     /// </summary>
 	[InitializeOnLoad]
     public class HierarchyIconExtension : UnityObjectEditor {

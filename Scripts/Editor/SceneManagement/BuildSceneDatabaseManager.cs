@@ -97,11 +97,9 @@ namespace EnhancedEditor.Editor
             Database.buildSceneGUIDs = _sceneGUIDs;
             Database.nonBuildScenes = _nonBuildScenes;
 
-            var _settings = EnhancedEditorSettings.Settings;
-
-            Database.coreSceneIndex = _settings.IsCoreSceneEnabled
-                                   ? EnhancedEditorSettings.Settings.CoreScene.BuildIndex
-                                   : -1;
+            Database.coreSceneIndex = CoreSceneUtility.IsCoreSceneEnabled
+                                    ? CoreSceneUtility.CoreScene.BuildIndex
+                                    : -1;
 
             EditorUtility.SetDirty(Database);
         }

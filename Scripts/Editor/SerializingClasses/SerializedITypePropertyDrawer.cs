@@ -22,7 +22,7 @@ namespace EnhancedEditor.Editor {
 
         // -----------------------
 
-        internal protected override float OnEnhancedGUI(Rect _position, SerializedProperty _property, GUIContent _label) {
+        protected override float OnEnhancedGUI(Rect _position, SerializedProperty _property, GUIContent _label) {
             // Register this property to cache its selectable type values.
             string _key = _property.propertyPath;
 
@@ -43,7 +43,7 @@ namespace EnhancedEditor.Editor {
                     Type[] _types = _assembly.GetTypes();
 
                     foreach (var _type in _types) {
-                        if (!_type.IsDefined(typeof(EtherealAttribute), false) && _type.IsSubclassOf(_baseType)) {
+                        if (!_type.IsDefined(typeof(EtherealAttribute), false) && _baseType.IsAssignableFrom(_type)) {
                             AddType(_temp, _type, _constraints);
                         }
                     }

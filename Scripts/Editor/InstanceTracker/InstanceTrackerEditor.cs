@@ -106,7 +106,7 @@ namespace EnhancedEditor.Editor
             {
                 GUILayout.Space(5f);
                 
-                // Header.
+                // Button.
                 EditorGUILayout.LabelField(headerGUI, Styles.HeaderStyle);
                 GUILayout.Space(7f);
 

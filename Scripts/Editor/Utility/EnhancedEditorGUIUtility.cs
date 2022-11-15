@@ -68,7 +68,7 @@ namespace EnhancedEditor.Editor {
         public const float SectionLabelMargins = 5f;
 
         /// <summary>
-        /// Size of scroll bars drawn in GUI.
+        /// Size of logScroll bars drawn in GUI.
         /// </summary>
         public const float ScrollSize = 13f;
 
@@ -90,13 +90,25 @@ namespace EnhancedEditor.Editor {
         /// Color used for various selected GUI controls.
         /// </summary>
         public static readonly EditorColor GUISelectedColor = new EditorColor(new Color(0f, .5f, 1f, .28f),
-                                                                              new Color(0f, .5f, 1f, .25f));
+                                                                              new Color(.1f, .6f, 1f, .4f));
 
         /// <summary>
         /// Color used for various GUI feedback controls.
         /// </summary>
         public static readonly EditorColor GUIFeedbackColor = new EditorColor(new Color(.2f, .341f, .85f),
                                                                               new Color(.2f, .341f, .85f));
+
+        /// <summary>
+        /// Color used to draw gui splitters, separating two layouts.
+        /// </summary>
+        public static readonly EditorColor GUISplitterColor = new EditorColor(new Color(.13f, .13f, .13f),
+                                                                              new Color(.13f, .13f, .13f));
+
+        /// <summary>
+        /// Color used to draw background bar controls.
+        /// </summary>
+        public static readonly EditorColor GUIBarColor = new EditorColor(new Color(.21f, .21f, .21f),
+                                                                         new Color(.21f, .21f, .21f));
 
         /// <summary>
         /// Color used for link labels, when the mouse is not hover.
@@ -192,6 +204,20 @@ namespace EnhancedEditor.Editor {
         }
 
         /// <summary>
+        /// Get a cached <see cref="GUIContent"/> for a specific image.
+        /// </summary>
+        /// <param name="_image">This <see cref="GUIContent"/> image.</param>
+        /// <param name="_tooltip"><see cref="GUIContent"/> tooltip.</param>
+        /// <returns><see cref="GUIContent"/> to use.</returns>
+        public static GUIContent GetLabelGUI(Texture _image, string _tooltip) {
+            labelGUI.image = _image;
+            labelGUI.tooltip = _tooltip;
+            labelGUI.text = string.Empty;
+
+            return labelGUI;
+        }
+
+        /// <summary>
         /// Get the height to use to draw a help box with a specific message, type and width.
         /// </summary>
         /// <param name="_message">The message text.</param>
@@ -204,7 +230,7 @@ namespace EnhancedEditor.Editor {
                 _label = helpBoxGUI;
                 _label.text = _message;
 
-                // Load an icon that will help calculate the help box height.
+                // Load an Icon that will help calculate the help box height.
                 if (_label.image == null)
                     _label.image = EditorGUIUtility.FindTexture("console.infoicon");
             } else {
@@ -213,6 +239,39 @@ namespace EnhancedEditor.Editor {
 
             float _height = EditorStyles.helpBox.CalcHeight(_label, _width);
             return _height;
+        }
+
+        /// <summary>
+        /// Calculates the total height used to draw a specific <see cref="GUIStyle"/> in a fixed line amount.
+        /// </summary>
+        /// <param name="_style">The <see cref="GUIStyle"/> to get the line height.</param>
+        /// <param name="_lineCount">Total line count to get the associated height.</param>
+        /// <returns>The height used to draw the given line amount with this style.</returns>
+        public static float CalculLineHeight(GUIStyle _style, int _lineCount) {
+            float _height = _style.CalcHeight(GUIContent.none, 100f);
+            float _padding = _style.padding.vertical;
+
+            return ((_height - _padding) * _lineCount) + _padding;
+        }
+
+        /// <summary>
+        /// Safely loads an Icon content without logging an error if not found.
+        /// </summary>
+        /// <param name="_icon">The name of the Icon to load.</param>
+        /// <param name="_text">Optional Icon text.</param>
+        /// <returns>The Icon loaded <see cref="GUIContent"/>.</returns>
+        public static GUIContent SafeIconContent(string _icon, string _text = "") {
+            bool _enabled = Debug.unityLogger.logEnabled;
+            Debug.unityLogger.logEnabled = false;
+
+            GUIContent _content = new GUIContent();
+
+            try {
+                _content = EditorGUIUtility.IconContent(_icon, _text);
+            } catch (Exception) { }
+
+            Debug.unityLogger.logEnabled = _enabled;
+            return _content;
         }
         #endregion
 
@@ -309,12 +368,12 @@ namespace EnhancedEditor.Editor {
         }
 
         /// <summary>
-        /// Moves a scroll to focus on a specific position in view.
+        /// Moves a logScroll to focus on a specific position in view.
         /// </summary>
-        /// <param name="_scroll">The current position of the scroll.</param>
+        /// <param name="_scroll">The current position of the logScroll.</param>
         /// <param name="_position">Position on screen to focus.</param>
-        /// <param name="_scrollAreaSize">The size of the scroll area on screen.</param>
-        /// <returns>Focused scroll value on position.</returns>
+        /// <param name="_scrollAreaSize">The size of the logScroll area on screen.</param>
+        /// <returns>Focused logScroll value on position.</returns>
         public static Vector2 FocusScrollOnPosition(Vector2 _scroll, Rect _position, Vector2 _scrollAreaSize) {
             // Horizontal focus.
             if (_scroll.x > _position.x) {
@@ -332,9 +391,20 @@ namespace EnhancedEditor.Editor {
 
             return _scroll;
         }
+
+        /// <summary>
+        /// Get a control rect for the current layout without allocating any more space.
+        /// </summary>
+        /// <returns>New rect of the current layout.</returns>
+        public static Rect GetControlRect() {
+            return EditorGUILayout.GetControlRect(false, -EditorGUIUtility.standardVerticalSpacing);
+        }
         #endregion
 
         #region Event and Clicks
+        public const float ResizeHandlerExtent = 3f;
+
+        private static readonly int resizeControlID = "ReduceSize".GetHashCode();
         private static Vector2 mouseDownPosition = new Vector2();
 
         // -----------------------
@@ -406,7 +476,7 @@ namespace EnhancedEditor.Editor {
         /// <summary>
         /// Did the user just performed a context click on this position?
         /// </summary>
-        /// <param name="_position"><inheritdoc cref="DocumentationMethod(Rect)" path="/param[@name='_position']"/></param>
+        /// <param name="_position"><inheritdoc cref="DocumentationMethod(Rect, IList, Predicate{int}, Predicate{int}, Action{int, bool})" path="/param[@name='_position']"/></param>
         /// <returns>True if the user performed a context click here, false otherwise.</returns>
         public static bool ContextClick(Rect _position) {
             if (_position.Event(out Event _event) == EventType.ContextClick) {
@@ -418,9 +488,23 @@ namespace EnhancedEditor.Editor {
         }
 
         /// <summary>
+        /// Did the user just performed a double click on this position?
+        /// </summary>
+        /// <param name="_position"><inheritdoc cref="DocumentationMethod(Rect, IList, Predicate{int}, Predicate{int}, Action{int, bool})" path="/param[@name='_position']"/></param>
+        /// <returns>True if the user performed a double click here, false otherwise.</returns>
+        public static bool DoubleClick(Rect _position) {
+            if ((_position.Event(out Event _event) == EventType.MouseDown) && (_event.button == 0) && (_event.clickCount > 1)) {
+                _event.Use();
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// Did the user just pressed a mouse button on this position?
         /// </summary>
-        /// <param name="_position"><inheritdoc cref="DocumentationMethod(Rect)" path="/param[@name='_position']"/></param>
+        /// <param name="_position"><inheritdoc cref="DocumentationMethod(Rect, IList, Predicate{int}, Predicate{int}, Action{int, bool})" path="/param[@name='_position']"/></param>
         /// <returns>True if the user clicked here, false otherwise.</returns>
         public static bool MouseDown(Rect _position) {
             if (_position.Event(out Event _event) == EventType.MouseDown) {
@@ -434,7 +518,7 @@ namespace EnhancedEditor.Editor {
         /// <summary>
         /// Did the user just released the main mouse button on this position?
         /// </summary>
-        /// <param name="_position"><inheritdoc cref="DocumentationMethod(Rect)" path="/param[@name='_position']"/></param>
+        /// <param name="_position"><inheritdoc cref="DocumentationMethod(Rect, IList, Predicate{int}, Predicate{int}, Action{int, bool})" path="/param[@name='_position']"/></param>
         /// <returns>True if the user released this mouse button here, false otherwise.</returns>
         public static bool MainMouseUp(Rect _position) {
             if ((_position.Event(out Event _event) == EventType.MouseUp) && (_event.button == 0)) {
@@ -448,7 +532,7 @@ namespace EnhancedEditor.Editor {
         /// <summary>
         /// Did the user just performed a click to deselect element(s) on this position?
         /// </summary>
-        /// <param name="_position"><inheritdoc cref="DocumentationMethod(Rect)" path="/param[@name='_position']"/></param>
+        /// <param name="_position"><inheritdoc cref="DocumentationMethod(Rect, IList, Predicate{int}, Predicate{int}, Action{int, bool})" path="/param[@name='_position']"/></param>
         /// <returns>True if the user performed a deselection click here, false otherwise.</returns>
         public static bool DeselectionClick(Rect _position) {
             if ((_position.Event(out Event _event) == EventType.MouseDown) && !_event.control && !_event.shift && (_event.button == 0)) {
@@ -514,13 +598,14 @@ namespace EnhancedEditor.Editor {
         /// <summary>
         /// Selects multiple elements of an array according to the user's mouse inputs.
         /// </summary>
-        /// <param name="_position"><inheritdoc cref="DocumentationMethod(Rect, IList, Predicate{int}, Action{int, bool})" path="/param[@name='_position']"/></param>
-        /// <param name="_collection"><inheritdoc cref="DocumentationMethod(Rect, IList, Predicate{int}, Action{int, bool})" path="/param[@name='_collection']"/></param>
+        /// <param name="_position"><inheritdoc cref="DocumentationMethod(Rect, IList, Predicate{int}, Predicate{int}, Action{int, bool})" path="/param[@name='_position']"/></param>
+        /// <param name="_collection"><inheritdoc cref="DocumentationMethod(Rect, IList, Predicate{int}, Predicate{int}, Action{int, bool})" path="/param[@name='_collection']"/></param>
         /// <param name="_index">Index of the current array element.</param>
-        /// <param name="_isSelected"><inheritdoc cref="DocumentationMethod(Rect, IList, Predicate{int}, Action{int, bool})" path="/param[@name='_isSelected']"/></param>
-        /// <param name="_onSelect"><inheritdoc cref="DocumentationMethod(Rect, IList, Predicate{int}, Action{int, bool})" path="/param[@name='_onSelect']"/></param>
+        /// <param name="_canBeSelected"><inheritdoc cref="DocumentationMethod(Rect, IList, Predicate{int}, Predicate{int}, Action{int, bool})" path="/param[@name='_canBeSelected']"/></param>
+        /// <param name="_isSelected"><inheritdoc cref="DocumentationMethod(Rect, IList, Predicate{int}, Predicate{int}, Action{int, bool})" path="/param[@name='_isSelected']"/></param>
+        /// <param name="_onSelect"><inheritdoc cref="DocumentationMethod(Rect, IList, Predicate{int}, Predicate{int}, Action{int, bool})" path="/param[@name='_onSelect']"/></param>
         /// <returns>True if the user performed a click to select element(s) here, false otherwise.</returns>
-        public static bool MultiSelectionClick(Rect _position, IList _collection, int _index, Predicate<int> _isSelected, Action<int, bool> _onSelect) {
+        public static bool MultiSelectionClick(Rect _position, IList _collection, int _index, Predicate<int> _isSelected, Predicate<int> _canBeSelected, Action<int, bool> _onSelect) {
             // Only select on mouse down or on selected element mouse up.
             bool _isMouseUpSelection = false;
             if (_position.Event(out Event _event) != EventType.MouseDown) {
@@ -565,11 +650,15 @@ namespace EnhancedEditor.Editor {
                 // Select all elements between indexes.
                 if (_index == _firstIndex) {
                     for (int _i = _lastIndex; _i-- > _firstIndex;) {
-                        _onSelect(_i, true);
+                        if (_canBeSelected(_i)) {
+                            _onSelect(_i, true);
+                        }
                     }
                 } else {
                     for (int _i = _firstIndex; _i < _lastIndex; _i++) {
-                        _onSelect(_i, true);
+                        if (_canBeSelected(_i)) {
+                            _onSelect(_i, true);
+                        }
                     }
                 }
             } else if (_event.control) {
@@ -591,10 +680,10 @@ namespace EnhancedEditor.Editor {
         /// <summary>
         /// Selects multiple elements of an array according to the user's vertical inputs.
         /// </summary>
-        /// <param name="_collection"><inheritdoc cref="DocumentationMethod(Rect, IList Predicate{int}, Action{int, bool})" path="/param[@name='_collection']"/></param>
-        /// <param name="_isSelected"><inheritdoc cref="DocumentationMethod(Rect, IList, Predicate{int}, Action{int, bool})" path="/param[@name='_isSelected']"/></param>
-        /// <param name="_canBeSelected">Used to know if a specific element can be selected.</param>
-        /// <param name="_onSelect"><inheritdoc cref="DocumentationMethod(Rect, IList, Predicate{int}, Action{int, bool})" path="/param[@name='_onSelect']"/></param>
+        /// <param name="_collection"><inheritdoc cref="DocumentationMethod(Rect, IList, Predicate{int}, Predicate{int}, Action{int, bool})" path="/param[@name='_collection']"/></param>
+        /// <param name="_isSelected"><inheritdoc cref="DocumentationMethod(Rect, IList, Predicate{int}, Predicate{int}, Action{int, bool})" path="/param[@name='_isSelected']"/></param>
+        /// <param name="_canBeSelected"><inheritdoc cref="DocumentationMethod(Rect, IList, Predicate{int}, Predicate{int}, Action{int, bool})" path="/param[@name='_canBeSelected']"/></param>
+        /// <param name="_onSelect"><inheritdoc cref="DocumentationMethod(Rect, IList, Predicate{int}, Predicate{int}, Action{int, bool})" path="/param[@name='_onSelect']"/></param>
         /// <param name="_lastSelectedIndex">Index of the last selected element. Use -1 if no element is currently selected.</param>
         /// <returns>True if the user pressed a key to select element(s), from otherwise.</returns>
         public static bool VerticalMultiSelectionKeys(IList _collection, Predicate<int> _isSelected, Predicate<int> _canBeSelected, Action<int, bool> _onSelect, int _lastSelectedIndex) {
@@ -688,27 +777,45 @@ namespace EnhancedEditor.Editor {
                     bool _increase = _lastSelectedIndex == _firstIndex;
                     if (_increase) {
                         int _index = GetNewSelectedIndex();
-                        for (int _i = _lastIndex; _i-- > _index;)
-                            _onSelect(_i, true);
+                        for (int _i = _lastIndex; _i-- > _index;) {
+                            if (_canBeSelected(_i)) {
+                                _onSelect(_i, true);
+                            }
+                        }
                     } else {
-                        for (int _i = _firstIndex; _i < _lastSelectedIndex; _i++)
-                            _onSelect(_i, true);
+                        for (int _i = _firstIndex; _i < _lastSelectedIndex; _i++) {
+                            if (_canBeSelected(_i)) {
+                                _onSelect(_i, true);
+                            }
+                        }
 
-                        for (int _i = _lastSelectedIndex; _i < _lastIndex; _i++)
-                            _onSelect(_i, false);
+                        for (int _i = _lastSelectedIndex; _i < _lastIndex; _i++) {
+                            if (_canBeSelected(_i)) {
+                                _onSelect(_i, false);
+                            }
+                        }
                     }
                 } else {
                     bool _increase = _lastSelectedIndex == (_lastIndex - 1);
                     if (_increase) {
                         int _index = GetNewSelectedIndex() + 1;
-                        for (int _i = _firstIndex; _i < _index; _i++)
-                            _onSelect(_i, true);
+                        for (int _i = _firstIndex; _i < _index; _i++) {
+                            if (_canBeSelected(_i)) {
+                                _onSelect(_i, true);
+                            }
+                        }
                     } else {
-                        for (int _i = _firstIndex; _i < (_lastSelectedIndex + 1); _i++)
-                            _onSelect(_i, false);
+                        for (int _i = _firstIndex; _i < (_lastSelectedIndex + 1); _i++) {
+                            if (_canBeSelected(_i)) {
+                                _onSelect(_i, false);
+                            }
+                        }
 
-                        for (int _i = _lastIndex; _i-- > (_lastSelectedIndex + 1);)
-                            _onSelect(_i, true);
+                        for (int _i = _lastIndex; _i-- > (_lastSelectedIndex + 1);) {
+                            if (_canBeSelected(_i)) {
+                                _onSelect(_i, true);
+                            }
+                        }
                     }
                 }
             } else {
@@ -740,6 +847,81 @@ namespace EnhancedEditor.Editor {
 
                 return _index;
             }
+        }
+
+        /// <summary>
+        /// Makes an horizontally resizable area from its left border.
+        /// </summary>
+        /// <param name="_area">The total resizable area position on screen.</param>
+        /// <param name="_minWidth">Minimum allowed width of the area.</param>
+        /// <param name="_maxWidth">Maximum allowed width of the area.</param>
+        /// <returns>The new width of the area. Make sure to only modify it when <see cref="GUI.changed"/> is set to true.</returns>
+        public static float HorizontalSplitterHandle(Rect _area, float _minWidth, float  _maxWidth) {
+            int _controlID = GetControlID(resizeControlID, FocusType.Passive);
+            Rect _splitter = new Rect(_area) {
+                x = _area.x - ResizeHandlerExtent,
+                width = ResizeHandlerExtent * 2f
+            };
+
+            EditorGUIUtility.AddCursorRect(_splitter, MouseCursor.ResizeHorizontal, _controlID);
+            return Mathf.Clamp(SplitterHandle(_controlID, _area, _splitter).width, _minWidth, _maxWidth);
+        }
+
+        /// <summary>
+        /// Makes a vertically resizable area from its top border.
+        /// </summary>
+        /// <param name="_area">The total resizable area position on screen.</param>
+        /// <param name="_minHeight">Minimum allowed height of the area.</param>
+        /// <param name="_maxHeight">Maximum allowed height of the area.</param>
+        /// <returns>The new height of the area. Make sure to only modify it when <see cref="GUI.changed"/> is set to true.</returns>
+        public static float VerticalSplitterHandle(Rect _area, float _minHeight, float _maxHeight) {
+            // Event and state control.
+            int _controlID = GetControlID(resizeControlID, FocusType.Passive);
+            Rect _splitter = new Rect(_area) {
+                yMin = _area.y - ResizeHandlerExtent,
+                height = ResizeHandlerExtent * 2f
+            };
+
+            EditorGUIUtility.AddCursorRect(_splitter, MouseCursor.ResizeVertical, _controlID);
+            return Mathf.Clamp(SplitterHandle(_controlID, _area, _splitter).height, _minHeight, _maxHeight);
+        }
+
+        // -----------------------
+
+        private static Rect SplitterHandle(int _controlID, Rect _area, Rect _splitter) {
+            Event _event = Event.current;
+
+            switch (_event.GetTypeForControl(_controlID)) {
+                // Prepare resize.
+                case EventType.MouseDown:
+                    if (_splitter.Contains(_event.mousePosition) && (GUIUtility.hotControl == 0) && (_event.button == 0)) {
+                        GUIUtility.hotControl = _controlID;
+                        GUIUtility.keyboardControl = 0;
+
+                        _event.Use();
+                    }
+                    break;
+
+                // ReduceSize.
+                case EventType.MouseDrag:
+                    if (GUIUtility.hotControl == _controlID) {
+                        _area.size = _area.max - _event.mousePosition;
+
+                        GUI.changed = true;
+                        _event.Use();
+                    }
+                    break;
+
+                // Stop resize.
+                case EventType.MouseUp:
+                    if ((GUIUtility.hotControl == _controlID) && (_event.button == 0)) {
+                        GUIUtility.hotControl = 0;
+                        _event.Use();
+                    }
+                    break;
+            }
+
+            return _area;
         }
         #endregion
 
@@ -883,8 +1065,9 @@ namespace EnhancedEditor.Editor {
         /// <param name="_position">Rectangle on the screen where to check for user actions.</param>
         /// <param name="_collection">Collection of all selectable elements.</param>
         /// <param name="_isSelected">Used to know if a specific element is selected.</param>
+        /// <param name="_canBeSelected">Used to know if a specific element can be selected.</param>
         /// <param name="_onSelect">Callback when selecting an element.</param>
-        internal static void DocumentationMethod(Rect _position, IList _collection, Predicate<int> _isSelected, Action<int, bool> _onSelect) { }
+        internal static void DocumentationMethod(Rect _position, IList _collection, Predicate<int> _isSelected, Predicate<int> _canBeSelected, Action<int, bool> _onSelect) { }
         #endregion
     }
 }

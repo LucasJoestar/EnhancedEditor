@@ -1,6 +1,6 @@
 {
     "name": "EnhancedEditor.Editor",
-    "rootNamespace": "",
+    "rootNamespace": "EnhancedEditor.Editor",
     "references": [
         "EnhancedEditor",
         "Unity.InputSystem",

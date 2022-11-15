@@ -25,6 +25,16 @@ namespace EnhancedEditor.Editor
     /// </summary>
 	public class SceneDesigner : EditorWindow
     {
+        #region Folder Wrapper
+        /// <summary>
+        /// Serializable wrapper class used to save and load scene designer folders from json.
+        /// </summary>
+        [Serializable]
+        public class FolderWrapper {
+            public List<string> Folders = new List<string>();
+        }
+        #endregion
+
         #region Folder & Asset
         private class Folder
         {
@@ -344,61 +354,23 @@ namespace EnhancedEditor.Editor
         // Window GUI
         // -------------------------------------------
 
+        private const string EditorPrefsKey = EnhancedEditorSettings.EditorPrefsPath + "SceneDesigner";
         private const string NoAssetMessage = "No asset could be found in the specified folders. " +
                                               "You can edit the scene designers folders using the button on the window top-right corner.";
 
         private static readonly Color indentColor = SuperColor.Grey.Get();
 
         private static Folder root = new Folder("Root");
-        private static string[] folders = new string[] { };
+        private static FolderWrapper folders = new FolderWrapper();
+        private static bool requireRefresh = true;
 
         private static Vector2 scroll = new Vector2();
         private new bool hasFocus = false;
 
         // -----------------------
 
-        private void OnEnable()
-        {
-            string[] _folders = EnhancedEditorSettings.Settings.UserSettings.SceneDesignerFolders;
-            if (_folders != folders)
-            {
-                root.Folders.Clear();
-
-                if (_folders.Length == 0)
-                    return;
-
-                string[] _pathHelpers = new string[_folders.Length];
-                for (int _i = 0; _i < _folders.Length; _i++)
-                {
-                    string _fullPath = Path.Combine("Assets", _folders[_i]);
-                    _pathHelpers[_i] = _fullPath;
-                }
-
-                // Load all objects.
-                string[] _assets = Array.ConvertAll(AssetDatabase.FindAssets("t:GameObject", _pathHelpers), AssetDatabase.GUIDToAssetPath);
-
-                for (int _i = 0; _i < _folders.Length; _i++)
-                {
-                    string _base = _folders[_i].Split('/', '\\')[0];
-                    _pathHelpers[_i] = string.IsNullOrEmpty(_base)
-                                     ? InternalEditorUtility.GetAssetsFolder()
-                                     : _base;
-                }
-
-                // Register each asset.
-                foreach (string _path in _assets)
-                {
-                    string[] _directories = _path.Split('/', '\\');
-                    int _index = 0;
-
-                    while (Array.IndexOf(_pathHelpers, _directories[_index].Trim()) == -1)
-                        _index++;
-
-                    root.RegisterAsset(_directories, _path, _index);
-                }
-
-                folders = _folders;
-            }
+        private void OnEnable() {
+            RefreshFolders();
         }
 
         private void OnFocus()
@@ -606,6 +578,48 @@ namespace EnhancedEditor.Editor
         }
         #endregion
 
+        #region User Preferences
+        private static readonly GUIContent sceneDesignerFoldersGUI = new GUIContent("Scene Designer Folders",
+                                                                                    "All folders displayed to select objects to place in the scene using the Scene Designer.");
+
+        private static readonly ReorderableList folderList = new ReorderableList(null, typeof(string)) {
+            drawHeaderCallback = DrawHeaderCallback,
+            drawElementCallback = DrawElementCallback,
+        };
+
+        // -----------------------
+
+        [EnhancedEditorPreferences(Order = 50)]
+        private static void DrawPreferences() {
+            RefreshFolders();
+
+            GUILayout.Space(5f);
+
+            using (var _scope = new EditorGUI.ChangeCheckScope()) {
+                folderList.list = folders.Folders;
+                folderList.DoLayoutList();
+
+                // Save on change.
+                if (_scope.changed) {
+                    folders.Folders = folderList.list as List<string>;
+                    string _json = EditorJsonUtility.ToJson(folders);
+                    EditorPrefs.SetString(EditorPrefsKey, _json);
+
+                    requireRefresh = true;
+                }
+            }
+        }
+
+        private static void DrawHeaderCallback(Rect _position) {
+            EditorGUI.LabelField(_position, sceneDesignerFoldersGUI);
+        }
+
+        private static void DrawElementCallback(Rect _position, int _index, bool _isActive, bool _isFocused) {
+            _position.yMin += EditorGUIUtility.standardVerticalSpacing;
+            folders.Folders[_index] = EnhancedEditorGUI.FolderField(_position, folders.Folders[_index]);
+        }
+        #endregion
+
         #region Toolbar Extension
         [EditorToolbarLeftExtension(Order = 100)]
         private static void ToolbarExtension()
@@ -745,6 +759,57 @@ namespace EnhancedEditor.Editor
                     }
                 }
             }
+        }
+        #endregion
+
+        #region Utility
+        /// <summary>
+        /// Refreshes folders content and assets.
+        /// </summary>
+        public static void RefreshFolders() {
+            if (!requireRefresh) {
+                return;
+            }
+
+            string _json = EditorPrefs.GetString(EditorPrefsKey, string.Empty);
+            if (!string.IsNullOrEmpty(_json)) {
+                EditorJsonUtility.FromJsonOverwrite(_json, folders);
+            }
+
+            root.Folders.Clear();
+
+            int _count = folders.Folders.Count;
+            if (_count == 0)
+                return;
+
+            string[] _pathHelpers = new string[_count];
+            for (int _i = 0; _i < _count; _i++) {
+                string _fullPath = Path.Combine("Assets", folders.Folders[_i]);
+                _pathHelpers[_i] = _fullPath;
+            }
+
+            // Load all objects.
+            string[] _assets = Array.ConvertAll(AssetDatabase.FindAssets("t:GameObject", _pathHelpers), AssetDatabase.GUIDToAssetPath);
+
+            for (int _i = 0; _i < _count; _i++) {
+                string _base = folders.Folders[_i].Split('/', '\\')[0];
+                _pathHelpers[_i] = string.IsNullOrEmpty(_base)
+                                 ? InternalEditorUtility.GetAssetsFolder()
+                                 : _base;
+            }
+
+            // Register each asset.
+            foreach (string _path in _assets) {
+                string[] _directories = _path.Split('/', '\\');
+                int _index = 0;
+
+                while (Array.IndexOf(_pathHelpers, _directories[_index].Trim()) == -1)
+                    _index++;
+
+                root.RegisterAsset(_directories, _path, _index);
+            }
+
+            requireRefresh = false;
         }
         #endregion
     }

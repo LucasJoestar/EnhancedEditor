@@ -162,11 +162,12 @@ namespace EnhancedEditor.Editor
                 if (!Array.Exists(trackers, t => t.targetTypeName == _target))
                 {
                     // Tracker directory creation.
-                    string _path = Path.Combine(Application.dataPath, EnhancedEditorSettings.Settings.InstanceTrackerDirectory);
+                    string _folder = DirectorySetting.Folder;
+                    string _path = Path.Combine(Application.dataPath, _folder);
                     if (!Directory.Exists(_path))
                         Directory.CreateDirectory(_path);
 
-                    _path = Path.Combine("Assets", EnhancedEditorSettings.Settings.InstanceTrackerDirectory, $"{_type}.asset");
+                    _path = Path.Combine("Assets", _folder, $"{_type}.asset");
 
                     // Create new tracker.
                     var _tracker = CreateInstance<InstanceTracker>();
@@ -273,6 +274,36 @@ namespace EnhancedEditor.Editor
         internal void RemoveTrack(SceneTrack _track)
         {
             ArrayUtility.Remove(ref tracks, _track);
+        }
+        #endregion
+
+        #region Project Settings
+        public const string DefaultDirectory = "EnhancedEditor/Editor/InstanceTrackers";
+        private const string DirectoryPanelTitle = "Instance Trackers Directory";
+        private static readonly int settingGUID = "InstanceTrackerDirectory".GetHashCode();
+
+        private static readonly GUIContent directoryGUI = new GUIContent("Instance Tracker Dir.",
+                                                                         "Directory in the project where are created all instance trackers.");
+
+        public static FolderProjectSetting DirectorySetting {
+            get {
+                EnhancedEditorSettings _editorSettings = EnhancedEditorSettings.Settings;
+
+                if (!_editorSettings.GetProjectSetting(settingGUID, out FolderProjectSetting _setting)) {
+                    _setting = new FolderProjectSetting(settingGUID, DefaultDirectory, true);
+                    _editorSettings.AddProjectSetting(_setting);
+                }
+
+                return _setting;
+            }
+        }
+
+        // -----------------------
+
+        [EnhancedEditorProjectSettings(Order = 11)]
+        private static void DrawProjectSetting() {
+            FolderProjectSetting _setting = DirectorySetting;
+            _setting.Folder = EnhancedEditorGUILayout.EditorFolderField(directoryGUI, _setting.Folder, DirectoryPanelTitle);
         }
         #endregion
     }

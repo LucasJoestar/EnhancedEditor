@@ -57,9 +57,10 @@ namespace EnhancedEditor.Editor
             GUILayout.Space(25f);
             #endif
             
-            buttonsGUI[1].text = (Time.timeScale == 1f)
+            float _chronos = Time.timeScale;
+            buttonsGUI[1].text = (_chronos == 1f)
                                ? string.Empty
-                               : $"x{Time.timeScale:0.##}";
+                               : $"x{_chronos:0.##}";
 
             int _click = EnhancedEditorToolbar.ButtonGroup(buttonsGUI);
             switch (_click)
@@ -81,6 +82,11 @@ namespace EnhancedEditor.Editor
 
                 default:
                     break;
+            }
+
+            // Constantly repaint while in play mode to correctly display the current time scale.
+            if (Application.isPlaying) {
+                EnhancedEditorToolbar.Repaint();
             }
         }
         #endregion

@@ -410,7 +410,7 @@ namespace EnhancedEditor.Editor
 
                         EnhancedEditorGUI.BackgroundLine(_temp, _isSelected, _i);
 
-                        // Draw null object (first index) without any icon.
+                        // Draw null object (first index) without any Icon.
                         if (_i == 0)
                         {
                             _position.xMin = 18f;
@@ -762,7 +762,7 @@ namespace EnhancedEditor.Editor
             _temp.height = 1f;
             EditorGUI.DrawRect(_temp, inspectorSeparatorColor);
 
-            // Inspector resize icon.
+            // Inspector resize Icon.
             Rect _resizePos = new Rect()
             {
                 x = (position.width - BottomResizeWidth) * .5f,
@@ -837,7 +837,7 @@ namespace EnhancedEditor.Editor
                     EditorGUIUtility.AddCursorRect(_temp, MouseCursor.ResizeVertical);
                     if (_eventType == EventType.MouseDrag)
                     {
-                        // Resize inspector height.
+                        // ReduceSize inspector height.
                         inspectorHeight = Mathf.Clamp(position.height - _event.mousePosition.y, 0f, position.height - PickerMinimumHeight);
                         if (inspectorHeight < WideInspectorMinimumHeight)
                         {

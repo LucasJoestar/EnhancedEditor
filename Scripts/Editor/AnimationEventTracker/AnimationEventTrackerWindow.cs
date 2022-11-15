@@ -281,7 +281,7 @@ namespace EnhancedEditor.Editor
 
         private bool DrawAnimatorOverview()
         {
-            // Header.
+            // Button.
             GUILayout.Space(5f);
             EnhancedEditorGUILayout.UnderlinedLabel(headerGUI, EditorStyles.boldLabel);
             GUILayout.Space(5f);

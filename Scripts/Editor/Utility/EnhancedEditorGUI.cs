@@ -137,7 +137,7 @@ namespace EnhancedEditor.Editor {
         /// Draws a section, a header-like label surrounded by horizontal lines. Use this to decorate your GUI.
         /// </summary>
         /// <param name="_position"><inheritdoc cref="DocumentationMethod(Rect, GUIContent)" path="/param[@name='_position']"/></param>
-        /// <param name="_label">Header label.</param>
+        /// <param name="_label">Button label.</param>
         /// <param name="_lineWidth">Width of the lines surrounding the label (in pixels).</param>
         public static void Section(Rect _position, GUIContent _label, float _lineWidth = EnhancedEditorGUIUtility.SectionDefaultLineWidth) {
             GUIStyle _style = EnhancedEditorStyles.BoldCenteredLabel;
@@ -677,7 +677,7 @@ namespace EnhancedEditor.Editor {
                       (_totalWidth / _palette.Count) + 1f,
                       PaletteColorSize);
 
-            // Get control scroll.
+            // Get control logScroll.
             if (!palettesScroll.ContainsKey(_id)) {
                 palettesScroll.Add(_id, new Vector2());
             }
@@ -685,7 +685,7 @@ namespace EnhancedEditor.Editor {
             Vector2 _scroll = palettesScroll[_id];
             Rect _scrollPos = new Rect(_palettePos.x, _palettePos.y, _totalWidth, _temp.height);
 
-            // Draw all colors within a scroll view.
+            // Draw all colors within a logScroll view.
             using (var _scope = new GUI.ScrollViewScope(_palettePos, _scroll, _scrollPos)) {
                 palettesScroll[_id] = _scope.scrollPosition;
 
@@ -961,15 +961,8 @@ namespace EnhancedEditor.Editor {
             DuoField(_position, _property, _labelGUI, _secondPropertyName, _secondPropertyWidth, out _extraHeight);
         }
 
-        /// <summary>
-        /// Retrieves a second <see cref="SerializedProperty"/> from the first one, and draw both of them next to each other.
-        /// </summary>
-        /// <param name="_position"><inheritdoc cref="DocumentationMethod(Rect, GUIContent)" path="/param[@name='_position']"/></param>
-        /// <param name="_property">The first <see cref="SerializedProperty"/> to draw, and used to retrieve the second one.</param>
-        /// <param name="_label">The label to display for this property.</param>
         /// <param name="_secondPropertyName">The name of the second poperty to retrieve and draw next to the first one.</param>
-        /// <param name="_secondPropertyWidth">The width used to draw the second property (in pixels).</param>
-        /// <param name="_extraHeight"><inheritdoc cref="DocumentationMethodExtra(Rect, ref bool, out float, GUIStyle)" path="/param[@name='_extraHeight']"/></param>
+        /// <inheritdoc cref="DuoField(Rect, SerializedProperty, GUIContent, SerializedProperty, float, out float)"/>
         public static void DuoField(Rect _position, SerializedProperty _property, GUIContent _label, string _secondPropertyName, float _secondPropertyWidth, out float _extraHeight) {
             SerializedProperty _secondProperty;
             string _path = _property.propertyPath;
@@ -995,8 +988,41 @@ namespace EnhancedEditor.Editor {
                 return;
             }
 
+            DuoField(_position, _property, _label, _secondProperty, _secondPropertyWidth, out _extraHeight);
+        }
+
+        /// <inheritdoc cref="DuoField(Rect, SerializedProperty, GUIContent, SerializedProperty, GUIContent, float, out float)"/>
+        public static void DuoField(Rect _position, SerializedProperty _property, SerializedProperty _secondProperty, float _secondPropertyWidth, out float _extraHeight) {
+            GUIContent _label = EnhancedEditorGUIUtility.GetPropertyLabel(_property);
+            DuoField(_position, _property, _label, _secondProperty, _secondPropertyWidth, out _extraHeight);
+        }
+
+        /// <inheritdoc cref="DuoField(Rect, SerializedProperty, GUIContent, SerializedProperty, GUIContent, float, out float)"/>
+        public static void DuoField(Rect _position, SerializedProperty _property, string _label, SerializedProperty _secondProperty, float _secondPropertyWidth, out float _extraHeight) {
+            GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
+            DuoField(_position, _property, _labelGUI, _secondProperty, _secondPropertyWidth, out _extraHeight);
+        }
+
+        /// <inheritdoc cref="DuoField(Rect, SerializedProperty, GUIContent, SerializedProperty, GUIContent, float, out float)"/>
+        public static void DuoField(Rect _position, SerializedProperty _property, GUIContent _label, SerializedProperty _secondProperty, float _secondPropertyWidth, out float _extraHeight) {
+            GUIContent _secondLabel = EnhancedEditorGUIUtility.GetPropertyLabel(_secondProperty);
+            DuoField(_position, _property, _label, _secondProperty, _secondLabel, _secondPropertyWidth, out _extraHeight);
+        }
+
+        /// <summary>
+        /// Draws two <see cref="SerializedProperty"/> next to each other.
+        /// </summary>
+        /// <param name="_position"><inheritdoc cref="DocumentationMethod(Rect, GUIContent)" path="/param[@name='_position']"/></param>
+        /// <param name="_property">The first <see cref="SerializedProperty"/> to draw, and used to retrieve the second one.</param>
+        /// <param name="_label">The label to display for this property.</param>
+        /// <param name="_secondProperty">The second <see cref="SerializedProperty"/> to draw next to the first one.</param>
+        /// <param name="_label">The label to display for the second property.</param>
+        /// <param name="_secondPropertyWidth">The width used to draw the second property (in pixels).</param>
+        /// <param name="_extraHeight"><inheritdoc cref="DocumentationMethodExtra(Rect, ref bool, out float, GUIStyle)" path="/param[@name='_extraHeight']"/></param>
+        public static void DuoField(Rect _position, SerializedProperty _property, GUIContent _label, SerializedProperty _secondProperty, GUIContent _secondLabel,
+                                    float _secondPropertyWidth, out float _extraHeight) {
             // Prefix label.
-            _label = EnhancedEditorGUIUtility.GetLabelGUI(string.Format(DuoGUIFormat, _label.text, EnhancedEditorGUIUtility.GetPropertyLabel(_secondProperty).text));
+            _label = EnhancedEditorGUIUtility.GetLabelGUI(string.Format(DuoGUIFormat, _label.text, _secondLabel.text));
             Rect _temp = EditorGUI.PrefixLabel(_position, _label);
 
             _temp.width -= _secondPropertyWidth;
@@ -1132,7 +1158,7 @@ namespace EnhancedEditor.Editor {
                 EditorGUI.SelectableLabel(_position, _folderPath, EditorStyles.textField);
             }
 
-            // Folder icon.
+            // Folder Icon.
             if (folderButtonGUI.image == null)
                 folderButtonGUI.image = EditorGUIUtility.FindTexture("FolderOpened Icon");
 
@@ -1877,11 +1903,13 @@ namespace EnhancedEditor.Editor {
         /// <param name="_requiredTypes">Only the objects possessing all of these required components will be assignable
         /// (must either be a component or an interface).</param>
         public static void PickerField(Rect _position, SerializedProperty _property, GUIContent _label, Type[] _requiredTypes) {
-            Type _objectType;
-
             // In order for the picker to work, the property must be of object reference type and the target object type either a GameObject or a Component.
-            if ((_property.propertyType != SerializedPropertyType.ObjectReference)
-               || !EnhancedEditorUtility.IsSceneObject(_objectType = EnhancedEditorUtility.GetSerializedPropertyType(_property))) {
+            if (_property.propertyType != SerializedPropertyType.ObjectReference) {
+                EditorGUI.PropertyField(_position, _property, _label);
+                return;
+            }
+
+            if (!EnhancedEditorUtility.GetSerializedPropertyType(_property, out Type _objectType) || !EnhancedEditorUtility.IsSceneObject(_objectType)) {
                 EditorGUI.PropertyField(_position, _property, _label);
                 return;
             }
@@ -2899,7 +2927,7 @@ namespace EnhancedEditor.Editor {
             }
 
             string _guid = _guidProperty.stringValue;
-            if (_property.propertyPath.Contains("Array.")) {
+            if (_property.propertyPath.Contains("Collection.")) {
                 string _path = AssetDatabase.GUIDToAssetPath(_guid);
                 string _name = string.IsNullOrEmpty(_path)
                              ? "None"
@@ -3338,7 +3366,7 @@ namespace EnhancedEditor.Editor {
                 return;
             }
 
-            // Resize the content array if it is too small. Do not reallocate a new array for each call.
+            // ReduceSize the content array if it is too small. Do not reallocate a new array for each call.
             if (tagGroupContent.Count < _tagGroup.arraySize) {
                 tagGroupContent.Resize(_tagGroup.arraySize);
             }
@@ -4545,57 +4573,82 @@ namespace EnhancedEditor.Editor {
         /// <param name="_includeChildren">If true the property including children is drawn; otherwise only the control itself (such as only a foldout but nothing below it).</param>
         /// <returns><inheritdoc cref="DocumentationMethodTotal(Rect, out float)" path="/param[@name='_totalHeight']"/></returns>
         public static float EnhancedPropertyField(Rect _position, SerializedProperty _property, GUIContent _label, bool _includeChildren = true) {
-            string _path = _property.propertyPath;
-
-            if (!drawers.TryGetValue(_path, out EnhancedPropertyEditor _editor)) {
-                Type _type = EnhancedEditorUtility.GetSerializedPropertyType(_property);
-
-                if ((_type != null) && EnhancedEditorUtility.FindSerializedPropertyField(_property, out FieldInfo _field)) {
-                    // Get all custom drawers in the project, and retrieve the one with the closest type from the editing property.
-                    var _drawers = TypeCache.GetTypesWithAttribute<CustomPropertyDrawer>();
-                    Pair<Type, Type> _bestDrawer = new Pair<Type, Type>(null, null);
-
-                    foreach (Type _drawer in _drawers) {
-                        if (!_drawer.IsSubclassOf(typeof(EnhancedPropertyEditor))) {
-                            continue;
-                        }
-
-                        CustomPropertyDrawer _attribute = _drawer.GetCustomAttribute<CustomPropertyDrawer>(false);
-                        if (_attribute == null) {
-                            continue;
-                        }
-
-                        Type _target = drawerType.GetValue(_attribute) as Type;
-
-                        // If the drawer type is the same as this property, then use it.
-                        if (_target == _type) {
-                            _bestDrawer = new Pair<Type, Type>(_drawer, _target);
-                            break;
-                        }
-
-                        // If the drawer can be used for children, use it if its type is the closest one from the property.
-                        if (_type.IsSubclassOf(_target) && (bool)drawerUseForChildren.GetValue(_attribute) && ((_bestDrawer.First == null) || _target.IsSubclassOf(_bestDrawer.Second))) {
-                            _bestDrawer = new Pair<Type, Type>(_drawer, _target);
-                        }
-                    }
-
-                    // If an associated drawer was found, create a new instance of it to be used.
-                    if (_bestDrawer.First != null) {
-                        _editor = Activator.CreateInstance(_bestDrawer.First) as EnhancedPropertyEditor;
-                        drawerFieldInfo.SetValue(_editor, _field);
-                    }
-                }
-
-                drawers.Add(_path, _editor);
-            }
+            EnhancedPropertyEditor _editor = GetPropertyEditor(_property);
 
             // Draw default editor.
             if (_editor != null) {
-                return _editor.OnEnhancedGUI(_position, _property, _label);
+                return _editor.DrawEnhancedProperty(_position, _property, _label);
             }
 
             EditorGUI.PropertyField(_position, _property, _label, _includeChildren);
             return EditorGUI.GetPropertyHeight(_property, _label, _includeChildren);
+        }
+
+        // -----------------------
+
+        /// <summary>
+        /// Get the height used to draw a property using <see cref="EnhancedPropertyField(Rect, SerializedProperty, GUIContent, bool)"/>.
+        /// </summary>
+        /// <param name="_property">The property to get the required height.</param>
+        /// <param name="_label"><inheritdoc cref="DocumentationMethod(Rect, GUIContent)" path="/param[@name='_label']"/></param>
+        /// <param name="_includeChildren">True to get the height for the property children too, false for the property itself.</param>
+        /// <returns>The total height used to draw this property.</returns>
+        public static float GetEnhancedPropertyHeight(SerializedProperty _property, GUIContent _label, bool _includeChildren = true) {
+            EnhancedPropertyEditor _editor = GetPropertyEditor(_property);
+
+            return (_editor != null)
+                 ? _editor.GetDefaultHeight(_property, _label)
+                 : EditorGUI.GetPropertyHeight(_property, _label, _includeChildren);
+        }
+
+        private static EnhancedPropertyEditor GetPropertyEditor(SerializedProperty _property) {
+            string _path = _property.propertyPath;
+
+            if (drawers.TryGetValue(_path, out EnhancedPropertyEditor _editor)) {
+                return _editor;
+            }
+
+            EnhancedEditorUtility.GetSerializedPropertyType(_property, out Type _type);
+
+            if ((_type != null) && EnhancedEditorUtility.FindSerializedPropertyField(_property, out FieldInfo _field)) {
+                // Get all custom drawers in the project, and retrieve the one with the closest type from the editing property.
+                var _drawers = TypeCache.GetTypesWithAttribute<CustomPropertyDrawer>();
+                Pair<Type, Type> _bestDrawer = new Pair<Type, Type>(null, null);
+
+                foreach (Type _drawer in _drawers) {
+                    if (!_drawer.IsSubclassOf(typeof(EnhancedPropertyEditor))) {
+                        continue;
+                    }
+
+                    CustomPropertyDrawer _attribute = _drawer.GetCustomAttribute<CustomPropertyDrawer>(false);
+                    if (_attribute == null) {
+                        continue;
+                    }
+
+                    Type _target = drawerType.GetValue(_attribute) as Type;
+
+                    // If the drawer type is the same as this property, then use it.
+                    if (_target == _type) {
+                        _bestDrawer = new Pair<Type, Type>(_drawer, _target);
+                        break;
+                    }
+
+                    // If the drawer can be used for children, use it if its type is the closest one from the property.
+                    if (_type.IsSubclassOfGeneric(_target) && (bool)drawerUseForChildren.GetValue(_attribute)
+                                                           && ((_bestDrawer.First == null) || _target.IsSubclassOfGeneric(_bestDrawer.Second))) {
+                        _bestDrawer = new Pair<Type, Type>(_drawer, _target);
+                    }
+                }
+
+                // If an associated drawer was found, create a new instance of it to be used.
+                if (_bestDrawer.First != null) {
+                    _editor = Activator.CreateInstance(_bestDrawer.First) as EnhancedPropertyEditor;
+                    drawerFieldInfo.SetValue(_editor, _field);
+                }
+            }
+
+            drawers.Add(_path, _editor);
+            return _editor;
         }
         #endregion
 
@@ -4607,24 +4660,24 @@ namespace EnhancedEditor.Editor {
         }
 
         /// <summary>
-        /// Draws a full-size icon button.
+        /// Draws a full-size Icon button.
         /// </summary>
         /// <param name="_position"><inheritdoc cref="DocumentationMethod(Rect, GUIContent)" path="/param[@name='_position']"/></param>
-        /// <param name="_icon">The icon to draw on the button.</param>
+        /// <param name="_icon">The Icon to draw on the button.</param>
         /// <param name="_style"><inheritdoc cref="DocumentationMethodExtra(Rect, ref bool, out float, GUIStyle)" path="/param[@name='_style']"/></param>
-        /// <param name="_margins">Margins on each side of the icon.</param>
+        /// <param name="_margins">Margins on each side of the Icon.</param>
         /// <returns>True if the user clicked the button, false otherwise.</returns>
         public static bool IconButton(Rect _position, GUIContent _icon, GUIStyle _style, float _margins = 0f) {
-            // Draw the icon outside of the button to avoid dealing with its margins.
+            // Draw the Icon outside of the button to avoid dealing with its margins.
             bool _click = GUI.Button(_position, GUIContent.none, _style);
             GUIStyle _labelStyle = GUI.skin.label;
 
             using (var _scope = EnhancedGUI.GUIStyleAlignment.Scope(_labelStyle, TextAnchor.MiddleCenter)) {
                 _position.width -= _margins;
                 _position.height -= _margins;
-
-                _position.x += _margins / 2f;
-                _position.y += _margins / 2f;
+                
+                _position.x += (_margins / 2f) - 1f;
+                _position.y += (_margins / 2f) + 1f;
 
                 GUI.Label(_position, _icon, _labelStyle);
             }
@@ -4668,71 +4721,261 @@ namespace EnhancedEditor.Editor {
         }
         #endregion
 
-        #region Underlined Label
-        /// <inheritdoc cref="UnderlinedLabel(Rect, GUIContent, Color, GUIStyle)"/>
-        public static void UnderlinedLabel(Rect _position, string _label) {
+        #region Scriptable Object
+        private const string SaveScriptableObjectPanelTitle = "Select a folder where to save the ScriptableObject";
+        private const string SaveScriptableObjectPanelMessage = "Oops..;\nSomething bad happened.";
+        private const string SaveScriptableObjectPanelExtension = "asset";
+
+        private const float ScriptableButtonWidth = 50f;
+        private const float ScriptableButtonSpacing = 5f;
+
+        private static readonly GUIContent scriptableNewGUI = new GUIContent("Create", "Creates a new instance of this object.");
+        private static readonly GUIContent scriptableCloneGUI = new GUIContent("Clone", "Creates a new instance of this object and copy the values of the assigned object into it.");
+
+        private static readonly Dictionary<ScriptableObject, SerializedObject> scriptableSerializedObjects = new Dictionary<ScriptableObject, SerializedObject>();
+
+        // ===== Serialized Property ===== \\
+
+        /// <inheritdoc cref="ScriptableObjectContentField(Rect, SerializedProperty, GUIContent, ScriptableObjectDrawerMode, out float, bool)"/>
+        public static void ScriptableObjectContentField(Rect _position, SerializedProperty _property,
+                                                        out float _extraHeight, bool _drawField = true) {
+            ScriptableObjectDrawerMode _mode = ScriptableObjectDrawerModeUtility.DefaultMode;
+            ScriptableObjectContentField(_position, _property, _mode, out _extraHeight, _drawField);
+        }
+
+        /// <inheritdoc cref="ScriptableObjectContentField(Rect, SerializedProperty, GUIContent, ScriptableObjectDrawerMode, out float, bool)"/>
+        public static void ScriptableObjectContentField(Rect _position, SerializedProperty _property, string _label,
+                                                        out float _extraHeight, bool _drawField = true) {
+            ScriptableObjectDrawerMode _mode = ScriptableObjectDrawerModeUtility.DefaultMode;
+            ScriptableObjectContentField(_position, _property, _label, _mode, out _extraHeight, _drawField);
+        }
+
+        /// <inheritdoc cref="ScriptableObjectContentField(Rect, SerializedProperty, GUIContent, ScriptableObjectDrawerMode, out float, bool)"/>
+        public static void ScriptableObjectContentField(Rect _position, SerializedProperty _property, GUIContent _label,
+                                                        out float _extraHeight, bool _drawField = true) {
+            ScriptableObjectDrawerMode _mode = ScriptableObjectDrawerModeUtility.DefaultMode;
+            ScriptableObjectContentField(_position, _property, _label, _mode, out _extraHeight, _drawField);
+        }
+
+        /// <inheritdoc cref="ScriptableObjectContentField(Rect, SerializedProperty, GUIContent, ScriptableObjectDrawerMode, out float, bool)"/>
+        public static void ScriptableObjectContentField(Rect _position, SerializedProperty _property, ScriptableObjectDrawerMode _mode,
+                                                        out float _extraHeight, bool _drawField = true) {
+            GUIContent _label = EnhancedEditorGUIUtility.GetPropertyLabel(_property);
+            ScriptableObjectContentField(_position, _property, _label, _mode, out _extraHeight, _drawField);
+        }
+
+        /// <inheritdoc cref="ScriptableObjectContentField(Rect, SerializedProperty, GUIContent, ScriptableObjectDrawerMode, out float, bool)"/>
+        public static void ScriptableObjectContentField(Rect _position, SerializedProperty _property, string _label, ScriptableObjectDrawerMode _mode,
+                                                        out float _extraHeight, bool _drawField = true) {
             GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
-            UnderlinedLabel(_position, _labelGUI);
-        }
-
-        /// <inheritdoc cref="UnderlinedLabel(Rect, GUIContent, Color, GUIStyle)"/>
-        public static void UnderlinedLabel(Rect _position, string _label, Color _color) {
-            GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
-            UnderlinedLabel(_position, _labelGUI, _color);
-        }
-
-        /// <inheritdoc cref="UnderlinedLabel(Rect, GUIContent, Color, GUIStyle)"/>
-        public static void UnderlinedLabel(Rect _position, string _label, GUIStyle _style) {
-            GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
-            UnderlinedLabel(_position, _labelGUI, _style);
-        }
-
-        /// <inheritdoc cref="UnderlinedLabel(Rect, GUIContent, Color, GUIStyle)"/>
-        public static void UnderlinedLabel(Rect _position, string _label, Color _color, GUIStyle _style) {
-            GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
-            UnderlinedLabel(_position, _labelGUI, _color, _style);
-        }
-
-        /// <inheritdoc cref="UnderlinedLabel(Rect, GUIContent, Color, GUIStyle)"/>
-        public static void UnderlinedLabel(Rect _position, GUIContent _label) {
-            GUIStyle _style = EditorStyles.label;
-            UnderlinedLabel(_position, _label, _style);
-        }
-
-        /// <inheritdoc cref="UnderlinedLabel(Rect, GUIContent, Color, GUIStyle)"/>
-        public static void UnderlinedLabel(Rect _position, GUIContent _label, Color _color) {
-            GUIStyle _style = EditorStyles.label;
-            UnderlinedLabel(_position, _label, _color, _style);
-        }
-
-        /// <inheritdoc cref="UnderlinedLabel(Rect, GUIContent, Color, GUIStyle)"/>
-        public static void UnderlinedLabel(Rect _position, GUIContent _label, GUIStyle _style) {
-            Color _color = Color.white;
-            UnderlinedLabel(_position, _label, _color, _style);
+            ScriptableObjectContentField(_position, _property, _labelGUI, _mode, out _extraHeight, _drawField);
         }
 
         /// <summary>
-        /// Draws an underlined label.
+        /// Draws a scriptable object with additional utility buttons, and all its content fields within a foldout.
         /// </summary>
         /// <param name="_position"><inheritdoc cref="DocumentationMethod(Rect, GUIContent)" path="/param[@name='_position']"/></param>
-        /// <param name="_label">Label to display.</param>
-        /// <param name="_color">Color of the label.</param>
-        /// <param name="_style"><inheritdoc cref="DocumentationMethodExtra(Rect, ref bool, out float, GUIStyle)" path="/param[@name='_style']"/></param>
-        public static void UnderlinedLabel(Rect _position, GUIContent _label, Color _color, GUIStyle _style) {
-            using (var _scope = EnhancedGUI.GUIColor.Scope(_color)) {
-                EditorGUI.LabelField(_position, _label, _style);
+        /// <param name="_property">The scriptable object property to draw.</param>
+        /// <param name="_label"><inheritdoc cref="DocumentationMethod(Rect, GUIContent)" path="/param[@name='_label']"/></param>
+        /// <param name="_mode">The mode used to draw this <see cref="ScriptableObject"/>.</param>
+        /// <param name="_extraHeight"><inheritdoc cref="DocumentationMethodExtra(Rect, ref bool, out float, GUIStyle)" path="/param[@name='_extraHeight']"/></param>
+        /// <param name="_drawField">Whether to draw the object reference field or only the object content.</param>
+        public static void ScriptableObjectContentField(Rect _position, SerializedProperty _property, GUIContent _label, ScriptableObjectDrawerMode _mode,
+                                                        out float _extraHeight, bool _drawField = true) {
+            // Property issue management.
+            if (!EnhancedEditorUtility.GetSerializedPropertyType(_property, out Type _objectType) || !_objectType.IsSubclassOf(typeof(ScriptableObject))) {
+                EditorGUI.PropertyField(_position, _property, _label);
+                _extraHeight = 0f;
+                return;
             }
 
-            _position = new Rect() {
-                x = EditorGUI.IndentedRect(_position).x,
-                y = _position.y + _position.height,
-                height = 1f,
-                width = _style.CalcSize(_label).x
-            };
-            ;
+            // Property field.
+            using (var _scope = new EditorGUI.PropertyScope(Rect.zero, _label, _property))
+            using (var _changeCheck = new EditorGUI.ChangeCheckScope()) {
+                bool _foldout = _property.isExpanded;
+                Object _object = _property.objectReferenceValue;
 
-            _color *= _style.normal.textColor;
-            EditorGUI.DrawRect(_position, _color);
+                _object = DoScriptableObjectContentField(_position, _label, _object as ScriptableObject, _objectType, _mode, ref _foldout, out _extraHeight, _drawField);
+
+                if (_changeCheck.changed) {
+                    _property.objectReferenceValue = _object;
+                    _property.isExpanded = _foldout;
+                }
+
+                _position.height += _extraHeight;
+                using (new EditorGUI.PropertyScope(_position, GUIContent.none, _property)) { }
+            }
+        }
+
+        // ===== Scriptable Object ===== \\
+
+        /// <inheritdoc cref="ScriptableObjectContentField(Rect, GUIContent, ScriptableObject, Type, ScriptableObjectDrawerMode, ref bool, out float, bool"/>
+        public static ScriptableObject ScriptableObjectContentField(Rect _position, ScriptableObject _scriptableObject, Type _objectType,
+                                                                    ref bool _foldout, out float _extraHeight, bool _drawField = true) {
+            ScriptableObjectDrawerMode _mode = ScriptableObjectDrawerModeUtility.DefaultMode;
+            return ScriptableObjectContentField(_position, _scriptableObject, _objectType, _mode, ref _foldout, out _extraHeight, _drawField);
+        }
+
+        /// <inheritdoc cref="ScriptableObjectContentField(Rect, GUIContent, ScriptableObject, Type, ScriptableObjectDrawerMode, ref bool, out float, bool"/>
+        public static ScriptableObject ScriptableObjectContentField(Rect _position, string _label, ScriptableObject _scriptableObject, Type _objectType,
+                                                                    ref bool _foldout, out float _extraHeight, bool _drawField = true) {
+            ScriptableObjectDrawerMode _mode = ScriptableObjectDrawerModeUtility.DefaultMode;
+            return ScriptableObjectContentField(_position, _label, _scriptableObject, _objectType, _mode, ref _foldout, out _extraHeight, _drawField);
+        }
+
+        /// <inheritdoc cref="ScriptableObjectContentField(Rect, GUIContent, ScriptableObject, Type, ScriptableObjectDrawerMode, ref bool, out float, bool"/>
+        public static ScriptableObject ScriptableObjectContentField(Rect _position, GUIContent _label, ScriptableObject _scriptableObject, Type _objectType,
+                                                                    ref bool _foldout, out float _extraHeight, bool _drawField = true) {
+            ScriptableObjectDrawerMode _mode = ScriptableObjectDrawerModeUtility.DefaultMode;
+            return ScriptableObjectContentField(_position, _label, _scriptableObject, _objectType, _mode, ref _foldout, out _extraHeight, _drawField);
+        }
+
+        /// <inheritdoc cref="ScriptableObjectContentField(Rect, GUIContent, ScriptableObject, Type, ScriptableObjectDrawerMode, ref bool, out float, bool"/>
+        public static ScriptableObject ScriptableObjectContentField(Rect _position, ScriptableObject _scriptableObject, Type _objectType,
+                                                                    ScriptableObjectDrawerMode _mode, ref bool _foldout, out float _extraHeight, bool _drawField = true) {
+            GUIContent _label =  GUIContent.none;
+            return ScriptableObjectContentField(_position, _label, _scriptableObject, _objectType, _mode, ref _foldout, out _extraHeight, _drawField);
+        }
+
+        /// <inheritdoc cref="ScriptableObjectContentField(Rect, GUIContent, ScriptableObject, Type, ScriptableObjectDrawerMode, ref bool, out float, bool"/>
+        public static ScriptableObject ScriptableObjectContentField(Rect _position, string _label, ScriptableObject _scriptableObject, Type _objectType,
+                                                                    ScriptableObjectDrawerMode _mode, ref bool _foldout, out float _extraHeight, bool _drawField = true) {
+            GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
+            return ScriptableObjectContentField(_position, _labelGUI, _scriptableObject, _objectType, _mode, ref _foldout, out _extraHeight, _drawField);
+        }
+
+        /// <param name="_scriptableObject">The scriptable object to draw.</param>
+        /// <param name="_foldout">The shown scriptable content foldout state.</param>
+        /// <returns><inheritdoc cref="DocumentationMethodObject(Object, Type, bool)" path="/returns"/></returns>
+        /// <inheritdoc cref="ScriptableObjectContentField(Rect, SerializedProperty, GUIContent, ScriptableObjectDrawerMode, out float, bool)"/>
+        public static ScriptableObject ScriptableObjectContentField(Rect _position, GUIContent _label, ScriptableObject _scriptableObject, Type _objectType,
+                                                                    ScriptableObjectDrawerMode _mode, ref bool _foldout, out float _extraHeight, bool _drawField = true) {
+            return DoScriptableObjectContentField(_position, _label, _scriptableObject, _objectType, _mode, ref _foldout, out _extraHeight, _drawField);
+        }
+
+        // -----------------------
+
+        private static ScriptableObject DoScriptableObjectContentField(Rect _position, GUIContent _label, ScriptableObject _scriptableObject, Type _objectType,
+                                                                       ScriptableObjectDrawerMode _mode, ref bool _foldout, out float _extraHeight, bool _drawField) {
+            bool _isContent = _scriptableObject != null;
+            bool _drawButton = _mode.HasFlag(ScriptableObjectDrawerMode.Button) && _drawField;
+            bool _drawContent = _mode.HasFlag(ScriptableObjectDrawerMode.Content) && _isContent;
+
+            // Object registration.
+            SerializedObject _serializedObject = null;
+
+            if (_drawContent && !scriptableSerializedObjects.TryGetValue(_scriptableObject, out _serializedObject)) {
+                _serializedObject = new SerializedObject(_scriptableObject);
+                scriptableSerializedObjects.Add(_scriptableObject, _serializedObject);
+            }
+
+            // Do not draw non-editable objects.
+            if (_drawContent && _scriptableObject.GetType().IsDefined(typeof(NonEditableAttribute))) {
+                _drawContent = false;
+            }
+
+            // Buttons.
+            if (_drawButton) {
+                GUIStyle _style;
+                Rect _buttonPosition = new Rect(_position) {
+                    xMin = _position.xMax - ScriptableButtonWidth
+                };
+
+                if (_isContent) {
+                    // Clone button.
+                    if (GUI.Button(_buttonPosition, scriptableCloneGUI, EditorStyles.miniButtonRight)) {
+                        string _path = OpenSaveFilePanel();
+
+                        if (!string.IsNullOrEmpty(_path)) {
+                            ScriptableObject _clone = Object.Instantiate(_scriptableObject);
+
+                            AssetDatabase.CreateAsset(_clone, _path);
+                            AssetDatabase.Refresh();
+                        }
+                    }
+
+                    _style = EditorStyles.miniButtonLeft;
+                    _buttonPosition.x -= _buttonPosition.width;
+                } else {
+                    _style = EditorStyles.miniButton;
+                }
+
+                // Create button.
+                if (GUI.Button(_buttonPosition, scriptableNewGUI, _style)) {
+                    string _path = OpenSaveFilePanel();
+
+                    if (!string.IsNullOrEmpty(_path)) {
+                        ScriptableObject _new = ScriptableObject.CreateInstance(_objectType);
+
+                        AssetDatabase.CreateAsset(_new, _path);
+                        AssetDatabase.Refresh();
+                    }
+                }
+
+                _position.xMax = _buttonPosition.x - ScriptableButtonSpacing;
+            }
+
+            _extraHeight = 0f;
+
+            if (_drawField) {
+                // Object drawer.
+                _scriptableObject = EditorGUI.ObjectField(_position, _label, _scriptableObject, _objectType, false) as ScriptableObject;
+
+                // Foldout.
+                if (_drawContent) {
+                    _foldout = EditorGUI.Foldout(_position, _foldout, GUIContent.none, false);
+                }
+            } else {
+                _extraHeight -= _position.height + EditorGUIUtility.standardVerticalSpacing;
+                _position.y += _extraHeight;
+            }
+
+            // Content.
+            if (_drawContent && _foldout) {
+                _serializedObject.UpdateIfRequiredOrScript();
+
+                if (_drawField) {
+                    using (var _scope = new EditorGUI.IndentLevelScope(1)) {
+                        _extraHeight = DrawContent();
+                    }
+                } else {
+                    _extraHeight = DrawContent();
+                }
+
+                _serializedObject.ApplyModifiedProperties();
+            }
+
+            return _scriptableObject;
+
+            // ----- Local Methods ----- \\
+
+            string OpenSaveFilePanel() {
+                return EditorUtility.SaveFilePanelInProject(SaveScriptableObjectPanelTitle, _objectType.Name, SaveScriptableObjectPanelExtension, SaveScriptableObjectPanelMessage);
+            }
+
+            float DrawContent() {
+                SerializedProperty _property = _serializedObject.GetIterator().Copy();
+
+                // Skip the script object reference property.
+                if (!_property.NextVisible(true)) {
+                    return 0f;
+                }
+
+                Rect _contentPosition = new Rect(_position);
+                float _height = 0f;
+
+                // Draw each scriptable property.
+                while (_property.NextVisible(false)) {
+                    _contentPosition.y += _contentPosition.height + EditorGUIUtility.standardVerticalSpacing;
+                    _contentPosition.height = EditorGUI.GetPropertyHeight(_property, true);
+
+                    _height += _contentPosition.height + EditorGUIUtility.standardVerticalSpacing;
+
+                    EditorGUI.PropertyField(_contentPosition, _property, true);
+                }
+
+                return _height;
+            }
         }
         #endregion
 
@@ -4749,7 +4992,7 @@ namespace EnhancedEditor.Editor {
                 return ManageDynamicControlHeight(GUIContent.none, 0f);
 
             try {
-                // Remove scroll size on width to avoid jitter.
+                // Remove logScroll size on width to avoid jitter.
                 float _scrollSize = EnhancedEditorGUIUtility.ScrollSize + 5f;
 
                 _position = EditorGUI.IndentedRect(_position);
@@ -4860,6 +5103,75 @@ namespace EnhancedEditor.Editor {
             }
         }
         #endregion
+
+        #region Underlined Label
+        /// <inheritdoc cref="UnderlinedLabel(Rect, GUIContent, Color, GUIStyle)"/>
+        public static void UnderlinedLabel(Rect _position, string _label) {
+            GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
+            UnderlinedLabel(_position, _labelGUI);
+        }
+
+        /// <inheritdoc cref="UnderlinedLabel(Rect, GUIContent, Color, GUIStyle)"/>
+        public static void UnderlinedLabel(Rect _position, string _label, Color _color) {
+            GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
+            UnderlinedLabel(_position, _labelGUI, _color);
+        }
+
+        /// <inheritdoc cref="UnderlinedLabel(Rect, GUIContent, Color, GUIStyle)"/>
+        public static void UnderlinedLabel(Rect _position, string _label, GUIStyle _style) {
+            GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
+            UnderlinedLabel(_position, _labelGUI, _style);
+        }
+
+        /// <inheritdoc cref="UnderlinedLabel(Rect, GUIContent, Color, GUIStyle)"/>
+        public static void UnderlinedLabel(Rect _position, string _label, Color _color, GUIStyle _style) {
+            GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
+            UnderlinedLabel(_position, _labelGUI, _color, _style);
+        }
+
+        /// <inheritdoc cref="UnderlinedLabel(Rect, GUIContent, Color, GUIStyle)"/>
+        public static void UnderlinedLabel(Rect _position, GUIContent _label) {
+            GUIStyle _style = EditorStyles.label;
+            UnderlinedLabel(_position, _label, _style);
+        }
+
+        /// <inheritdoc cref="UnderlinedLabel(Rect, GUIContent, Color, GUIStyle)"/>
+        public static void UnderlinedLabel(Rect _position, GUIContent _label, Color _color) {
+            GUIStyle _style = EditorStyles.label;
+            UnderlinedLabel(_position, _label, _color, _style);
+        }
+
+        /// <inheritdoc cref="UnderlinedLabel(Rect, GUIContent, Color, GUIStyle)"/>
+        public static void UnderlinedLabel(Rect _position, GUIContent _label, GUIStyle _style) {
+            Color _color = Color.white;
+            UnderlinedLabel(_position, _label, _color, _style);
+        }
+
+        /// <summary>
+        /// Draws an underlined label.
+        /// </summary>
+        /// <param name="_position"><inheritdoc cref="DocumentationMethod(Rect, GUIContent)" path="/param[@name='_position']"/></param>
+        /// <param name="_label">Label to display.</param>
+        /// <param name="_color">Color of the label.</param>
+        /// <param name="_style"><inheritdoc cref="DocumentationMethodExtra(Rect, ref bool, out float, GUIStyle)" path="/param[@name='_style']"/></param>
+        public static void UnderlinedLabel(Rect _position, GUIContent _label, Color _color, GUIStyle _style) {
+            using (var _scope = EnhancedGUI.GUIColor.Scope(_color)) {
+                EditorGUI.LabelField(_position, _label, _style);
+            }
+
+            _position = new Rect() {
+                x = EditorGUI.IndentedRect(_position).x,
+                y = _position.y + _position.height,
+                height = 1f,
+                width = _style.CalcSize(_label).x
+            };
+            ;
+
+            _color *= _style.normal.textColor;
+            EditorGUI.DrawRect(_position, _color);
+        }
+        #endregion
+
 
         // --- Utility --- \\
 

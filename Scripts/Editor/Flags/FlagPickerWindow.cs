@@ -396,7 +396,7 @@ namespace EnhancedEditor.Editor {
 
                 // Select on click.
                 if (UseGroup) {
-                    EnhancedEditorGUIUtility.MultiSelectionClick(_position, flags, i, IsFlagSelected, OnSelectFlag);
+                    EnhancedEditorGUIUtility.MultiSelectionClick(_position, flags, i, IsFlagSelected, CanSelectFlag, OnSelectFlag);
                 } else if (EnhancedEditorGUIUtility.MouseDown(_position)) {
                     SelectFlag(i);
                     if (Event.current.clickCount > 1) {
@@ -476,7 +476,7 @@ namespace EnhancedEditor.Editor {
                     }
 
                     // Multi selection.
-                    EnhancedEditorGUIUtility.MultiSelectionClick(_position, group.Array, i, IsGroupFlagSelected, OnSelectGroupFlag);
+                    EnhancedEditorGUIUtility.MultiSelectionClick(_position, group.Array, i, IsGroupFlagSelected, CanSelectGroupFlag, OnSelectGroupFlag);
                 }
             }
         }

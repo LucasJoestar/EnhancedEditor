@@ -14,7 +14,7 @@ namespace EnhancedEditor.Editor {
     [CustomPropertyDrawer(typeof(FlagReference), true)]
     public class FlagReferencePropertyDrawer : EnhancedPropertyEditor {
         #region Drawer Content
-        internal protected override float OnEnhancedGUI(Rect _position, SerializedProperty _property, GUIContent _label) {
+        protected override float OnEnhancedGUI(Rect _position, SerializedProperty _property, GUIContent _label) {
             EnhancedEditorGUI.FlagReferenceField(_position, _property, _label);
             return _position.height;
         }

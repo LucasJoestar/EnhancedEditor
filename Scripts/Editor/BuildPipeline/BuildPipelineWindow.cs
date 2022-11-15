@@ -147,11 +147,36 @@ namespace EnhancedEditor.Editor
         private const float LargeButtonHeight = 25f;
         private const float RefreshButtonWidth = 60f;
 
+        private const string EditorPrefsKey = EnhancedEditorSettings.EditorPrefsPath + "BuildDirectory";
         private const string UndoRecordTitle = "Build Pipeline Change";
         private const string PresetMetaDataFile = "preset.meta";
         public const char ScriptingDefineSymbolSeparator = ';';
 
-        private static string BuildDirectory => EnhancedEditorSettings.Settings.UserSettings.BuildDirectory;
+        private static string buildDirectory = string.Empty;
+
+        public static string BuildDefaultDirectory {
+            get {
+                string _directory = Path.Combine(Path.GetDirectoryName(Application.dataPath), "Builds");
+                return _directory.Replace(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            }
+        }
+
+        /// <summary>
+        /// The directory where to build and look for existing builds of the game.
+        /// </summary>
+        public static string BuildDirectory {
+            get {
+                if (string.IsNullOrEmpty(buildDirectory)) {
+                    buildDirectory = EditorPrefs.GetString(EditorPrefsKey, BuildDefaultDirectory);
+                }
+
+                return buildDirectory;
+            }
+            set {
+                EditorPrefs.SetString(EditorPrefsKey, value);
+                buildDirectory = value;
+            }
+        }
 
         public static readonly AutoManagedResource<BuildPreset> PresetResources = new AutoManagedResource<BuildPreset>("Custom", "BP_", string.Empty);
         private readonly GUIContent[] tabsGUI = new GUIContent[]
@@ -464,7 +489,7 @@ namespace EnhancedEditor.Editor
             }
 
             // Select scene on click.
-            EnhancedEditorGUIUtility.MultiSelectionClick(_position, buildScenes, _index, IsBuildSceneSelected, SelectBuildScene);
+            EnhancedEditorGUIUtility.MultiSelectionClick(_position, buildScenes, _index, IsBuildSceneSelected, CanSelectBuildScene, SelectBuildScene);
         }
 
         private void BuilderSectionEvents(Rect _position)
@@ -510,14 +535,6 @@ namespace EnhancedEditor.Editor
                 _menu.ShowAsContext();
 
                 Repaint();
-            }
-
-            // ----- Local Method ----- \\
-
-            bool CanSelectBuildScene(int _index)
-            {
-                SceneWrapper _scene = buildScenes[_index];
-                return _scene.IsVisible;
             }
         }
 
@@ -627,14 +644,6 @@ namespace EnhancedEditor.Editor
                 EditorGUILayout.LabelField(buildIdentifierGUI, GUILayout.Width(90f));
                 buildIdentifier = EditorGUILayout.TextField(buildIdentifier);
             }
-
-            // ----- Local Method ----- \\
-
-            bool CanSelectProjectScene(int _index)
-            {
-                SceneWrapper _scene = projectScenes[_index];
-                return _scene.IsVisible;
-            }
         }
 
         private void DrawProjectScene(Rect _position, int _index)
@@ -659,7 +668,7 @@ namespace EnhancedEditor.Editor
             }
 
             // Select scene on click.
-            EnhancedEditorGUIUtility.MultiSelectionClick(_position, projectScenes, _index, IsProjectSceneSelected, SelectProjectScene);
+            EnhancedEditorGUIUtility.MultiSelectionClick(_position, projectScenes, _index, IsProjectSceneSelected, CanSelectProjectScene, SelectProjectScene);
         }
 
         private void DrawBuilderBottom()
@@ -714,12 +723,14 @@ namespace EnhancedEditor.Editor
             return _isSelected;
         }
 
+        private bool CanSelectBuildScene(int _index) {
+            SceneWrapper _scene = buildScenes[_index];
+            return _scene.IsVisible;
+        }
+
         private void SelectBuildScene(int _index, bool _isSelected)
         {
             SceneWrapper _scene = buildScenes[_index];
-            if (_isSelected && !_scene.IsVisible)
-                return;
-
             _scene.IsSelected = _isSelected;
 
             // Last selected index update.
@@ -742,6 +753,11 @@ namespace EnhancedEditor.Editor
             bool _isSelected = _scene.IsSelected && _scene.IsVisible;
 
             return _isSelected;
+        }
+
+        private bool CanSelectProjectScene(int _index) {
+            SceneWrapper _scene = projectScenes[_index];
+            return _scene.IsVisible;
         }
 
         private void SelectProjectScene(int _index, bool _isSelected)
@@ -1557,7 +1573,7 @@ namespace EnhancedEditor.Editor
                 }
 
                 // Select on click.
-                EnhancedEditorGUIUtility.MultiSelectionClick(_position, customSymbols, _i, IsSymbolSelected, SelectSymbol);
+                EnhancedEditorGUIUtility.MultiSelectionClick(_position, customSymbols, _i, IsSymbolSelected, CanSelectSymbol, SelectSymbol);
             }
         }
 
@@ -1606,12 +1622,6 @@ namespace EnhancedEditor.Editor
             }
 
             // ----- Local Methods ----- \\
-
-            bool CanSelectSymbol(int _index)
-            {
-                ScriptingDefineSymbolInfo _symbol = customSymbols[_index];
-                return _symbol.IsVisible;
-            }
 
             void EnableSymbols()
             {
@@ -1705,6 +1715,11 @@ namespace EnhancedEditor.Editor
             bool _isSelected = _symbol.IsSelected && _symbol.IsVisible;
 
             return _isSelected;
+        }
+
+        private bool CanSelectSymbol(int _index) {
+            ScriptingDefineSymbolInfo _symbol = customSymbols[_index];
+            return _symbol.IsVisible;
         }
 
         private void SelectSymbol(int _index, bool _isSelected)
@@ -2162,7 +2177,7 @@ namespace EnhancedEditor.Editor
         private void DrawTab(Action _onDrawHeader, Action _onDrawSectionToolbar, Action _onDrawSection, Action<Rect> _onSectionEvent,
                              Action _onDrawRightSide, Action _onDrawBottom, ref Vector2 _sectionScroll)
         {
-            // Header.
+            // Button.
             _onDrawHeader();
 
             using (var _globalScope = new GUILayout.HorizontalScope())
@@ -2230,14 +2245,11 @@ namespace EnhancedEditor.Editor
             EnhancedEditorGUILayout.UnderlinedLabel(_header, EditorStyles.boldLabel);
             GUILayout.Space(3f);
 
-            EnhancedEditorSettings _settings = EnhancedEditorSettings.Settings;
-            string _directory = EnhancedEditorGUILayout.FolderField(GUIContent.none, _settings.UserSettings.BuildDirectory, true, BuildDirectoryPanelTitle);
+            string _directory = EnhancedEditorGUILayout.FolderField(GUIContent.none, BuildDirectory, true, BuildDirectoryPanelTitle);
 
-            if (_directory != _settings.UserSettings.BuildDirectory)
+            if (_directory != BuildDirectory)
             {
-                _settings.UserSettings.BuildDirectory = _directory;
-                _settings.SaveSettings();
-
+                BuildDirectory = _directory;
                 RefreshBuilds();
             }
         }
@@ -2488,6 +2500,22 @@ namespace EnhancedEditor.Editor
 
                     EditorGUI.HelpBox(_temp, _message, _messageType);
                 }
+            }
+        }
+        #endregion
+
+        #region User Preferences
+        private static readonly GUIContent preferencesGUI = new GUIContent("Build Directory",
+                                                                           "Directory where to build and look for existing builds of the game from the BuildPipelineWindow.");
+
+        // -----------------------
+
+        [EnhancedEditorPreferences(Order = 5)]
+        private static void DrawPreferences() {
+            string _directory = EnhancedEditorGUILayout.FolderField(preferencesGUI, BuildDirectory, true, BuildDirectoryPanelTitle);
+
+            if (_directory != buildDirectory) {
+                BuildDirectory = _directory;
             }
         }
         #endregion

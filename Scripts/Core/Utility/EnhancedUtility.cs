@@ -7,6 +7,8 @@
 using System;
 using System.Reflection;
 
+using Object = UnityEngine.Object;
+
 namespace EnhancedEditor {
     /// <summary>
     /// Contains multiple utility methods for usage during both editor and runtime.
@@ -15,7 +17,23 @@ namespace EnhancedEditor {
         #region Reflection
         private const BindingFlags CopyObjectFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
 
+        private static readonly MethodInfo findObjectFromInstanceIDMethod = typeof(Object).GetMethod("FindObjectFromInstanceID", BindingFlags.Static | BindingFlags.NonPublic);
+        private static readonly object[] findObjectFromInstanceIDParameters = new object[1];
+
         // -----------------------
+
+        /// <summary>
+        /// Finds the loaded <see cref="Object"/> with a specific instance id.
+        /// </summary>
+        /// <param name="_instanceID">The id to get the associated <see cref="Object"/>.</param>
+        /// <param name="_object">The object with the given instance id.</param>
+        /// <returns>True if the object with this instance id could be found, false otherwise.</returns>
+        public static bool FindObjectFromInstanceID(int _instanceID, out Object _object) {
+            findObjectFromInstanceIDParameters[0] = _instanceID;
+
+            _object = findObjectFromInstanceIDMethod.Invoke(null, findObjectFromInstanceIDParameters) as Object;
+            return _object != null;
+        }
 
         /// <summary>
         /// Copies the value of all fields and properties of a source object into a target object.

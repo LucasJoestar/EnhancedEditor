@@ -475,7 +475,7 @@ namespace EnhancedEditor.Editor
         public static void Repaint()
         {
             #if EDITOR_TOOLBAR
-            repaintDelegate();
+            repaintDelegate?.Invoke();
             #endif
         }
         #endregion

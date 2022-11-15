@@ -588,7 +588,7 @@ namespace EnhancedEditor.Editor
 
                 // Special event operations.
                 EventOperations(_position, _dragPosition, _object, _i, _object.Indent);
-                EnhancedEditorGUIUtility.MultiSelectionClick(_linePos, Pinboard.PinObjects, _i, IsSelected, Select);
+                EnhancedEditorGUIUtility.MultiSelectionClick(_linePos, Pinboard.PinObjects, _i, IsSelected, CanBeSelected, Select);
             }
         }
 

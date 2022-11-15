@@ -24,7 +24,7 @@ namespace EnhancedEditor.Editor
             return _height;
         }
 
-        internal protected override float OnEnhancedGUI(Rect _position, SerializedProperty _property, GUIContent _label)
+        protected override float OnEnhancedGUI(Rect _position, SerializedProperty _property, GUIContent _label)
         {
             // As the full height is given on position, set it for one line only.
             _position.height = EditorGUIUtility.singleLineHeight;

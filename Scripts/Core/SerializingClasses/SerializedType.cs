@@ -5,7 +5,12 @@
 // ============================================================================ //
 
 using System;
+using System.Collections.Generic;
 using UnityEngine;
+
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace EnhancedEditor {
 	/// <summary>
@@ -25,7 +30,7 @@ namespace EnhancedEditor {
 	/// </summary>
 	/// <typeparam name="T">Base type this type value should be derived from.</typeparam>
 	[Serializable]
-	public class SerializedType<T> : ISerializationCallbackReceiver where T : class {
+	public class SerializedType<T> : ISerializationCallbackReceiver, IComparer<SerializedType<T>> where T : class {
 		#region Global Members
 		[SerializeField] protected string typeName = string.Empty;
 
@@ -59,6 +64,29 @@ namespace EnhancedEditor {
 		public SerializedType(Type _type, SerializedTypeConstraint _constraints = SerializedTypeConstraint.None) : this(_constraints) {
 			Type = _type;
 		}
+
+		/// <summary>
+		/// Creates a new type serialization wrapper.
+		/// <br/> Initializes it with the first not ignored derived type.
+		/// </summary>
+		/// <param name="_defaultType">The default value of this type, if no other could be found.</param>
+		/// <param name="_ignored">Derived types to ignore when seeking for the default value.</param>
+		/// <inheritdoc cref="SerializedType{T}.SerializedType(SerializedTypeConstraint)"/>
+		public SerializedType(SerializedTypeConstraint _constraints, Type _defaultType, params Type[] _ignored) : this(_constraints) {
+			#if UNITY_EDITOR
+			var _types = TypeCache.GetTypesDerivedFrom(typeof(T));
+
+			foreach (var _type in _types) {
+				if ((!_type.IsAbstract || _constraints.HasFlag(SerializedTypeConstraint.Abstract)) && !_type.IsDefined(typeof(EtherealAttribute), false)
+				 && (_type != _defaultType) && !ArrayUtility.Contains(_ignored, _type)) {
+					Type = _type;
+					return;
+				}
+			}
+			#endif
+
+			Type = _defaultType;
+		}
 		#endregion
 
 		#region Operators
@@ -73,9 +101,27 @@ namespace EnhancedEditor {
 		public override string ToString() {
 			return (type != null) ? type.FullName : "[Null Type]";
 		}
+
+        public override bool Equals(object _object) {
+			if (_object is SerializedType<T> _type) {
+				return Type.Equals(_type.Type);
+            }
+
+            return base.Equals(_object);
+        }
+
+        public override int GetHashCode() {
+            return base.GetHashCode();
+        }
         #endregion
 
-        #region Utility
+        #region Comparer
+        int IComparer<SerializedType<T>>.Compare(SerializedType<T> a, SerializedType<T> b) {
+			return a.Type.Name.CompareTo(b.Type.Name);
+		}
+		#endregion
+
+		#region Utility
 		internal void SetType(Type _type) {
 			Type _base = typeof(T);
 
@@ -96,7 +142,7 @@ namespace EnhancedEditor {
 					Debug.LogError($"SerializedType - This type value cannot be the same as the base type \'{_base.Name}\'");
 					return;
 				}
-			} else if (!_type.IsSubclassOf(_base)) {
+			} else if (!_base.IsAssignableFrom(_type)) {
 				Debug.LogError($"SerializedType - The type \'{_type.Name}\' does not inherit from \'{_base.Name}\'");
 				return;
 			}

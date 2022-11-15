@@ -30,7 +30,7 @@ namespace EnhancedEditor.Editor {
             return _height;
         }
 
-        internal protected override float OnEnhancedGUI(Rect _position, SerializedProperty _property, GUIContent _label) {
+        protected override float OnEnhancedGUI(Rect _position, SerializedProperty _property, GUIContent _label) {
             // Register this property to cache its interface type.
             string _key = _property.propertyPath;
 

@@ -123,7 +123,7 @@ namespace EnhancedEditor.Editor
 
                     using (var verticalScope = new GUILayout.VerticalScope(GUILayout.Width(position.width - 10f)))
                     {
-                        // Header.
+                        // Button.
                         EnhancedEditorGUILayout.UnderlinedLabel(headerGUI, EditorStyles.boldLabel);
                         GUILayout.Space(7f);
 
@@ -349,7 +349,7 @@ namespace EnhancedEditor.Editor
             {
                 Undo.RecordObject(this, UndoRecordTitle);
 
-                // Header and content.
+                // Button and content.
                 Rect _position = new Rect(5f, 5f, PrefixWidth, EditorGUIUtility.singleLineHeight);
                 EditorGUI.LabelField(_position, tagGUI);
 

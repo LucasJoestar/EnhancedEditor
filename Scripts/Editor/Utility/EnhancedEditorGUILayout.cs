@@ -1867,6 +1867,48 @@ namespace EnhancedEditor.Editor {
 
         // --- Various GUI Controls --- \\
 
+        #region Centered Controls
+        /// <summary>
+        /// Makes a centered generic popup selection field.
+        /// </summary>
+        /// <param name="_selectedIndex">The index of the selected option.</param>
+        /// <param name="_displayedOptions">An array of text, image and tooltips for the displayed options.</param>
+        /// <param name="_options"><inheritdoc cref="DocumentationMethod(GUILayoutOption[])" path="/param[@name='_options']"/></param>
+        /// <returns>The index of the option that has been selected by the user</returns>
+        public static int CenteredPopup(int _selectedIndex, GUIContent[] _displayedOptions, params GUILayoutOption[] _options) {
+            using (var _scope = new GUILayout.HorizontalScope()) {
+                GUILayout.FlexibleSpace();
+                _selectedIndex = EditorGUILayout.Popup(_selectedIndex, _displayedOptions, EnhancedEditorStyles.CenteredPopup, _options);
+                GUILayout.FlexibleSpace();
+            }
+
+            return _selectedIndex;
+        }
+
+        /// <inheritdoc cref="CenteredToolbar(int, GUIContent[], GUI.ToolbarButtonSize, GUILayoutOption[])"/>
+        public static int CenteredToolbar(int _selectedIndex, GUIContent[] _buttons, params GUILayoutOption[] _options) {
+            return CenteredToolbar(_selectedIndex, _buttons, GUI.ToolbarButtonSize.FitToContents, _options);
+        }
+
+        /// <summary>
+        /// Makes a centered toolbar.
+        /// </summary>
+        /// <param name="_selectedIndex">The index of the selected button.</param>
+        /// <param name="_buttons">An array of text, image and tooltips for the buttons.</param>
+        /// <param name="_buttonSize">Button size mode, used to draw the different tabs of the toolbar.</param>
+        /// <param name="_options"><inheritdoc cref="DocumentationMethod(GUILayoutOption[])" path="/param[@name='_options']"/></param>
+        /// <returns>The index of the button that has been selected by the user</returns>
+        public static int CenteredToolbar(int _selectedIndex, GUIContent[] _buttons, GUI.ToolbarButtonSize _buttonSize, params GUILayoutOption[] _options) {
+            using (var _scope = new GUILayout.HorizontalScope()) {
+                GUILayout.FlexibleSpace();
+                _selectedIndex = GUILayout.Toolbar(_selectedIndex, _buttons, EnhancedEditorStyles.Button, _buttonSize, _options);
+                GUILayout.FlexibleSpace();
+            }
+
+            return _selectedIndex;
+        }
+        #endregion
+
         #region Editable Label
         /// <param name="_options"><inheritdoc cref="DocumentationMethod(GUILayoutOption[])" path="/param[@name='_options']"/></param>
         /// <inheritdoc cref="EnhancedEditorGUI.EditableLabel(Rect, string)"/>
@@ -1931,6 +1973,146 @@ namespace EnhancedEditor.Editor {
         }
         #endregion
 
+        #region Scriptable Object
+        // ===== Serialized Property ===== \\
+
+        /// <inheritdoc cref="ScriptableObjectContentField(SerializedProperty, GUIContent, ScriptableObjectDrawerMode, bool, GUILayoutOption[])"/>
+        public static void ScriptableObjectContentField(SerializedProperty _property,
+                                                        bool _drawField = true, params GUILayoutOption[] _options) {
+            ScriptableObjectDrawerMode _mode = ScriptableObjectDrawerModeUtility.DefaultMode;
+            ScriptableObjectContentField(_property, _mode, _drawField, _options);
+        }
+
+        /// <inheritdoc cref="ScriptableObjectContentField(SerializedProperty, GUIContent, ScriptableObjectDrawerMode, bool, GUILayoutOption[])"/>
+        public static void ScriptableObjectContentField(SerializedProperty _property, string _label,
+                                                        bool _drawField = true, params GUILayoutOption[] _options) {
+            ScriptableObjectDrawerMode _mode = ScriptableObjectDrawerModeUtility.DefaultMode;
+            ScriptableObjectContentField(_property, _label, _mode, _drawField, _options);
+        }
+
+        /// <inheritdoc cref="ScriptableObjectContentField(SerializedProperty, GUIContent, ScriptableObjectDrawerMode, bool, GUILayoutOption[])"/>
+        public static void ScriptableObjectContentField(SerializedProperty _property, GUIContent _label,
+                                                        bool _drawField = true, params GUILayoutOption[] _options) {
+            ScriptableObjectDrawerMode _mode = ScriptableObjectDrawerModeUtility.DefaultMode;
+            ScriptableObjectContentField(_property, _label, _mode, _drawField, _options);
+        }
+
+        /// <inheritdoc cref="ScriptableObjectContentField(SerializedProperty, GUIContent, ScriptableObjectDrawerMode, bool, GUILayoutOption[])"/>
+        public static void ScriptableObjectContentField(SerializedProperty _property, ScriptableObjectDrawerMode _mode,
+                                                        bool _drawField = true, params GUILayoutOption[] _options) {
+            GUIContent _label = EnhancedEditorGUIUtility.GetPropertyLabel(_property);
+            ScriptableObjectContentField(_property, _label, _mode, _drawField, _options);
+        }
+
+        /// <inheritdoc cref="ScriptableObjectContentField(SerializedProperty, GUIContent, ScriptableObjectDrawerMode, bool, GUILayoutOption[])"/>
+        public static void ScriptableObjectContentField(SerializedProperty _property, string _label, ScriptableObjectDrawerMode _mode,
+                                                        bool _drawField = true, params GUILayoutOption[] _options) {
+            GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
+            ScriptableObjectContentField(_property, _labelGUI, _mode, _drawField, _options);
+        }
+
+        /// <param name="_options"><inheritdoc cref="DocumentationMethod(GUILayoutOption[])" path="/param[@name='_options']"/></param>
+        /// <inheritdoc cref="EnhancedEditorGUI.ScriptableObjectContentField(Rect, SerializedProperty, GUIContent, ScriptableObjectDrawerMode, out float, bool)"/>
+        public static void ScriptableObjectContentField(SerializedProperty _property, GUIContent _label, ScriptableObjectDrawerMode _mode,
+                                                        bool _drawField = true, params GUILayoutOption[] _options) {
+            Rect _position = EditorGUILayout.GetControlRect(_options);
+            EnhancedEditorGUI.ScriptableObjectContentField(_position, _property, _label, _mode, out float _extraHeight, _drawField);
+
+            IncrementPosition(_extraHeight);
+        }
+
+        // ===== Scriptable Object ===== \\
+
+        /// <inheritdoc cref="ScriptableObjectContentField(GUIContent, ScriptableObject, Type, ScriptableObjectDrawerMode, ref bool, bool, GUILayoutOption[]"/>
+        public static ScriptableObject ScriptableObjectContentField(ScriptableObject _scriptableObject, Type _objectType,
+                                                                    ref bool _foldout, bool _drawField = true, params GUILayoutOption[] _options) {
+            ScriptableObjectDrawerMode _mode = ScriptableObjectDrawerModeUtility.DefaultMode;
+            return ScriptableObjectContentField(_scriptableObject, _objectType, _mode, ref _foldout, _drawField, _options);
+        }
+
+        /// <inheritdoc cref="ScriptableObjectContentField(GUIContent, ScriptableObject, Type, ScriptableObjectDrawerMode, ref bool, bool, GUILayoutOption[]"/>
+        public static ScriptableObject ScriptableObjectContentField(string _label, ScriptableObject _scriptableObject, Type _objectType,
+                                                                    ref bool _foldout, bool _drawField = true, params GUILayoutOption[] _options) {
+            ScriptableObjectDrawerMode _mode = ScriptableObjectDrawerModeUtility.DefaultMode;
+            return ScriptableObjectContentField(_label, _scriptableObject, _objectType, _mode, ref _foldout, _drawField, _options);
+        }
+
+        /// <inheritdoc cref="ScriptableObjectContentField(GUIContent, ScriptableObject, Type, ScriptableObjectDrawerMode, ref bool, bool, GUILayoutOption[]"/>
+        public static ScriptableObject ScriptableObjectContentField(GUIContent _label, ScriptableObject _scriptableObject, Type _objectType,
+                                                                    ref bool _foldout, bool _drawField = true, params GUILayoutOption[] _options) {
+            ScriptableObjectDrawerMode _mode = ScriptableObjectDrawerModeUtility.DefaultMode;
+            return ScriptableObjectContentField(_label, _scriptableObject, _objectType, _mode, ref _foldout, _drawField, _options);
+        }
+
+        /// <inheritdoc cref="ScriptableObjectContentField(GUIContent, ScriptableObject, Type, ScriptableObjectDrawerMode, ref bool, bool, GUILayoutOption[]"/>
+        public static ScriptableObject ScriptableObjectContentField(ScriptableObject _scriptableObject, Type _objectType, ScriptableObjectDrawerMode _mode,
+                                                                    ref bool _foldout, bool _drawField = true, params GUILayoutOption[] _options) {
+            GUIContent _label =  GUIContent.none;
+            return ScriptableObjectContentField(_label, _scriptableObject, _objectType, _mode, ref _foldout, _drawField, _options);
+        }
+
+        /// <inheritdoc cref="ScriptableObjectContentField(GUIContent, ScriptableObject, Type, ScriptableObjectDrawerMode, ref bool, bool, GUILayoutOption[]"/>
+        public static ScriptableObject ScriptableObjectContentField(string _label, ScriptableObject _scriptableObject, Type _objectType, ScriptableObjectDrawerMode _mode,
+                                                                    ref bool _foldout, bool _drawField = true, params GUILayoutOption[] _options) {
+            GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
+            return ScriptableObjectContentField(_labelGUI, _scriptableObject, _objectType, _mode, ref _foldout, _drawField, _options);
+        }
+
+        /// <param name="_options"><inheritdoc cref="DocumentationMethod(GUILayoutOption[])" path="/param[@name='_options']"/></param>
+        /// <inheritdoc cref="EnhancedEditorGUI.ScriptableObjectContentField(Rect, GUIContent, ScriptableObject, Type, ScriptableObjectDrawerMode, ref bool, out float, bool)"/>
+        public static ScriptableObject ScriptableObjectContentField(GUIContent _label, ScriptableObject _scriptableObject, Type _objectType, ScriptableObjectDrawerMode _mode,
+                                                                    ref bool _foldout, bool _drawField = true, params GUILayoutOption[] _options) {
+            Rect _position = EditorGUILayout.GetControlRect(_options);
+            _scriptableObject = EnhancedEditorGUI.ScriptableObjectContentField(_position, _label, _scriptableObject, _objectType, _mode, ref _foldout, out float _extraHeight, _drawField);
+
+            IncrementPosition(_extraHeight);
+            return _scriptableObject;
+        }
+        #endregion
+
+        #region Texture
+        /// <summary>
+        /// Draws a texture, with its height automatically adjusted to the width available on screen.
+        /// </summary>
+        /// <param name="_options"><inheritdoc cref="DocumentationMethod(GUILayoutOption[])" path="/param[@name='_options']"/></param>
+        /// <returns></returns>
+        /// <inheritdoc cref="EnhancedEditorGUI.Texture(Rect, Texture2D)"/>
+        public static void Texture(Texture2D _texture, params GUILayoutOption[] _options) {
+            Rect _position = GetPosition(false, 0f, _options);
+            float _height = EnhancedEditorGUI.Texture(_position, _texture);
+
+            if (_height == 0f) {
+                _height = -EditorGUIUtility.standardVerticalSpacing;
+            }
+
+            IncrementPosition(_height);
+        }
+        #endregion
+
+        #region Toolbar Search Field
+        /// <inheritdoc cref="ToolbarSearchField(string, string, GUILayoutOption[])"/>
+        public static string ToolbarSearchField(string _searchFilter, params GUILayoutOption[] _options) {
+            Rect _position = EditorGUILayout.GetControlRect(_options);
+            return EnhancedEditorGUI.ToolbarSearchField(_position, _searchFilter);
+        }
+
+        /// <param name="_options"><inheritdoc cref="DocumentationMethod(GUILayoutOption[])" path="/param[@name='_options']"/></param>
+        /// <inheritdoc cref="EnhancedEditorGUI.ToolbarSearchField(string, Rect, string)"/>
+        public static string ToolbarSearchField(string _controlName, string _searchFilter, params GUILayoutOption[] _options) {
+            Rect _position = EditorGUILayout.GetControlRect(_options);
+            return EnhancedEditorGUI.ToolbarSearchField(_controlName, _position, _searchFilter);
+        }
+        #endregion
+
+        #region Toolbar Sort Options
+        /// <param name="_options"><inheritdoc cref="DocumentationMethod(GUILayoutOption[])" path="/param[@name='_options']"/></param>
+        /// <inheritdoc cref="EnhancedEditorGUI.ToolbarSortOptions(Rect, ref int, ref bool, GUIContent[])"/>
+        public static void ToolbarSortOptions(ref int _selectedOption, ref bool _doSortAscending, GUIContent[] _sortingOptions, params GUILayoutOption[] _options) {
+            Rect _position = GUILayoutUtility.GetRect(GUIContent.none, EditorStyles.toolbar, _options);
+            EnhancedEditorGUI.ToolbarSortOptions(_position, ref _selectedOption, ref _doSortAscending, _sortingOptions);
+        }
+        #endregion
+
         #region Underlined Label
         /// <inheritdoc cref="UnderlinedLabel(GUIContent, Color, GUIStyle, GUILayoutOption[])"/>
         public static void UnderlinedLabel(string _label, params GUILayoutOption[] _options) {
@@ -1979,87 +2161,6 @@ namespace EnhancedEditor.Editor {
         public static void UnderlinedLabel(GUIContent _label, Color _color, GUIStyle _style, params GUILayoutOption[] _options) {
             Rect _position = GetPosition(true, _style, _options);
             EnhancedEditorGUI.UnderlinedLabel(_position, _label, _color, _style);
-        }
-        #endregion
-
-        #region Texture
-        /// <summary>
-        /// Draws a texture, with its height automatically adjusted to the width available on screen.
-        /// </summary>
-        /// <param name="_options"><inheritdoc cref="DocumentationMethod(GUILayoutOption[])" path="/param[@name='_options']"/></param>
-        /// <returns></returns>
-        /// <inheritdoc cref="EnhancedEditorGUI.Texture(Rect, Texture2D)"/>
-        public static void Texture(Texture2D _texture, params GUILayoutOption[] _options) {
-            Rect _position = GetPosition(false, 0f, _options);
-            float _height = EnhancedEditorGUI.Texture(_position, _texture);
-
-            if (_height == 0f) {
-                _height = -EditorGUIUtility.standardVerticalSpacing;
-            }
-
-            IncrementPosition(_height);
-        }
-        #endregion
-
-        #region Toolbar Search Field
-        /// <inheritdoc cref="ToolbarSearchField(string, string, GUILayoutOption[])"/>
-        public static string ToolbarSearchField(string _searchFilter, params GUILayoutOption[] _options) {
-            Rect _position = EditorGUILayout.GetControlRect(_options);
-            return EnhancedEditorGUI.ToolbarSearchField(_position, _searchFilter);
-        }
-
-        /// <param name="_options"><inheritdoc cref="DocumentationMethod(GUILayoutOption[])" path="/param[@name='_options']"/></param>
-        /// <inheritdoc cref="EnhancedEditorGUI.ToolbarSearchField(string, Rect, string)"/>
-        public static string ToolbarSearchField(string _controlName, string _searchFilter, params GUILayoutOption[] _options) {
-            Rect _position = EditorGUILayout.GetControlRect(_options);
-            return EnhancedEditorGUI.ToolbarSearchField(_controlName, _position, _searchFilter);
-        }
-        #endregion
-
-        #region Toolbar Sort Options
-        /// <param name="_options"><inheritdoc cref="DocumentationMethod(GUILayoutOption[])" path="/param[@name='_options']"/></param>
-        /// <inheritdoc cref="EnhancedEditorGUI.ToolbarSortOptions(Rect, ref int, ref bool, GUIContent[])"/>
-        public static void ToolbarSortOptions(ref int _selectedOption, ref bool _doSortAscending, GUIContent[] _sortingOptions, params GUILayoutOption[] _options) {
-            Rect _position = GUILayoutUtility.GetRect(GUIContent.none, EditorStyles.toolbar, _options);
-            EnhancedEditorGUI.ToolbarSortOptions(_position, ref _selectedOption, ref _doSortAscending, _sortingOptions);
-        }
-        #endregion
-
-        // --- Internal GUI Controls --- \\
-
-        #region Centered Controls
-        /// <summary>
-        /// Makes a centered generic popup selection field.
-        /// </summary>
-        /// <param name="_selectedIndex">The index of the selected option.</param>
-        /// <param name="_displayedOptions">An array of text, image and tooltips for the displayed options.</param>
-        /// <param name="_options"><inheritdoc cref="DocumentationMethod(GUILayoutOption[])" path="/param[@name='_options']"/></param>
-        /// <returns>The index of the option that has been selected by the user</returns>
-        internal static int CenteredPopup(int _selectedIndex, GUIContent[] _displayedOptions, params GUILayoutOption[] _options) {
-            using (var _scope = new GUILayout.HorizontalScope()) {
-                GUILayout.FlexibleSpace();
-                _selectedIndex = EditorGUILayout.Popup(_selectedIndex, _displayedOptions, EnhancedEditorStyles.CenteredPopup, _options);
-                GUILayout.FlexibleSpace();
-            }
-
-            return _selectedIndex;
-        }
-
-        /// <summary>
-        /// Makes a centered toolbar.
-        /// </summary>
-        /// <param name="_selectedIndex">The index of the selected button.</param>
-        /// <param name="_buttons">An array of text, image and tooltips for the buttons.</param>
-        /// <param name="_options"><inheritdoc cref="DocumentationMethod(GUILayoutOption[])" path="/param[@name='_options']"/></param>
-        /// <returns>The index of the button that has been selected by the user</returns>
-        internal static int CenteredToolbar(int _selectedIndex, GUIContent[] _buttons, params GUILayoutOption[] _options) {
-            using (var _scope = new GUILayout.HorizontalScope()) {
-                GUILayout.FlexibleSpace();
-                _selectedIndex = GUILayout.Toolbar(_selectedIndex, _buttons, EnhancedEditorStyles.Button, GUI.ToolbarButtonSize.FitToContents, _options);
-                GUILayout.FlexibleSpace();
-            }
-
-            return _selectedIndex;
         }
         #endregion
 
