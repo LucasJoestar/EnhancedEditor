@@ -102,12 +102,18 @@ namespace EnhancedEditor.Editor {
                 IsVisible = true;
 
                 Timestamp = DateTime.Now.ToLongTimeString();
-                Frame = Application.isPlaying ? Time.frameCount.ToString() : string.Empty;
+
+                // Unity might throw an exception when this is called during serialization.
+                try {
+                    Frame = EditorApplication.isPlaying ? Time.frameCount.ToString() : string.Empty;
+                } catch (UnityException) {
+                    Frame = string.Empty;
+                }
             }
 
             // -----------------------
 
-            public abstract bool AddDuplicateLog(string _log, string _stackTrace, int _instanceID, int _index);
+            public abstract bool AddDuplicateLog(LogWrapper _log, int _instanceID, int _index);
             public abstract void SetOriginalLog(int _index);
             public abstract OriginalLogEntry GetEntry(List<LogEntry> _entries);
             public abstract string GetTime(List<LogEntry> _entries, bool _collapse);
@@ -142,10 +148,10 @@ namespace EnhancedEditor.Editor {
 
             // -----------------------
 
-            public OriginalLogEntry(string _log, string _stackTrace, int _instanceID, LogType _type) : base() {
-                LogString = _log;
-                StackTrace = _stackTrace;
-                Type = _type.ToFlag();
+            public OriginalLogEntry(LogWrapper _log, int _instanceID) : base() {
+                LogString = _log.Log;
+                StackTrace = _log.StackTrace;
+                Type = _log.Type.ToFlag();
                 ContextInstanceID = _instanceID;
 
                 if ((_instanceID != -1) && EnhancedUtility.FindObjectFromInstanceID(_instanceID, out Object _object)) {
@@ -183,8 +189,8 @@ namespace EnhancedEditor.Editor {
                 return this;
             }
 
-            public override bool AddDuplicateLog(string _log, string _stackTrace, int _instanceID, int _index) {
-                if ((_log == LogString) && (StackTrace == _stackTrace) && (ContextInstanceID == _instanceID)) {
+            public override bool AddDuplicateLog(LogWrapper _log, int _instanceID, int _index) {
+                if ((_log.Log == LogString) && (_log.StackTrace == StackTrace) && (ContextInstanceID == _instanceID)) {
                     DuplicateCount++;
                     LastDuplicateIndex = _index;
 
@@ -227,7 +233,7 @@ namespace EnhancedEditor.Editor {
                 return _entries[OriginalIndex].GetEntry(_entries);
             }
 
-            public override bool AddDuplicateLog(string _log, string _stackTrace, int _instanceID, int _index) {
+            public override bool AddDuplicateLog(LogWrapper _log, int _instanceID, int _index) {
                 return false;
             }
 
@@ -243,6 +249,21 @@ namespace EnhancedEditor.Editor {
                 if (OriginalIndex > _index) {
                     OriginalIndex--;
                 }
+            }
+        }
+
+        [Serializable]
+        internal struct LogWrapper {
+            public string Log;
+            public string StackTrace;
+            public LogType Type;
+
+            // -----------------------
+
+            public LogWrapper(string _log, string _stackTrace, LogType _type) {
+                Log = _log;
+                StackTrace = _stackTrace;
+                Type = _type;
             }
         }
 
@@ -846,6 +867,7 @@ namespace EnhancedEditor.Editor {
 
         private static readonly GUIContent openPreferencesGUI = new GUIContent("Open Preferences", "Opens the enhanced console preferences window");
 
+        [SerializeField] private List<LogWrapper> pendingLogs = new List<LogWrapper>();
         [SerializeReference] private List<LogEntry> logs = new List<LogEntry>(DefaultLogCapacity);
 
         [SerializeField] private LogColumn[] logColumns = new LogColumn[] {
@@ -908,6 +930,9 @@ namespace EnhancedEditor.Editor {
         }
 
         private void OnGUI() {
+            // Update pending logs.
+            UpdateLogs();
+
             // Toolbar.
             using (var _scope = new GUILayout.HorizontalScope(EditorStyles.toolbar)) {
                 DrawToolbar();
@@ -987,44 +1012,7 @@ namespace EnhancedEditor.Editor {
                 return;
             }
 
-            // Get entry.
-            EnhancedLogger.GetLogContextInstanceID(ref _log, out int _instanceID);
-            LogEntry _entry = GetLogEntry();
-            logs.Add(_entry);
-
-            SetLogFilter(_entry, EnhancedConsolePreferences.Preferences);
-            FilterLog(_entry);
-            Repaint();
-
-            // Editor pause on error.
-            if (HasFlag(Flags.ErrorPause) && Application.isPlaying) {
-                switch (_type) {
-                    case LogType.Error:
-                    case LogType.Assert:
-                    case LogType.Exception:
-                        Debug.Break();
-                        break;
-
-                    default:
-                        break;
-                }
-            }
-
-            // ----- Local Method ----- \\
-
-            LogEntry GetLogEntry() {
-                int _count = logs.Count;
-
-                for (int i = 0; i < _count; i++) {
-                    // Duplicate entry.
-                    if (logs[i].AddDuplicateLog(_log, _stackTrace, _instanceID, _count)) {
-                        return new DuplicateLogEntry(i);
-                    }
-                }
-
-                // New original entry.
-                return new OriginalLogEntry(_log, _stackTrace, _instanceID, _type);
-            }
+            pendingLogs.Add(new LogWrapper(_log, _stackTrace, _type));
         }
 
         [DidReloadScripts]
@@ -1768,6 +1756,60 @@ namespace EnhancedEditor.Editor {
         #endregion
 
         #region Utility
+        /// <summary>
+        /// Updates pending logs.
+        /// </summary>
+        private void UpdateLogs() {
+            if (pendingLogs.Count == 0) {
+                return;
+            }
+
+            for (int i = 0; i < pendingLogs.Count; i++) {
+                LogWrapper _log = pendingLogs[i];
+
+                // Get entry.
+                EnhancedLogger.GetLogContextInstanceID(ref _log.Log, out int _instanceID);
+                LogEntry _entry = GetLogEntry(_log, _instanceID);
+                logs.Add(_entry);
+
+                SetLogFilter(_entry, EnhancedConsolePreferences.Preferences);
+                FilterLog(_entry);
+
+                // Editor pause on error.
+                if (HasFlag(Flags.ErrorPause) && Application.isPlaying) {
+                    switch (_log.Type) {
+                        case LogType.Error:
+                        case LogType.Assert:
+                        case LogType.Exception:
+                            Debug.Break();
+                            break;
+
+                        default:
+                            break;
+                    }
+                }
+            }
+
+            pendingLogs.Clear();
+            Repaint();
+
+            // ----- Local Method ----- \\
+
+            LogEntry GetLogEntry(LogWrapper _log, int _instanceID) {
+                int _count = logs.Count;
+
+                for (int i = 0; i < _count; i++) {
+                    // Duplicate entry.
+                    if (logs[i].AddDuplicateLog(_log, _instanceID, _count)) {
+                        return new DuplicateLogEntry(i);
+                    }
+                }
+
+                // New original entry.
+                return new OriginalLogEntry(_log, _instanceID);
+            }
+        }
+
         /// <summary>
         /// Refreshes all log filters.
         /// </summary>
