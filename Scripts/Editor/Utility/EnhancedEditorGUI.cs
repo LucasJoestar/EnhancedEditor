@@ -95,7 +95,7 @@ namespace EnhancedEditor.Editor {
             // Enhanced property drawers context menu.
             if (EnhancedPropertyEditor.propertyInfos.ContainsKey(_property.propertyPath)) {
                 var _infos = EnhancedPropertyEditor.propertyInfos[_property.propertyPath];
-                _infos.OnContextMenu(_menu);
+                _infos.OnContextMenu(_menu, _property);
             }
         }
         #endregion
@@ -942,7 +942,7 @@ namespace EnhancedEditor.Editor {
         #endregion
 
         #region Duo
-        private const int DuoCacheLimit = 20;
+        private const int DuoCacheLimit = 100;
         private const string DuoGUIFormat = "{0} / {1}";
 
         private static readonly Dictionary<string, string> duoPropertyCache = new Dictionary<string, string>();
@@ -1800,6 +1800,14 @@ namespace EnhancedEditor.Editor {
                 _position.xMin += _temp.width + 5f;
                 _position.xMax -= _temp.width + 5f;
 
+                if (_minValue < _minLimit) {
+                    _minValue = _minLimit;
+                }
+
+                if (_maxValue > _maxLimit) {
+                    _maxValue = _minLimit;
+                }
+
                 EditorGUI.MinMaxSlider(_position, ref _minValue, ref _maxValue, _minLimit, _maxLimit);
             }
 
@@ -2102,7 +2110,7 @@ namespace EnhancedEditor.Editor {
         #endregion
 
         #region Popup
-        private const int PopupCacheLimit = 10;
+        private const int PopupCacheLimit = 50;
         private static readonly Dictionary<string, GUIContent[]> popupInfos = new Dictionary<string, GUIContent[]>();
 
         // -----------------------
@@ -4739,21 +4747,21 @@ namespace EnhancedEditor.Editor {
         /// <inheritdoc cref="ScriptableObjectContentField(Rect, SerializedProperty, GUIContent, ScriptableObjectDrawerMode, out float, bool)"/>
         public static void ScriptableObjectContentField(Rect _position, SerializedProperty _property,
                                                         out float _extraHeight, bool _drawField = true) {
-            ScriptableObjectDrawerMode _mode = ScriptableObjectDrawerModeUtility.DefaultMode;
+            ScriptableObjectDrawerMode _mode = ScriptableObjectDrawerEnhancedSettings.Settings.DefaultMode;
             ScriptableObjectContentField(_position, _property, _mode, out _extraHeight, _drawField);
         }
 
         /// <inheritdoc cref="ScriptableObjectContentField(Rect, SerializedProperty, GUIContent, ScriptableObjectDrawerMode, out float, bool)"/>
         public static void ScriptableObjectContentField(Rect _position, SerializedProperty _property, string _label,
                                                         out float _extraHeight, bool _drawField = true) {
-            ScriptableObjectDrawerMode _mode = ScriptableObjectDrawerModeUtility.DefaultMode;
+            ScriptableObjectDrawerMode _mode = ScriptableObjectDrawerEnhancedSettings.Settings.DefaultMode;
             ScriptableObjectContentField(_position, _property, _label, _mode, out _extraHeight, _drawField);
         }
 
         /// <inheritdoc cref="ScriptableObjectContentField(Rect, SerializedProperty, GUIContent, ScriptableObjectDrawerMode, out float, bool)"/>
         public static void ScriptableObjectContentField(Rect _position, SerializedProperty _property, GUIContent _label,
                                                         out float _extraHeight, bool _drawField = true) {
-            ScriptableObjectDrawerMode _mode = ScriptableObjectDrawerModeUtility.DefaultMode;
+            ScriptableObjectDrawerMode _mode = ScriptableObjectDrawerEnhancedSettings.Settings.DefaultMode;
             ScriptableObjectContentField(_position, _property, _label, _mode, out _extraHeight, _drawField);
         }
 
@@ -4812,21 +4820,21 @@ namespace EnhancedEditor.Editor {
         /// <inheritdoc cref="ScriptableObjectContentField(Rect, GUIContent, ScriptableObject, Type, ScriptableObjectDrawerMode, ref bool, out float, bool"/>
         public static ScriptableObject ScriptableObjectContentField(Rect _position, ScriptableObject _scriptableObject, Type _objectType,
                                                                     ref bool _foldout, out float _extraHeight, bool _drawField = true) {
-            ScriptableObjectDrawerMode _mode = ScriptableObjectDrawerModeUtility.DefaultMode;
+            ScriptableObjectDrawerMode _mode = ScriptableObjectDrawerEnhancedSettings.Settings.DefaultMode;
             return ScriptableObjectContentField(_position, _scriptableObject, _objectType, _mode, ref _foldout, out _extraHeight, _drawField);
         }
 
         /// <inheritdoc cref="ScriptableObjectContentField(Rect, GUIContent, ScriptableObject, Type, ScriptableObjectDrawerMode, ref bool, out float, bool"/>
         public static ScriptableObject ScriptableObjectContentField(Rect _position, string _label, ScriptableObject _scriptableObject, Type _objectType,
                                                                     ref bool _foldout, out float _extraHeight, bool _drawField = true) {
-            ScriptableObjectDrawerMode _mode = ScriptableObjectDrawerModeUtility.DefaultMode;
+            ScriptableObjectDrawerMode _mode = ScriptableObjectDrawerEnhancedSettings.Settings.DefaultMode;
             return ScriptableObjectContentField(_position, _label, _scriptableObject, _objectType, _mode, ref _foldout, out _extraHeight, _drawField);
         }
 
         /// <inheritdoc cref="ScriptableObjectContentField(Rect, GUIContent, ScriptableObject, Type, ScriptableObjectDrawerMode, ref bool, out float, bool"/>
         public static ScriptableObject ScriptableObjectContentField(Rect _position, GUIContent _label, ScriptableObject _scriptableObject, Type _objectType,
                                                                     ref bool _foldout, out float _extraHeight, bool _drawField = true) {
-            ScriptableObjectDrawerMode _mode = ScriptableObjectDrawerModeUtility.DefaultMode;
+            ScriptableObjectDrawerMode _mode = ScriptableObjectDrawerEnhancedSettings.Settings.DefaultMode;
             return ScriptableObjectContentField(_position, _label, _scriptableObject, _objectType, _mode, ref _foldout, out _extraHeight, _drawField);
         }
 
@@ -4874,6 +4882,8 @@ namespace EnhancedEditor.Editor {
                 _drawContent = false;
             }
 
+            Rect _fieldRect = new Rect(_position);
+
             // Buttons.
             if (_drawButton) {
                 GUIStyle _style;
@@ -4912,18 +4922,18 @@ namespace EnhancedEditor.Editor {
                     }
                 }
 
-                _position.xMax = _buttonPosition.x - ScriptableButtonSpacing;
+                _fieldRect.xMax = _buttonPosition.x - ScriptableButtonSpacing;
             }
 
             _extraHeight = 0f;
 
             if (_drawField) {
                 // Object drawer.
-                _scriptableObject = EditorGUI.ObjectField(_position, _label, _scriptableObject, _objectType, false) as ScriptableObject;
+                _scriptableObject = EditorGUI.ObjectField(_fieldRect, _label, _scriptableObject, _objectType, false) as ScriptableObject;
 
                 // Foldout.
                 if (_drawContent) {
-                    _foldout = EditorGUI.Foldout(_position, _foldout, GUIContent.none, false);
+                    _foldout = EditorGUI.Foldout(_fieldRect, _foldout, GUIContent.none, false);
                 }
             } else {
                 _extraHeight -= _position.height + EditorGUIUtility.standardVerticalSpacing;

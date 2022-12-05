@@ -4,6 +4,8 @@
 //
 // ============================================================================ //
 
+using UnityEditor;
+
 namespace EnhancedEditor.Editor
 {
     /// <summary>
@@ -13,7 +15,7 @@ namespace EnhancedEditor.Editor
     public class MinPropertyDrawer : EnhancedPropertyDrawer
     {
         #region Drawer Content
-        public override void OnValueChanged()
+        public override void OnValueChanged(SerializedProperty _property)
         {
             MinAttribute _attribute = Attribute as MinAttribute;
             float _minValue;
@@ -23,10 +25,10 @@ namespace EnhancedEditor.Editor
             {
                 _minValue = _attribute.MinValue;
             }
-            else if (!_attribute.MinMember.Value.GetValue(SerializedProperty, out _minValue))
+            else if (!_attribute.MinMember.Value.GetValue(_property, out _minValue))
                 return;
 
-            EnhancedEditorUtility.FloorSerializedPropertyValue(SerializedProperty, _minValue);
+            EnhancedEditorUtility.FloorSerializedPropertyValue(_property, _minValue);
         }
         #endregion
     }

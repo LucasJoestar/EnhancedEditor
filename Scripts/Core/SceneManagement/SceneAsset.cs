@@ -41,7 +41,7 @@ namespace EnhancedEditor
     /// or with the help of the multiple loading / unloading methods.
     /// </summary>
     [Serializable]
-	public class SceneAsset
+	public class SceneAsset : IEquatable<SceneAsset>, IEquatable<Scene>
     {
         #region Global Members
         [SerializeField] internal string guid = string.Empty;
@@ -129,6 +129,38 @@ namespace EnhancedEditor
         }
         #endregion
 
+        #region Operators
+        public static implicit operator Scene(SceneAsset _scene) {
+            return SceneManager.GetSceneByBuildIndex(_scene.BuildIndex);
+        }
+
+        public bool Equals(SceneAsset _scene) {
+            return this == _scene;
+        }
+
+        public bool Equals(Scene _scene) {
+            return BuildIndex == _scene.buildIndex;
+        }
+
+        public override bool Equals(object _object) {
+            if (_object != null) {
+                if (_object is SceneAsset _sceneAsset) {
+                    return Equals(_sceneAsset);
+                }
+
+                if (_object is Scene _scene) {
+                    return Equals(_scene);
+                }
+            }
+
+            return base.Equals(_object);
+        }
+
+        public override int GetHashCode() {
+            return base.GetHashCode();
+        }
+        #endregion
+
         #region Unload Async
         /// <summary>
         /// Destroys all <see cref="GameObject"/> associated with this scene and remove it from the <see cref="SceneManager"/>.
@@ -211,7 +243,9 @@ namespace EnhancedEditor
         /// </summary>
         public bool IsLoaded {
             get {
-                return SceneManager.GetSceneByBuildIndex(BuildIndex).isLoaded;
+                return IsValid
+                     ? SceneManager.GetSceneByBuildIndex(BuildIndex).isLoaded
+                     : false;
             }
         }
 
@@ -222,7 +256,7 @@ namespace EnhancedEditor
             get {
                 if (BuildIndex == -1) {
                     #if UNITY_EDITOR || DEVELOPMENT_BUILD
-                    Debug.LogException(new NonBuildSceneException(BuildSceneDatabase.GetNonBuildSceneName(guid)), BuildSceneDatabase.Database);
+                    //Debug.LogException(new NonBuildSceneException(BuildSceneDatabase.GetNonBuildSceneName(guid)), BuildSceneDatabase.Database);
                     #endif
 
                     return false;

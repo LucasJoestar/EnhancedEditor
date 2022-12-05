@@ -52,9 +52,9 @@ namespace EnhancedEditor.Editor {
             return false;
         }
 
-        public override void OnContextMenu(GenericMenu _menu) {
-            if (SerializedProperty.propertyType == SerializedPropertyType.ObjectReference) {
-                EnhancedEditorGUI.AddRequiredUtilityToMenu(id, SerializedProperty, _menu);
+        public override void OnContextMenu(GenericMenu _menu, SerializedProperty _property) {
+            if (_property.propertyType == SerializedPropertyType.ObjectReference) {
+                EnhancedEditorGUI.AddRequiredUtilityToMenu(id, _property, _menu);
             }
         }
         #endregion

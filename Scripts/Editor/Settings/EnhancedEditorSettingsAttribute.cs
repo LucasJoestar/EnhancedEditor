@@ -22,10 +22,10 @@ namespace EnhancedEditor.Editor {
 
     /// <inheritdoc cref="EnhancedEditorSettingsAttribute"/>
     /// <remarks>Use this to draw user-related preferences settings.</remarks>
-    public class EnhancedEditorPreferencesAttribute : EnhancedEditorSettingsAttribute { }
+    public class EnhancedEditorUserSettingsAttribute : EnhancedEditorSettingsAttribute { }
 
     /// <inheritdoc cref="EnhancedEditorSettingsAttribute"/>
     /// <remarks>Use this to global shared project settings.
-    /// <br/> The method must take a <see cref="EnhancedEditorSettings"/> parameter.</remarks>
+    /// <br/> The method must take a <see cref="EnhancedEditorProjectSettings"/> parameter.</remarks>
     public class EnhancedEditorProjectSettingsAttribute : EnhancedEditorSettingsAttribute { }
 }

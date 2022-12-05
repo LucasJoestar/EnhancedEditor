@@ -134,13 +134,15 @@ namespace EnhancedEditor.Editor
         /// <summary>
         /// Called whenever this property value is changed in the inspector.
         /// </summary>
-        public virtual void OnValueChanged() { }
+        /// <param name="_property"><inheritdoc cref="DocumentationMethod(Rect, SerializedProperty, GUIContent, out float)" path="/param[@name='_property']"/></param>
+        public virtual void OnValueChanged(SerializedProperty _property) { }
 
         /// <summary>
         /// Allows you to add new item(s) to the <see cref="GenericMenu"/> displayed on this field context click.
         /// </summary>
         /// <param name="_menu">Menu to add item(s) to.</param>
-        public virtual void OnContextMenu(GenericMenu _menu) { }
+        /// <param name="_property"><inheritdoc cref="DocumentationMethod(Rect, SerializedProperty, GUIContent, out float)" path="/param[@name='_property']"/></param>
+        public virtual void OnContextMenu(GenericMenu _menu, SerializedProperty _property) { }
 
         /// <summary>
         /// Use this to draw additional GUI element(s) in the <see cref="SceneView"/> (and allows you to use <see cref="Handles"/>).

@@ -4,6 +4,7 @@
 //
 // ============================================================================ //
 
+using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEditorInternal;
@@ -79,16 +80,21 @@ namespace EnhancedEditor.Editor {
                 lists.Add(_key, _list);
             }
 
-            // Default property drawer.
-            if (_list == null) {
+            float _height;
+
+            try {
+                _height = _position.height
+                          = _list.GetHeight();
+
+                _list.DoList(_position);
+            } catch (ArgumentException) { // This can happen when the SerializedProperty target object is missing.
+                // Default property drawer.
+                lists.Remove(_key);
+
                 EditorGUI.PropertyField(_position, _property, _label);
-                return _position.height;
+                _height = _position.height;
             }
 
-            float _height = _position.height
-                              = _list.GetHeight();
-
-            _list.DoList(_position);
             return _height;
         }
         #endregion

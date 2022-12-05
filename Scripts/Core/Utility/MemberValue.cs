@@ -58,6 +58,37 @@ namespace EnhancedEditor
         // -----------------------
 
         /// <summary>
+        /// Calls this member from a specific object instance.
+        /// </summary>
+        /// <param name="_object">Object instance to call member from.</param>
+        /// <param name="_objectType">Instance object type.</param>
+        /// <returns>True if this member value was successfully retrieved, false otherwise.</returns>
+        public bool Call(object _object, Type _objectType) {
+            MemberInfo[] _members = _objectType.GetMember(Name, GetMemberFlags);
+
+            for (int _i = 0; _i < _members.Length; _i++) {
+                MemberInfo _member = _members[_i];
+
+                if (_member.MemberType == MemberTypes.Method) {
+                    MethodInfo _method = (MethodInfo)_member;
+
+                    if (_method.GetParameters().Length == 0) {
+                        _method.Invoke(_object, null);
+                        return true;
+                    }
+                }
+            }
+
+            // Try with the base type.
+            _objectType = _objectType.BaseType;
+            if (_objectType != null) {
+                return Call(_object, _objectType);
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// Get this member value from a specific object instance.
         /// </summary>
         /// <param name="_object">Object instance to get member value from.</param>

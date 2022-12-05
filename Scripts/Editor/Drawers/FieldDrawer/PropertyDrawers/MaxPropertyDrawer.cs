@@ -4,6 +4,8 @@
 //
 // ============================================================================ //
 
+using UnityEditor;
+
 namespace EnhancedEditor.Editor
 {
     /// <summary>
@@ -13,7 +15,7 @@ namespace EnhancedEditor.Editor
     public class MaxPropertyDrawer : EnhancedPropertyDrawer
     {
         #region Drawer Content
-        public override void OnValueChanged()
+        public override void OnValueChanged(SerializedProperty _property)
         {
             MaxAttribute _attribute = Attribute as MaxAttribute;
             float _maxValue;
@@ -23,10 +25,10 @@ namespace EnhancedEditor.Editor
             {
                 _maxValue = _attribute.MaxValue;
             }
-            else if (!_attribute.MaxMember.Value.GetValue(SerializedProperty, out _maxValue))
+            else if (!_attribute.MaxMember.Value.GetValue(_property, out _maxValue))
                 return;
 
-            EnhancedEditorUtility.CeilSerializedPropertyValue(SerializedProperty, _maxValue);
+            EnhancedEditorUtility.CeilSerializedPropertyValue(_property, _maxValue);
         }
         #endregion
     }

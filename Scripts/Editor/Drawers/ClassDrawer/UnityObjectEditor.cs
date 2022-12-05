@@ -143,7 +143,7 @@ namespace EnhancedEditor.Editor
             }
 
             // Add the EnhancedEditor GameObject-extending component if none is attached.
-            if (!Application.isPlaying && ExtendedBehaviourUtility.AutomaticSetup)
+            if (!Application.isPlaying && ExtendedBehaviourEnhancedSettings.AutomaticSetup)
             {
                 foreach (var _object in serializedObject.targetObjects)
                 {

@@ -146,7 +146,7 @@ namespace EnhancedEditor.Editor {
         #endregion
 
         #region GUI Content
-        private const int PropertyLabelCacheLimit = 100;
+        private const int PropertyLabelCacheLimit = 500;
 
         private static readonly GUIContent labelGUI = new GUIContent(GUIContent.none);
         private static readonly GUIContent helpBoxGUI = new GUIContent();
@@ -173,7 +173,12 @@ namespace EnhancedEditor.Editor {
                 }
 
                 if (EnhancedEditorUtility.FindSerializedPropertyField(_property, out FieldInfo _info) && (_attribute = _info.GetCustomAttribute<DisplayNameAttribute>()) != null) {
-                    _label = new GUIContent(_attribute.Label.text, string.IsNullOrEmpty(_attribute.Label.tooltip) ? _property.tooltip : _attribute.Label.tooltip);
+                    if ((_attribute.NameMember != null) && _attribute.NameMember.Value.GetValue(_property, out string _name)) {
+                        _attribute.SetName(_name);
+                    }
+
+                    GUIContent _displayLabel = _attribute.Label;
+                    _label = new GUIContent(_displayLabel.text, string.IsNullOrEmpty(_displayLabel.tooltip) ? _property.tooltip : _displayLabel.tooltip);
                 } else {
                     _label = new GUIContent(ObjectNames.NicifyVariableName(_property.name), _property.tooltip);
                 }
@@ -1044,6 +1049,17 @@ namespace EnhancedEditor.Editor {
         #endregion
 
         #region Utility
+        private static readonly MethodInfo getActiveFolderPathMethodInfo = typeof(ProjectWindowUtil).GetMethod("GetActiveFolderPath",
+                                                                                                               BindingFlags.Static | BindingFlags.NonPublic);
+
+        /// <summary>
+        /// Get the path of the currently selected folder. If multiple are selected, returns the first one.
+        /// </summary>
+        /// <returns>The path of the first currently selected folder.</returns>
+        public static string GetActiveFolderPath() {
+            return getActiveFolderPathMethodInfo.Invoke(null, null) as string;
+        }
+
         /// <summary>
         /// Repaints all editors associated with a specific <see cref="SerializedObject"/>.
         /// </summary>

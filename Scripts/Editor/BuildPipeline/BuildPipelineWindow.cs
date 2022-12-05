@@ -147,12 +147,12 @@ namespace EnhancedEditor.Editor
         private const float LargeButtonHeight = 25f;
         private const float RefreshButtonWidth = 60f;
 
-        private const string EditorPrefsKey = EnhancedEditorSettings.EditorPrefsPath + "BuildDirectory";
         private const string UndoRecordTitle = "Build Pipeline Change";
         private const string PresetMetaDataFile = "preset.meta";
         public const char ScriptingDefineSymbolSeparator = ';';
 
-        private static string buildDirectory = string.Empty;
+        private static readonly int buildDirectorySettingsGUID = "BuildPipelineDirectory".GetHashCode();
+        private static FolderEnhancedSettings buildDirectorySettings = null;
 
         public static string BuildDefaultDirectory {
             get {
@@ -166,15 +166,23 @@ namespace EnhancedEditor.Editor
         /// </summary>
         public static string BuildDirectory {
             get {
-                if (string.IsNullOrEmpty(buildDirectory)) {
-                    buildDirectory = EditorPrefs.GetString(EditorPrefsKey, BuildDefaultDirectory);
+                return BuildDirectorySettings.Folder;
+            }
+        }
+
+        /// <summary>
+        /// Build directory related user settings.
+        /// </summary>
+        public static FolderEnhancedSettings BuildDirectorySettings {
+            get {
+                EnhancedEditorUserSettings _userSettings = EnhancedEditorUserSettings.Instance;
+
+                if ((buildDirectorySettings == null) && !_userSettings.GetSetting(buildDirectorySettingsGUID, out buildDirectorySettings, out _)) {
+                    buildDirectorySettings = new FolderEnhancedSettings(buildDirectorySettingsGUID, BuildDefaultDirectory, false);
+                    _userSettings.AddSetting(buildDirectorySettings);
                 }
 
-                return buildDirectory;
-            }
-            set {
-                EditorPrefs.SetString(EditorPrefsKey, value);
-                buildDirectory = value;
+                return buildDirectorySettings;
             }
         }
 
@@ -2245,11 +2253,12 @@ namespace EnhancedEditor.Editor
             EnhancedEditorGUILayout.UnderlinedLabel(_header, EditorStyles.boldLabel);
             GUILayout.Space(3f);
 
-            string _directory = EnhancedEditorGUILayout.FolderField(GUIContent.none, BuildDirectory, true, BuildDirectoryPanelTitle);
+            FolderEnhancedSettings _setting = BuildDirectorySettings;
+            string _directory = EnhancedEditorGUILayout.FolderField(GUIContent.none, _setting.Folder, true, BuildDirectoryPanelTitle);
 
-            if (_directory != BuildDirectory)
+            if (_directory != _setting.Folder)
             {
-                BuildDirectory = _directory;
+                _setting.Folder = _directory;
                 RefreshBuilds();
             }
         }
@@ -2504,19 +2513,16 @@ namespace EnhancedEditor.Editor
         }
         #endregion
 
-        #region User Preferences
-        private static readonly GUIContent preferencesGUI = new GUIContent("Build Directory",
-                                                                           "Directory where to build and look for existing builds of the game from the BuildPipelineWindow.");
+        #region User Settings
+        private static readonly GUIContent userSettingsGUI = new GUIContent("Build Directory",
+                                                                            "Directory where to build and look for existing builds of the game from the BuildPipelineWindow.");
 
         // -----------------------
 
-        [EnhancedEditorPreferences(Order = 5)]
-        private static void DrawPreferences() {
-            string _directory = EnhancedEditorGUILayout.FolderField(preferencesGUI, BuildDirectory, true, BuildDirectoryPanelTitle);
-
-            if (_directory != buildDirectory) {
-                BuildDirectory = _directory;
-            }
+        [EnhancedEditorUserSettings(Order = 5)]
+        private static void DrawSettings() {
+            FolderEnhancedSettings _settings = BuildDirectorySettings;
+            _settings.Folder = EnhancedEditorGUILayout.FolderField(userSettingsGUI, _settings.Folder, true, BuildDirectoryPanelTitle);
         }
         #endregion
     }

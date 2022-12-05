@@ -45,7 +45,7 @@ namespace EnhancedEditor.Editor
                 return;
 
             // Template directory management.
-            string _templateDirectory = $"{Application.dataPath}/{DirectorySetting.Folder}";
+            string _templateDirectory = $"{Application.dataPath}/{Settings.Folder}";
             if (!Directory.Exists(_templateDirectory))
                 Directory.CreateDirectory(_templateDirectory);
             
@@ -234,29 +234,34 @@ namespace EnhancedEditor.Editor
         #region Project Settings
         public const string DefaultDirectory = "EnhancedEditor/Editor/ScriptTemplates";
         private const string DirectoryPanelTitle = "Script Templates Directory";
-        private static readonly int settingGUID = "ScriptTemplateDirectory".GetHashCode();
+
+        private static readonly int settingsGUID = "ScriptTemplateDirectory".GetHashCode();
+        private static FolderEnhancedSettings settings = null;
 
         private static readonly GUIContent directoryGUI = new GUIContent("Script Template Dir.",
                                                                          "Directory in the project where are stored all script templates.");
-
-        public static FolderProjectSetting DirectorySetting {
+        
+        /// <summary>
+        /// Script generator related project settings.
+        /// </summary>
+        public static FolderEnhancedSettings Settings {
             get {
-                EnhancedEditorSettings _editorSettings = EnhancedEditorSettings.Settings;
+                EnhancedEditorProjectSettings _projectSettings = EnhancedEditorProjectSettings.Instance;
 
-                if (!_editorSettings.GetProjectSetting(settingGUID, out FolderProjectSetting _setting)) {
-                    _setting = new FolderProjectSetting(settingGUID, DefaultDirectory, true);
-                    _editorSettings.AddProjectSetting(_setting);
+                if ((settings == null) && !_projectSettings.GetSetting(settingsGUID, out settings, out _)) {
+                    settings = new FolderEnhancedSettings(settingsGUID, DefaultDirectory, true);
+                    _projectSettings.AddSetting(settings);
                 }
 
-                return _setting;
+                return settings;
             }
         }
 
         // -----------------------
 
         [EnhancedEditorProjectSettings(Order = 12)]
-        private static void DrawProjectSetting() {
-            FolderProjectSetting _setting = DirectorySetting;
+        private static void DrawSettings() {
+            FolderEnhancedSettings _setting = Settings;
             _setting.Folder = EnhancedEditorGUILayout.FolderField(directoryGUI, _setting.Folder, false, DirectoryPanelTitle);
         }
         #endregion

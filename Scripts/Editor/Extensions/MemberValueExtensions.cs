@@ -15,6 +15,19 @@ namespace EnhancedEditor.Editor {
     /// </summary>
 	public static class MemberValueExtensions {
         #region Content
+        /// <summary>
+        /// Call this member from a specific <see cref="SerializedObject"/>.
+        /// </summary>
+        /// <param name="_member"><see cref="MemberValue{T}"/> to call.</param>
+        /// <param name="_serializedObject">The <see cref="SerializedObject"/> of this member.</param>
+        /// <inheritdoc cref="MemberValue{T}.Call(object, Type)"/>
+        public static bool Call<T>(this MemberValue<T> _member, SerializedObject _serializedObject) {
+            object _object = _serializedObject.targetObject;
+            Type _objectType = _object.GetType();
+
+            return _member.Call(_object, _objectType);
+        }
+
         /// <param name="_serializedObject">The <see cref="SerializedObject"/> of this member.</param>
         /// <inheritdoc cref="GetValue{T}(MemberValue{T}, SerializedProperty, out T)"/>
         public static bool GetValue<T>(this MemberValue<T> _member, SerializedObject _serializedObject, out T _value) {

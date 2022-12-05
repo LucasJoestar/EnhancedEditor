@@ -18,12 +18,19 @@ namespace EnhancedEditor.Editor
         #region Drawer Content
         public override bool OnBeforeGUI(Rect _position, SerializedProperty _property, GUIContent _label, out float _height)
         {
-            if (!string.IsNullOrEmpty(_label.text)) {
-                DisplayNameAttribute _attribute = Attribute as DisplayNameAttribute;
-                _label.text = _attribute.Label.text;
+            DisplayNameAttribute _attribute = Attribute as DisplayNameAttribute;
+            if ((_attribute.NameMember != null) && _attribute.NameMember.Value.GetValue(_property, out string _name)) {
+                _attribute.SetName(_name);
+            }
 
-                if (!string.IsNullOrEmpty(_attribute.Label.tooltip)) {
-                    _label.tooltip = _attribute.Label.tooltip;
+            // Get label.
+            GUIContent _displayLabel =_attribute.Label;
+
+            if (!string.IsNullOrEmpty(_displayLabel.text)) {
+                _label.text = _displayLabel.text;
+
+                if (!string.IsNullOrEmpty(_displayLabel.tooltip)) {
+                    _label.tooltip = _displayLabel.tooltip;
                 }
             }
 

@@ -10,26 +10,22 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 
 [assembly: InternalsVisibleTo("EnhancedEditor.Editor")]
-namespace EnhancedEditor
-{
+namespace EnhancedEditor {
     /// <summary>
     /// <see cref="ScriptableObject"/> database containing informations about all scenes included in build.
     /// <para/> Should not be used directly.
     /// </summary>
     [NonEditable("This data is sensitive and should not be manipulated manually.")]
-	public class BuildSceneDatabase : ScriptableObject
-    {
+    public class BuildSceneDatabase : ScriptableObject {
         #region Non Build Scene
         [Serializable]
-        internal struct NonBuildScene
-        {
+        internal struct NonBuildScene {
             public string Name;
             public string GUID;
 
             // -----------------------
 
-            public NonBuildScene(string _name, string _guid)
-            {
+            public NonBuildScene(string _name, string _guid) {
                 Name = _name;
                 GUID = _guid;
             }
@@ -60,18 +56,14 @@ namespace EnhancedEditor
         /// <item>... or any other way you'd like.</item>
         /// </list><para/>
         /// </summary>
-        public static BuildSceneDatabase Database
-        {
-            get
-            {
+        public static BuildSceneDatabase Database {
+            get {
                 #if UNITY_EDITOR
-                if (!Application.isPlaying && (EditorTagDatabaseGetter != null))
-                {
+                if (!Application.isPlaying && (EditorTagDatabaseGetter != null)) {
                     return EditorTagDatabaseGetter();
                 }
 
-                if (database == null)
-                {
+                if (database == null) {
                     Debug.LogError($"Unassigned {typeof(BuildSceneDatabase).Name} reference!\nYou must manually set this database " +
                                    $"reference on game start to be able to properly use {typeof(SceneAsset).Name}s and {typeof(SceneBundle).Name}s.");
 
@@ -81,28 +73,128 @@ namespace EnhancedEditor
 
                 return database;
             }
-            set
-            {
+            set {
                 database = value;
             }
         }
 
-        [SerializeField] internal string[] buildSceneGUIDs = new string[] { };
-        [SerializeField] internal int coreSceneIndex = -1;
+        // -------------------------------------------
+        // Database Content
+        // -------------------------------------------
+
+        [SerializeField] internal SceneBundle[] sceneBundles        = new SceneBundle[0];
+        [SerializeField] internal string[] buildSceneGUIDs          = new string[0];
+
+        [SerializeField] internal int coreSceneIndex                = -1;
 
         #if UNITY_EDITOR || DEVELOPMENT_BUILD
-        [SerializeField] internal NonBuildScene[] nonBuildScenes = new NonBuildScene[] { };
+        [SerializeField] internal NonBuildScene[] nonBuildScenes    = new NonBuildScene[0];
         #endif
         #endregion
 
-        #region Behaviour
+        #region Scene Bundle
+        // -------------------------------------------
+        // Bundle
+        // -------------------------------------------
+
+        /// <summary>
+        /// Get the total count of <see cref="SceneBundle"/> in build.
+        /// </summary>
+        public int SceneBundleCount {
+            get { return sceneBundles.Length; }
+        }
+
+        /// <summary>
+        /// Get the <see cref="SceneBundle"/> at the given index.
+        /// <para/>
+        /// Use <see cref="SceneBundleCount"/> to get the total amount of bundles in build.
+        /// </summary>
+        /// <param name="_index">Index to get the associated <see cref="SceneBundle"/>.</param>
+        /// <returns>The <see cref="SceneBundle"/> at the specified index.</returns>
+        public SceneBundle GetSceneBundleAt(int _index) {
+            return sceneBundles[_index];
+        }
+
+        // -------------------------------------------
+        // Helpers
+        // -------------------------------------------
+
+        /// <summary>
+        /// Get the <see cref="SceneBundle"/> associated with a given <see cref="Scene"/>.
+        /// </summary>
+        /// <inheritdoc cref="GetSceneBundle(SceneAsset, out SceneBundle)"/>
+        public bool GetSceneBundle(Scene _scene, out SceneBundle _bundle) {
+            foreach (SceneBundle _temp in sceneBundles) {
+                if ((_temp.Scenes.Length == 1) && _temp.ContainScene(_scene)) {
+                    _bundle = _temp;
+                    return true;
+                }
+            }
+
+            _bundle = null;
+            return false;
+        }
+
+        /// <summary>
+        /// Get the <see cref="SceneBundle"/> associated with all given <see cref="Scene"/>.
+        /// </summary>
+        /// <inheritdoc cref="GetSceneBundle(SceneAsset[], out SceneBundle)"/>
+        public bool GetSceneBundle(Scene[] _scenes, out SceneBundle _bundle) {
+            foreach (SceneBundle _temp in sceneBundles) {
+                if ((_temp.Scenes.Length == _scenes.Length) && _temp.ContainScenes(_scenes)) {
+                    _bundle = _temp;
+                    return true;
+                }
+            }
+
+            _bundle = null;
+            return false;
+        }
+
+        /// <summary>
+        /// Get the <see cref="SceneBundle"/> associated with a given <see cref="SceneAsset"/>.
+        /// </summary>
+        /// <param name="_scene">The scene to get the associated bundle.</param>
+        /// <param name="_bundle">The bundle associated with the given scene (null if none).</param>
+        /// <returns>True if an associated <see cref="SceneBundle"/> could be found, false otherwise.</returns>
+        public bool GetSceneBundle(SceneAsset _scene, out SceneBundle _bundle) {
+            foreach (SceneBundle _temp in sceneBundles) {
+                if ((_temp.Scenes.Length == 1) && _temp.ContainScene(_scene)) {
+                    _bundle = _temp;
+                    return true;
+                }
+            }
+
+            _bundle = null;
+            return false;
+        }
+
+        /// <summary>
+        /// Get the <see cref="SceneBundle"/> associated with all given <see cref="SceneAsset"/>.
+        /// </summary>
+        /// <param name="_scenes">The scenes to get the associated bundle.</param>
+        /// <param name="_bundle">The bundle associated with the given scenes (null if none).</param>
+        /// <returns>True if an associated <see cref="SceneBundle"/> could be found, false otherwise.</returns>
+        public bool GetSceneBundle(SceneAsset[] _scenes, out SceneBundle _bundle) {
+            foreach (SceneBundle _temp in sceneBundles) {
+                if ((_temp.Scenes.Length == _scenes.Length) && _temp.ContainScenes(_scenes)) {
+                    _bundle = _temp;
+                    return true;
+                }
+            }
+
+            _bundle = null;
+            return false;
+        }
+        #endregion
+
+        #region Utility
         /// <summary>
         /// Get the build index of a specific scene from its GUID.
         /// </summary>
         /// <param name="_sceneGUID">GUID of the scene to get associated build index.</param>
         /// <returns>Build index of the scene if it was included in build, -1 otherwise.</returns>
-        public static int GetSceneBuildIndex(string _sceneGUID)
-        {
+        public static int GetSceneBuildIndex(string _sceneGUID) {
             int _index = Array.IndexOf(Database.buildSceneGUIDs, _sceneGUID);
             return _index;
         }
@@ -112,11 +204,9 @@ namespace EnhancedEditor
         /// </summary>
         /// <param name="_sceneGUID">GUID of the non included in build scene.</param>
         /// <returns>Name of this scene if in editor or in a development build, and an empty string otherwise.</returns>
-        internal static string GetNonBuildSceneName(string _sceneGUID)
-        {
+        internal static string GetNonBuildSceneName(string _sceneGUID) {
             #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            foreach (NonBuildScene _scene in Database.nonBuildScenes)
-            {
+            foreach (NonBuildScene _scene in Database.nonBuildScenes) {
                 if (_scene.GUID == _sceneGUID)
                     return _scene.Name;
             }
@@ -124,9 +214,9 @@ namespace EnhancedEditor
 
             return string.Empty;
         }
-        #endregion
 
-        #region Utility
+        // -----------------------
+
         /// <summary>
         /// Is this scene the core game scene?
         /// </summary>

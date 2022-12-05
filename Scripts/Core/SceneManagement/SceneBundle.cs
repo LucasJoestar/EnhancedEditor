@@ -29,11 +29,6 @@ namespace EnhancedEditor {
         #region Global Members
         [Section("Scene Bundle")]
 
-        [SerializeField]
-        private SerializedType<SceneBundleBehaviour> behaviourType = new SerializedType<SceneBundleBehaviour>(SerializedTypeConstraint.None, typeof(DefaultSceneBundleBehaviour));
-
-        [Space(10f)]
-
         /// <summary>
         /// All scenes included in this bundle.
         /// </summary>
@@ -48,7 +43,9 @@ namespace EnhancedEditor {
 
         [Space(10f), HorizontalLine(SuperColor.Grey, 1f), Space(10f)]
 
-        [SerializeReference, Enhanced, ShowIf("ShowBehaviour"), Block] public SceneBundleBehaviour Behaviour = new DefaultSceneBundleBehaviour();
+        [SerializeField, Enhanced, Block]
+        public PolymorphValue<SceneBundleBehaviour> Behaviour = new PolymorphValue<SceneBundleBehaviour>(SerializedTypeConstraint.None,
+                                                                                                        typeof(DefaultSceneBundleBehaviour), "Behaviour");
 
         /// <summary>
         /// An empty class only displays its name in the inspector.
@@ -101,7 +98,7 @@ namespace EnhancedEditor {
                                                   ? new UnloadBundleAsyncOperation(this, _options)
                                                   : new UnloadBundleAsyncOperation();
             
-            Behaviour.OnUnloadAsyncBundle(this, _operation, _options);
+            Behaviour.Value.OnUnloadAsyncBundle(this, _operation, _options);
             return _operation;
         }
         #endregion
@@ -125,7 +122,7 @@ namespace EnhancedEditor {
                                                 ? new LoadBundleAsyncOperation(this, _parameters)
                                                 : new LoadBundleAsyncOperation();
 
-            Behaviour.OnLoadAsyncBundle(this, _operation, _parameters);
+            Behaviour.Value.OnLoadAsyncBundle(this, _operation, _parameters);
             return _operation;
         }
         #endregion
@@ -153,7 +150,7 @@ namespace EnhancedEditor {
                 LoadScene(_i);
             }
 
-            Behaviour.OnLoadBundle(this, _parameters);
+            Behaviour.Value.OnLoadBundle(this, _parameters);
 
             // ----- Local Method ----- \\
 
@@ -167,32 +164,124 @@ namespace EnhancedEditor {
         }
         #endregion
 
-        #region Editor Utility
-        #if UNITY_EDITOR
-        private void Awake() {
-            RefreshBehaviour();
+        #region Contain
+        // -------------------------------------------
+        // Scene
+        // -------------------------------------------
+
+        /// <inheritdoc cref="ContainScene(Scene, out SceneAsset)"/>
+        public bool ContainScene(Scene _scene) {
+            return ContainScene(_scene, out _);
         }
 
-        private void OnValidate() {
-            RefreshBehaviour();
-        }
-
-        // -----------------------
-
-        private void RefreshBehaviour() {
-            if (Application.isPlaying) {
-                return;
+        /// <summary>
+        /// Get if this <see cref="SceneBundle"/> contains a specific <see cref="Scene"/>.
+        /// </summary>
+        /// <param name="_scene">The <see cref="Scene"/> to check.</param>
+        /// <param name="_asset">The matching <see cref="Scene"/> <see cref="SceneAsset"/>.</param>
+        /// <returns>True if this bundle contains the given <see cref="Scene"/>, false otherwise.</returns>
+        public bool ContainScene(Scene _scene, out SceneAsset _asset) {
+            foreach (SceneAsset _temp in Scenes) {
+                if (_temp.Equals(_scene)) {
+                    _asset = _temp;
+                    return true;
+                }
             }
 
-            // Create a new behaviour if its type changed.
-            if (behaviourType.Type != Behaviour.GetType()) {
-                var _behaviour = Activator.CreateInstance(behaviourType.Type);
-                Behaviour = EnhancedUtility.CopyObjectContent(Behaviour, _behaviour) as SceneBundleBehaviour;
-
-                EditorUtility.SetDirty(this);
-            }
+            _asset = null;
+            return false;
         }
-        #endif
+
+        /// <summary>
+        /// Get if all the specified scenes are contained in this bundle.
+        /// </summary>
+        /// <param name="_scenes">All scenes to check.</param>
+        /// <returns>True if all the given scenes are in this bundle, false otherwise.</returns>
+        public bool ContainScenes(Scene[] _scenes) {
+            foreach (Scene _scene in _scenes) {
+                if (!ContainScene(_scene)) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        // -------------------------------------------
+        // Scene Asset
+        // -------------------------------------------
+
+        /// <inheritdoc cref="ContainScene(SceneAsset, out SceneAsset)"/>
+        public bool ContainScene(SceneAsset _scene) {
+            return ContainScene(_scene, out _);
+        }
+
+        /// <summary>
+        /// Get if this <see cref="SceneBundle"/> contains a specific <see cref="SceneAsset"/>.
+        /// </summary>
+        /// <param name="_scene">The <see cref="SceneAsset"/> to check.</param>
+        /// <param name="_asset">The matching <see cref="SceneAsset"/> <see cref="SceneAsset"/>.</param>
+        /// <returns>True if this bundle contains the given <see cref="SceneAsset"/>, false otherwise.</returns>
+        public bool ContainScene(SceneAsset _scene, out SceneAsset _asset) {
+            foreach (SceneAsset _temp in Scenes) {
+                if (_temp == _scene) {
+                    _asset = _temp;
+                    return true;
+                }
+            }
+
+            _asset = null;
+            return false;
+        }
+
+        /// <summary>
+        /// Get if all the specified scenes are contained in this bundle.
+        /// </summary>
+        /// <param name="_scenes">All scenes to check.</param>
+        /// <returns>True if all the given scenes are in this bundle, false otherwise.</returns>
+        public bool ContainScenes(SceneAsset[] _scenes) {
+            foreach (SceneAsset _scene in _scenes) {
+                if (!ContainScene(_scene)) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+        #endregion
+
+        #region Utility
+        /// <summary>
+        /// Get if this <see cref="SceneBundle"/> is the core scene bundle.
+        /// </summary>
+        /// <returns>True if this bundle only contain the core scene, false otherwise.</returns>
+        public bool IsCoreBundle() {
+            return (Scenes.Length == 1) && Scenes[0].IsCoreScene;
+        }
+
+        // -------------------------------------------
+        // Getter
+        // -------------------------------------------
+
+        /// <inheritdoc cref="BuildSceneDatabase.GetSceneBundle(Scene, out SceneBundle)"/>
+        public static bool GetSceneBundle(Scene _scene, out SceneBundle _bundle) {
+            return BuildSceneDatabase.Database.GetSceneBundle(_scene, out _bundle);
+        }
+
+        /// <inheritdoc cref="BuildSceneDatabase.GetSceneBundle(Scene[], out SceneBundle)"/>
+        public static bool GetSceneBundle(Scene[] _scenes, out SceneBundle _bundle) {
+            return BuildSceneDatabase.Database.GetSceneBundle(_scenes, out _bundle);
+        }
+
+        /// <inheritdoc cref="BuildSceneDatabase.GetSceneBundle(SceneAsset, out SceneBundle)"/>
+        public static bool GetSceneBundle(SceneAsset _scene, out SceneBundle _bundle) {
+            return BuildSceneDatabase.Database.GetSceneBundle(_scene, out _bundle);
+        }
+
+        /// <inheritdoc cref="BuildSceneDatabase.GetSceneBundle(SceneAsset[], out SceneBundle)"/>
+        public static bool GetSceneBundle(SceneAsset[] _scenes, out SceneBundle _bundle) {
+            return BuildSceneDatabase.Database.GetSceneBundle(_scenes, out _bundle);
+        }
         #endregion
     }
 }

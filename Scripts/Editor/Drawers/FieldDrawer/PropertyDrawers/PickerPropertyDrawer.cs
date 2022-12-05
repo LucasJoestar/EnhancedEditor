@@ -26,13 +26,13 @@ namespace EnhancedEditor.Editor
             return true;
         }
 
-        public override void OnValueChanged()
+        public override void OnValueChanged(SerializedProperty _property)
         {
             // Reset object value if it does not match.
-            if ((SerializedProperty.propertyType == SerializedPropertyType.ObjectReference)
-             && EnhancedEditorGUI.ResetPickerObjectIfDontMatch(SerializedProperty.objectReferenceValue, (Attribute as PickerAttribute).RequiredTypes))
+            if ((_property.propertyType == SerializedPropertyType.ObjectReference)
+             && EnhancedEditorGUI.ResetPickerObjectIfDontMatch(_property.objectReferenceValue, (Attribute as PickerAttribute).RequiredTypes))
             {
-                SerializedProperty.objectReferenceValue = null;
+                _property.objectReferenceValue = null;
             }
         }
         #endregion

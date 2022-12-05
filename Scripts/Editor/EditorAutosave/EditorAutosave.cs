@@ -16,13 +16,11 @@ using UnityEditor.SceneManagement;
 using UnityEditorInternal;
 using UnityEngine;
 
-namespace EnhancedEditor.Editor
-{
+namespace EnhancedEditor.Editor {
     /// <summary>
     /// Editor toolbar extension that automatically saves assets and open scene(s) at regular intervals.
     /// </summary>
-    public static class EditorAutosave
-    {
+    public static class EditorAutosave {
         #region Global Members
         private const float DefaultSaveInterval = 300f;
 
@@ -31,7 +29,6 @@ namespace EnhancedEditor.Editor
         private const float MinSaveInterval = 5f;
         private const float UpdateMaxInterval = .5f;
 
-        private const string EditorPrefKey = EnhancedEditorSettings.EditorPrefsPath + "Autosave";
         private const string EnabledKey = "AutosaveEnabled";
         private const string RemainingTimeKey = "AutosaveRemainingTime";
 
@@ -40,22 +37,40 @@ namespace EnhancedEditor.Editor
         private static readonly GUIContent enableGUI = new GUIContent(string.Empty, EnableTooltip);
         private static readonly GUIContent disableGUI = new GUIContent(string.Empty, "Toggle Assets & Open Scene(s) Autosave\n\nCurrently disabled.");
 
+        private static readonly int settingsGUID = "EnhancedEditorAutosaveSetting".GetHashCode();
+        private static FloatEnhancedSettings settings = null;
+
         private static float saveInterval = 0f;
         private static float saveRemainingTime = 0f;
         private static double lastTimeCheckup = 0f;
         private static bool isEnabled = false;
 
+        /// <summary>
+        /// Autosave-related user settings.
+        /// </summary>
+        public static FloatEnhancedSettings Settings {
+            get {
+                EnhancedEditorUserSettings _userSettings = EnhancedEditorUserSettings.Instance;
+
+                if ((settings == null) && !_userSettings.GetSetting(settingsGUID, out settings, out _)) {
+                    settings = new FloatEnhancedSettings(settingsGUID, DefaultSaveInterval);
+                    _userSettings.AddSetting(settings);
+                }
+
+                return settings;
+            }
+        }
+
         // -----------------------
 
-        static EditorAutosave()
-        {
+        static EditorAutosave() {
             EditorApplication.update -= Update;
             EditorApplication.update += Update;
 
             enableGUI.image = EditorGUIUtility.FindTexture("Record On");
             disableGUI.image = EditorGUIUtility.FindTexture("SaveAs");
 
-            saveInterval = EditorPrefs.GetFloat(EditorPrefKey, DefaultSaveInterval) + UpdateMaxInterval;
+            saveInterval = Settings.Value + UpdateMaxInterval;
 
             // Loads session values.
             isEnabled = SessionState.GetBool(EnabledKey, isEnabled);
@@ -64,18 +79,15 @@ namespace EnhancedEditor.Editor
         #endregion
 
         #region Behaviour
-        private static void Update()
-        {
+        private static void Update() {
             // Do not save in play mode, as it wouldn't be any useful.
-            if (isEnabled && !EditorApplication.isPlaying && InternalEditorUtility.isApplicationActive)
-            {
+            if (isEnabled && !EditorApplication.isPlaying && InternalEditorUtility.isApplicationActive) {
                 double _timeSinceStartup = EditorApplication.timeSinceStartup;
                 float _ellipse = (float)Math.Min(UpdateMaxInterval, _timeSinceStartup - lastTimeCheckup);
                 lastTimeCheckup = _timeSinceStartup;
 
                 saveRemainingTime -= _ellipse;
-                if (saveRemainingTime < 0f)
-                {
+                if (saveRemainingTime < 0f) {
                     EditorSceneManager.SaveOpenScenes();
                     AssetDatabase.SaveAssets();
 
@@ -88,14 +100,15 @@ namespace EnhancedEditor.Editor
         }
         #endregion
 
-        #region User Preferences
+        #region User Settings
         private static readonly GUIContent autosaveIntervalGUI = new GUIContent("Autosave Interval",
-                                                                                "Time interval (in seconds) between two autosave. Autosave can be toggled from the main editor toolbar.");
+                                                                                "Time interval (in seconds) between two autosave. " +
+                                                                                "Autosave can be toggled from the main editor toolbar.");
 
         // -----------------------
 
-        [EnhancedEditorPreferences(Order = 10)]
-        private static void DrawPreferences() {
+        [EnhancedEditorUserSettings(Order = 10)]
+        private static void DrawSettings() {
             // Autosave interval.
             float _interval = saveInterval - UpdateMaxInterval;
             float _newInterval = EnhancedEditorGUILayout.MinField(autosaveIntervalGUI, _interval, MinSaveInterval);
@@ -105,7 +118,8 @@ namespace EnhancedEditor.Editor
                 saveInterval = saveRemainingTime
                              = _newInterval + UpdateMaxInterval;
 
-                EditorPrefs.SetFloat(EditorPrefKey, _newInterval);
+                settings.Value = _newInterval;
+                GUI.changed = true;
             }
         }
         #endregion
@@ -113,8 +127,7 @@ namespace EnhancedEditor.Editor
         #region Toolbar Extension
         [EditorToolbarLeftExtension(Order = -25)]
         #pragma warning disable IDE0051
-        private static void OnGUI()
-        {
+        private static void OnGUI() {
             #if SCENEVIEW_TOOLBAR
             GUILayout.Space(10f);
             #endif
@@ -123,8 +136,7 @@ namespace EnhancedEditor.Editor
             GUIContent _label;
             GUILayoutOption _width;
 
-            if (isEnabled)
-            {
+            if (isEnabled) {
                 string _time = saveRemainingTime.ToString("##0");
                 enableGUI.text = EditorApplication.isPlaying ? string.Empty : $" {_time}s";
                 enableGUI.tooltip = string.Format(EnableTooltip, _time);
@@ -134,19 +146,15 @@ namespace EnhancedEditor.Editor
 
                 // Constantly repaint to properly display the remaining time.
                 EnhancedEditorToolbar.Repaint();
-            }
-            else
-            {
+            } else {
                 _label = disableGUI;
                 _width = GUILayout.Width(ButtonDisabledWidth);
             }
 
             // Disable this button while the application is playing, as no save would be performed.
-            using (var _scope = EnhancedGUI.GUIEnabled.Scope(!Application.isPlaying))
-            {
+            using (var _scope = EnhancedGUI.GUIEnabled.Scope(!Application.isPlaying)) {
                 // Enable / disable autosave and save its value.
-                if (EnhancedEditorToolbar.Button(_label, _width))
-                {
+                if (EnhancedEditorToolbar.Button(_label, _width)) {
                     isEnabled = !isEnabled;
                     SessionState.SetBool(EnabledKey, isEnabled);
                 }

@@ -63,16 +63,16 @@ namespace EnhancedEditor.Editor
 
             // -----------------------
 
-            public void OnContextMenu(GenericMenu _menu)
+            public void OnContextMenu(GenericMenu _menu, SerializedProperty _property)
             {
                 foreach (EnhancedPropertyDrawer _drawer in PropertyDrawers)
-                    _drawer.OnContextMenu(_menu);
+                    _drawer.OnContextMenu(_menu, _property);
             }
         }
         #endregion
 
         #region Drawer Content
-        private const int CacheLimit = 100;
+        private const int CacheLimit = 500;
         internal static readonly Dictionary<string, PropertyInfos> propertyInfos = new Dictionary<string, PropertyInfos>();
 
         // -----------------------
@@ -175,7 +175,7 @@ namespace EnhancedEditor.Editor
 
                     foreach (EnhancedPropertyDrawer _drawer in _infos.PropertyDrawers)
                     {
-                        _drawer.OnValueChanged();
+                        _drawer.OnValueChanged(_property);
                     }
                 }
             }
@@ -189,7 +189,7 @@ namespace EnhancedEditor.Editor
             if (EnhancedEditorGUIUtility.ContextClick(_position))
             {
                 GenericMenu _menu = new GenericMenu();
-                _infos.OnContextMenu(_menu);
+                _infos.OnContextMenu(_menu, _property);
 
                 if (_menu.GetItemCount() > 0)
                     _menu.ShowAsContext();

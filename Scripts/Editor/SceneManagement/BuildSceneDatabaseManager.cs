@@ -93,15 +93,39 @@ namespace EnhancedEditor.Editor
                 _nonBuildScenes[_i] = new BuildSceneDatabase.NonBuildScene(_name, _guid);
             }
 
-            // Register informations in the database.
-            Database.buildSceneGUIDs = _sceneGUIDs;
-            Database.nonBuildScenes = _nonBuildScenes;
+            // Get all SceneBundle included in build.
+            List<SceneBundle> _sceneBundles = new List<SceneBundle>(EnhancedEditorUtility.LoadAssets<SceneBundle>());
 
-            Database.coreSceneIndex = CoreSceneUtility.IsCoreSceneEnabled
-                                    ? CoreSceneUtility.CoreScene.BuildIndex
+            for (int i = _sceneBundles.Count; i-- > 0;) {
+                SceneBundle _bundle = _sceneBundles[i];
+
+                if (!IsIncludedInBuild(_bundle)) {
+                    _sceneBundles.RemoveAt(i);
+                }
+            }
+
+            // Register informations in the database.
+            Database.sceneBundles       = _sceneBundles.ToArray();
+            Database.buildSceneGUIDs    = _sceneGUIDs;
+            Database.nonBuildScenes     = _nonBuildScenes;
+
+            Database.coreSceneIndex = CoreSceneEnhancedSettings.Settings.IsCoreSceneEnabled
+                                    ? CoreSceneEnhancedSettings.Settings.CoreScene.BuildIndex
                                     : -1;
 
             EditorUtility.SetDirty(Database);
+
+            // ----- Local Method ----- \\
+
+            bool IsIncludedInBuild(SceneBundle _sceneBundle) {
+                foreach (SceneAsset _scene in _sceneBundle.Scenes) {
+                    if (_scene.BuildIndex == -1) {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
         }
         #endregion
     }

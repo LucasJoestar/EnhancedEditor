@@ -12,7 +12,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Reflection;
 using UnityEditor;
 using UnityEngine;
@@ -20,31 +19,35 @@ using UnityEngine;
 using SettingDelegate = System.Action;
 
 namespace EnhancedEditor.Editor {
+    // -------------------------------------------
+    // Enhanced Settings
+    // -------------------------------------------
+
     /// <summary>
-    /// <see cref="EnhancedEditorSettings"/>-related project settings base class.
+    /// <see cref="EnhancedEditorProjectSettings"/>-related project settings base class.
     /// <br/> Inherit from this to create your own project settings.
     /// </summary>
     [Serializable]
-    public abstract class EnhancedEditorProjectSetting {
+    public abstract class EnhancedSettings {
         #region Global Members
         /// <summary>
         /// The unique identifier of this setting.
         /// </summary>
-        public int GUID = 0;
+        [SerializeField, HideInInspector] public int GUID = 0;
 
         // -----------------------
 
-        public EnhancedEditorProjectSetting(int _guid) {
+        public EnhancedSettings(int _guid) {
             GUID = _guid;
         }
         #endregion
     }
 
     /// <summary>
-    /// <see cref="EnhancedEditorProjectSetting"/> for a simple <see cref="bool"/>.
+    /// <see cref="EnhancedSettings"/> for a simple <see cref="bool"/>.
     /// </summary>
     [Serializable]
-    public class BooleanProjectSetting : EnhancedEditorProjectSetting {
+    public class BooleanEnhancedSettings : EnhancedSettings {
         #region Global Members
         /// <summary>
         /// This setting value.
@@ -53,18 +56,38 @@ namespace EnhancedEditor.Editor {
 
         // -----------------------
 
-        /// <inheritdoc cref="BooleanProjectSetting"/>
-        public BooleanProjectSetting(int _guid, bool _value) : base(_guid) {
+        /// <inheritdoc cref="BooleanEnhancedSettings"/>
+        public BooleanEnhancedSettings(int _guid, bool _value) : base(_guid) {
             Value = _value;
         }
         #endregion
     }
 
     /// <summary>
-    /// <see cref="EnhancedEditorProjectSetting"/> for a folder path.
+    /// <see cref="EnhancedSettings"/> for a simple <see cref="float"/>.
     /// </summary>
     [Serializable]
-    public class FolderProjectSetting : EnhancedEditorProjectSetting {
+    public class FloatEnhancedSettings : EnhancedSettings {
+        #region Global Members
+        /// <summary>
+        /// This setting value.
+        /// </summary>
+        public float Value = 0f;
+
+        // -----------------------
+
+        /// <inheritdoc cref="BooleanEnhancedSettings"/>
+        public FloatEnhancedSettings(int _guid, float _value) : base(_guid) {
+            Value = _value;
+        }
+        #endregion
+    }
+
+    /// <summary>
+    /// <see cref="EnhancedSettings"/> for a folder path.
+    /// </summary>
+    [Serializable]
+    public class FolderEnhancedSettings : EnhancedSettings {
         #region Global Members
         /// <summary>
         /// Default folder value.
@@ -83,8 +106,8 @@ namespace EnhancedEditor.Editor {
 
         // -----------------------
 
-        /// <inheritdoc cref="FolderProjectSetting"/>
-        public FolderProjectSetting(int _guid, string _defaultValue, bool _inProjectOnly) : base(_guid) {
+        /// <inheritdoc cref="FolderEnhancedSettings"/>
+        public FolderEnhancedSettings(int _guid, string _defaultValue, bool _inProjectOnly) : base(_guid) {
             DefaultValue = _defaultValue;
             InProjectOnly = _inProjectOnly;
 
@@ -93,75 +116,101 @@ namespace EnhancedEditor.Editor {
         #endregion
     }
 
+    // -------------------------------------------
+    // Editor settings class
+    // -------------------------------------------
+
     /// <summary>
-    /// <see cref="EnhancedEditor"/>-related preferences settings.
-    /// <para/>
-    /// Note that these settings should not be called from a <see cref="ScriptableObject"/> constructor, due to Unity preferences limitations.
+    /// <see cref="EnhancedEditor"/> base settings class, managing both project and user settings.
     /// </summary>
-    [NonEditable("Please use the Preferences/Project Settings windows to edit these settings.")]
-    #pragma warning disable IDE0051
-    public class EnhancedEditorSettings : ScriptableObject {
+    public abstract class EnhancedEditorSettings : ScriptableObject {
         #region Styles
-        private static class Styles {
-            public static readonly GUIContent PreferencesButtonGUI = new GUIContent(EditorGUIUtility.FindTexture("d_Settings"), "Opens the EnhancedEditor user preferences.");
-            public static readonly GUIContent ProjectSettingsButtonGUI = new GUIContent(EditorGUIUtility.FindTexture("d_Settings"), "Opens the EnhancedEditor project settings.");
+        internal static class Styles {
+            public static readonly GUIContent UsetSettingsButtonGUI     = new GUIContent(EditorGUIUtility.FindTexture("d_Settings"),
+                                                                                         "Opens the EnhancedEditor user preferences.");
+
+            public static readonly GUIContent ProjectSettingsButtonGUI  = new GUIContent(EditorGUIUtility.FindTexture("d_Settings"),
+                                                                                         "Opens the EnhancedEditor project settings.");
         }
         #endregion
 
         #region Global Members
-        private const string DefaultSettingsDirectory = "EnhancedEditor/Editor/Settings/";
+        /// <inheritdoc cref="EnhancedEditorUserSettings.Instance"/>
+        public static EnhancedEditorUserSettings UserSettings {
+            get { return EnhancedEditorUserSettings.Instance; }
+        }
 
-        private static EnhancedEditorSettings settings = null;
+        /// <inheritdoc cref="EnhancedEditorProjectSettings.Instance"/>
+        public static EnhancedEditorProjectSettings ProjectSettings {
+            get { return EnhancedEditorProjectSettings.Instance; }
+        }
 
-        /// <inheritdoc cref="EnhancedEditorSettings"/>
-        public static EnhancedEditorSettings Settings {
+        // -----------------------
+
+        [SerializeReference]
+        internal EnhancedSettings[] settings = new EnhancedSettings[] { };
+        #endregion
+
+        #region Behaviour
+        private SerializedObject serializedObject = null;
+
+        public SerializedObject SerializedObject {
             get {
-                if ((settings == null) && !EnhancedEditorUtility.LoadMainAsset(out settings)) {
-                    string _path = Path.Combine(Application.dataPath, DefaultSettingsDirectory);
-                    if (!Directory.Exists(_path)) {
-                        Directory.CreateDirectory(_path);
-                    }
-
-                    _path = Path.Combine("Assets", DefaultSettingsDirectory, $"EnhancedEditorSettings.asset");
-                    settings = CreateInstance<EnhancedEditorSettings>();
-
-                    AssetDatabase.CreateAsset(settings, _path);
-                    AssetDatabase.SaveAssets();
+                if (serializedObject == null) {
+                    serializedObject = new SerializedObject(this);
                 }
 
-                return settings;
+                return serializedObject;
             }
         }
 
-        [SerializeReference] private EnhancedEditorProjectSetting[] projectSettings = new EnhancedEditorProjectSetting[] { };
-        #endregion
+        // -----------------------
 
-        #region Settings Utility
         /// <summary>
         /// Get the setting associated with a specific guid.
         /// </summary>
         /// <param name="_guid">The guid to get the associated setting.</param>
         /// <param name="_setting">The setting associated with the guid.</param>
+        /// <param name="_property">The <see cref="SerializedProperty"/> associated with this setting.</param>
         /// <returns>True if the associated setting could be found, false otherwise.</returns>
-        public bool GetProjectSetting<T>(int _guid, out T _setting) where T : EnhancedEditorProjectSetting {
-            int _index = Array.FindIndex(projectSettings, s => s.GUID == _guid);
+        public virtual bool GetSetting<T>(int _guid, out T _setting, out SerializedProperty _property) where T : EnhancedSettings {
+            int _index = Array.FindIndex(settings, s => s.GUID == _guid);
 
-            if ((_index != -1) && (projectSettings[_index] is T _temp)) {
+            if ((_index != -1) && (settings[_index] is T _temp)) {
                 _setting = _temp;
+
+                SerializedObject.ApplyModifiedProperties();
+                SerializedObject.Update();
+
+                _property = SerializedObject.FindProperty("settings").GetArrayElementAtIndex(_index);
+
                 return true;
             }
 
             _setting = null;
+            _property = null;
+
             return false;
         }
 
         /// <summary>
-        /// Adds a new project setting to these settings.
+        /// Adds a new setting to these project settings.
         /// </summary>
-        /// <param name="_setting">The new project setting to add.</param>
-        public void AddProjectSetting(EnhancedEditorProjectSetting _setting) {
-            ArrayUtility.Add(ref projectSettings, _setting);
+        /// <param name="_setting">The new setting to add.</param>
+        public virtual SerializedProperty AddSetting(EnhancedSettings _setting) {
+            ArrayUtility.Add(ref settings, _setting);
+
+            SerializedObject.ApplyModifiedProperties();
+            SerializedObject.Update();
+
+            SerializedProperty _property = SerializedObject.FindProperty("settings");
+            return _property.GetArrayElementAtIndex(_property.arraySize - 1);
         }
+
+        /// <summary>
+        /// Saves these settings.
+        /// </summary>
+        public abstract void Save();
         #endregion
 
         #region Menu Navigation
@@ -170,51 +219,11 @@ namespace EnhancedEditor.Editor {
         // -----------------------
 
         /// <summary>
-        /// Opens the Preferences window with the <see cref="EnhancedEditor"/> settings already selected.
+        /// Draws a button to open the Enhanced Editor user settings window.
         /// </summary>
-        [MenuItem(MenuPath + "Preferences", false, -50), Button(SuperColor.Green, IsDrawnOnTop = false)]
-        public static EditorWindow OpenPreferences() {
-            EditorWindow _preferences = SettingsService.OpenUserPreferences(PreferencesPath);
-            return _preferences;
-        }
-
-        /// <summary>
-        /// Opens the Project Settings window with the <see cref="EnhancedEditor"/> settings already selected.
-        /// </summary>
-        [MenuItem(MenuPath + "Project Settings", false, -50), Button(SuperColor.Green, IsDrawnOnTop = false)]
-        public static EditorWindow OpenProjectSettings() {
-            EditorWindow _projectSettings = SettingsService.OpenProjectSettings(ProjectSettingsPath);
-            return _projectSettings;
-        }
-
-        /// <summary>
-        /// Main editor toolbar extension used to open the <see cref="EnhancedEditor"/> preferences settings.
-        /// </summary>
-        [EditorToolbarRightExtension(Order = 500)]
-        private static void OpenPreferencesToolbarExtension() {
-            #if SCENEVIEW_TOOLBAR
-            GUILayout.Space(10f);
-            #elif EDITOR_TOOLBAR
-            GUILayout.FlexibleSpace();
-            #endif
-
-            if (EnhancedEditorToolbar.Button(Styles.PreferencesButtonGUI, GUILayout.Width(32f))) {
-                OpenPreferences();
-            }
-
-            #if EDITOR_TOOLBAR
-            GUILayout.Space(25f);
-            #endif
-        }
-
-        // -----------------------
-
-        /// <summary>
-        /// Draws a button to open the Enhanced Editor preferences window.
-        /// </summary>
-        public static void DrawPreferencesButton(Rect _position) {
-            if (EnhancedEditorGUI.IconButton(_position, Styles.PreferencesButtonGUI)) {
-                OpenPreferences();
+        public static void DrawUserSettingsButton(Rect _position) {
+            if (EnhancedEditorGUI.IconButton(_position, Styles.UsetSettingsButtonGUI)) {
+                EnhancedEditorUserSettings.OpenSettings();
             }
         }
 
@@ -223,26 +232,26 @@ namespace EnhancedEditor.Editor {
         /// </summary>
         public static void DrawProjectSettingsButton(Rect _position) {
             if (EnhancedEditorGUI.IconButton(_position, Styles.ProjectSettingsButtonGUI)) {
-                OpenPreferences();
+                EnhancedEditorProjectSettings.OpenSettings();
             }
         }
         #endregion
 
         #region Settings Providers
-        public const string ProjectSettingsPath = "Project/Enhanced Editor";
-        public const string PreferencesPath = "Preferences/Enhanced Editor";
+        public const string UserSettingsPath        = "Preferences/Enhanced Editor";
+        public const string ProjectSettingsPath     = "Project/Enhanced Editor";
 
-        public const string ProjectSettingsLabel = "Enhanced Editor";
-        public const string PreferencesGlobalLabel = "Enhanced Editor";
+        public const string UserSettingsGlobalLabel = "Enhanced Editor";
+        public const string ProjectSettingsLabel    = "Enhanced Editor";
 
-        public static readonly string[] PreferencesKeywords = new string[] {
-                                                                "Enhanced",
-                                                                "Editor",
-                                                                "Autosave",
-                                                                "Build Pipeline",
-                                                                "Chronos",
-                                                                "Scene Designer",
-                                                            };
+        public static readonly string[] UserSettingsKeywords    = new string[] {
+                                                                    "Enhanced",
+                                                                    "Editor",
+                                                                    "Autosave",
+                                                                    "Build Pipeline",
+                                                                    "Chronos",
+                                                                    "Scene Designer",
+                                                                };
 
 
         public static readonly string[] ProjectSettingsKeywords = new string[] {
@@ -258,13 +267,13 @@ namespace EnhancedEditor.Editor {
 
         [SettingsProvider]
         private static SettingsProvider CreateUserSettingsProvider() {
-            SettingsProvider _provider = new SettingsProvider(PreferencesPath, SettingsScope.User) {
-                label = PreferencesGlobalLabel,
-                keywords = PreferencesKeywords,
+            SettingsProvider _provider = new SettingsProvider(UserSettingsPath, SettingsScope.User) {
+                label = UserSettingsGlobalLabel,
+                keywords = UserSettingsKeywords,
 
                 guiHandler = (string _searchContext) => {
                     GUILayout.Space(10f);
-                    DrawUserPreferences();
+                    DrawUserSettings();
                 },
             };
 
@@ -288,27 +297,39 @@ namespace EnhancedEditor.Editor {
         #endregion
 
         #region GUI Draw
-        public const string ProjectSettingsRecordTitle = "EnhancedEditor Settings Change";
-        public const string EditorPrefsPath = "EnhancedEditor/";
+        public const string ProjectSettingsRecordTitle  = "EnhancedEditor Project Settings Change";
+        public const string UserSettingsRecordTitle     = "EnhancedEditor User Settings Change";
+        public const string EditorPrefsPath             = "EnhancedEditor/";
 
-        private static List<SettingDelegate> preferencesDrawers = new List<SettingDelegate>();
-        private static List<SettingDelegate> projectSettingsDrawers = new List<SettingDelegate>();
+        private static readonly List<SettingDelegate> userSettingsDrawers = new List<SettingDelegate>();
+        private static readonly List<SettingDelegate> projectSettingsDrawers = new List<SettingDelegate>();
 
         private static readonly GUIContent shortcutsGUI = new GUIContent("Editor Shortcuts", "Edit all Enhanced Editor-related editor shortcuts.");
 
         // -----------------------
 
-        public static void DrawUserPreferences() {
+        public static void DrawUserSettings() {
             // Load drawers.
-            GetDelegates<EnhancedEditorPreferencesAttribute>(preferencesDrawers);
+            GetDelegates<EnhancedEditorUserSettingsAttribute>(userSettingsDrawers);
+            EnhancedEditorUserSettings _settings = UserSettings;
 
             // Draw preferences.
             using (var _scope = new GUILayout.HorizontalScope()) {
                 GUILayout.Space(10f);
 
-                using (var _verticalScope = new GUILayout.VerticalScope()) {
-                    foreach (SettingDelegate _delegate in preferencesDrawers) {
+                using (var _verticalScope = new GUILayout.VerticalScope())
+                using (var _changeCheck = new EditorGUI.ChangeCheckScope()) {
+                    Undo.RecordObject(_settings, UserSettingsRecordTitle);
+                    _settings.SerializedObject.Update();
+
+                    foreach (SettingDelegate _delegate in userSettingsDrawers) {
                         _delegate();
+                    }
+
+                    _settings.SerializedObject.ApplyModifiedProperties();
+
+                    if (_changeCheck.changed) {
+                        _settings.Save();
                     }
 
                     #if UNITY_2019_1_OR_NEWER
@@ -330,8 +351,7 @@ namespace EnhancedEditor.Editor {
         public static void DrawProjectSettings() {
             // Load drawers.
             GetDelegates<EnhancedEditorProjectSettingsAttribute>(projectSettingsDrawers);
-
-            EnhancedEditorSettings _settings = Settings;
+            EnhancedEditorProjectSettings _settings = ProjectSettings;
 
             // Draw project settings.
             using (var _scope = new GUILayout.HorizontalScope()) {
@@ -340,13 +360,16 @@ namespace EnhancedEditor.Editor {
                 using (var _verticalScope = new GUILayout.VerticalScope())
                 using (var _changeCheck = new EditorGUI.ChangeCheckScope()) {
                     Undo.RecordObject(_settings, ProjectSettingsRecordTitle);
+                    _settings.SerializedObject.Update();
 
                     foreach (SettingDelegate _delegate in projectSettingsDrawers) {
                         _delegate();
                     }
 
+                    _settings.SerializedObject.ApplyModifiedProperties();
+
                     if (_changeCheck.changed) {
-                        EnhancedEditorUtility.SaveAsset(_settings);
+                        _settings.Save();
                     }
                 }
             }

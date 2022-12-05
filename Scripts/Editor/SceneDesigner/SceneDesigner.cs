@@ -18,26 +18,83 @@ using UnityEditor.ShortcutManagement;
 using UnityEditorInternal;
 using UnityEngine;
 
-namespace EnhancedEditor.Editor
-{
+namespace EnhancedEditor.Editor {
+    /// <summary>
+    /// <see cref="SceneDesigner"/>-related <see cref="EnhancedSettings"/> class.
+    /// </summary>
+    [Serializable]
+    public class SceneDesignerEnhancedSettings : EnhancedSettings {
+        #region Global Members
+        [Folder] public List<string> Folders = new List<string>();
+
+        // -----------------------
+
+        /// <inheritdoc cref="SceneDesignerEnhancedSettings"/>
+        public SceneDesignerEnhancedSettings(int _guid) : base(_guid) { }
+        #endregion
+
+        #region Settings
+        private static readonly GUIContent sceneDesignerFoldersGUI = new GUIContent("Scene Designer Folders",
+                                                                                    "All folders displayed to select objects to place in the scene using the Scene Designer.");
+
+        private static readonly ReorderableList folderList = new ReorderableList(null, typeof(string)) {
+            drawHeaderCallback = DrawHeaderCallback,
+            drawElementCallback = DrawElementCallback,
+        };
+
+        private static readonly int settingsGUID = "EnhancedEditorScriptableSceneDesignerSetting".GetHashCode();
+        private static SceneDesignerEnhancedSettings settings = null;
+
+        /// <inheritdoc cref="SceneDesignerEnhancedSettings"/>
+        public static SceneDesignerEnhancedSettings Settings {
+            get {
+                EnhancedEditorUserSettings _userSettings = EnhancedEditorUserSettings.Instance;
+
+                if ((settings == null) && !_userSettings.GetSetting(settingsGUID, out settings, out _)) {
+                    settings = new SceneDesignerEnhancedSettings(settingsGUID);
+                    _userSettings.AddSetting(settings);
+                }
+
+                return settings;
+            }
+        }
+
+        // -----------------------
+
+        [EnhancedEditorUserSettings(Order = 50)]
+        private static void DrawSettings() {
+            var _ = Settings;
+
+            GUILayout.Space(5f);
+
+            using (var _scope = new EditorGUI.ChangeCheckScope()) {
+                folderList.list = settings.Folders;
+                folderList.DoLayoutList();
+
+                // Save on change.
+                if (_scope.changed) {
+                    SceneDesigner.RefreshFolders();
+                }
+            }
+        }
+
+        private static void DrawHeaderCallback(Rect _position) {
+            EditorGUI.LabelField(_position, sceneDesignerFoldersGUI);
+        }
+
+        private static void DrawElementCallback(Rect _position, int _index, bool _isActive, bool _isFocused) {
+            _position.yMin += EditorGUIUtility.standardVerticalSpacing;
+            settings.Folders[_index] = EnhancedEditorGUI.FolderField(_position, settings.Folders[_index]);
+        }
+        #endregion
+    }
+
     /// <summary>
     /// Editor toolbar extension used to easily select prefabs from the project and place them in the scene.
     /// </summary>
-	public class SceneDesigner : EditorWindow
-    {
-        #region Folder Wrapper
-        /// <summary>
-        /// Serializable wrapper class used to save and load scene designer folders from json.
-        /// </summary>
-        [Serializable]
-        public class FolderWrapper {
-            public List<string> Folders = new List<string>();
-        }
-        #endregion
-
+	public class SceneDesigner : EditorWindow {
         #region Folder & Asset
-        private class Folder
-        {
+        private class Folder {
             public string Name = string.Empty;
             public bool Foldout = false;
 
@@ -46,20 +103,16 @@ namespace EnhancedEditor.Editor
 
             // -----------------------
 
-            public Folder(string _name)
-            {
+            public Folder(string _name) {
                 Name = _name;
             }
 
             // -----------------------
 
-            public void RegisterAsset(string[] _directories, string _fullPath, int _index)
-            {
-                if (_index == (_directories.Length - 1))
-                {
+            public void RegisterAsset(string[] _directories, string _fullPath, int _index) {
+                if (_index == (_directories.Length - 1)) {
                     // Register new asset.
-                    if (!Assets.Exists(a => a.Path == _fullPath))
-                    {
+                    if (!Assets.Exists(a => a.Path == _fullPath)) {
                         Asset _asset = new Asset(_fullPath);
                         Assets.Add(_asset);
                     }
@@ -68,10 +121,8 @@ namespace EnhancedEditor.Editor
                 }
 
                 string _directory = _directories[_index];
-                foreach (Folder _folder in Folders)
-                {
-                    if (_folder.Name == _directory)
-                    {
+                foreach (Folder _folder in Folders) {
+                    if (_folder.Name == _directory) {
                         _folder.RegisterAsset(_directories, _fullPath, _index + 1);
                         return;
                     }
@@ -84,8 +135,7 @@ namespace EnhancedEditor.Editor
             }
         }
 
-        private class Asset
-        {
+        private class Asset {
             public string Name = string.Empty;
             public string Path = string.Empty;
 
@@ -93,8 +143,7 @@ namespace EnhancedEditor.Editor
 
             // -----------------------
 
-            public Asset(string _path)
-            {
+            public Asset(string _path) {
                 Name = $" {System.IO.Path.GetFileNameWithoutExtension(_path)}";
                 Path = _path;
             }
@@ -102,8 +151,7 @@ namespace EnhancedEditor.Editor
         #endregion
 
         #region Mesh Infos
-        private class MeshInfo
-        {
+        private class MeshInfo {
             public Mesh Mesh = null;
             public Material[] Materials = null;
             public Transform Transform = null;
@@ -112,8 +160,7 @@ namespace EnhancedEditor.Editor
 
             // -----------------------
 
-            public MeshInfo(MeshFilter _mesh)
-            {
+            public MeshInfo(MeshFilter _mesh) {
                 Mesh = _mesh.sharedMesh;
                 Transform = _mesh.transform;
 
@@ -146,8 +193,7 @@ namespace EnhancedEditor.Editor
 
         // -----------------------
 
-        static SceneDesigner()
-        {
+        static SceneDesigner() {
             toolbarButton.image = EditorGUIUtility.IconContent("PreMatCube").image;
 
             // Loads session values.
@@ -167,16 +213,14 @@ namespace EnhancedEditor.Editor
 
         // -----------------------
 
-        private static void OnSceneGUI(SceneView _sceneView)
-        {
+        private static void OnSceneGUI(SceneView _sceneView) {
             if (mouseOverWindow != _sceneView)
                 return;
 
             Event _event = Event.current;
 
             // Create and place a new instance on click.
-            if ((GUIUtility.hotControl != 0) && (_event.type == EventType.MouseDown) && (_event.button == 0))
-            {
+            if ((GUIUtility.hotControl != 0) && (_event.type == EventType.MouseDown) && (_event.button == 0)) {
                 newInstance = PrefabUtility.InstantiatePrefab(selectedAsset) as GameObject;
                 newInstance.transform.position = worldPosition;
 
@@ -186,17 +230,14 @@ namespace EnhancedEditor.Editor
                 Undo.RegisterCreatedObjectUndo(newInstance, "New Asset Instantiation");
 
                 _event.Use();
-            }
-            else if ((_event.type == EventType.Used) && (newInstance != null))
-            {
+            } else if ((_event.type == EventType.Used) && (newInstance != null)) {
                 Selection.activeObject = newInstance;
                 newInstance = null;
             }
 
             // Get the asset preview position in world space according to the user mouse position.
             Ray _worldRay = HandleUtility.GUIPointToWorldRay(_event.mousePosition);
-            if (Physics.Raycast(_worldRay, out RaycastHit _hit, 1000f))
-            {
+            if (Physics.Raycast(_worldRay, out RaycastHit _hit, 1000f)) {
                 // Get the hit normal, rounded to the nearest int for each axis
                 Vector3 _roundedNormal = new Vector3(Mathf.RoundToInt(_hit.normal.x),
                                                      Mathf.RoundToInt(_hit.normal.y),
@@ -204,32 +245,26 @@ namespace EnhancedEditor.Editor
 
                 // Set the preview position relative to the virtual collider
                 worldPosition = (_hit.point - assetBounds.center) + Vector3.Scale(assetBounds.extents, _roundedNormal);
-            }
-            else
-            {
+            } else {
                 worldPosition = _worldRay.origin + (_worldRay.direction * 25f);
             }
 
             // Position handles.
             bool doDrawHandles = GUIUtility.hotControl == 0;
-            #if SCENEVIEW_TOOLBAR
+#if SCENEVIEW_TOOLBAR
             doDrawHandles &= _event.mousePosition.y > 25f;
-            #endif
+#endif
 
-            if (doDrawHandles)
-            {
+            if (doDrawHandles) {
                 Transform _transform = selectedAsset.transform;
 
-                using (var _scope = EnhancedEditorGUI.HandlesColor.Scope(Handles.xAxisColor))
-                {
+                using (var _scope = EnhancedEditorGUI.HandlesColor.Scope(Handles.xAxisColor)) {
                     Handles.ArrowHandleCap(0, worldPosition, Quaternion.LookRotation(_transform.right), 1f, EventType.Repaint);
                 }
-                using (var _scope = EnhancedEditorGUI.HandlesColor.Scope(Handles.yAxisColor))
-                {
+                using (var _scope = EnhancedEditorGUI.HandlesColor.Scope(Handles.yAxisColor)) {
                     Handles.ArrowHandleCap(0, worldPosition, Quaternion.LookRotation(_transform.up), 1f, EventType.Repaint);
                 }
-                using (var _scope = EnhancedEditorGUI.HandlesColor.Scope(Handles.zAxisColor))
-                {
+                using (var _scope = EnhancedEditorGUI.HandlesColor.Scope(Handles.zAxisColor)) {
                     Handles.ArrowHandleCap(0, worldPosition, Quaternion.LookRotation(_transform.forward), 1f, EventType.Repaint);
                 }
             }
@@ -263,14 +298,11 @@ namespace EnhancedEditor.Editor
         /// Set the <see cref="SceneDesigner"/> enabled state.
         /// </summary>
         /// <param name="_isEnable">Should the <see cref="SceneDesigner"/> be enabled?</param>
-        public static void SetEnable(bool _isEnable)
-        {
+        public static void SetEnable(bool _isEnable) {
             SceneView.duringSceneGui -= OnSceneGUI;
 
-            if (_isEnable)
-            {
-                if (string.IsNullOrEmpty(selectedAssetPath))
-                {
+            if (_isEnable) {
+                if (string.IsNullOrEmpty(selectedAssetPath)) {
                     GetWindow();
                     return;
                 }
@@ -286,8 +318,7 @@ namespace EnhancedEditor.Editor
 
         /// <inheritdoc cref="SelectAsset(string)"/>
         /// <param name="_asset">New selected asset.</param>
-        public static void SelectAsset(GameObject _asset)
-        {
+        public static void SelectAsset(GameObject _asset) {
             string _path = AssetDatabase.GetAssetPath(_asset);
             if (!string.IsNullOrEmpty(_path))
                 SelectAsset(_path);
@@ -297,11 +328,9 @@ namespace EnhancedEditor.Editor
         /// Set the <see cref="SceneDesigner"/> currently selected asset.
         /// </summary>
         /// <param name="_assetPath">New selected asset path.</param>
-        public static void SelectAsset(string _assetPath)
-        {
+        public static void SelectAsset(string _assetPath) {
             GameObject _asset = AssetDatabase.LoadAssetAtPath<GameObject>(_assetPath);
-            if (_asset != null)
-            {
+            if (_asset != null) {
                 Transform _transform = _asset.transform;
                 selectedAsset = _asset;
 
@@ -313,8 +342,7 @@ namespace EnhancedEditor.Editor
 
                 assetBounds = new Bounds();
 
-                foreach (MeshInfo _mesh in meshInfos)
-                {
+                foreach (MeshInfo _mesh in meshInfos) {
                     Bounds _bounds = _mesh.Bounds;
                     _bounds.center -= _transform.position;
 
@@ -334,8 +362,7 @@ namespace EnhancedEditor.Editor
         /// Creates and shows a new <see cref="SceneDesigner"/> instance on screen.
         /// </summary>
         /// <returns><see cref="SceneDesigner"/> instance on screen.</returns>
-        public static SceneDesigner GetWindow()
-        {
+        public static SceneDesigner GetWindow() {
             SceneDesigner _window = CreateInstance<SceneDesigner>();
 
             Vector2 _position = GUIUtility.GUIToScreenPoint(Event.current.mousePosition);
@@ -354,15 +381,11 @@ namespace EnhancedEditor.Editor
         // Window GUI
         // -------------------------------------------
 
-        private const string EditorPrefsKey = EnhancedEditorSettings.EditorPrefsPath + "SceneDesigner";
         private const string NoAssetMessage = "No asset could be found in the specified folders. " +
                                               "You can edit the scene designers folders using the button on the window top-right corner.";
 
         private static readonly Color indentColor = SuperColor.Grey.Get();
-
-        private static Folder root = new Folder("Root");
-        private static FolderWrapper folders = new FolderWrapper();
-        private static bool requireRefresh = true;
+        private static readonly Folder root = new Folder("Root");
 
         private static Vector2 scroll = new Vector2();
         private new bool hasFocus = false;
@@ -373,8 +396,7 @@ namespace EnhancedEditor.Editor
             RefreshFolders();
         }
 
-        private void OnFocus()
-        {
+        private void OnFocus() {
             if (!InternalEditorUtility.isApplicationActive) {
                 Close();
                 return;
@@ -383,10 +405,8 @@ namespace EnhancedEditor.Editor
             hasFocus = true;
         }
 
-        private void OnGUI()
-        {
-            if (!hasFocus && !PreviewWindow.HasFocus)
-            {
+        private void OnGUI() {
+            if (!hasFocus && !PreviewWindow.HasFocus) {
                 Close();
                 return;
             }
@@ -394,13 +414,11 @@ namespace EnhancedEditor.Editor
             bool _drawIndent = Event.current.type == EventType.Repaint;
             int _index = 0;
 
-            using (var _scope = new GUILayout.ScrollViewScope(scroll))
-            {
+            using (var _scope = new GUILayout.ScrollViewScope(scroll)) {
                 scroll = _scope.scrollPosition;
 
                 GUILayout.Space(2f);
-                using (var _horizontalScope = new EditorGUILayout.HorizontalScope())
-                {
+                using (var _horizontalScope = new EditorGUILayout.HorizontalScope()) {
                     // Preferences button.
                     Rect _position = new Rect(_horizontalScope.rect)
                     {
@@ -408,14 +426,12 @@ namespace EnhancedEditor.Editor
                         height = 20f
                     };
 
-                    EnhancedEditorSettings.DrawPreferencesButton(_position);
+                    EnhancedEditorProjectSettings.DrawUserSettingsButton(_position);
 
                     GUILayout.Space(5f);
-                    using (var _verticalScope = new GUILayout.VerticalScope())
-                    {
+                    using (var _verticalScope = new GUILayout.VerticalScope()) {
                         // No asset message.
-                        if (root.Folders.Count == 0)
-                        {
+                        if (root.Folders.Count == 0) {
                             GUILayout.FlexibleSpace();
                             EditorGUILayout.HelpBox(NoAssetMessage, UnityEditor.MessageType.Info, true);
 
@@ -432,25 +448,20 @@ namespace EnhancedEditor.Editor
 
             // ----- Local Methods ----- \\
 
-            void DrawFolder(Folder _folder)
-            {
+            void DrawFolder(Folder _folder) {
                 Rect _origin = EditorGUI.IndentedRect(EditorGUILayout.GetControlRect(false, -EditorGUIUtility.standardVerticalSpacing));
                 Rect _position = default;
 
-                foreach (Folder _subfolder in _folder.Folders)
-                {
+                foreach (Folder _subfolder in _folder.Folders) {
                     GUIContent _label = EnhancedEditorGUIUtility.GetLabelGUI(_subfolder.Name, _subfolder.Name);
                     _position = GetRect(false);
 
-                    using (var _noIndent = EnhancedEditorGUI.ZeroIndentScope())
-                    {
+                    using (var _noIndent = EnhancedEditorGUI.ZeroIndentScope()) {
                         _subfolder.Foldout = EditorGUI.Foldout(_position, _subfolder.Foldout, _label, true);
                     }
 
-                    if (_subfolder.Foldout)
-                    {
-                        using (var _scope = new EditorGUI.IndentLevelScope())
-                        {
+                    if (_subfolder.Foldout) {
+                        using (var _scope = new EditorGUI.IndentLevelScope()) {
                             DrawFolder(_subfolder);
                         }
                     }
@@ -458,18 +469,15 @@ namespace EnhancedEditor.Editor
 
                 _index = 0;
 
-                foreach (Asset _asset in _folder.Assets)
-                {
+                foreach (Asset _asset in _folder.Assets) {
                     GUIContent _label = EnhancedEditorGUIUtility.GetLabelGUI(_asset.Name, _asset.Path);
                     _position = GetRect(true, _asset.Path);
 
-                    using (var _noIndent = EnhancedEditorGUI.ZeroIndentScope())
-                    {
+                    using (var _noIndent = EnhancedEditorGUI.ZeroIndentScope()) {
                         EditorGUI.LabelField(_position, _label);
 
                         // Mini thumbnail.
-                        if (_asset.Icon == null)
-                        {
+                        if (_asset.Icon == null) {
                             GameObject _object = AssetDatabase.LoadAssetAtPath<GameObject>(_asset.Path);
                             Texture2D _icon = AssetPreview.GetAssetPreview(_object);
 
@@ -477,9 +485,7 @@ namespace EnhancedEditor.Editor
                                 _icon = AssetPreview.GetMiniThumbnail(_object);
 
                             _asset.Icon = _icon;
-                        }
-                        else
-                        {
+                        } else {
                             Rect _temp = new Rect(_position)
                             {
                                 xMin = _position.xMax - (_position.height + 3f),
@@ -489,17 +495,14 @@ namespace EnhancedEditor.Editor
                             EditorGUI.DrawPreviewTexture(_temp, _asset.Icon);
 
                             // Preview window.
-                            if (!PreviewWindow.HasFocus && _temp.Contains(Event.current.mousePosition))
-                            {
+                            if (!PreviewWindow.HasFocus && _temp.Contains(Event.current.mousePosition)) {
                                 _temp.position += position.position;
                                 PreviewWindow.GetWindow(_temp, _asset.Icon);
                             }
                         }
 
-                        if (_position.Event(out Event _event) == EventType.MouseDown)
-                        {
-                            switch (_event.clickCount)
-                            {
+                        if (_position.Event(out Event _event) == EventType.MouseDown) {
+                            switch (_event.clickCount) {
                                 // Select.
                                 case 1:
                                     SelectAsset(_asset.Path);
@@ -521,8 +524,7 @@ namespace EnhancedEditor.Editor
                 }
 
                 // Vertical indent.
-                if (_drawIndent && (EditorGUI.indentLevel != 0))
-                {
+                if (_drawIndent && (EditorGUI.indentLevel != 0)) {
                     Rect _temp = new Rect()
                     {
                         x = _origin.x - 9f,
@@ -535,8 +537,7 @@ namespace EnhancedEditor.Editor
                 }
             }
 
-            Rect GetRect(bool _isAsset, string _path = "")
-            {
+            Rect GetRect(bool _isAsset, string _path = "") {
                 Rect _position = EditorGUI.IndentedRect(EditorGUILayout.GetControlRect());
                 Rect _background = new Rect(_position)
                 {
@@ -544,15 +545,13 @@ namespace EnhancedEditor.Editor
                     width = position.width
                 };
 
-                if (_isAsset)
-                {
+                if (_isAsset) {
                     EnhancedEditorGUI.BackgroundLine(_background, selectedAssetPath == _path, _index);
                     _index++;
                 }
 
                 // Horizontal indent.
-                if (_drawIndent && (EditorGUI.indentLevel != 0))
-                {
+                if (_drawIndent && (EditorGUI.indentLevel != 0)) {
                     Rect _temp = new Rect()
                     {
                         x = _position.x - 7f,
@@ -568,8 +567,7 @@ namespace EnhancedEditor.Editor
             }
         }
 
-        private void OnLostFocus()
-        {
+        private void OnLostFocus() {
             if (!PreviewWindow.HasFocus) {
                 Close();
             }
@@ -578,56 +576,12 @@ namespace EnhancedEditor.Editor
         }
         #endregion
 
-        #region User Preferences
-        private static readonly GUIContent sceneDesignerFoldersGUI = new GUIContent("Scene Designer Folders",
-                                                                                    "All folders displayed to select objects to place in the scene using the Scene Designer.");
-
-        private static readonly ReorderableList folderList = new ReorderableList(null, typeof(string)) {
-            drawHeaderCallback = DrawHeaderCallback,
-            drawElementCallback = DrawElementCallback,
-        };
-
-        // -----------------------
-
-        [EnhancedEditorPreferences(Order = 50)]
-        private static void DrawPreferences() {
-            RefreshFolders();
-
-            GUILayout.Space(5f);
-
-            using (var _scope = new EditorGUI.ChangeCheckScope()) {
-                folderList.list = folders.Folders;
-                folderList.DoLayoutList();
-
-                // Save on change.
-                if (_scope.changed) {
-                    folders.Folders = folderList.list as List<string>;
-                    string _json = EditorJsonUtility.ToJson(folders);
-                    EditorPrefs.SetString(EditorPrefsKey, _json);
-
-                    requireRefresh = true;
-                }
-            }
-        }
-
-        private static void DrawHeaderCallback(Rect _position) {
-            EditorGUI.LabelField(_position, sceneDesignerFoldersGUI);
-        }
-
-        private static void DrawElementCallback(Rect _position, int _index, bool _isActive, bool _isFocused) {
-            _position.yMin += EditorGUIUtility.standardVerticalSpacing;
-            folders.Folders[_index] = EnhancedEditorGUI.FolderField(_position, folders.Folders[_index]);
-        }
-        #endregion
-
         #region Toolbar Extension
         [EditorToolbarLeftExtension(Order = 100)]
-        private static void ToolbarExtension()
-        {
+        private static void ToolbarExtension() {
             int _result = EnhancedEditorToolbar.DropdownToggle(isEnabled, toolbarButton, GUILayout.Width(32f));
 
-            switch (_result)
-            {
+            switch (_result) {
                 // Designer enable state toggle.
                 case 0:
                     SetEnable(!isEnabled);
@@ -645,10 +599,8 @@ namespace EnhancedEditor.Editor
         #endregion
 
         #region Preview Window
-        private class PreviewWindow : EditorWindow
-        {
-            public static PreviewWindow GetWindow(Rect _screenPosition, Texture _preview)
-            {
+        private class PreviewWindow : EditorWindow {
+            public static PreviewWindow GetWindow(Rect _screenPosition, Texture _preview) {
                 PreviewWindow _window = CreateInstance<PreviewWindow>();
 
                 Vector2 _position = GUIUtility.GUIToScreenPoint(Event.current.mousePosition);
@@ -674,33 +626,28 @@ namespace EnhancedEditor.Editor
 
             // -----------------------
 
-            private void OnEnable()
-            {
+            private void OnEnable() {
                 HasFocus = true;
             }
 
-            private void OnGUI()
-            {
+            private void OnGUI() {
                 Vector2 _position = GUIUtility.GUIToScreenPoint(Event.current.mousePosition);
-                if (!screenPosition.Contains(_position))
-                {
+                if (!screenPosition.Contains(_position)) {
                     Close();
                     return;
                 }
 
-                if (Event.current.type == EventType.Repaint)
-                {
+                if (Event.current.type == EventType.Repaint) {
                     position = new Rect(_position, position.size);
                 }
 
                 Rect _temp = EditorGUILayout.GetControlRect(GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
                 EditorGUI.DrawPreviewTexture(_temp, preview);
-                
+
                 Repaint();
             }
 
-            private void OnDisable()
-            {
+            private void OnDisable() {
                 HasFocus = false;
                 FocusWindowIfItsOpen<SceneDesigner>();
             }
@@ -767,24 +714,16 @@ namespace EnhancedEditor.Editor
         /// Refreshes folders content and assets.
         /// </summary>
         public static void RefreshFolders() {
-            if (!requireRefresh) {
-                return;
-            }
-
-            string _json = EditorPrefs.GetString(EditorPrefsKey, string.Empty);
-            if (!string.IsNullOrEmpty(_json)) {
-                EditorJsonUtility.FromJsonOverwrite(_json, folders);
-            }
-
+            var _settings = SceneDesignerEnhancedSettings.Settings;
             root.Folders.Clear();
 
-            int _count = folders.Folders.Count;
+            int _count = _settings.Folders.Count;
             if (_count == 0)
                 return;
 
             string[] _pathHelpers = new string[_count];
             for (int _i = 0; _i < _count; _i++) {
-                string _fullPath = Path.Combine("Assets", folders.Folders[_i]);
+                string _fullPath = Path.Combine("Assets", _settings.Folders[_i]);
                 _pathHelpers[_i] = _fullPath;
             }
 
@@ -792,7 +731,7 @@ namespace EnhancedEditor.Editor
             string[] _assets = Array.ConvertAll(AssetDatabase.FindAssets("t:GameObject", _pathHelpers), AssetDatabase.GUIDToAssetPath);
 
             for (int _i = 0; _i < _count; _i++) {
-                string _base = folders.Folders[_i].Split('/', '\\')[0];
+                string _base = _settings.Folders[_i].Split('/', '\\')[0];
                 _pathHelpers[_i] = string.IsNullOrEmpty(_base)
                                  ? InternalEditorUtility.GetAssetsFolder()
                                  : _base;
@@ -808,8 +747,6 @@ namespace EnhancedEditor.Editor
 
                 root.RegisterAsset(_directories, _path, _index);
             }
-
-            requireRefresh = false;
         }
         #endregion
     }

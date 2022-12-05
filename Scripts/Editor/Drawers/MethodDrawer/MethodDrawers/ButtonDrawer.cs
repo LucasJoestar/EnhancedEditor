@@ -63,8 +63,12 @@ namespace EnhancedEditor.Editor
         public override bool OnGUI()
         {
             ButtonAttribute _attribute = Attribute as ButtonAttribute;
-            bool _isEnable = _attribute.Mode.IsActive() &&
-                            (!useCondition || (_attribute.ConditionMember.GetValue(SerializedObject, out bool _value) && (_value == _attribute.ConditionType.Get())));
+
+
+            if (!_attribute.Mode.IsActive() ||
+                (useCondition && _attribute.ConditionMember.GetValue(SerializedObject, out bool _value) && (_value != _attribute.ConditionType.Get()))) {
+                return false;
+            }
 
             using (var _scope = new GUILayout.HorizontalScope())
             {
@@ -74,7 +78,6 @@ namespace EnhancedEditor.Editor
                 float _size = Mathf.Max(EditorStyles.label.CalcSize(Label).x + 20f, EnhancedEditorGUIUtility.ScreenWidth - 250f);
                 using (var _verticalScope = new GUILayout.VerticalScope(EditorStyles.helpBox, GUILayout.Width(_size)))
                 {
-                    using (EnhancedGUI.GUIEnabled.Scope(_isEnable))
                     using (EnhancedGUI.GUIColor.Scope(_attribute.Color))
                     {
                         if (GUILayout.Button(Label, GUILayout.Height(ButtonHeight)))

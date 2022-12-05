@@ -49,8 +49,9 @@ namespace EnhancedEditor.Editor {
     /// <see cref="EnhancedConsoleWindow"/>-related <see cref="ScriptableObject"/> settings wrapper.
     /// <br/> Used to create a <see cref="SerializedObject"/> from it and draw its settings using a <see cref="SerializedProperty"/>.
     /// </summary>
-    public class EnhancedConsolePreferences : ScriptableObject {
-        #region Content
+    [Serializable]
+    public class EnhancedConsoleEnhancedSettings : EnhancedSettings {
+        #region Global Members
         [SerializeField, HideInInspector] internal int selectedTabIndex = 0;
 
         public BlockArray<LogColumnType> Columns = new BlockArray<LogColumnType>(false, true, true) {
@@ -86,6 +87,11 @@ namespace EnhancedEditor.Editor {
         public int FilterCount {
             get { return CustomFilters.Count + DefaultFilters.Count; }
         }
+
+        // -----------------------
+
+        /// <inheritdoc cref="EnhancedConsoleEnhancedSettings"/>
+        public EnhancedConsoleEnhancedSettings(int _guid) : base(_guid) { }
         #endregion
 
         #region Behaviour
@@ -226,14 +232,19 @@ namespace EnhancedEditor.Editor {
         }
 
         /// <summary>
-        /// Saves these preferences settings.
+        /// Copies the values of another <see cref="EnhancedConsoleEnhancedSettings"/>.
         /// </summary>
-        public void Save() {
-            EditorPrefs.SetString(EditorPrefsKey, EditorJsonUtility.ToJson(this));
+        /// <param name="_settings">The setting values to copy.</param>
+        public void CopyValues(EnhancedConsoleEnhancedSettings _settings) {
+            selectedTabIndex = _settings.selectedTabIndex;
+            Columns = _settings.Columns;
+            CustomFilters = _settings.CustomFilters;
+            DefaultFilters = _settings.DefaultFilters;
+            IgnoredStackCalls = _settings.IgnoredStackCalls;
         }
         #endregion
 
-        #region User Preferences
+        #region Settings
         private const float ToolbarWidth = 375f;
         private const float ToolbarHeight = 25f;
         private const float ButtonWidth = 55f;
@@ -241,8 +252,7 @@ namespace EnhancedEditor.Editor {
         public const string PreferencesFileExtension = ".txt";
         public const string UndoRecordTitle = "Enhanced Console Preferences change";
 
-        public const string EditorPrefsKey = EnhancedEditorSettings.EditorPrefsPath + "EnhancedConsole";
-        public const string PreferencesPath = EnhancedEditorSettings.PreferencesPath + "/Console";
+        public const string PreferencesPath = EnhancedEditorSettings.UserSettingsPath + "/Console";
         public const string PreferencesLabel = "Console";
 
         public static readonly string[] PreferencesKeywords = new string[] {
@@ -263,44 +273,33 @@ namespace EnhancedEditor.Editor {
             new GUIContent("Ignored Calls", "Configure the calls to ignore from the console logs stack"),
         };
 
+        private static readonly int settingsGUID = "EnhancedEditorConsoleSetting".GetHashCode();
+        private static EnhancedConsoleEnhancedSettings settings = null;
+        private static SerializedProperty settingsProperty = null;
 
-        private static EnhancedConsolePreferences preferences = null;
-        private static SerializedObject serializedObject = null;
-
-        /// <summary>
-        /// <see cref="EnhancedConsoleWindow"/>-related user preferences settings.
-        /// </summary>
-        public static EnhancedConsolePreferences Preferences {
+        /// <inheritdoc cref="EnhancedConsoleEnhancedSettings"/>
+        public static EnhancedConsoleEnhancedSettings Settings {
             get {
-                if (preferences == null) {
-                    preferences = CreateInstance<EnhancedConsolePreferences>();
-                    serializedObject = new SerializedObject(preferences);
+                EnhancedEditorUserSettings _userSettings = EnhancedEditorUserSettings.Instance;
 
-                    string _json = EditorPrefs.GetString(EditorPrefsKey, string.Empty);
-                    if (!string.IsNullOrEmpty(_json)) {
-                        EditorJsonUtility.FromJsonOverwrite(_json, preferences);
-                    }
+                if (((settings == null) || (settingsProperty.serializedObject.targetObject == null))
+                   && !_userSettings.GetSetting(settingsGUID, out settings, out settingsProperty)) {
 
-                    if (preferences.Initialize()) {
-                        EditorPrefs.SetString(EditorPrefsKey, EditorJsonUtility.ToJson(preferences));
+                    settings = new EnhancedConsoleEnhancedSettings(settingsGUID);
+                    settingsProperty = _userSettings.AddSetting(settings);
+
+                    if (settings.Initialize()) {
+                        _userSettings.Save();
                     }
                 }
 
-                return preferences;
-            } set {
-                if (value == null) {
-                    return;
-                }
-
-                preferences = value;
-                serializedObject = new SerializedObject(value);
-                SavePreferences(value);
+                return settings;
             }
         }
 
         // -----------------------
 
-        public static EditorWindow OpenPreferences() {
+        public static EditorWindow OpenUserSettings() {
             EditorWindow _preferences = SettingsService.OpenUserPreferences(PreferencesPath);
             return _preferences;
         }
@@ -310,13 +309,13 @@ namespace EnhancedEditor.Editor {
             SettingsProvider _provider = new SettingsProvider(PreferencesPath, SettingsScope.User) {
                 label = PreferencesLabel,
                 keywords = PreferencesKeywords,
-                guiHandler = DrawPreferences,
+                guiHandler = DrawSettings,
             };
 
             return _provider;
         }
 
-        private static void DrawPreferences(string _searchContext) {
+        private static void DrawSettings(string _searchContext) {
             using (var _scope = new GUILayout.HorizontalScope()) {
                 GUILayout.FlexibleSpace();
 
@@ -328,7 +327,7 @@ namespace EnhancedEditor.Editor {
                             string _json = File.ReadAllText(_path);
 
                             // To check if the json could be successfully loaded, resize the preferences columns to 0.
-                            EnhancedConsolePreferences _temp = CreateInstance<EnhancedConsolePreferences>(); { _temp.Columns.Array = new LogColumnType[0]; }
+                            EnhancedConsoleEnhancedSettings _temp = new EnhancedConsoleEnhancedSettings(settingsGUID); { _temp.Columns.Array = new LogColumnType[0]; }
                             EditorJsonUtility.FromJsonOverwrite(_json, _temp);
 
                             // Then, if it was not resized, it means that the json was in an incorrect format.
@@ -336,7 +335,7 @@ namespace EnhancedEditor.Editor {
                                 throw new ArgumentException();
                             }
 
-                            Preferences = _temp;
+                            settings.CopyValues(_temp);
                         } catch (Exception e) when ((e is ArgumentException) || (e is IOException)) {
                             EditorUtility.DisplayDialog("Preferences Import", "Could not load any setting from the selected preferences file.\n\n" +
                                                         "Please select another file and try again.", "Ok");
@@ -347,70 +346,62 @@ namespace EnhancedEditor.Editor {
                 if (GUILayout.Button(exportGUI, EditorStyles.miniButtonRight, GUILayout.Width(ButtonWidth))) {
                     string _path = EditorUtility.SaveFilePanel("Export Preferences", string.Empty, "EnhancedConsolePreferences", PreferencesFileExtension);
                     if (!string.IsNullOrEmpty(_path)) {
-                        File.WriteAllText(_path, EditorJsonUtility.ToJson(Preferences, true));
+                        File.WriteAllText(_path, EditorJsonUtility.ToJson(Settings, true));
                     }
                 }
             }
 
             GUILayout.Space(10f);
 
-            EnhancedConsolePreferences _preferences = Preferences;
-            serializedObject.UpdateIfRequiredOrScript();
-
-            Undo.RecordObject(_preferences, UndoRecordTitle);
+            EnhancedConsoleEnhancedSettings _setting = Settings;
+            settingsProperty.serializedObject.Update();
 
             using (var _scope = new GUILayout.HorizontalScope()) {
                 GUILayout.Space(15f);
 
                 using (var _verticalScope = new GUILayout.VerticalScope())
                 using (var _changeCheck = new EditorGUI.ChangeCheckScope()) {
-                    _preferences.selectedTabIndex = EnhancedEditorGUILayout.CenteredToolbar(_preferences.selectedTabIndex, tabsGUI, GUI.ToolbarButtonSize.Fixed,
+                    _setting.selectedTabIndex = EnhancedEditorGUILayout.CenteredToolbar(_setting.selectedTabIndex, tabsGUI, GUI.ToolbarButtonSize.Fixed,
                                                                                             GUILayout.Width(ToolbarWidth), GUILayout.Height(ToolbarHeight));
 
                     GUILayout.Space(10f);
 
-                    switch (_preferences.selectedTabIndex) {
+                    switch (_setting.selectedTabIndex) {
                         case 0:
-                            EditorGUILayout.PropertyField(serializedObject.FindProperty("Columns"));
+                            EditorGUILayout.PropertyField(settingsProperty.FindPropertyRelative("Columns"));
 
                             if (_changeCheck.changed) {
-                                serializedObject.ApplyModifiedProperties();
-                                EnhancedConsoleWindow.GetWindow(false).SortColumns(_preferences);
+                                settingsProperty.serializedObject.ApplyModifiedProperties();
+                                EnhancedConsoleWindow.GetWindow(false).SortColumns(_setting);
                             }
 
                             break;
 
                         case 1:
-                            EnhancedEditorGUILayout.EnhancedPropertyField(serializedObject.FindProperty("CustomFilters"));
+                            EnhancedEditorGUILayout.EnhancedPropertyField(settingsProperty.FindPropertyRelative("CustomFilters"));
                             break;
 
                         case 2:
-                            EnhancedEditorGUILayout.EnhancedPropertyField(serializedObject.FindProperty("DefaultFilters"));
+                            EnhancedEditorGUILayout.EnhancedPropertyField(settingsProperty.FindPropertyRelative("DefaultFilters"));
                             break;
 
                         case 3:
-                            EditorGUILayout.PropertyField(serializedObject.FindProperty("IgnoredStackCalls"));
+                            EditorGUILayout.PropertyField(settingsProperty.FindPropertyRelative("IgnoredStackCalls"));
                             break;
 
                         default:
                             break;
                     }
 
-                    serializedObject.ApplyModifiedProperties();
+                    settingsProperty.serializedObject.ApplyModifiedProperties();
 
-                    // Serialize on change.
+                    // Refresh on change.
                     if (_changeCheck.changed) {
-                        SavePreferences(_preferences);
+                        EnhancedEditorUserSettings.Instance.Save();
+                        EnhancedConsoleWindow.GetWindow(false).RefreshFilters();
                     }
                 }
             }
-        }
-
-        private static void SavePreferences(EnhancedConsolePreferences _preferences) {
-            string _json = EditorJsonUtility.ToJson(_preferences);
-            EditorPrefs.SetString(EditorPrefsKey, _json);
-
-            EnhancedConsoleWindow.GetWindow(false).RefreshFilters();
         }
         #endregion
     }

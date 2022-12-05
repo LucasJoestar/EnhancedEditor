@@ -40,6 +40,7 @@ namespace EnhancedEditor.Editor {
             public static readonly GUIStyle LogStyle = new GUIStyle("label") {
                 alignment   = TextAnchor.MiddleLeft,
                 richText    = true,
+                wordWrap    = false,
                 
                 // Use a brighter text color on all styles to make it clearly visible with a colored background.
                 normal  = new GUIStyleState() { textColor = new Color(.9f, .9f, .9f) },
@@ -367,7 +368,7 @@ namespace EnhancedEditor.Editor {
                         int _startLineIndex = _log.LastIndexOf('(', _endFileIndex);
                         int _endLineIndex = _log.LastIndexOf(',', _endFileIndex);
 
-                        if (_startLineIndex != -1) {
+                        if ((_startLineIndex != -1) && (_endLineIndex != -1)) {
                             string _file = _log.Substring(0, _startLineIndex);
                             _startLineIndex++;
 
@@ -394,7 +395,7 @@ namespace EnhancedEditor.Editor {
                     if (!string.IsNullOrEmpty(_line) && (GetStackInfos(_line, out string _, out string _filePath, out int _lineNumber,
                                                                        out string _namespace, out string _class, out string _method) == 0)) {
                         // Get detailed informations.
-                        if (EnhancedConsolePreferences.Preferences.IgnoreCall(_namespace, _class, _method)) {
+                        if (EnhancedConsoleEnhancedSettings.Settings.IgnoreCall(_namespace, _class, _method)) {
                             continue;
                         }
 
@@ -448,7 +449,7 @@ namespace EnhancedEditor.Editor {
                         return true;
                 }
 
-                return !EnhancedConsolePreferences.Preferences.IgnoreCall(_namespace, _class, _method);
+                return !EnhancedConsoleEnhancedSettings.Settings.IgnoreCall(_namespace, _class, _method);
             }
 
             /// <summary>
@@ -979,7 +980,7 @@ namespace EnhancedEditor.Editor {
         }
 
         void IHasCustomMenu.AddItemsToMenu(GenericMenu _menu) {
-            _menu.AddItem(openPreferencesGUI, false, () => EnhancedConsolePreferences.OpenPreferences());
+            _menu.AddItem(openPreferencesGUI, false, () => EnhancedConsoleEnhancedSettings.OpenUserSettings());
         }
         #endregion
 
@@ -1000,10 +1001,17 @@ namespace EnhancedEditor.Editor {
         private void OnPlayModeStateChanged(PlayModeStateChange _state) {
             RegisterCallbacks();
 
+            // When entering edit mode, OnEnable is not called again, but every serializereference is lost.
+            if (_state == PlayModeStateChange.EnteredEditMode) {
+                RefreshFilters();
+            }
+
             // Clear the console when entering play mode.
             if (HasFlag(Flags.ClearOnPlay) && (_state == PlayModeStateChange.ExitingEditMode)) {
                 Clear();
             }
+
+            Repaint();
         }
 
         private void OnLogMessageReceived(string _log, string _stackTrace, LogType _type) {
@@ -1013,6 +1021,7 @@ namespace EnhancedEditor.Editor {
             }
 
             pendingLogs.Add(new LogWrapper(_log, _stackTrace, _type));
+            Repaint();
         }
 
         [DidReloadScripts]
@@ -1213,7 +1222,7 @@ namespace EnhancedEditor.Editor {
             GUILayout.FlexibleSpace();
 
             // Filters visibility and count.
-            EnhancedConsolePreferences _preferences = EnhancedConsolePreferences.Preferences;
+            EnhancedConsoleEnhancedSettings _preferences = EnhancedConsoleEnhancedSettings.Settings;
             for (int i = 0; i < _preferences.FilterCount; i++) {
                 ConsoleLogFilter _filter = _preferences.GetFilterAt(i);
 
@@ -1232,8 +1241,8 @@ namespace EnhancedEditor.Editor {
                 // Set visible.
                 if (_isVisible != _filter.IsVisible) {
                     _filter.IsVisible = _isVisible;
-                    _preferences.Save();
 
+                    EnhancedEditorUserSettings.Instance.Save();
                     FilterLogs();
                 }
             }
@@ -1241,7 +1250,7 @@ namespace EnhancedEditor.Editor {
 
         private void DrawLogs() {
             if (Event.current.type == EventType.Repaint) {
-                EnhancedConsolePreferences.Preferences.ResetFiltersDisplayedCount();
+                EnhancedConsoleEnhancedSettings.Settings.ResetFiltersDisplayedCount();
             }
 
             // Columns toolbar.
@@ -1772,7 +1781,7 @@ namespace EnhancedEditor.Editor {
                 LogEntry _entry = GetLogEntry(_log, _instanceID);
                 logs.Add(_entry);
 
-                SetLogFilter(_entry, EnhancedConsolePreferences.Preferences);
+                SetLogFilter(_entry, EnhancedConsoleEnhancedSettings.Settings);
                 FilterLog(_entry);
 
                 // Editor pause on error.
@@ -1814,7 +1823,7 @@ namespace EnhancedEditor.Editor {
         /// Refreshes all log filters.
         /// </summary>
         internal void RefreshFilters() {
-            EnhancedConsolePreferences _preferences = EnhancedConsolePreferences.Preferences;
+            EnhancedConsoleEnhancedSettings _preferences = EnhancedConsoleEnhancedSettings.Settings;
 
             foreach (LogEntry _log in logs) {
                 SetLogFilter(_log, _preferences);
@@ -1827,7 +1836,7 @@ namespace EnhancedEditor.Editor {
         /// <summary>
         /// Sorts the log columns in the preferences order.
         /// </summary>
-        internal void SortColumns(EnhancedConsolePreferences _preferences) {
+        internal void SortColumns(EnhancedConsoleEnhancedSettings _preferences) {
             Array.Sort(logColumns, (a, b) => {
                 int _aIndex = Array.IndexOf(_preferences.Columns.Array, a.Column);
                 int _bIndex = Array.IndexOf(_preferences.Columns.Array, b.Column);
@@ -1898,7 +1907,7 @@ namespace EnhancedEditor.Editor {
         /// <summary>
         /// Get and associate the best <see cref="ConsoleLogFilter"/> for a specific <see cref="LogEntry"/>.
         /// </summary>
-        private void SetLogFilter(LogEntry _entry, EnhancedConsolePreferences _preferences) {
+        private void SetLogFilter(LogEntry _entry, EnhancedConsoleEnhancedSettings _preferences) {
             if (_entry.IsDuplicate) {
                 return;
             }

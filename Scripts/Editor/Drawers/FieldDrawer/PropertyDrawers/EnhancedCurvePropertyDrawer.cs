@@ -33,9 +33,9 @@ namespace EnhancedEditor.Editor
             return true;
         }
 
-        public override void OnContextMenu(GenericMenu _menu)
+        public override void OnContextMenu(GenericMenu _menu, SerializedProperty _property)
         {
-            AnimationCurvePropertyDrawer.OnContextMenu(_menu, SerializedProperty);
+            AnimationCurvePropertyDrawer.OnContextMenu(_menu, _property);
         }
         #endregion
     }

@@ -162,7 +162,7 @@ namespace EnhancedEditor.Editor
                 if (!Array.Exists(trackers, t => t.targetTypeName == _target))
                 {
                     // Tracker directory creation.
-                    string _folder = DirectorySetting.Folder;
+                    string _folder = Settings.Folder;
                     string _path = Path.Combine(Application.dataPath, _folder);
                     if (!Directory.Exists(_path))
                         Directory.CreateDirectory(_path);
@@ -280,29 +280,34 @@ namespace EnhancedEditor.Editor
         #region Project Settings
         public const string DefaultDirectory = "EnhancedEditor/Editor/InstanceTrackers";
         private const string DirectoryPanelTitle = "Instance Trackers Directory";
-        private static readonly int settingGUID = "InstanceTrackerDirectory".GetHashCode();
 
         private static readonly GUIContent directoryGUI = new GUIContent("Instance Tracker Dir.",
                                                                          "Directory in the project where are created all instance trackers.");
 
-        public static FolderProjectSetting DirectorySetting {
-            get {
-                EnhancedEditorSettings _editorSettings = EnhancedEditorSettings.Settings;
+        private static readonly int settingsGUID = "InstanceTrackerDirectory".GetHashCode();
+        private static FolderEnhancedSettings settings = null;
 
-                if (!_editorSettings.GetProjectSetting(settingGUID, out FolderProjectSetting _setting)) {
-                    _setting = new FolderProjectSetting(settingGUID, DefaultDirectory, true);
-                    _editorSettings.AddProjectSetting(_setting);
+        /// <summary>
+        /// Instace tracker related project settings.
+        /// </summary>
+        public static FolderEnhancedSettings Settings {
+            get {
+                EnhancedEditorProjectSettings _projectSettings = EnhancedEditorProjectSettings.Instance;
+
+                if ((settings == null) && !_projectSettings.GetSetting(settingsGUID, out settings, out _)) {
+                    settings = new FolderEnhancedSettings(settingsGUID, DefaultDirectory, true);
+                    _projectSettings.AddSetting(settings);
                 }
 
-                return _setting;
+                return settings;
             }
         }
 
         // -----------------------
 
         [EnhancedEditorProjectSettings(Order = 11)]
-        private static void DrawProjectSetting() {
-            FolderProjectSetting _setting = DirectorySetting;
+        private static void DrawSetting() {
+            FolderEnhancedSettings _setting = Settings;
             _setting.Folder = EnhancedEditorGUILayout.EditorFolderField(directoryGUI, _setting.Folder, DirectoryPanelTitle);
         }
         #endregion

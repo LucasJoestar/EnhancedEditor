@@ -20,9 +20,9 @@ namespace EnhancedEditor {
     [Flags]
 	public enum SerializedTypeConstraint {
 		None = 0,
-		BaseType,
-		Abstract,
-		Null
+		BaseType = 1 << 1,
+		Abstract = 1 << 2,
+		Null = 1 << 3
     }
 
 	/// <summary>
@@ -35,6 +35,7 @@ namespace EnhancedEditor {
 		[SerializeField] protected string typeName = string.Empty;
 
         [SerializeField] protected SerializedTypeConstraint constraints = SerializedTypeConstraint.None;
+		[SerializeField, HideInInspector] protected string[] interfaces = null;
 
 		private Type type = null;
 
@@ -48,6 +49,20 @@ namespace EnhancedEditor {
 				SetType(value);
 			}
 		}
+
+		/// <summary>
+		/// All potential interfaces inherited by this type.
+		/// <br/> Must inherit from at least one of them.
+		/// </summary>
+		public Type[] PotentialInterfaces {
+            get {
+				if (interfaces == null) {
+					return new Type[0];
+                }
+
+				return Array.ConvertAll(interfaces, (i) => Type.GetType(i));
+            }
+        }
 		#endregion
 
 		#region Constructors
@@ -86,6 +101,12 @@ namespace EnhancedEditor {
 			#endif
 
 			Type = _defaultType;
+		}
+
+		/// <param name="_potentialInterfaces"><inheritdoc cref="PotentialInterfaces" path="/summary"/></param>
+		/// <inheritdoc cref="SerializedType{T}.SerializedType(SerializedTypeConstraint, Type, Type[])"/>
+		public SerializedType(Type _type, SerializedTypeConstraint _constraints, Type[] _potentialInterfaces) : this(_type, _constraints) {
+			interfaces = Array.ConvertAll(_potentialInterfaces, (i) => i.GetReflectionName());
 		}
 		#endregion
 
@@ -134,7 +155,9 @@ namespace EnhancedEditor {
 
 				type = null;
 				typeName = string.Empty;
+				return;
 			}
+
 
 			// Base type & subclass.
 			if (_type == _base){
@@ -144,6 +167,12 @@ namespace EnhancedEditor {
 				}
 			} else if (!_base.IsAssignableFrom(_type)) {
 				Debug.LogError($"SerializedType - The type \'{_type.Name}\' does not inherit from \'{_base.Name}\'");
+				return;
+			}
+
+			// Potential interfaces.
+			if (!SerializedTypeUtility.IsAssignableFrom(_type, PotentialInterfaces)) {
+				Debug.LogError($"SerializedType - The type \'{_type.Name}\' does not inherit from any potential interface");
 				return;
 			}
 
@@ -172,6 +201,23 @@ namespace EnhancedEditor {
 		}
 
 		void ISerializationCallbackReceiver.OnBeforeSerialize() { }
+		#endregion
+	}
+
+	/// <summary>
+	/// <see cref="SerializedType{T}"/>-related utility class.
+	/// </summary>
+	public static class SerializedTypeUtility {
+		#region Utility
+		/// <summary>
+		/// The guid value used for null reference.
+		/// </summary>
+		/// <param name="_type">The potential assignable <see cref="Type"/>.</param>
+		/// <param name="_interfaces">All potential assignable interfaces.</param>
+		/// <returns>True if this type can be assigned to one or more of the given interfaces, false otherwise.</returns>
+		public static bool IsAssignableFrom(Type _type, Type[] _interfaces) {
+			return Array.TrueForAll(_interfaces, (i) => i == null) || Array.Exists(_interfaces, (i) => (i != null) && i.IsAssignableFrom(_type));
+        }
 		#endregion
 	}
 }

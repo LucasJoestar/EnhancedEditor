@@ -22,7 +22,7 @@ namespace EnhancedEditor {
         // -----------------------
 
         /// <param name="_optionMember"><inheritdoc cref="OptionMember" path="/summary"/></param>
-        /// <inheritdoc cref="ValidationMemberAttribute"/>
+        /// <inheritdoc cref="PopupAttribute"/>
         public PopupAttribute(string _optionMember) {
             OptionMember = _optionMember;
         }

@@ -1979,21 +1979,21 @@ namespace EnhancedEditor.Editor {
         /// <inheritdoc cref="ScriptableObjectContentField(SerializedProperty, GUIContent, ScriptableObjectDrawerMode, bool, GUILayoutOption[])"/>
         public static void ScriptableObjectContentField(SerializedProperty _property,
                                                         bool _drawField = true, params GUILayoutOption[] _options) {
-            ScriptableObjectDrawerMode _mode = ScriptableObjectDrawerModeUtility.DefaultMode;
+            ScriptableObjectDrawerMode _mode = ScriptableObjectDrawerEnhancedSettings.Settings.DefaultMode;
             ScriptableObjectContentField(_property, _mode, _drawField, _options);
         }
 
         /// <inheritdoc cref="ScriptableObjectContentField(SerializedProperty, GUIContent, ScriptableObjectDrawerMode, bool, GUILayoutOption[])"/>
         public static void ScriptableObjectContentField(SerializedProperty _property, string _label,
                                                         bool _drawField = true, params GUILayoutOption[] _options) {
-            ScriptableObjectDrawerMode _mode = ScriptableObjectDrawerModeUtility.DefaultMode;
+            ScriptableObjectDrawerMode _mode = ScriptableObjectDrawerEnhancedSettings.Settings.DefaultMode;
             ScriptableObjectContentField(_property, _label, _mode, _drawField, _options);
         }
 
         /// <inheritdoc cref="ScriptableObjectContentField(SerializedProperty, GUIContent, ScriptableObjectDrawerMode, bool, GUILayoutOption[])"/>
         public static void ScriptableObjectContentField(SerializedProperty _property, GUIContent _label,
                                                         bool _drawField = true, params GUILayoutOption[] _options) {
-            ScriptableObjectDrawerMode _mode = ScriptableObjectDrawerModeUtility.DefaultMode;
+            ScriptableObjectDrawerMode _mode = ScriptableObjectDrawerEnhancedSettings.Settings.DefaultMode;
             ScriptableObjectContentField(_property, _label, _mode, _drawField, _options);
         }
 
@@ -2026,21 +2026,21 @@ namespace EnhancedEditor.Editor {
         /// <inheritdoc cref="ScriptableObjectContentField(GUIContent, ScriptableObject, Type, ScriptableObjectDrawerMode, ref bool, bool, GUILayoutOption[]"/>
         public static ScriptableObject ScriptableObjectContentField(ScriptableObject _scriptableObject, Type _objectType,
                                                                     ref bool _foldout, bool _drawField = true, params GUILayoutOption[] _options) {
-            ScriptableObjectDrawerMode _mode = ScriptableObjectDrawerModeUtility.DefaultMode;
+            ScriptableObjectDrawerMode _mode = ScriptableObjectDrawerEnhancedSettings.Settings.DefaultMode;
             return ScriptableObjectContentField(_scriptableObject, _objectType, _mode, ref _foldout, _drawField, _options);
         }
 
         /// <inheritdoc cref="ScriptableObjectContentField(GUIContent, ScriptableObject, Type, ScriptableObjectDrawerMode, ref bool, bool, GUILayoutOption[]"/>
         public static ScriptableObject ScriptableObjectContentField(string _label, ScriptableObject _scriptableObject, Type _objectType,
                                                                     ref bool _foldout, bool _drawField = true, params GUILayoutOption[] _options) {
-            ScriptableObjectDrawerMode _mode = ScriptableObjectDrawerModeUtility.DefaultMode;
+            ScriptableObjectDrawerMode _mode = ScriptableObjectDrawerEnhancedSettings.Settings.DefaultMode;
             return ScriptableObjectContentField(_label, _scriptableObject, _objectType, _mode, ref _foldout, _drawField, _options);
         }
 
         /// <inheritdoc cref="ScriptableObjectContentField(GUIContent, ScriptableObject, Type, ScriptableObjectDrawerMode, ref bool, bool, GUILayoutOption[]"/>
         public static ScriptableObject ScriptableObjectContentField(GUIContent _label, ScriptableObject _scriptableObject, Type _objectType,
                                                                     ref bool _foldout, bool _drawField = true, params GUILayoutOption[] _options) {
-            ScriptableObjectDrawerMode _mode = ScriptableObjectDrawerModeUtility.DefaultMode;
+            ScriptableObjectDrawerMode _mode = ScriptableObjectDrawerEnhancedSettings.Settings.DefaultMode;
             return ScriptableObjectContentField(_label, _scriptableObject, _objectType, _mode, ref _foldout, _drawField, _options);
         }
 

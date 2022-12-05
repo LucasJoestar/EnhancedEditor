@@ -176,7 +176,7 @@ namespace EnhancedEditor.Editor
 
                 if (GUI.Button(_position, coreSceneGUI))
                 {
-                    EnhancedEditorSettings.OpenProjectSettings();
+                    EnhancedEditorProjectSettings.OpenSettings();
                 }
 
                 switch (selectedTab)
@@ -277,12 +277,12 @@ namespace EnhancedEditor.Editor
 
             GUIContent GetElementName(int _groupIndex, int _elementIndex)
             {
-                var _settings = EnhancedEditorSettings.Settings;
+                var _settings = EnhancedEditorProjectSettings.Instance;
                 var _element = Database.sceneGroups[_groupIndex].Scenes[_elementIndex];
 
                 GUIContent _label = EnhancedEditorGUIUtility.GetLabelGUI(_element.Name);
 
-                if (CoreSceneUtility.IsCoreSceneEnabled && (CoreSceneUtility.CoreScene.GUID == _element.GUID))
+                if (CoreSceneEnhancedSettings.Settings.IsCoreSceneEnabled && (CoreSceneEnhancedSettings.Settings.CoreScene.GUID == _element.GUID))
                 {
                     _label.image = coreSceneGUI.image;
                 }
@@ -747,7 +747,7 @@ namespace EnhancedEditor.Editor
                 {
                     if (SessionState.GetBool(UnloadCoreSceneKey, false))
                     {
-                        CloseSceneFromGUID(CoreSceneUtility.CoreScene.guid);
+                        CloseSceneFromGUID(CoreSceneEnhancedSettings.Settings.CoreScene.guid);
                         SessionState.SetBool(UnloadCoreSceneKey, false);
                     }
 
@@ -758,9 +758,9 @@ namespace EnhancedEditor.Editor
                 // Load the core scene if enabled when exiting edit mode.
                 case PlayModeStateChange.ExitingEditMode:
                 {
-                    if (CoreSceneUtility.IsCoreSceneEnabled)
+                    if (CoreSceneEnhancedSettings.Settings.IsCoreSceneEnabled)
                     {
-                        string _path = AssetDatabase.GUIDToAssetPath(CoreSceneUtility.CoreScene.guid);
+                        string _path = AssetDatabase.GUIDToAssetPath(CoreSceneEnhancedSettings.Settings.CoreScene.guid);
                         if (string.IsNullOrEmpty(_path))
                             return;
 
@@ -787,7 +787,7 @@ namespace EnhancedEditor.Editor
                     string _playScenes = SessionState.GetString(PlayScenesKey, string.Empty);
                     if (!string.IsNullOrEmpty(_playScenes))
                     {
-                        string _coreScenePath = AssetDatabase.GUIDToAssetPath(CoreSceneUtility.CoreScene.guid);
+                        string _coreScenePath = AssetDatabase.GUIDToAssetPath(CoreSceneEnhancedSettings.Settings.CoreScene.guid);
                         int _loadedCount = EditorSceneManager.loadedSceneCount;
 
                         string[] _allScenes = _playScenes.Split(PlaySceneSeparator);
@@ -821,7 +821,7 @@ namespace EnhancedEditor.Editor
             // ----- Local Method ----- \\
 
             void SetActiveScene() {
-                if (CoreSceneUtility.IsCoreSceneEnabled) {
+                if (CoreSceneEnhancedSettings.Settings.IsCoreSceneEnabled) {
                     string _path = SessionState.GetString(PlayActiveScene, string.Empty);
 
                     if (!string.IsNullOrEmpty(_path)) {
@@ -924,8 +924,8 @@ namespace EnhancedEditor.Editor
                     EditorSceneManager.OpenScene(_scenePath, _mode);
 
                     // Always make sure the core scene is loaded.
-                    if (CoreSceneUtility.IsCoreSceneEnabled && !CoreSceneUtility.CoreScene.IsLoaded) {
-                        Scene _core = EditorSceneManager.OpenScene(AssetDatabase.GUIDToAssetPath(CoreSceneUtility.CoreScene.GUID), OpenSceneMode.Additive);
+                    if (CoreSceneEnhancedSettings.Settings.IsCoreSceneEnabled && !CoreSceneEnhancedSettings.Settings.CoreScene.IsLoaded) {
+                        Scene _core = EditorSceneManager.OpenScene(AssetDatabase.GUIDToAssetPath(CoreSceneEnhancedSettings.Settings.CoreScene.GUID), OpenSceneMode.Additive);
                         Scene _first = SceneManager.GetSceneAt(0);
 
                         if (_core != _first) {

@@ -10,10 +10,10 @@ using UnityEngine;
 
 namespace EnhancedEditor.Editor {
     /// <summary>
-    /// <see cref="EnhancedEditorProjectSetting"/> for the core scene system.
+    /// <see cref="EnhancedSettings"/> for the core scene system.
     /// </summary>
     [Serializable]
-    public class CoreSceneProjectSetting : EnhancedEditorProjectSetting {
+    public class CoreSceneEnhancedSettings : EnhancedSettings {
         #region Global Members
         /// <summary>
         /// The core scene to load when entering play mode.
@@ -28,49 +28,39 @@ namespace EnhancedEditor.Editor {
 
         // -----------------------
 
-        /// <inheritdoc cref="CoreSceneProjectSetting"/>
-        public CoreSceneProjectSetting(int _guid) : base(_guid) { }
+        /// <inheritdoc cref="CoreSceneEnhancedSettings"/>
+        public CoreSceneEnhancedSettings(int _guid) : base(_guid) { }
         #endregion
-    }
 
-    /// <summary>
-    /// Core scene related static class utility.
-    /// </summary>
-    public static class CoreSceneUtility {
         #region Project Settings
         private const string CoreSceneMessage = "The Core Scene system allows to always load a specific scene first when entering play mode in the editor.";
-        private static readonly int settingGUID = "AutomaticSetup".GetHashCode();
 
         private static readonly GUIContent coreSceneHeaderGUI = new GUIContent("Core Scene System", "Settings related to the Core Scene system.");
         private static readonly GUIContent coreSceneGUI = new GUIContent("Core Scene", "The core scene to load when entering play mode.");
         private static readonly GUIContent isCoreSceneEnabledGUI = new GUIContent("Enabled", "Enables / Disables to core scene system.");
 
-        public static CoreSceneProjectSetting CoreSceneSetting {
-            get {
-                EnhancedEditorSettings _editorSettings = EnhancedEditorSettings.Settings;
+        private static readonly int settingsGUID = "AutomaticSetup".GetHashCode();
+        private static CoreSceneEnhancedSettings settings = null;
 
-                if (!_editorSettings.GetProjectSetting(settingGUID, out CoreSceneProjectSetting _setting)) {
-                    _setting = new CoreSceneProjectSetting(settingGUID);
-                    _editorSettings.AddProjectSetting(_setting);
+        /// <inheritdoc cref="CoreSceneEnhancedSettings"/>
+        public static CoreSceneEnhancedSettings Settings {
+            get {
+                EnhancedEditorProjectSettings _projectSettings = EnhancedEditorProjectSettings.Instance;
+
+                if ((settings == null) && !_projectSettings.GetSetting(settingsGUID, out settings, out _)) {
+                    settings = new CoreSceneEnhancedSettings(settingsGUID);
+                    _projectSettings.AddSetting(settings);
                 }
 
-                return _setting;
+                return settings;
             }
-        }
-
-        public static SceneAsset CoreScene {
-            get { return CoreSceneSetting.CoreScene; }
-        }
-
-        public static bool IsCoreSceneEnabled {
-            get { return CoreSceneSetting.IsCoreSceneEnabled; }
         }
 
         // -----------------------
 
         [EnhancedEditorProjectSettings(Order = 25)]
-        private static void DrawProjectSetting() {
-            CoreSceneProjectSetting _setting = CoreSceneSetting;
+        private static void DrawSettings() {
+            CoreSceneEnhancedSettings _setting = Settings;
 
             GUILayout.Space(15f);
 

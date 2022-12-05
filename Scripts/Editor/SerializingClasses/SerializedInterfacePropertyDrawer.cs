@@ -16,7 +16,7 @@ namespace EnhancedEditor.Editor {
     [CustomPropertyDrawer(typeof(SerializedInterface<>), true)]
     public class SerializedInterfacePropertyDrawer : EnhancedPropertyEditor {
         #region Drawer Content
-        private const int CacheLimit = 25;
+        private const int CacheLimit = 100;
         private static readonly Dictionary<string, Type> interfaceInfos = new Dictionary<string, Type>();
 
         // -----------------------

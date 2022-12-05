@@ -90,13 +90,13 @@ namespace EnhancedEditor.Editor {
                 // Save dirty objects when exiting edit mode.
                 modifiedObjects = new List<int>(GetModifiedObjects());
 
-                foreach (var _id in modifiedObjects) {
-                    if (!EditorUtility.IsDirty(_id)) {
-                        modifiedObjects.Remove(_id);
+                for (int i = modifiedObjects.Count; i-- > 0;) {
+                    if (!EditorUtility.IsDirty(modifiedObjects[i])) {
+                        modifiedObjects.RemoveAt(i);
                     }
-
-                    SetModifiedObjects();
                 }
+
+                SetModifiedObjects();
             } else if (_state == PlayModeStateChange.EnteredEditMode) {
                 // When re-entering edit mode, set registered objects as dirty
                 // as they are no longer in this state after play mode.
