@@ -32,7 +32,7 @@ namespace EnhancedEditor.Editor {
 
         protected override float OnEnhancedGUI(Rect _position, SerializedProperty _property, GUIContent _label) {
             // Register this property to cache its interface type.
-            string _key = _property.propertyPath;
+            string _key = EnhancedEditorUtility.GetSerializedPropertyID(_property);
 
             if (!interfaceInfos.TryGetValue(_key, out Type _interfaceType)) {
                 // Clear cache on limit reach.

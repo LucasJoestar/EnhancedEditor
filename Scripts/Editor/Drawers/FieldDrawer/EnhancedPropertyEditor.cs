@@ -79,10 +79,10 @@ namespace EnhancedEditor.Editor
 
         public override sealed float GetPropertyHeight(SerializedProperty _property, GUIContent _label)
         {
-            string _path = _property.propertyPath;
+            string _id = EnhancedEditorUtility.GetSerializedPropertyID(_property);
 
             // Repaint on next frame if not yet initialized.
-            if (!propertyInfos.TryGetValue(_path, out PropertyInfos _infos))
+            if (!propertyInfos.TryGetValue(_id, out PropertyInfos _infos))
             {
                 float _height = GetDefaultHeight(_property, _label);
                 return _height;
@@ -93,10 +93,10 @@ namespace EnhancedEditor.Editor
 
         public override sealed void OnGUI(Rect _position, SerializedProperty _property, GUIContent _label)
         {
-            string _path = _property.propertyPath;
+            string _id = EnhancedEditorUtility.GetSerializedPropertyID(_property);
 
             // Property initialization.
-            if (!propertyInfos.TryGetValue(_path, out PropertyInfos _infos))
+            if (!propertyInfos.TryGetValue(_id, out PropertyInfos _infos))
             {
                 // Data clear.
                 if (propertyInfos.Count > CacheLimit)
@@ -106,7 +106,7 @@ namespace EnhancedEditor.Editor
                 }
 
                 _infos = new PropertyInfos(_property, GetFieldInfo(_property));
-                propertyInfos.Add(_path, _infos);
+                propertyInfos.Add(_id, _infos);
             }
 
             float _yOrigin = _position.y;
@@ -226,7 +226,7 @@ namespace EnhancedEditor.Editor
         /// <returns>Total height to be used to draw this property field.</returns>
         internal protected virtual float GetDefaultHeight(SerializedProperty _property, GUIContent _label)
         {
-            if (defaultPropertyHeight.TryGetValue(GetID(_property), out float _height)) {
+            if (defaultPropertyHeight.TryGetValue(EnhancedEditorUtility.GetSerializedPropertyID(_property), out float _height)) {
                 return _height;
             }
 
@@ -243,7 +243,7 @@ namespace EnhancedEditor.Editor
         /// <returns>Total height used to draw this property field.</returns>
         internal float DrawEnhancedProperty(Rect _position, SerializedProperty _property, GUIContent _label) {
             float _height = OnEnhancedGUI(_position, _property, _label);
-            string _id = GetID(_property);
+            string _id = EnhancedEditorUtility.GetSerializedPropertyID(_property);
 
             if (!defaultPropertyHeight.ContainsKey(_id)) {
                 if (defaultPropertyHeight.Count > CacheLimit) {
@@ -267,12 +267,6 @@ namespace EnhancedEditor.Editor
         {
             _position.height = EditorGUI.GetPropertyHeight(_property, _label);
             return EnhancedEditorGUI.EnhancedPropertyField(_position,  _property, _label);
-        }
-
-        // -----------------------
-
-        private string GetID(SerializedProperty _property) {
-            return _property.propertyPath + _property.serializedObject.targetObject.GetInstanceID().ToString();
         }
         #endregion
 

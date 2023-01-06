@@ -18,7 +18,14 @@ namespace EnhancedEditor.Editor
         #region Drawer Content
         public override bool OnBeforeGUI(Rect _position, SerializedProperty _property, GUIContent _label, out float _height)
         {
-            EnhancedGUI.GUIEnabled.Push(false);
+            ReadOnlyAttribute _attribute = Attribute as ReadOnlyAttribute;
+            bool _enabled = false;
+
+            if ((_attribute.ConditionMember != null) && _attribute.ConditionMember.Value.GetValue(_property, out bool _guiEnabled)) {
+                _enabled = _guiEnabled;
+            }
+
+            EnhancedGUI.GUIEnabled.Push(_enabled);
             _height = 0f;
 
             return false;

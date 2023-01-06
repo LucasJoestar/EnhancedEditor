@@ -22,7 +22,7 @@ namespace EnhancedEditor.Editor
         private static readonly Dictionary<string, int> reconnectionHelper = new Dictionary<string, int>();
 
         private BeginFoldoutPropertyDrawer begin = null;
-        private string propertyPath = string.Empty;
+        private string propertyID = string.Empty;
         private float height = 0f;
 
         private bool isFirstDraw = true;
@@ -33,7 +33,7 @@ namespace EnhancedEditor.Editor
 
         public override void OnEnable()
         {
-            propertyPath = SerializedProperty.propertyPath;
+            propertyID = EnhancedEditorUtility.GetSerializedPropertyID(SerializedProperty);
             Connect(false);
         }
 
@@ -98,12 +98,12 @@ namespace EnhancedEditor.Editor
         private bool Connect(bool _isRegistered)
         {
             // Reconnection helper.
-            bool _needToReconnect = reconnectionHelper.ContainsKey(propertyPath);
+            bool _needToReconnect = reconnectionHelper.ContainsKey(propertyID);
 
             int _replaceIndex = -1;
             int _pathCount = 0;
             int _count = _needToReconnect
-                       ? reconnectionHelper[propertyPath]
+                       ? reconnectionHelper[propertyID]
                        : 1;
 
             // Try to reconnect this foldout, as some properties can be recreated while
@@ -122,7 +122,7 @@ namespace EnhancedEditor.Editor
                 }
 
                 // If an existing foldout is found with the same path and whose target access throws an error, replace it.
-                if (_foldout.propertyPath == propertyPath)
+                if (_foldout.propertyID == propertyID)
                 {
                     try
                     {
@@ -166,21 +166,21 @@ namespace EnhancedEditor.Editor
                 // Reconnection helper update.
                 if (_needToReconnect)
                 {
-                    if (_pathCount == reconnectionHelper[propertyPath])
+                    if (_pathCount == reconnectionHelper[propertyID])
                     {
                         // All foldouts of this property have been reconnected.
-                        reconnectionHelper.Remove(propertyPath);
+                        reconnectionHelper.Remove(propertyID);
                     }
                     else
                     {
                         // Reconnect counter update.
-                        reconnectionHelper[propertyPath] = reconnectionHelper[propertyPath] + 1;
+                        reconnectionHelper[propertyID] = reconnectionHelper[propertyID] + 1;
                     }
                 }
                 else if (_pathCount > 1)
                 {
                     // All foldouts of this property must now be reconnected.
-                    reconnectionHelper.Add(propertyPath, 2);
+                    reconnectionHelper.Add(propertyID, 2);
                 }
             }
             else

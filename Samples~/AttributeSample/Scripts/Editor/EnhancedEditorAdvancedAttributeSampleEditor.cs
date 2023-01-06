@@ -130,7 +130,7 @@ namespace EnhancedEditor.AttributeSample.Editor
             _position.y += _position.height + EditorGUIUtility.standardVerticalSpacing;
             _position.y += EnhancedEditorGUI.Texture(_position, sample.Required) + EditorGUIUtility.standardVerticalSpacing;
 
-            EnhancedEditorGUI.PickerField(_position, _pickerAnimator, new System.Type[] { typeof(ScriptableObject), typeof(EnhancedBehaviour) } );
+            EnhancedEditorGUI.PickerField(_position, _pickerAnimator, new System.Type[] { typeof(ScriptableObject), typeof(ExtendedBehaviour) } );
 
             _position.y += _position.height + EditorGUIUtility.standardVerticalSpacing;
             EnhancedEditorGUI.ReadonlyField(_position, _readonly, true, true);
@@ -232,7 +232,7 @@ namespace EnhancedEditor.AttributeSample.Editor
             EnhancedEditorGUILayout.RequiredField(_required);
             EnhancedEditorGUILayout.Texture(sample.Required);
 
-            EnhancedEditorGUILayout.PickerField(_pickerAnimator, new System.Type[] { typeof(ScriptableObject), typeof(EnhancedBehaviour) });
+            EnhancedEditorGUILayout.PickerField(_pickerAnimator, new System.Type[] { typeof(ScriptableObject), typeof(ExtendedBehaviour) });
             EnhancedEditorGUILayout.ReadonlyField(_readonly, true);
             EnhancedEditorGUILayout.InlineField(_inline);
 

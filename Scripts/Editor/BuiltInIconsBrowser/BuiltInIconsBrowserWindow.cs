@@ -132,6 +132,11 @@ namespace EnhancedEditor.Editor
         [SerializeField] private string searchFilter = string.Empty;
         [SerializeField] private float sizeSlider = 1f;
 
+        [SerializeField] private Texture iconTexture = null;
+
+        private SerializedObject serializedObject = null;
+        private SerializedProperty textureProperty = null;
+
         private Icon[] icons = new Icon[] { };
         private Vector2 scroll = new Vector2();
         private bool doFocusSelection = false;
@@ -275,14 +280,22 @@ namespace EnhancedEditor.Editor
                 {
                     // Icon name.
                     Rect _position = EditorGUILayout.GetControlRect();
+                    float _xMax = _position.xMax;
+
                     _position.width = 50f;
 
                     EnhancedEditorGUI.UnderlinedLabel(_position, iconNameHeaderGUI, EditorStyles.boldLabel);
 
                     _position.x += _position.width;
-                    _position.xMax = position.width;
+                    _position.xMax = _position.xMax = _xMax - 150f;
 
                     GUI.Label(_position, iconNameGUI);
+
+                    _position.x += _position.width;
+                    _position.xMax = _xMax;
+                    _position.y += 5f;
+
+                    EditorGUI.PropertyField(_position, textureProperty, GUIContent.none);
 
                     // Code snippets.
                     GUILayout.Space(10f);
@@ -667,6 +680,12 @@ namespace EnhancedEditor.Editor
             iconNameGUI.text = _icon.Name;
             sizeGUI.text = string.Format(SizeFormat, _icon.Size.x, _icon.Size.y);
             iconContentGUI.image = _icon.IconContent.image;
+
+            // Icon.
+            iconTexture = _icon.IconContent.image;
+
+            serializedObject = new SerializedObject(this);
+            textureProperty = serializedObject.FindProperty("iconTexture");
 
             // Stop editing text field to correctly repaint all code snippets.
             EditorGUIUtility.editingTextField = false;

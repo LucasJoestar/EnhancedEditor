@@ -39,7 +39,7 @@ namespace EnhancedEditor
             return _gameObject.AddComponent(_componentType);
         }
 
-        #if !UNITY_2019_2_OR_NEWER
+#if !UNITY_2019_2_OR_NEWER
         /// <summary>
         /// Gets the component of the specified type, if it exists.<br/>
         /// TryGetComponent will attempt to retrieve the component of the given type.The notable difference compared to
@@ -61,6 +61,31 @@ namespace EnhancedEditor
             return _component != null;
         }
 #endif
+        #endregion
+
+        #region Extended Behaviour
+        /// <summary>
+        /// Get the <see cref="ExtendedBehaviour"/> attached to this <see cref="GameObject"/>.
+        /// </summary>
+        /// <param name="_gameObject">This <see cref="GameObject"/> to get the <see cref="ExtendedBehaviour"/> from.</param>
+        /// <returns>The <see cref="ExtendedBehaviour"/> attached to this <see cref="GameObject"/>.</returns>
+        public static ExtendedBehaviour GetExtendedBehaviour(this GameObject _gameObject) {
+            return _gameObject.GetComponent<ExtendedBehaviour>();
+        }
+
+        /// <summary>
+        /// Get all <see cref="Tag"/> assigned to this <see cref="GameObject"/>.
+        /// </summary>
+        /// <param name="_gameObject">This <see cref="GameObject"/> to get the tags from.</param>
+        /// <returns>The <see cref="TagGroup"/> containing all tag assigned to this <see cref="GameObject"/>.</returns>
+        public static TagGroup GetTags(this GameObject _gameObject) {
+            if (_gameObject.TryGetComponent(out ExtendedBehaviour _behaviour)) {
+                return _behaviour.Tags;
+            }
+
+            _gameObject.LogWarning($"No {typeof(ExtendedBehaviour).Name} could be found on the object \'{_gameObject.name}\'.");
+            return new TagGroup();
+        }
         #endregion
     }
 }

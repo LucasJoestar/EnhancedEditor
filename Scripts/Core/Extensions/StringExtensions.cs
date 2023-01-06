@@ -24,6 +24,26 @@ namespace EnhancedEditor {
         public static string RemoveWhitespace(this string _value) {
             return whitespaceRegex.Replace(_value, string.Empty);
         }
+
+        /// <inheritdoc cref="GetPrefix(string, string)"/>
+        public static string GetPrefix(this string _string) {
+            return GetPrefix(_string, "_");
+        }
+
+        /// <summary>
+        /// Get the prefix of this <see cref="string"/>.
+        /// <br/> Uses the '_' character as a default separator.
+        /// </summary>
+        /// <param name="_string">This <see cref="string"/> value to get the prefix from.</param>
+        /// <param name="_separator">This separator of this <see cref="string"/> prefix to search for.</param>
+        /// <returns>The prefix of this <see cref="string"/>.</returns>
+        public static string GetPrefix(this string _string, string _separator) {
+            int _index = _string.IndexOf(_separator);
+
+            return (_index != -1)
+                 ? _string.Substring(0, _index + 1)
+                 : string.Empty;
+        }
         #endregion
     }
 }

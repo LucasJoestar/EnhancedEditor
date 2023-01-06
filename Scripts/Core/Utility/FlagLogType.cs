@@ -7,7 +7,7 @@
 using System;
 using UnityEngine;
 
-namespace EnhancedEditor.Editor {
+namespace EnhancedEditor {
     /// <summary>
     /// Flag <see cref="LogType"/> enum, with additional values.
     /// </summary>

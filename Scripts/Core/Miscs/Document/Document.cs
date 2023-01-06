@@ -13,7 +13,7 @@ namespace EnhancedEditor
     /// <see cref="ScriptableObject"/> used for editor purposes, allowing to write and share
     /// nicely displayed documents across the project.
     /// </summary>
-    [CreateAssetMenu(fileName = "DOC_NewDocument", menuName = "Enhanced Editor/Document", order = 185)]
+    [CreateAssetMenu(fileName = "DOC_NewDocument", menuName = InternalUtility.MenuPath + "Document", order = InternalUtility.MenuOrder)]
 	public class Document : ScriptableObject
     {
         #region Section

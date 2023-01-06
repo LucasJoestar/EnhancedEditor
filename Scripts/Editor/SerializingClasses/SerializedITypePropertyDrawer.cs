@@ -26,7 +26,7 @@ namespace EnhancedEditor.Editor {
 
         protected override float OnEnhancedGUI(Rect _position, SerializedProperty _property, GUIContent _label) {
             // Register this property to cache its selectable type values.
-            string _key = _property.propertyPath + _property.serializedObject.targetObject.GetType().Name;
+            string _key = EnhancedEditorUtility.GetSerializedPropertyID(_property);
 
             if (!interfaceInfos.TryGetValue(_key, out GUIContent[] _selectableTypes)) {
                 // Clear cache on limit reach.
@@ -55,7 +55,8 @@ namespace EnhancedEditor.Editor {
 
                         foreach (var _type in _types) {
                             if (!_type.IsDefined(typeof(EtherealAttribute), false) && _baseType.IsAssignableFrom(_type)
-                                                                                   && SerializedTypeUtility.IsAssignableFrom(_type, _interfaces)) {
+                                                                                   && SerializedTypeUtility.IsAssignableFrom(_type, _interfaces)
+                                                                                   && (_type != _baseType)) {
                                 AddType(_temp, _type, _constraints);
                             }
                         }

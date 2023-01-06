@@ -20,13 +20,13 @@ namespace EnhancedEditor.Editor {
     [Serializable]
     public class ConsoleLogIgnoredStackCall {
         #region Global Members
-        [Enhanced, Duo("UseNamespace")] public string Namespace = "Namespace";
+        [Enhanced, Duo("UseNamespace", 20f)] public string Namespace = "Namespace";
         [SerializeField, HideInInspector, DisplayName("Enabled")] public bool UseNamespace = true;
 
-        [Enhanced, Duo("UseClass")] public string Class = "Class";
+        [Enhanced, Duo("UseClass", 20f)] public string Class = "Class";
         [SerializeField, HideInInspector, DisplayName("Enabled")] public bool UseClass = true;
 
-        [Enhanced, Duo("UseMethod")] public string Method = "Method";
+        [Enhanced, Duo("UseMethod", 20f)] public string Method = "Method";
         [SerializeField, HideInInspector, DisplayName("Enabled")] public bool UseMethod = true;
 
         // -----------------------
@@ -237,6 +237,7 @@ namespace EnhancedEditor.Editor {
         /// <param name="_settings">The setting values to copy.</param>
         public void CopyValues(EnhancedConsoleEnhancedSettings _settings) {
             selectedTabIndex = _settings.selectedTabIndex;
+
             Columns = _settings.Columns;
             CustomFilters = _settings.CustomFilters;
             DefaultFilters = _settings.DefaultFilters;
@@ -282,7 +283,7 @@ namespace EnhancedEditor.Editor {
             get {
                 EnhancedEditorUserSettings _userSettings = EnhancedEditorUserSettings.Instance;
 
-                if (((settings == null) || (settingsProperty.serializedObject.targetObject == null))
+                if (((settings == null) || (settingsProperty.serializedObject != _userSettings.SerializedObject))
                    && !_userSettings.GetSetting(settingsGUID, out settings, out settingsProperty)) {
 
                     settings = new EnhancedConsoleEnhancedSettings(settingsGUID);

@@ -1792,7 +1792,7 @@ namespace EnhancedEditor.Editor
             Array.Sort(customSymbols, (a, b) => a.DefineSymbol.Symbol.CompareTo(b.DefineSymbol.Symbol));
 
             // Get all active symbols.
-            activeSymbols = PlayerSettings.GetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup).Split(ScriptingDefineSymbolSeparator);
+            activeSymbols = PlayerSettings.GetScriptingDefineSymbolsForGroup(BuildPipeline.GetBuildTargetGroup(EditorUserBuildSettings.activeBuildTarget)).Split(ScriptingDefineSymbolSeparator);
 
             // When no symbol is enabled, an empty string will be returned; ignore it.
             if ((activeSymbols.Length == 1) && string.IsNullOrEmpty(activeSymbols[0]))
@@ -1851,7 +1851,7 @@ namespace EnhancedEditor.Editor
 
         private void UpdateNeedToApplySymbols()
         {
-            string _symbols = PlayerSettings.GetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup);
+            string _symbols = PlayerSettings.GetScriptingDefineSymbolsForGroup(BuildPipeline.GetBuildTargetGroup(EditorUserBuildSettings.activeBuildTarget));
             doNeedToApplySymbols = _symbols != string.Join(ScriptingDefineSymbolSeparator.ToString(), activeSymbols);
         }
 
@@ -1886,7 +1886,7 @@ namespace EnhancedEditor.Editor
         private void SetScriptingDefineSymbol()
         {
             string _symbols = string.Join(ScriptingDefineSymbolSeparator.ToString(), activeSymbols);
-            SetScriptingDefineSymbols(EditorUserBuildSettings.selectedBuildTargetGroup, _symbols);
+            SetScriptingDefineSymbols(BuildPipeline.GetBuildTargetGroup(EditorUserBuildSettings.activeBuildTarget), _symbols);
         }
 
         private void SetScriptingDefineSymbols(BuildTargetGroup _targetGroup, string _symbols)

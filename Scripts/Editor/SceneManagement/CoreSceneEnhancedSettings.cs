@@ -35,9 +35,10 @@ namespace EnhancedEditor.Editor {
         #region Project Settings
         private const string CoreSceneMessage = "The Core Scene system allows to always load a specific scene first when entering play mode in the editor.";
 
-        private static readonly GUIContent coreSceneHeaderGUI = new GUIContent("Core Scene System", "Settings related to the Core Scene system.");
-        private static readonly GUIContent coreSceneGUI = new GUIContent("Core Scene", "The core scene to load when entering play mode.");
-        private static readonly GUIContent isCoreSceneEnabledGUI = new GUIContent("Enabled", "Enables / Disables to core scene system.");
+        private static readonly GUIContent coreSceneHeaderGUI       = new GUIContent("Core Scene System", "Settings related to the Core Scene system.");
+        private static readonly GUIContent coreSceneGUI             = new GUIContent("Core Scene", "The core scene to load when entering play mode.");
+        private static readonly GUIContent isCoreSceneEnabledGUI    = new GUIContent("Enabled", "Enables / Disables to core scene system.");
+
 
         private static readonly int settingsGUID = "AutomaticSetup".GetHashCode();
         private static CoreSceneEnhancedSettings settings = null;

@@ -158,7 +158,6 @@ namespace EnhancedEditor {
 				return;
 			}
 
-
 			// Base type & subclass.
 			if (_type == _base){
 				if (!constraints.HasFlag(SerializedTypeConstraint.BaseType)) {
@@ -186,10 +185,10 @@ namespace EnhancedEditor {
 			type = _type;
 			typeName = _type.GetReflectionName();
 		}
-        #endregion
+		#endregion
 
-        #region Serialization Callbacks
-        void ISerializationCallbackReceiver.OnAfterDeserialize() {
+		#region Serialization Callbacks
+		void ISerializationCallbackReceiver.OnAfterDeserialize() {
 			// Deserialize the type value based on the serialized type name.
 			if (!string.IsNullOrEmpty(typeName)) {
 				type = Type.GetType(typeName);

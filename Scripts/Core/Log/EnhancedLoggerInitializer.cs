@@ -4,7 +4,6 @@
 //
 // ============================================================================ //
 
-using System.Diagnostics;
 using UnityEngine;
 
 #if UNITY_EDITOR
@@ -13,8 +12,7 @@ using UnityEditor;
 
 namespace EnhancedEditor {
     /// <summary>
-    /// <see cref="EnhancedLogger"/> initializer class,
-    /// using conditional compiltation symbols.
+    /// <see cref="EnhancedLogger"/> initializer class, using conditional compiltation symbols.
     /// </summary>
     #if UNITY_EDITOR
     [InitializeOnLoad]
@@ -29,9 +27,11 @@ namespace EnhancedEditor {
         // -----------------------
 
         // Uses the first registration callback to be initialized as soon as possible.
-        [Conditional("ENHANCED_LOGGER"), RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void Initialize() {
+            #if ENHANCED_LOGGER
             EnhancedLogger.Initialize();
+            #endif
         }
         #endregion
     }

@@ -101,15 +101,11 @@ namespace EnhancedEditor.Editor {
             public LogEntry() {
                 IsSelected = false;
                 IsVisible = true;
+            }
 
-                Timestamp = DateTime.Now.ToLongTimeString();
-
-                // Unity might throw an exception when this is called during serialization.
-                try {
-                    Frame = EditorApplication.isPlaying ? Time.frameCount.ToString() : string.Empty;
-                } catch (UnityException) {
-                    Frame = string.Empty;
-                }
+            public LogEntry(LogWrapper _log) : this() {
+                Timestamp = _log.Timestamp;
+                Frame = _log.Frame;
             }
 
             // -----------------------
@@ -149,7 +145,7 @@ namespace EnhancedEditor.Editor {
 
             // -----------------------
 
-            public OriginalLogEntry(LogWrapper _log, int _instanceID) : base() {
+            public OriginalLogEntry(LogWrapper _log, int _instanceID) : base(_log) {
                 LogString = _log.Log;
                 StackTrace = _log.StackTrace;
                 Type = _log.Type.ToFlag();
@@ -191,7 +187,7 @@ namespace EnhancedEditor.Editor {
             }
 
             public override bool AddDuplicateLog(LogWrapper _log, int _instanceID, int _index) {
-                if ((_log.Log == LogString) && (_log.StackTrace == StackTrace) && (ContextInstanceID == _instanceID)) {
+                if ((LogString == _log.Log) && (_log.StackTrace == StackTrace) && (ContextInstanceID == _instanceID)) {
                     DuplicateCount++;
                     LastDuplicateIndex = _index;
 
@@ -224,7 +220,7 @@ namespace EnhancedEditor.Editor {
 
             // -----------------------
 
-            public DuplicateLogEntry(int _originalIndex) : base() {
+            public DuplicateLogEntry(LogWrapper _log, int _originalIndex) : base(_log) {
                 OriginalIndex = _originalIndex;
             }
 
@@ -241,7 +237,7 @@ namespace EnhancedEditor.Editor {
             public override void SetOriginalLog(int _index) {
                 OriginalIndex = _index;
             }
-            
+
             public override string GetTime(List<LogEntry> _entries, bool _collapse) {
                 return Timestamp;
             }
@@ -259,12 +255,28 @@ namespace EnhancedEditor.Editor {
             public string StackTrace;
             public LogType Type;
 
+            public bool IsNative;
+
+            public string Timestamp;
+            public string Frame;
+
             // -----------------------
 
-            public LogWrapper(string _log, string _stackTrace, LogType _type) {
+            public LogWrapper(string _log, string _stackTrace, LogType _type, bool _isNative) {
                 Log = _log;
                 StackTrace = _stackTrace;
                 Type = _type;
+
+                IsNative = _isNative;
+
+                Timestamp = DateTime.Now.ToLongTimeString();
+
+                // Unity might throw an exception when this is called during serialization.
+                try {
+                    Frame = EditorApplication.isPlaying ? Time.frameCount.ToString() : string.Empty;
+                } catch (UnityException) {
+                    Frame = string.Empty;
+                }
             }
         }
 
@@ -350,7 +362,7 @@ namespace EnhancedEditor.Editor {
             public static readonly char[] SeparatorToReplace        = new char[] { ':', '/' };
             public static readonly char[] ArgumentSeparatorAsArray  = new char[] { ',' };
             public static readonly char[] PathSeparatorAsArray      = new char[] { '.' };
-            
+
             // -----------------------
 
             /// <summary>
@@ -385,10 +397,10 @@ namespace EnhancedEditor.Editor {
                             _entry.ColumnNumber = _columnNumber;
                         }
                     }
-                    
+
                     return;
                 }
-                
+
                 string[] _lines = _entry.StackTrace.Split('\n');
 
                 foreach (string _line in _lines) {
@@ -851,24 +863,21 @@ namespace EnhancedEditor.Editor {
 
             return _window;
         }
-        
+
         // -------------------------------------------
         // Window GUI
         // -------------------------------------------
 
-        private const string CompilationKey = "EnhancedConsoleCompilation";
-        private const string EditorPrefKey = "EnhancedConsoleKey";
-        private const string SessionStateKey = "EnhancedConsoleKey";
-        private const string UndoRecordTitle = "Enhanced Console Change";
+        private const string CompilationKey     = "EnhancedConsoleCompilation";
+        private const string EditorPrefKey      = "EnhancedConsoleKey";
+        private const string SessionStateKey    = "EnhancedConsoleKey";
+        private const string UndoRecordTitle    = "Enhanced Console Change";
 
         private const int DefaultLogCapacity = 50;
 
-        private static readonly Type logEntriesType = typeof(UnityEditor.Editor).Assembly.GetType("UnityEditor.LogEntries");
-        private static readonly MethodInfo clearMethod = logEntriesType.GetMethod("Clear", BindingFlags.Static | BindingFlags.Public);
+        private static readonly GUIContent openPreferencesGUI   = new GUIContent("Open Preferences", "Opens the enhanced console preferences window");
+        private static readonly List<LogWrapper> pendingLogs    = new List<LogWrapper>();
 
-        private static readonly GUIContent openPreferencesGUI = new GUIContent("Open Preferences", "Opens the enhanced console preferences window");
-
-        [SerializeField] private List<LogWrapper> pendingLogs = new List<LogWrapper>();
         [SerializeReference] private List<LogEntry> logs = new List<LogEntry>(DefaultLogCapacity);
 
         [SerializeField] private LogColumn[] logColumns = new LogColumn[] {
@@ -886,16 +895,20 @@ namespace EnhancedEditor.Editor {
             new LogColumn(LogColumnType.Timestamp,  ColumnVisibility.Visible, 40f, 25f),
         };
 
-        [SerializeField] private Flags flags = Flags.ClearOnPlay;
-        [SerializeField] private string searchFilter = string.Empty;
+        [SerializeField] private Flags flags            = Flags.ClearOnPlay;
+        [SerializeField] private string searchFilter    = string.Empty;
 
-        private Vector2 logScroll = new Vector2();
-        private Vector2 stackTraceHeaderScroll = new Vector2();
+        private static EnhancedConsoleWindow console    = null;
+
+        private Vector2 logScroll               = new Vector2();
+        private Vector2 stackTraceHeaderScroll  = new Vector2();
         private Vector2 stackTraceContentScroll = new Vector2();
-        
+
         // -----------------------
 
         private void OnEnable() {
+            console = this;
+
             // Load content.
             string _json = EditorPrefs.GetString(EditorPrefKey, string.Empty);
             if (!string.IsNullOrEmpty(_json)) {
@@ -919,7 +932,7 @@ namespace EnhancedEditor.Editor {
                 SessionState.SetBool(CompilationKey, false);
                 Clear();
             }
-            
+
             // Delete compilation logs on enable.
             for (int i = logs.Count; i-- > 0;) {
                 if (string.IsNullOrEmpty(logs[i].GetEntry(logs).StackTrace)) {
@@ -928,11 +941,13 @@ namespace EnhancedEditor.Editor {
             }
 
             RefreshFilters();
+            GetNativeConsoleLogs();
         }
 
         private void OnGUI() {
             // Update pending logs.
             UpdateLogs();
+            requireRepaint = false;
 
             // Toolbar.
             using (var _scope = new GUILayout.HorizontalScope(EditorStyles.toolbar)) {
@@ -971,12 +986,12 @@ namespace EnhancedEditor.Editor {
         }
 
         private void OnDisable() {
+            console = null;
+            UnregisterCallbacks();
+
             // Save content.
             string _json = EditorJsonUtility.ToJson(this);
             EditorPrefs.SetString(EditorPrefKey, _json);
-
-            // Callbacks.
-            UnregisterCallbacks();
         }
 
         void IHasCustomMenu.AddItemsToMenu(GenericMenu _menu) {
@@ -985,12 +1000,15 @@ namespace EnhancedEditor.Editor {
         #endregion
 
         #region Callback
+        private const int MaxPendingLog = 9000;
+        private static bool requireRepaint = true;
+
         int IOrderedCallback.callbackOrder {
             get { return -1; }
         }
 
         // -----------------------
-        
+
         void IPreprocessBuildWithReport.OnPreprocessBuild(BuildReport _report) {
             // Clears the console before starting to build.
             if (HasFlag(Flags.ClearOnBuild)) {
@@ -1011,22 +1029,41 @@ namespace EnhancedEditor.Editor {
                 Clear();
             }
 
+            GetNativeConsoleLogs();
             Repaint();
         }
 
-        private void OnLogMessageReceived(string _log, string _stackTrace, LogType _type) {
-            // Used for debug purpose.
-            if (HasFlag(Flags.Disabled)) {
-                return;
+        private void OnUpdate() {
+            if (requireRepaint) {
+                Repaint();
             }
+        }
 
-            pendingLogs.Add(new LogWrapper(_log, _stackTrace, _type));
-            Repaint();
+        private static void OnLogMessageReceived(string _log, string _stackTrace, LogType _type) {
+            RegisterLog(_log, _stackTrace, _type);
         }
 
         [DidReloadScripts]
         private static void OnAfterCompilation() {
             SessionState.SetBool(CompilationKey, true);
+        }
+
+        // -----------------------
+
+        private static void RegisterLog(string _log, string _stackTrace, LogType _type, bool _isNative = false) {
+            // Used for debug purpose.
+            if ((console != null) && console.HasFlag(Flags.Disabled)) {
+                return;
+            }
+
+            pendingLogs.Add(new LogWrapper(_log.TrimEnd(), _stackTrace.TrimEnd(), _type, _isNative));
+
+            while (pendingLogs.Count > MaxPendingLog) {
+                pendingLogs.RemoveAt(0);
+            }
+
+            // Repaint.
+            requireRepaint = true;
         }
         #endregion
 
@@ -1074,7 +1111,7 @@ namespace EnhancedEditor.Editor {
 
         private bool doFocusSelection = false;
         private int selectedLogIndex = -1;
-        
+
         // -----------------------
 
         private void DrawToolbar() {
@@ -1275,7 +1312,7 @@ namespace EnhancedEditor.Editor {
                         EditorGUI.LabelField(_position, _column.Label, Styles.LogColumnStyle);
 
                         // Separator.
-                        Rect _splitter = new Rect(_position);  {
+                        Rect _splitter = new Rect(_position); {
                             _splitter.xMin = _position.xMax - 1f;
                             _splitter.yMin -= EditorGUIUtility.standardVerticalSpacing;
                         }
@@ -1356,7 +1393,7 @@ namespace EnhancedEditor.Editor {
                 bool _updateHeight = _logWidth != previousLogWidth;
 
                 float _origin = _position.y;
-                
+
                 for (int i = 0; i < logs.Count; i++) {
                     if (DrawLog(ref _position, i, _area, _collapse, _count, _height, _logColumn, _updateHeight)) {
                         _count++;
@@ -1764,11 +1801,163 @@ namespace EnhancedEditor.Editor {
         }
         #endregion
 
+        #region Native Console
+        // -------------------------------------------
+        // Log Flags
+        // -------------------------------------------
+
+        /// <summary>
+        /// Unity native console flags enum.
+        /// <br/> See GitHub for more informations.
+        /// <para/>
+        /// https://github.com/Unity-Technologies/UnityCsReference/blob/master/Editor/Mono/LogEntries.bindings.cs
+        /// </summary>
+        [Flags]
+        internal enum LogMessageFlags : int {
+            kNoLogMessageFlags = 0,
+
+            kError  = 1 << 0, // Message describes an error.
+            kAssert = 1 << 1, // Message describes an assertion failure.
+            kLog    = 1 << 2, // Message is a general log message.
+            kFatal  = 1 << 4, // Message describes a fatal error, and that the program should now exit.
+
+            kAssetImportError   = 1 << 6, // Message describes an error generated during asset importing.
+            kAssetImportWarning = 1 << 7, // Message describes a warning generated during asset importing.
+
+            kScriptingError     = 1 << 8, // Message describes an error produced by script code.
+            kScriptingWarning   = 1 << 9, // Message describes a warning produced by script code.
+            kScriptingLog       = 1 << 10, // Message describes a general log message produced by script code.
+
+            kScriptCompileError     = 1 << 11, // Message describes an error produced by the script compiler.
+            kScriptCompileWarning   = 1 << 12, // Message describes a warning produced by the script compiler.
+
+            kStickyLog              = 1 << 13, // Message is 'sticky' and should not be removed when the user manually clears the console window.
+            kMayIgnoreLineNumber    = 1 << 14, // The scripting runtime should skip annotating the log callstack with file and line information.
+            kReportBug              = 1 << 15, // When used with kFatal, indicates that the log system should launch the bug reporter.
+
+            // The message before this one should be displayed at the bottom of Unity's main window, unless there are no messages before this one.
+            kDisplayPreviousErrorInStatusBar = 1 << 16,
+
+            kScriptingException         = 1 << 17, // Message describes an exception produced by script code.
+            kDontExtractStacktrace      = 1 << 18, // Stacktrace extraction should be skipped for this message.
+            kScriptingAssertion         = 1 << 21, // The message describes an assertion failure in script code.
+            kStacktraceIsPostprocessed  = 1 << 22, // The stacktrace has already been postprocessed and does not need further processing.
+            kIsCalledFromManaged        = 1 << 23, // The message is being called from managed code.
+
+            // Utilities.
+            Log        = kScriptingLog          | kLog,
+            Warning    = kScriptingWarning      | kAssetImportWarning |  kScriptCompileWarning,
+            Error      = kScriptingError        | kError | kAssetImportError | kScriptCompileError,
+            Assert     = kScriptingAssertion    | kAssert,
+            Exception  = kScriptingException,
+        }
+
+        // -------------------------------------------
+        // Behaviour 
+        // -------------------------------------------
+
+        private const int MaxNativeLogCount = 20;
+
+        private const BindingFlags StaticFlags      = BindingFlags.Static | BindingFlags.Public;
+        private const BindingFlags InstanceFlags    = BindingFlags.Instance | BindingFlags.Public;
+
+        private static readonly Type logEntriesType = typeof(EditorWindow).Assembly.GetType("UnityEditor.LogEntries");
+        private static readonly Type logEntryType   = typeof(EditorWindow).Assembly.GetType("UnityEditor.LogEntry");
+
+        private static readonly MethodInfo startGetEntriesMethod    = logEntriesType.GetMethod("StartGettingEntries", StaticFlags);
+        private static readonly MethodInfo endGetEntriesMethod      = logEntriesType.GetMethod("EndGettingEntries", StaticFlags);
+
+        private static readonly MethodInfo getEntryMethod           = logEntriesType.GetMethod("GetEntryInternal", StaticFlags);
+        private static readonly MethodInfo clearMethod              = logEntriesType.GetMethod("Clear", StaticFlags);
+
+        private static readonly FieldInfo messageField              = logEntryType.GetField("message", InstanceFlags);
+        private static readonly FieldInfo modeField                 = logEntryType.GetField("mode", InstanceFlags);
+        private static readonly FieldInfo instanceIDIField          = logEntryType.GetField("instanceID", InstanceFlags);
+        private static readonly FieldInfo callstackStartField       = logEntryType.GetField("callstackTextStartUTF16", InstanceFlags);
+
+        private static readonly object[] getEntryParams = new object[2];
+
+        // -----------------------
+
+        private void GetNativeConsoleLogs() {
+            try {
+                // Create a log object to be override be the GetEntry out parameter.
+                var _logObject = Activator.CreateInstance(logEntryType);
+                int _count = Mathf.Min(MaxNativeLogCount, (int)startGetEntriesMethod.Invoke(null, null));
+
+                for (int i = 0; i < _count; i++) {
+                    // Setup params.
+                    getEntryParams[0] = i;
+                    getEntryParams[1] = _logObject;
+
+                    if (!(bool)getEntryMethod.Invoke(null, getEntryParams)) {
+                        continue;
+                    }
+
+                    // Get log informations.
+                    string _log = (string)messageField.GetValue(_logObject);
+                    int _type = (int)modeField.GetValue(_logObject);
+                    int _callstackStart = (int)callstackStartField.GetValue(_logObject);
+
+                    string _stackTrace = _log.Substring(_callstackStart + 1).TrimEnd();
+                    _log = _log.Substring(0, _callstackStart).TrimEnd();
+
+                    RegisterLog(_log, _stackTrace, GetLogType((LogMessageFlags)_type), true);
+                }
+
+                // Notifies that we are stopping getting entries.
+                endGetEntriesMethod.Invoke(null, null);
+            } catch (Exception e) {
+                Debug.LogException(e);
+            }
+        }
+        
+        private void ClearNativeConsole() {
+            clearMethod.Invoke(null, null);
+        }
+
+        // -------------------------------------------
+        // Utility 
+        // -------------------------------------------
+        
+        private LogType GetLogType(LogMessageFlags _flags) {
+            if (HasFlag(LogMessageFlags.Exception)) {
+                return LogType.Exception;
+            }
+
+            if (HasFlag(LogMessageFlags.Error)) {
+                return LogType.Error;
+            }
+
+            if (HasFlag(LogMessageFlags.Assert)) {
+                return LogType.Assert;
+            }
+
+            if (HasFlag(LogMessageFlags.Warning)) {
+                return LogType.Warning;
+            }
+
+            return LogType.Log;
+
+            // ----- Local Methods ----- \\
+
+            bool HasFlag(LogMessageFlags _type) {
+                return (_flags & _type) != 0;
+            }
+        }
+        #endregion
+
         #region Utility
         /// <summary>
         /// Updates pending logs.
         /// </summary>
         private void UpdateLogs() {
+            // Disabled debug.
+            if (HasFlag(Flags.Disabled)) {
+                pendingLogs.Clear();
+                return;
+            }
+
             if (pendingLogs.Count == 0) {
                 return;
             }
@@ -1778,6 +1967,12 @@ namespace EnhancedEditor.Editor {
 
                 // Get entry.
                 EnhancedLogger.GetLogContextInstanceID(ref _log.Log, out int _instanceID);
+
+                // Ignore duplicate logs.
+                if (_log.IsNative && logs.Exists(l => l.IsDuplicate || (l.GetEntry(logs).StackTrace == _log.StackTrace))) {
+                    continue;
+                }
+
                 LogEntry _entry = GetLogEntry(_log, _instanceID);
                 logs.Add(_entry);
 
@@ -1799,6 +1994,10 @@ namespace EnhancedEditor.Editor {
                 }
             }
 
+            // Save content.
+            string _json = EditorJsonUtility.ToJson(this);
+            EditorPrefs.SetString(EditorPrefKey, _json);
+
             pendingLogs.Clear();
             Repaint();
 
@@ -1810,7 +2009,7 @@ namespace EnhancedEditor.Editor {
                 for (int i = 0; i < _count; i++) {
                     // Duplicate entry.
                     if (logs[i].AddDuplicateLog(_log, _instanceID, _count)) {
-                        return new DuplicateLogEntry(i);
+                        return new DuplicateLogEntry(_log, i);
                     }
                 }
 
@@ -1998,16 +2197,23 @@ namespace EnhancedEditor.Editor {
         private void RegisterCallbacks() {
             UnregisterCallbacks();
 
+            // The console might be already registered (uses a static method),
+            // so unregister it before as a security.
+            Application.logMessageReceivedThreaded -= OnLogMessageReceived;
             Application.logMessageReceivedThreaded += OnLogMessageReceived;
+
             EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
+            EditorApplication.update               += OnUpdate;
         }
 
         /// <summary>
         /// Unregisters this window callbacks.
         /// </summary>
         private void UnregisterCallbacks() {
-            Application.logMessageReceivedThreaded -= OnLogMessageReceived;
+            // The console window might be destroyed when maximazing another window,
+            // so keep registered on logs independently.
             EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
+            EditorApplication.update               -= OnUpdate;
         }
 
         /// <summary>
@@ -2020,8 +2226,10 @@ namespace EnhancedEditor.Editor {
             SelectLog(-1);
 
             if (!HasFlag(Flags.Disabled)) {
-                clearMethod.Invoke(null, null);
+                ClearNativeConsole();
             }
+
+            GetNativeConsoleLogs();
         }
         #endregion
     }

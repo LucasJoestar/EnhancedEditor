@@ -186,11 +186,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "F:\\- My Stuff -\\Projets\\Projects\\EnhancedLogger\\EnhancedLogger.csproj",
+      "projectUniqueName": "F:\\- My Stuff -\\Projets\\TwinPeaks\\TwinPeaks\\Assets\\700 EnhancedEngine\\EnhancedEditor\\EnhancedLoggerProject~\\EnhancedLogger.csproj",
       "projectName": "EnhancedLogger",
-      "projectPath": "F:\\- My Stuff -\\Projets\\Projects\\EnhancedLogger\\EnhancedLogger.csproj",
+      "projectPath": "F:\\- My Stuff -\\Projets\\TwinPeaks\\TwinPeaks\\Assets\\700 EnhancedEngine\\EnhancedEditor\\EnhancedLoggerProject~\\EnhancedLogger.csproj",
       "packagesPath": "C:\\Users\\Lucas\\.nuget\\packages\\",
-      "outputPath": "F:\\- My Stuff -\\Projets\\Projects\\EnhancedLogger\\obj\\",
+      "outputPath": "F:\\- My Stuff -\\Projets\\TwinPeaks\\TwinPeaks\\Assets\\700 EnhancedEngine\\EnhancedEditor\\EnhancedLoggerProject~\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

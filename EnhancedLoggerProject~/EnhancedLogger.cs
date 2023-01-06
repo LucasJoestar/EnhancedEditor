@@ -68,8 +68,12 @@ namespace EnhancedEditor {
         #endregion
 
         #region Initialization
+        /// <summary>
+        /// Initializes and enables the enhanced logger.
+        /// </summary>
         public static void Initialize() {
             defaultLoggerField.SetValue(null, Logger);
+            EnableLogger(true);
         }
         #endregion
 
@@ -163,6 +167,7 @@ namespace EnhancedEditor {
 
         // -----------------------
 
+        /// <inheritdoc cref="ILogger.IsLogTypeAllowed(LogType)"/>
         public bool IsLogTypeAllowed(LogType _logType) {
             if (logEnabled) {
                 if (_logType == LogType.Exception) {
@@ -219,6 +224,28 @@ namespace EnhancedEditor {
             }
 
             return _message.ToString();
+        }
+
+        // -----------------------
+
+        /// <summary>
+        /// Enabled/Disabled the <see cref="UnityObjectLogger"/> logs.
+        /// </summary>
+        /// <param name="_enabled">Whether to enable or disable logs.</param>
+        public static void EnableLogger(bool _enabled) {
+            UnityObjectLogger.Enabled = _enabled;
+        }
+
+        /// <summary>
+        /// Get the default <see cref="string"/> format used to log messages for a given <see cref="Type"/>.
+        /// </summary>
+        /// <param name="_type">The object <see cref="Type"/> this log comes from.</param>
+        /// <param name="_color">Color used to identify this log.</param>
+        /// <returns>This <see cref="Type"/> associated log format.</returns>
+        public static string GetMessageFormat(Type _type, Color _color) {
+            return $"<b><size=13><color=#{ColorUtility.ToHtmlStringRGBA(_color)}>{_type.Name}</color></size></b>  " +
+                   $"<size=10><color=#{ColorUtility.ToHtmlStringRGBA(new Color(.5f, .5f, .5f, 1f))}>▶</color></size>  " +
+                   $"{{0}}";
         }
         #endregion
     }

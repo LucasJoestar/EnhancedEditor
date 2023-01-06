@@ -8,10 +8,6 @@ using System;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
-
 namespace EnhancedEditor {
     /// <summary>
     /// Default empty <see cref="SceneBundle"/> behaviour.
@@ -24,7 +20,7 @@ namespace EnhancedEditor {
     /// which can then be used to easily load and unload these scenes together at once.
     /// </summary>
     #pragma warning disable IDE0052
-    [CreateAssetMenu(fileName = "NewSceneBundle", menuName = "Enhanced Editor/Scene Bundle", order = 190)]
+    [CreateAssetMenu(fileName = "NewSceneBundle", menuName = InternalUtility.MenuPath + "Scene Bundle", order = InternalUtility.MenuOrder)]
     public class SceneBundle : ScriptableObject {
         #region Global Members
         [Section("Scene Bundle")]
@@ -43,9 +39,8 @@ namespace EnhancedEditor {
 
         [Space(10f), HorizontalLine(SuperColor.Grey, 1f), Space(10f)]
 
-        [SerializeField, Enhanced, Block]
-        public PolymorphValue<SceneBundleBehaviour> Behaviour = new PolymorphValue<SceneBundleBehaviour>(SerializedTypeConstraint.None,
-                                                                                                        typeof(DefaultSceneBundleBehaviour), "Behaviour");
+        [SerializeField] public PolymorphValue<SceneBundleBehaviour> Behaviour = new PolymorphValue<SceneBundleBehaviour>(SerializedTypeConstraint.None,
+                                                                                                                          typeof(DefaultSceneBundleBehaviour));
 
         /// <summary>
         /// An empty class only displays its name in the inspector.

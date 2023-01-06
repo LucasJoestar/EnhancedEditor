@@ -68,6 +68,15 @@ namespace EnhancedEditor.Editor {
         // -----------------------
 
         /// <summary>
+        /// Get a unique id used to reference a specific <see cref="SerializedProperty"/>.
+        /// </summary>
+        /// <param name="_property">The <see cref="SerializedProperty"/> to get an associated id.</param>
+        /// <returns>The id associated with the given <see cref="SerializedProperty"/>.</returns>
+        public static string GetSerializedPropertyID(SerializedProperty _property) {
+            return _property.propertyPath + _property.serializedObject.targetObject.GetInstanceID().ToString();
+        }
+
+        /// <summary>
         /// Get the the type name of the actual value of a specific <see cref="SerializedProperty"/>.
         /// </summary>
         /// <param name="_property"><see cref="SerializedProperty"/> to get the type name from.</param>
@@ -373,31 +382,40 @@ namespace EnhancedEditor.Editor {
         #endregion
 
         #region Assets
+        /// <typeparam name="T"><inheritdoc cref="FindAssetsGUID(Type)" path="/param[@name='_type']"/></typeparam>
+        /// <inheritdoc cref="FindAssetsGUID(Type)"/>
+        public static string[] FindAssetsGUID<T>() where T : Object {
+            return FindAssetsGUID(typeof(T));
+        }
+
         /// <summary>
         /// Finds the guid of all assets of a specific type in the project.
         /// </summary>
-        /// <typeparam name="T">Asset type to find.</typeparam>
+        /// <param name="_type">Asset type to find.</param>
         /// <returns>All found assets guid.</returns>
-        public static string[] FindAssetsGUID<T>() where T : Object {
-            string _filter = $"t:{typeof(T).Name}";
+        public static string[] FindAssetsGUID(Type _type) {
+            string _filter = $"t:{_type.Name}";
             return AssetDatabase.FindAssets(_filter);
+        }
+
+        /// <typeparam name="T"><inheritdoc cref="FindAssets(Type)" path="/param[@name='_type']"/></typeparam>
+        /// <inheritdoc cref="FindAssets(Type)"/>
+        public static string[] FindAssets<T>() where T : Object {
+            return FindAssets(typeof(T));
         }
 
         /// <summary>
         /// Finds all assets of a specific type in the project.
         /// </summary>
-        /// <typeparam name="T">Asset type to find.</typeparam>
+        /// <param name="_type">Asset type to find.</param>
         /// <returns>All found assets path.</returns>
-        public static string[] FindAssets<T>() where T : Object {
-            string[] _guids = FindAssetsGUID<T>();
+        public static string[] FindAssets(Type _type) {
+            string[] _guids = FindAssetsGUID(_type);
             return Array.ConvertAll(_guids, AssetDatabase.GUIDToAssetPath);
         }
 
-        /// <summary>
-        /// Loads all assets of a specific type in the project.
-        /// </summary>
-        /// <typeparam name="T">Asset type to load.</typeparam>
-        /// <returns>Collection of all loaded assets.</returns>
+        /// <typeparam name="T"><inheritdoc cref="LoadAssets(Type)" path="/param[@name='_type']"/></typeparam>
+        /// <inheritdoc cref="LoadAssets(Type)"/>
         public static T[] LoadAssets<T>() where T : Object {
             string[] _guids = FindAssetsGUID<T>();
             return Array.ConvertAll(_guids, (a) => {
@@ -406,11 +424,19 @@ namespace EnhancedEditor.Editor {
         }
 
         /// <summary>
-        /// Loads the first asset of a specific type that could be found in the project.
+        /// Loads all assets of a specific type in the project.
         /// </summary>
-        /// <typeparam name="T">Asset type to load.</typeparam>
-        /// <param name="_asset">Loaded asset.</param>
-        /// <returns>True if an asset of this type could be found and loaded, false otherwise.</returns>
+        /// <param name="_type">Asset type to load.</param>
+        /// <returns>Collection of all loaded assets.</returns>
+        public static Object[] LoadAssets(Type _type) {
+            string[] _guids = FindAssetsGUID(_type);
+            return Array.ConvertAll(_guids, (a) => {
+                return AssetDatabase.LoadAssetAtPath(AssetDatabase.GUIDToAssetPath(a), _type);
+            });
+        }
+
+        /// <typeparam name="T"><inheritdoc cref="LoadMainAsset(Type, out Object)" path="/param[@name='_type']"/></typeparam>
+        /// <inheritdoc cref="LoadMainAsset(Type, out Object)"/>
         public static bool LoadMainAsset<T>(out T _asset) where T : Object {
             string[] _guids = FindAssetsGUID<T>();
             if (_guids.Length != 0) {
@@ -423,6 +449,36 @@ namespace EnhancedEditor.Editor {
             _asset = null;
             return false;
         }
+
+        /// <summary>
+        /// Loads the first asset of a specific type that could be found in the project.
+        /// </summary>
+        /// <param name="_type">Asset type to load.</param>
+        /// <param name="_asset">Loaded asset.</param>
+        /// <returns>True if an asset of this type could be found and loaded, false otherwise.</returns>
+        public static bool LoadMainAsset(Type _type, out Object _asset) {
+            string[] _guids = FindAssetsGUID(_type);
+            if (_guids.Length != 0) {
+                string _guid = _guids[0];
+                _asset = AssetDatabase.LoadAssetAtPath(AssetDatabase.GUIDToAssetPath(_guid), _type);
+
+                return true;
+            }
+
+            _asset = null;
+            return false;
+        }
+
+        /// <summary>
+        /// Get the GUID from a specific asset <see cref="Object"/>.
+        /// </summary>
+        /// <param name="_asset">The asset to get the GUID.</param>
+        /// <returns>The GUID of the given asset.</returns>
+        public static string GetAssetGUID(Object _asset) {
+            return AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(_asset));
+        }
+
+        // -----------------------
 
         /// <summary>
         /// Saves a specific asset in the database.

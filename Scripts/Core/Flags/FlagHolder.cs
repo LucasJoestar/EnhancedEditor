@@ -16,7 +16,7 @@ namespace EnhancedEditor {
     /// <see cref="ScriptableObject"/> wrapper class for multiple <see cref="Flag"/>.
     /// </summary>
     [ResetOnExitPlayMode]
-    [CreateAssetMenu(fileName = "FH_NewFlagHplder", menuName = "Enhanced Editor/Flag Holder", order = 200)]
+    [CreateAssetMenu(fileName = "FH_NewFlagHplder", menuName = InternalUtility.MenuPath + "Flag Holder", order = InternalUtility.MenuOrder)]
     public class FlagHolder : ScriptableObject {
         #region Global Members
         /// <summary>

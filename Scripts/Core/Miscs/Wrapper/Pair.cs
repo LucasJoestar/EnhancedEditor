@@ -15,7 +15,7 @@ namespace EnhancedEditor {
     /// <typeparam name="T">Type of the first pair value.</typeparam>
     /// <typeparam name="U">Type of the second pair value.</typeparam>
     [Serializable]
-    public struct Pair<T, U> {
+    public struct Pair<T, U> : IComparable<Pair<T, U>> {
         #region Global Members
         /// <summary>
         /// First pair value.
@@ -43,6 +43,20 @@ namespace EnhancedEditor {
         #region Operator
         public static implicit operator Pair<T, U>(KeyValuePair<T, U> _pair) {
             return new Pair<T, U>(_pair.Key, _pair.Value);
+        }
+        #endregion
+
+        #region Comparison
+        int IComparable<Pair<T, U>>.CompareTo(Pair<T, U> _other) {
+            if (First is IComparable<T> _comparerT) {
+                return _comparerT.CompareTo(_other.First);
+            }
+
+            if (Second is IComparable<U> _comparerU) {
+                return _comparerU.CompareTo(_other.Second);
+            }
+
+            return 0;
         }
         #endregion
 

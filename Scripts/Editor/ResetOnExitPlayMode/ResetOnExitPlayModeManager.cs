@@ -10,10 +10,13 @@ using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 
+using Object = UnityEngine.Object;
+
 namespace EnhancedEditor.Editor {
     /// <summary>
     /// <see cref="ResetOnExitPlayModeAttribute"/>-related manager class. 
     /// </summary>
+    [InitializeOnLoad]
     internal static class ResetOnExitPlayModeManager {
         #region Serialization Wrappers
         [Serializable]
@@ -23,49 +26,42 @@ namespace EnhancedEditor.Editor {
 
         [Serializable]
         private class ObjectWrapper {
-            public string AssetPath = string.Empty;
+            public string GUID = string.Empty;
             public string Json = string.Empty;
 
             // -----------------------
 
-            public ObjectWrapper(string _path, string _value) {
-                AssetPath = _path;
-                Json = _value;
+            public ObjectWrapper(Object _object) {
+                GUID = EnhancedEditorUtility.GetAssetGUID(_object);
+                Json = EditorJsonUtility.ToJson(_object);
             }
         }
         #endregion
 
         #region Play Mode State Changed
         private const string MainKey = "ResetOnExitPlayMode_MainKey";
-        private const string RefreshKey = "ResetOnExitPlayMode_RefreshKey";
 
         // -----------------------
 
-        [InitializeOnLoadMethod]
-        private static void Initialize() {
-            if (EditorApplication.isPlaying) {
-                return;
-            }
-
+        static ResetOnExitPlayModeManager() {
             EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
 
-            // Deserialize content if needed, then save its value.
-            if (EditorPrefs.GetBool(RefreshKey, false)) {
+            // Restore values.
+            if (!EditorApplication.isPlayingOrWillChangePlaymode) {
                 DeserializeObjects();
             }
-
-            SerializeObjects();
         }
 
         private static void OnPlayModeStateChanged(PlayModeStateChange _mode) {
             switch (_mode) {
+                // Reset values when entering edit mode.
                 case PlayModeStateChange.EnteredEditMode:
                     DeserializeObjects();
                     break;
 
+                // Save values before entering Play mode.
                 case PlayModeStateChange.ExitingEditMode:
                     SerializeObjects();
-                    EditorPrefs.SetBool(RefreshKey, true);
                     break;
 
                 default:
@@ -76,16 +72,19 @@ namespace EnhancedEditor.Editor {
         private static void SerializeObjects() {
             JsonWrapper _json = new JsonWrapper();
 
-            foreach (Type _type in GetObjectTypes()) {
-                foreach (ScriptableObject _object in LoadObjects(_type)) {
-                    _json.Objects.Add(new ObjectWrapper(AssetDatabase.GetAssetPath(_object), EditorJsonUtility.ToJson(_object)));
-                }
+            foreach (Type _type in GetObjectTypes())
+            foreach (ScriptableObject _object in LoadObjects(_type)) {
+                
+                ObjectWrapper _wrapper = new ObjectWrapper(_object);
+                _json.Objects.Add(_wrapper);
             }
 
+            // Register values to be restored outside Play mode.
             EditorPrefs.SetString(MainKey, EditorJsonUtility.ToJson(_json));
         }
 
         private static void DeserializeObjects() {
+            // Get values to restore.
             string _json = EditorPrefs.GetString(MainKey, string.Empty);
             if (string.IsNullOrEmpty(_json)) {
                 return;
@@ -94,61 +93,57 @@ namespace EnhancedEditor.Editor {
             JsonWrapper _wrapper = new JsonWrapper();
             EditorJsonUtility.FromJsonOverwrite(_json, _wrapper);
 
-            foreach (Type _type in GetObjectTypes()) {
-                foreach (ScriptableObject _object in LoadObjects(_type)) {
-                    string _path = AssetDatabase.GetAssetPath(_object);
-                    int _index = _wrapper.Objects.FindIndex(o => o.AssetPath == _path);
+            foreach (var _obj in _wrapper.Objects) {
+                string _path = AssetDatabase.GUIDToAssetPath(_obj.GUID);
 
-                    if (_index != -1) {
-                        EditorJsonUtility.FromJsonOverwrite(_wrapper.Objects[_index].Json, _object);
-                        _wrapper.Objects.RemoveAt(_index);
-                    }
+                // If an object can't be found, skip it.
+                if (string.IsNullOrEmpty(_path)) {
+                    continue;
                 }
+
+                Object _asset = AssetDatabase.LoadMainAssetAtPath(_path);
+                EditorJsonUtility.FromJsonOverwrite(_obj.Json, _asset);
             }
 
-            EditorPrefs.SetBool(RefreshKey, false);
+            // Reset Prefs value to indicate there is nothing to be restored.
+            EditorPrefs.SetString(MainKey, string.Empty);
         }
         #endregion
 
         #region Utility
-        private static readonly MethodInfo loadObjectGenericMethodInfo = typeof(ResetOnExitPlayModeManager).GetMethod("DoLoadObjects", BindingFlags.NonPublic | BindingFlags.Static);
-        private static readonly List<ScriptableObject> _buffer = new List<ScriptableObject>();
+        private static readonly List<Type> resetTypes   = new List<Type>();
+        private static readonly List<Object> buffer     = new List<Object>();
 
         // -----------------------
 
         private static List<Type> GetObjectTypes() {
-            List<Type> _types = new List<Type>();
             Type _scriptableType = typeof(ScriptableObject);
+            resetTypes.Clear();
 
             #if UNITY_2019_2_OR_NEWER
             foreach (var _type in TypeCache.GetTypesWithAttribute<ResetOnExitPlayModeAttribute>()) {
                 if (_type.IsSubclassOf(_scriptableType)) {
-                    _types.Add(_type);
+                    resetTypes.Add(_type);
                 }
             }
             #else
             foreach (Assembly _assembly in AppDomain.CurrentDomain.GetAssemblies()) {
                 foreach (Type _type in _assembly.GetTypes()) {
                     if (_type.IsSubclassOf(_scriptableType) && (_type.GetCustomAttribute<ResetOnExitPlayModeAttribute>(true) != null)) {
-                        _types.Add(_type);
+                        resetTypes.Add(_type);
                     }
                 }
             }
             #endif
 
-            return _types;
+            return resetTypes;
         }
 
-        private static List<ScriptableObject> LoadObjects(Type _type) {
-            loadObjectGenericMethodInfo.MakeGenericMethod(_type).Invoke(null, null);
+        private static List<Object> LoadObjects(Type _type) {
+            buffer.Clear();
+            buffer.AddRange(EnhancedEditorUtility.LoadAssets(_type));
 
-            return _buffer;
-        }
-
-        #pragma warning disable IDE0051
-        private static void DoLoadObjects<T>() where T : ScriptableObject {
-            _buffer.Clear();
-            _buffer.AddRange(EnhancedEditorUtility.LoadAssets<T>());
+            return buffer;
         }
         #endregion
     }

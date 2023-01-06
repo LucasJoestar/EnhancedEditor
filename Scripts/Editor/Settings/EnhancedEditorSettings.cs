@@ -147,8 +147,7 @@ namespace EnhancedEditor.Editor {
 
         // -----------------------
 
-        [SerializeReference]
-        internal EnhancedSettings[] settings = new EnhancedSettings[] { };
+        [SerializeReference] internal EnhancedSettings[] settings = new EnhancedSettings[] { };
         #endregion
 
         #region Behaviour
@@ -156,7 +155,7 @@ namespace EnhancedEditor.Editor {
 
         public SerializedObject SerializedObject {
             get {
-                if (serializedObject == null) {
+                if ((serializedObject == null) || (serializedObject.targetObject == null)) {
                     serializedObject = new SerializedObject(this);
                 }
 
@@ -174,14 +173,15 @@ namespace EnhancedEditor.Editor {
         /// <param name="_property">The <see cref="SerializedProperty"/> associated with this setting.</param>
         /// <returns>True if the associated setting could be found, false otherwise.</returns>
         public virtual bool GetSetting<T>(int _guid, out T _setting, out SerializedProperty _property) where T : EnhancedSettings {
+            // References to the SerializedProperty may be lost on undo
+            // (because of the SerializedReference attribute), so register a callback on it.
+            Undo.undoRedoPerformed -= OnUndoRedoPerformed;
+            Undo.undoRedoPerformed += OnUndoRedoPerformed;
+
             int _index = Array.FindIndex(settings, s => s.GUID == _guid);
 
             if ((_index != -1) && (settings[_index] is T _temp)) {
                 _setting = _temp;
-
-                SerializedObject.ApplyModifiedProperties();
-                SerializedObject.Update();
-
                 _property = SerializedObject.FindProperty("settings").GetArrayElementAtIndex(_index);
 
                 return true;
@@ -200,10 +200,12 @@ namespace EnhancedEditor.Editor {
         public virtual SerializedProperty AddSetting(EnhancedSettings _setting) {
             ArrayUtility.Add(ref settings, _setting);
 
-            SerializedObject.ApplyModifiedProperties();
-            SerializedObject.Update();
+            SerializedObject _object = SerializedObject;
 
-            SerializedProperty _property = SerializedObject.FindProperty("settings");
+            _object.ApplyModifiedPropertiesWithoutUndo();
+            _object.Update();
+
+            SerializedProperty _property = _object.FindProperty("settings");
             return _property.GetArrayElementAtIndex(_property.arraySize - 1);
         }
 
@@ -211,6 +213,12 @@ namespace EnhancedEditor.Editor {
         /// Saves these settings.
         /// </summary>
         public abstract void Save();
+
+        // -----------------------
+
+        private void OnUndoRedoPerformed() {
+            serializedObject = null;
+        }
         #endregion
 
         #region Menu Navigation
@@ -316,7 +324,7 @@ namespace EnhancedEditor.Editor {
             // Draw preferences.
             using (var _scope = new GUILayout.HorizontalScope()) {
                 GUILayout.Space(10f);
-
+                
                 using (var _verticalScope = new GUILayout.VerticalScope())
                 using (var _changeCheck = new EditorGUI.ChangeCheckScope()) {
                     Undo.RecordObject(_settings, UserSettingsRecordTitle);

@@ -93,8 +93,10 @@ namespace EnhancedEditor.Editor {
             }
 
             // Enhanced property drawers context menu.
-            if (EnhancedPropertyEditor.propertyInfos.ContainsKey(_property.propertyPath)) {
-                var _infos = EnhancedPropertyEditor.propertyInfos[_property.propertyPath];
+            string _id = EnhancedEditorUtility.GetSerializedPropertyID(_property);
+
+            if (EnhancedPropertyEditor.propertyInfos.ContainsKey(_id)) {
+                var _infos = EnhancedPropertyEditor.propertyInfos[_id];
                 _infos.OnContextMenu(_menu, _property);
             }
         }
@@ -965,17 +967,17 @@ namespace EnhancedEditor.Editor {
         /// <inheritdoc cref="DuoField(Rect, SerializedProperty, GUIContent, SerializedProperty, float, out float)"/>
         public static void DuoField(Rect _position, SerializedProperty _property, GUIContent _label, string _secondPropertyName, float _secondPropertyWidth, out float _extraHeight) {
             SerializedProperty _secondProperty;
-            string _path = _property.propertyPath;
+            string _id = EnhancedEditorUtility.GetSerializedPropertyID(_property);
 
             // Cache second property full path.
-            if (!duoPropertyCache.TryGetValue(_path, out string _secondPropertyPath)) {
+            if (!duoPropertyCache.TryGetValue(_id, out string _secondPropertyPath)) {
                 // Clear cache.
                 if (duoPropertyCache.Count > DuoCacheLimit) {
                     duoPropertyCache.Clear();
                 }
 
                 _secondPropertyPath = EnhancedEditorUtility.FindSerializedProperty(_property, _secondPropertyName, out _secondProperty) ? _secondProperty.propertyPath : string.Empty;
-                duoPropertyCache.Add(_path, _secondPropertyPath);
+                duoPropertyCache.Add(_id, _secondPropertyPath);
             } else {
                 _secondProperty = _property.serializedObject.FindProperty(_secondPropertyPath);
             }
@@ -2185,7 +2187,7 @@ namespace EnhancedEditor.Editor {
             int _count = _options.Count;
 
             // Cache popup options to minimize allocation.
-            string _key = _property.propertyPath;
+            string _key = EnhancedEditorUtility.GetSerializedPropertyID(_property);
             if (!popupInfos.TryGetValue(_key, out GUIContent[] _optionsGUI)) {
                 // Clear cache on limit reach.
                 if (popupInfos.Count > PopupCacheLimit) {
@@ -4610,9 +4612,9 @@ namespace EnhancedEditor.Editor {
         }
 
         private static EnhancedPropertyEditor GetPropertyEditor(SerializedProperty _property) {
-            string _path = _property.propertyPath;
+            string _id = EnhancedEditorUtility.GetSerializedPropertyID(_property);
 
-            if (drawers.TryGetValue(_path, out EnhancedPropertyEditor _editor)) {
+            if (drawers.TryGetValue(_id, out EnhancedPropertyEditor _editor)) {
                 return _editor;
             }
 
@@ -4655,8 +4657,36 @@ namespace EnhancedEditor.Editor {
                 }
             }
 
-            drawers.Add(_path, _editor);
+            drawers.Add(_id, _editor);
             return _editor;
+        }
+        #endregion
+
+        #region Gradient
+        private const float GradientTileWidth = 7f;
+
+        // -----------------------
+
+        /// <summary>
+        /// Draw a filled rectangle using a given <see cref="Gradient"/>
+        /// at the specified position and size within the current editor window.
+        /// </summary>
+        /// <param name="_position"><inheritdoc cref="DocumentationMethod(Rect, GUIContent)" path="/param[@name='_position']"/></param>
+        /// <param name="_gradient"><see cref="Gradient"/> to draw on this position.</param>
+        public static void DrawGradient(Rect _position, Gradient _gradient) {
+            Rect _temp = new Rect(_position){
+                width = GradientTileWidth
+            };
+
+            float _count = _position.width / GradientTileWidth;
+            float _remain = _position.width % GradientTileWidth;
+
+            _temp.x += _remain / 2f;
+
+            for (int i = 1; i < _count; i++) {
+                EditorGUI.DrawRect(_temp, _gradient.Evaluate(i / _count));
+                _temp.x += GradientTileWidth;
+            }
         }
         #endregion
 
@@ -5182,7 +5212,6 @@ namespace EnhancedEditor.Editor {
         }
         #endregion
 
-
         // --- Utility --- \\
 
         #region Internal Utility
@@ -5199,7 +5228,7 @@ namespace EnhancedEditor.Editor {
 
         internal static float ManageDynamicControlHeight(SerializedProperty _property, float _height) {
             // Get property id.
-            int _id = _property.propertyPath.GetHashCode();
+            int _id = EnhancedEditorUtility.GetSerializedPropertyID(_property).GetHashCode();
             return ManageDynamicControlHeight(_id, _height);
         }
 

@@ -126,7 +126,7 @@ namespace EnhancedEditor.Editor {
             get {
                 EnhancedEditorUserSettings _userSettings = EnhancedEditorUserSettings.Instance;
 
-                if (((settings == null) || (settingsProperty.serializedObject.targetObject == null))
+                if (((settings == null) || (settingsProperty.serializedObject != _userSettings.SerializedObject))
                    && !_userSettings.GetSetting(settingsGUID, out settings, out settingsProperty)) {
 
                     settings = new EnhancedProjectBrowserEnhancedSettings(settingsGUID);

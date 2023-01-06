@@ -7,6 +7,10 @@
 using System;
 using UnityEngine;
 
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+
 namespace EnhancedEditor {
     /// <summary>
     /// Wrapper for a value that can change its type while it derives from a specific base <see cref="System.Type"/>.
@@ -15,21 +19,22 @@ namespace EnhancedEditor {
     [Serializable]
     public class PolymorphValue<T> where T : class {
         #region Global Members
+        #if UNITY_EDITOR
+        [SerializeField] private string name = "[NONE]"; // Editor object name.
+        #endif
+
         /// <summary>
         /// This value type.
         /// </summary>
-        [SerializeField, Enhanced, DisplayName("displayName", true), ValidationMember("SetType")] private SerializedType<T> type = null;
+        [SerializeField, Enhanced, ValidationMember("SetType")] private SerializedType<T> type = null;
 
-        /// <summary>
-        /// This object value.
-        /// </summary>
-        [field: SerializeReference, Space(5f), Enhanced, Block]
-        public T Value { get; private set; } = null;
+        [Space(5f)]
+
+        [SerializeReference] private T value = null;
 
         // -----------------------
 
         [SerializeField, HideInInspector] private bool doFullCopy = false;
-        [SerializeField, HideInInspector] private string displayName = "Type";
 
         /// <summary>
         /// This value type.
@@ -39,24 +44,55 @@ namespace EnhancedEditor {
             get { return type; }
             set {
                 type.Type = value;
-
                 value = type.Type;
 
                 // Null value.
                 if (value == null) {
-                    Value = null;
+                    this.value = null;
+
+                    #if UNITY_EDITOR
+                    name = "[NONE]";
+                    #endif
+
                     return;
                 }
 
                 // Polymorphism.
-                if (value != Value?.GetType()) {
+                if (value != this.value?.GetType()) {
                     T _value = Activator.CreateInstance(value) as T;
-
-                    if (Value != null) {
-                        _value = EnhancedUtility.CopyObjectContent(Value, _value, doFullCopy) as T;
+                    if (this.value != null) {
+                        _value = EnhancedUtility.CopyObjectContent(this.value, _value, doFullCopy) as T;
                     }
 
-                    Value = _value;
+                    this.value = _value;
+
+                    #if UNITY_EDITOR
+                    var _attributes = value.GetCustomAttributes(typeof(DisplayNameAttribute), true);
+
+                    name = (_attributes.Length != 0)
+                         ? (_attributes[0] as DisplayNameAttribute).Label.text
+                         : ObjectNames.NicifyVariableName(value.Name);
+                    #endif
+                }
+            }
+        }
+
+        /// <summary>
+        /// This object value.
+        /// </summary>
+        public T Value {
+            get { return value; }
+            set {
+                if (value == null) {
+                    Type = null;
+                    return;
+                }
+
+                Type _type = value.GetType();
+                Type = _type;
+
+                if (Type == _type) {
+                    this.value = value;
                 }
             }
         }
@@ -74,32 +110,22 @@ namespace EnhancedEditor {
 
         #region Constructors
         /// <inheritdoc cref="PolymorphValue{T}.PolymorphValue(SerializedTypeConstraint, Type, bool, string, Type[])"/>
-        public PolymorphValue(Type _value, SerializedTypeConstraint _constraints = SerializedTypeConstraint.None) : this(_constraints, _value, true, "Type", null) { }
+        public PolymorphValue(Type _value, SerializedTypeConstraint _constraints = SerializedTypeConstraint.None) : this(_constraints, _value, true, null) { }
 
         /// <inheritdoc cref="PolymorphValue{T}.PolymorphValue(SerializedTypeConstraint, Type, bool, string, Type[])"/>
         public PolymorphValue(SerializedTypeConstraint _constraints, Type _value, params Type[] _ignored) : this(_constraints, _value, true, _ignored) {  }
 
-        /// <inheritdoc cref="PolymorphValue{T}.PolymorphValue(SerializedTypeConstraint, Type, bool, string, Type[])"/>
-        public PolymorphValue(SerializedTypeConstraint _constraints, Type _value, string _displayName, params Type[] _ignored) :
-                              this(_constraints, _value, true, _displayName, _ignored) { }
-
-        /// <inheritdoc cref="PolymorphValue{T}.PolymorphValue(SerializedTypeConstraint, Type, bool, string, Type[])"/>
-        public PolymorphValue(SerializedTypeConstraint _constraints, Type _value, bool _doFullCopy, params Type[] _ignored) :
-                              this(_constraints, _value, _doFullCopy, "Type", _ignored) { }
-
         /// <param name="_value">This object initial value.</param>
         /// <param name="_doFullCopy"><inheritdoc cref="EnhancedUtility.CopyObjectContent(object, object, bool)" path="/param[@name='_doFullCopy']"/>
         /// <br/> (True by default)</param>
-        /// <param name="_displayName">The displayed name of this value 'Type' field.</param>
         /// <inheritdoc cref="PolymorphValue{T}"/>
         /// <inheritdoc cref="SerializedType{T}.SerializedType(SerializedTypeConstraint, Type, Type[])"/>
-        public PolymorphValue(SerializedTypeConstraint _constraints, Type _value, bool _doFullCopy, string _displayName, params Type[] _ignored) {
+        public PolymorphValue(SerializedTypeConstraint _constraints, Type _value, bool _doFullCopy, params Type[] _ignored) {
             // Must be instantiated.
             _constraints &= ~SerializedTypeConstraint.Abstract;
 
             type = new SerializedType<T>(_constraints, _value, _ignored);
             doFullCopy = _doFullCopy;
-            displayName = _displayName;
 
             // Create type instance.
             Type = type;
@@ -108,7 +134,7 @@ namespace EnhancedEditor {
 
         #region Operators
         public static implicit operator T(PolymorphValue<T> _value) {
-            return _value.Value;
+            return _value.value;
         }
 
         public static implicit operator Type(PolymorphValue<T> _value) {
@@ -116,12 +142,12 @@ namespace EnhancedEditor {
         }
 
         public override string ToString() {
-            return (Value != null) ? Value.ToString() : "[Null]";
+            return (value != null) ? value.ToString() : "[Null]";
         }
 
         public override bool Equals(object _object) {
             if (_object is PolymorphValue<T> _value) {
-                return Value == _value.Value;
+                return value == _value.value;
             }
 
             return base.Equals(_object);
@@ -132,7 +158,7 @@ namespace EnhancedEditor {
         }
         #endregion
 
-        #region Conversation
+        #region Convertion
         /// <summary>
         /// Get the converted value of this object if it of the given type.
         /// </summary>
@@ -140,7 +166,7 @@ namespace EnhancedEditor {
         /// <param name="_value">The casted value of this object (null if failed).</param>
         /// <returns>True if this object value could be casted into the given type, false otherwise.</returns>
         public bool GetValue<U>(out U _value) where U : T {
-            if (Value is U _temp) {
+            if (value is U _temp) {
                 _value = _temp;
                 return true;
             }

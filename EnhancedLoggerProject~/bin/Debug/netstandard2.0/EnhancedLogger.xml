@@ -1,0 +1,275 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>EnhancedLogger</name>
+    </assembly>
+    <members>
+        <member name="T:EnhancedEditor.EnhancedLogger">
+            <summary>
+            Enhanced <see cref="T:UnityEngine.ILogger"/> class,
+            aiming the replace the original Unity logger used for debug.
+            </summary>
+        </member>
+        <member name="M:EnhancedEditor.EnhancedLogger.#ctor">
+            <summary>
+            Prevents from creating new instances.
+            </summary>
+        </member>
+        <member name="M:EnhancedEditor.EnhancedLogger.Initialize">
+            <summary>
+            Initializes and enables the enhanced logger.
+            </summary>
+        </member>
+        <member name="M:EnhancedEditor.EnhancedLogger.IsLogTypeAllowed(UnityEngine.LogType)">
+            <inheritdoc cref="M:UnityEngine.ILogger.IsLogTypeAllowed(UnityEngine.LogType)"/>
+        </member>
+        <member name="M:EnhancedEditor.EnhancedLogger.GetLogContextInstanceID(System.String@,System.Int32@)">
+            <summary>
+            Get the instance id of the context object associated with a specific log.
+            </summary>
+            <param name="_log">The log to get the associated context object instance id.</param>
+            <param name="_instanceID">The instance id of this log context object (-1 if none).</param>
+            <returns>True if this log is associated with a context object that could be found, false otherwise.</returns>
+        </member>
+        <member name="M:EnhancedEditor.EnhancedLogger.EnableLogger(System.Boolean)">
+            <summary>
+            Enabled/Disabled the <see cref="T:EnhancedEditor.UnityObjectLogger"/> logs.
+            </summary>
+            <param name="_enabled">Whether to enable or disable logs.</param>
+        </member>
+        <member name="M:EnhancedEditor.EnhancedLogger.GetMessageFormat(System.Type,UnityEngine.Color)">
+            <summary>
+            Get the default <see cref="T:System.String"/> format used to log messages for a given <see cref="T:System.Type"/>.
+            </summary>
+            <param name="_type">The object <see cref="T:System.Type"/> this log comes from.</param>
+            <param name="_color">Color used to identify this log.</param>
+            <returns>This <see cref="T:System.Type"/> associated log format.</returns>
+        </member>
+        <member name="T:EnhancedEditor.IMessageLogger">
+            <summary>
+            Interface to inherit any object to customize its log messages format.
+            <br/> Use <see cref="M:EnhancedEditor.EnhancedLogger.GetMessageFormat(System.Type,UnityEngine.Color)"/> to get a default format.
+            </summary>
+        </member>
+        <member name="M:EnhancedEditor.IMessageLogger.GetLogMessageFormat(UnityEngine.LogType)">
+            <summary>
+            Get the <see cref="T:System.String"/> format to use for this object log message.
+            </summary>
+            <param name="_type">The <see cref="T:UnityEngine.LogType"/> to get the associated format.</param>
+            <returns>The format of this object log message.</returns>
+        </member>
+        <member name="T:EnhancedEditor.UnityObjectLogger">
+            <summary>
+            <see cref="T:UnityEngine.Object"/>-related extensions class, used to dynamically
+            log a message to the console with the associated object instance as context.
+            </summary>
+        </member>
+        <member name="F:EnhancedEditor.UnityObjectLogger.Enabled">
+            <summary>
+            Indicates whether logs are enabled or not.
+            </summary>
+        </member>
+        <member name="M:EnhancedEditor.UnityObjectLogger.Log(UnityEngine.Object,System.Object)">
+            <summary>
+            Logs a message to the Unity Console from this object.
+            </summary>
+            <param name="_object"><inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,System.String,System.String)" path="/param[@name='_object']"/></param>
+            <param name="_message"><inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,System.String,System.String)" path="/param[@name='_message']"/></param>
+        </member>
+        <member name="M:EnhancedEditor.UnityObjectLogger.LogFormat(UnityEngine.Object,System.String,System.Object[])">
+            <summary>
+            Logs a formatted message to the Unity Console from this object.
+            </summary>
+            <param name="_object"><inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,System.String,System.String)" path="/param[@name='_object']"/></param>
+            <param name="_message"><inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,System.String,System.String)" path="/param[@name='_message']"/></param>
+            <param name="_format"><inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,System.String,System.String)" path="/param[@name='_format']"/></param>
+        </member>
+        <member name="M:EnhancedEditor.UnityObjectLogger.LogMessage``1(``0,System.Object)">
+            <summary>
+            Logs a special formatted message to the Unity Console from this object.
+            </summary>
+            <param name="_object"><inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,System.String,System.String)" path="/param[@name='_object']"/></param>
+            <param name="_message"><inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,System.String,System.String)" path="/param[@name='_message']"/></param>
+        </member>
+        <member name="M:EnhancedEditor.UnityObjectLogger.LogMessage``1(``0,System.Object,UnityEngine.Object)">
+            <summary>
+            Logs a special formatted message to the Unity Console from this object.
+            </summary>
+            <param name="_object"><inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,System.String,System.String)" path="/param[@name='_object']"/></param>
+            <param name="_message"><inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,System.String,System.String)" path="/param[@name='_message']"/></param>
+            <param name="_context"><inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,UnityEngine.LogType)" path="/param[@name='_context']"/></param>
+        </member>
+        <member name="M:EnhancedEditor.UnityObjectLogger.LogWarning(UnityEngine.Object,System.Object)">
+            <summary>
+            Logs a warning message to the Unity Console
+            from this object.
+            </summary>
+            <param name="_object"><inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,System.String,System.String)" path="/param[@name='_object']"/></param>
+            <param name="_message"><inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,System.String,System.String)" path="/param[@name='_message']"/></param>
+        </member>
+        <member name="M:EnhancedEditor.UnityObjectLogger.LogWarningFormat(UnityEngine.Object,System.String,System.Object[])">
+            <summary>
+            Logs a formatted warning message to the Unity Console
+            from this object.
+            </summary>
+            <param name="_object"><inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,System.String,System.String)" path="/param[@name='_object']"/></param>
+            <param name="_message"><inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,System.String,System.String)" path="/param[@name='_message']"/></param>
+            <param name="_format"><inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,System.String,System.String)" path="/param[@name='_format']"/></param>
+        </member>
+        <member name="M:EnhancedEditor.UnityObjectLogger.LogWarningMessage``1(``0,System.Object)">
+            <summary>
+            Logs a special formatted warning message to the Unity Console from this object.
+            </summary>
+            <param name="_object"><inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,System.String,System.String)" path="/param[@name='_object']"/></param>
+            <param name="_message"><inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,System.String,System.String)" path="/param[@name='_message']"/></param>
+        </member>
+        <member name="M:EnhancedEditor.UnityObjectLogger.LogWarningMessage``1(``0,System.Object,UnityEngine.Object)">
+            <summary>
+            Logs a special formatted warning message to the Unity Console from this object.
+            </summary>
+            <param name="_object"><inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,System.String,System.String)" path="/param[@name='_object']"/></param>
+            <param name="_message"><inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,System.String,System.String)" path="/param[@name='_message']"/></param>
+            <param name="_context"><inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,UnityEngine.LogType)" path="/param[@name='_context']"/></param>
+        </member>
+        <member name="M:EnhancedEditor.UnityObjectLogger.LogError(UnityEngine.Object,System.Object)">
+            <summary>
+            Logs an error message to the Unity Console from this object.
+            </summary>
+            <param name="_object"><inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,System.String,System.String)" path="/param[@name='_object']"/></param>
+            <param name="_message"><inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,System.String,System.String)" path="/param[@name='_message']"/></param>
+        </member>
+        <member name="M:EnhancedEditor.UnityObjectLogger.LogErrorFormat(UnityEngine.Object,System.String,System.Object[])">
+            <summary>
+            Logs a formatted error message to the Unity Console from this object.
+            </summary>
+            <param name="_object"><inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,System.String,System.String)" path="/param[@name='_object']"/></param>
+            <param name="_message"><inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,System.String,System.String)" path="/param[@name='_message']"/></param>
+            <param name="_format"><inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,System.String,System.String)" path="/param[@name='_format']"/></param>
+        </member>
+        <member name="M:EnhancedEditor.UnityObjectLogger.LogErrorMessage``1(``0,System.Object)">
+            <summary>
+            Logs a special formatted error message to the Unity Console from this object.
+            </summary>
+            <param name="_object"><inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,System.String,System.String)" path="/param[@name='_object']"/></param>
+            <param name="_message"><inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,System.String,System.String)" path="/param[@name='_message']"/></param>
+        </member>
+        <member name="M:EnhancedEditor.UnityObjectLogger.LogErrorMessage``1(``0,System.Object,UnityEngine.Object)">
+            <summary>
+            Logs a special formatted error warning message to the Unity Console from this object.
+            </summary>
+            <param name="_object"><inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,System.String,System.String)" path="/param[@name='_object']"/></param>
+            <param name="_message"><inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,System.String,System.String)" path="/param[@name='_message']"/></param>
+            <param name="_context"><inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,UnityEngine.LogType)" path="/param[@name='_context']"/></param>
+        </member>
+        <member name="M:EnhancedEditor.UnityObjectLogger.LogAssertion(UnityEngine.Object,System.Object)">
+            <summary>
+            Logs an assertion message to the Unity Console from this object.
+            </summary>
+            <param name="_object"><inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,System.String,System.String)" path="/param[@name='_object']"/></param>
+            <param name="_message"><inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,System.String,System.String)" path="/param[@name='_message']"/></param>
+        </member>
+        <member name="M:EnhancedEditor.UnityObjectLogger.LogAssertionFormat(UnityEngine.Object,System.String,System.Object[])">
+            <summary>
+            Logs a formatted assertion message to the Unity Console from this object.
+            </summary>
+            <param name="_object"><inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,System.String,System.String)" path="/param[@name='_object']"/></param>
+            <param name="_message"><inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,System.String,System.String)" path="/param[@name='_message']"/></param>
+            <param name="_format"><inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,System.String,System.String)" path="/param[@name='_format']"/></param>
+        </member>
+        <member name="M:EnhancedEditor.UnityObjectLogger.LogAssertionMessage``1(``0,System.Object)">
+            <summary>
+            Logs a special formatted assertion message to the Unity Console from this object.
+            </summary>
+            <param name="_object"><inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,System.String,System.String)" path="/param[@name='_object']"/></param>
+            <param name="_message"><inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,System.String,System.String)" path="/param[@name='_message']"/></param>
+        </member>
+        <member name="M:EnhancedEditor.UnityObjectLogger.LogAssertionMessage``1(``0,System.Object,UnityEngine.Object)">
+            <summary>
+            Logs a special formatted assertion warning message to the Unity Console from this object.
+            </summary>
+            <param name="_object"><inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,System.String,System.String)" path="/param[@name='_object']"/></param>
+            <param name="_message"><inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,System.String,System.String)" path="/param[@name='_message']"/></param>
+            <param name="_context"><inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,UnityEngine.LogType)" path="/param[@name='_context']"/></param>
+        </member>
+        <member name="M:EnhancedEditor.UnityObjectLogger.Assert(UnityEngine.Object,System.Boolean)">
+            <inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,System.Boolean,System.String,System.String)"/>
+        </member>
+        <member name="M:EnhancedEditor.UnityObjectLogger.Assert(UnityEngine.Object,System.Boolean,System.Object)">
+            <inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,System.Boolean,System.String,System.String)"/>
+        </member>
+        <member name="M:EnhancedEditor.UnityObjectLogger.Assert(UnityEngine.Object,System.Boolean,System.String)">
+            <inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,System.Boolean,System.String,System.String)"/>
+        </member>
+        <member name="M:EnhancedEditor.UnityObjectLogger.AssertFormat(UnityEngine.Object,System.Boolean,System.String,System.Object[])">
+            <summary>
+            Assert a condition and logs a formated error message from this object to the Unity console on failure.
+            </summary>
+            <param name="_message"><inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,System.String,System.String)" path="/param[@name='_message']"/></param>
+            <param name="_format"><inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,System.String,System.String)" path="/param[@name='_format']"/></param>
+            <inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,System.Boolean,System.String,System.String)"/>
+        </member>
+        <member name="M:EnhancedEditor.UnityObjectLogger.LogException(UnityEngine.Object,System.Exception)">
+            <summary>
+            Logs an exception message to the Unity Console from this object.
+            </summary>
+            <param name="_object"><inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,System.String,System.String)" path="/param[@name='_object']"/></param>
+            <param name="_exception">Runtime exception to display.</param>
+        </member>
+        <member name="M:EnhancedEditor.UnityObjectLogger.Log(UnityEngine.Object,UnityEngine.LogType,System.Object)">
+            <summary>
+            Logs a message to the Unity Console from this object.
+            </summary>
+            <param name="_object"><inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,System.String,System.String)" path="/param[@name='_object']"/></param>
+            <param name="_type"><inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,UnityEngine.LogType)" path="/param[@name='_type']"/></param>
+            <param name="_message"><inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,System.String,System.String)" path="/param[@name='_message']"/></param>
+        </member>
+        <member name="M:EnhancedEditor.UnityObjectLogger.LogFormat(UnityEngine.Object,UnityEngine.LogType,System.String,System.Object[])">
+            <summary>
+            Logs a formatted message to the Unity Console from this object.
+            </summary>
+            <param name="_object"><inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,System.String,System.String)" path="/param[@name='_object']"/></param>
+            <param name="_type"><inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,UnityEngine.LogType)" path="/param[@name='_type']"/></param>
+            <param name="_message"><inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,System.String,System.String)" path="/param[@name='_message']"/></param>
+            <param name="_format"><inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,System.String,System.String)" path="/param[@name='_format']"/></param>
+        </member>
+        <member name="M:EnhancedEditor.UnityObjectLogger.LogMessage``1(``0,UnityEngine.LogType,System.Object)">
+            <summary>
+            Logs a special formatted message to the Unity Console from this object.
+            </summary>
+            <param name="_object"><inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,System.String,System.String)" path="/param[@name='_object']"/></param>
+            <param name="_type"><inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,UnityEngine.LogType)" path="/param[@name='_type']"/></param>
+            <param name="_message"><inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,System.String,System.String)" path="/param[@name='_message']"/></param>
+        </member>
+        <member name="M:EnhancedEditor.UnityObjectLogger.LogMessage``1(``0,UnityEngine.LogType,System.Object,UnityEngine.Object)">
+            <summary>
+            Logs a special formatted message to the Unity Console from this object.
+            </summary>
+            <param name="_object"><inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,System.String,System.String)" path="/param[@name='_object']"/></param>
+            <param name="_type"><inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,UnityEngine.LogType)" path="/param[@name='_type']"/></param>
+            <param name="_message"><inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,System.String,System.String)" path="/param[@name='_message']"/></param>
+            <param name="_context"><inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,UnityEngine.LogType)" path="/param[@name='_context']"/></param>
+        </member>
+        <member name="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,System.String,System.String)">
+            <summary>
+            Documentation method.
+            </summary>
+            <param name="_object">Object to which the message applies.</param>
+            <param name="_message">String or object to be converted to string representation to display.</param>
+            <param name="_format">A composite format string..</param>
+        </member>
+        <member name="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,System.Boolean,System.String,System.String)">
+            <summary>
+            Assert a condition and logs an error message from this object to the Unity console on failure.
+            </summary>
+            <param name="_condition">Condition you expect to be true.</param>
+            <inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,System.String,System.String)"/>
+        </member>
+        <member name="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,UnityEngine.LogType)">
+            <summary>
+            Documentation method.
+            </summary>
+            <param name="_context">Context object of the message.</param>
+            <param name="_type">Type of the message to log.</param>
+        </member>
+    </members>
+</doc>

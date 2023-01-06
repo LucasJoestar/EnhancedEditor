@@ -20,7 +20,7 @@ namespace EnhancedEditor.Editor {
             public const string PackageDisplayNameHeader = "\"displayName\"";
             public const char PackageDisplayNameSeparator = '\"';
 
-            public readonly HierarchyProperty Property = null;
+            public HierarchyProperty Property = null;
             public readonly string PackageName = string.Empty;
             public readonly string GUID = string.Empty;
             public readonly bool IsAssetsFolder = false;
@@ -188,10 +188,10 @@ namespace EnhancedEditor.Editor {
 
         #region Global Members
         private static readonly Dictionary<string, ItemInfos> itemInfos = new Dictionary<string, ItemInfos>();
-        private static readonly PackageItemInfos packageFolderItemInfo = new PackageItemInfos();
+        private static readonly PackageItemInfos packageFolderItemInfo  = new PackageItemInfos();
 
         private static int[] expandedProjectWindowItems = null;
-        private static string[] selectedObjects = null;
+        private static string[] selectedObjects         = null;
 
         // -----------------------
 
@@ -207,9 +207,10 @@ namespace EnhancedEditor.Editor {
         #region Editor GUI
         private static readonly HashSet<string> selectedTreeViewItems = new HashSet<string>();
 
-        private static readonly List<Rect> indentPositions = new List<Rect>() { Rect.zero };
-        private static readonly Color dragPreviewColor = new Color(1f, 1f, 1f, .1f);
-        private static readonly Color selectionColor = new Color(1f, 1f, 1f, .12f);
+        private static readonly List<Rect> indentPositions  = new List<Rect>() { Rect.zero };
+        private static readonly Color dragPreviewColor      = new Color(1f, 1f, 1f, .1f);
+        private static readonly Color selectionColor        = new Color(1f, 1f, 1f, .12f);
+
         private static Rect assetsPosition = Rect.zero;
 
         // -----------------------

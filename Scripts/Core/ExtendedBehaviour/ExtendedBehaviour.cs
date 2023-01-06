@@ -19,7 +19,6 @@ namespace EnhancedEditor {
         #region Global Members
         #if UNITY_EDITOR
         [SerializeField, Enhanced, EnhancedTextArea(true)] private string comment = string.Empty;
-        [SerializeField] internal Texture icon = null;
         #endif
 
         [Space(10f)]
@@ -37,8 +36,19 @@ namespace EnhancedEditor {
 
         [Space(10f)]
 
-        [HelpBox("Editor preview objects are meant to be only used in editor mode, outside of play", MessageType.Info, false)]
+        [HelpBox("Editor preview objects are meant to be only used in editor mode, outside of play", MessageType.Info, true)]
         [SerializeField, Enhanced, ShowIf("IsPersistent", ConditionType.False)] private bool IsEditorPreview = false;
+
+        [Tooltip("If true, displays this object as a hierarchy header when the Enhanced Hierarchy is enabled")]
+        [SerializeField] internal bool isHeader = false;
+
+        [Tooltip("If true, override the default settings used to customize the way this object is displayed in the hierarchy")]
+        [SerializeField] internal bool overrideHierarchyStyle = false;
+
+        [Space(10f)]
+
+        [Tooltip("Enhanced Hierarchy related style, used to customize the way this object is displayed in the hierarchy")]
+        [SerializeField, Enhanced, ShowIf("overrideHierarchyStyle")] internal HierarchyStyle hierarchyStyle = new HierarchyStyle();
         #endif
         #endregion
 

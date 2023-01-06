@@ -162,9 +162,9 @@ namespace EnhancedEditor.Editor {
         /// <returns>Label associated with the property.</returns>
         public static GUIContent GetPropertyLabel(SerializedProperty _property) {
             // Cache label.
-            string _path = _property.propertyPath;
+            string _id = EnhancedEditorUtility.GetSerializedPropertyID(_property);
 
-            if (!propertyLabelGUI.TryGetValue(_path, out GUIContent _label)) {
+            if (!propertyLabelGUI.TryGetValue(_id, out GUIContent _label)) {
                 DisplayNameAttribute _attribute;
 
                 // Clear cache.
@@ -183,7 +183,7 @@ namespace EnhancedEditor.Editor {
                     _label = new GUIContent(ObjectNames.NicifyVariableName(_property.name), _property.tooltip);
                 }
 
-                propertyLabelGUI.Add(_path, _label);
+                propertyLabelGUI.Add(_id, _label);
             }
 
             return _label;
