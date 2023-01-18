@@ -34,6 +34,12 @@ namespace EnhancedEditor.Editor {
         /// </summary>
         public static readonly GUIBuffer<float> GUILabelWidth = new GUIBuffer<float>(() => EditorGUIUtility.labelWidth,
                                                                                      (w) => EditorGUIUtility.labelWidth = w, "GUI Label Width");
+
+        /// <summary>
+        /// <see cref="EditorGUIUtility.hierarchyMode"/> buffer system. Use this to dynamically enable / disable the hierarchy mode.
+        /// </summary>
+        public static readonly GUIBuffer<bool> HierarchyMode = new GUIBuffer<bool>(() => EditorGUIUtility.hierarchyMode,
+                                                                                   (b) => EditorGUIUtility.hierarchyMode = b, "GUI Hierarchy Mode");
         #endregion
 
         #region Initialization
@@ -946,8 +952,14 @@ namespace EnhancedEditor.Editor {
         #region Duo
         private const int DuoCacheLimit = 100;
         private const string DuoGUIFormat = "{0} / {1}";
+        private const string DuoGUITooltipFormat = "{0}\n{1}";
 
         private static readonly Dictionary<string, string> duoPropertyCache = new Dictionary<string, string>();
+
+        /// <summary>
+        /// Indicates if a duo property is currently being drawn or not.
+        /// </summary>
+        public static bool IsDrawingDuoProperty { get; private set; }
 
         // -----------------------
 
@@ -1024,7 +1036,9 @@ namespace EnhancedEditor.Editor {
         public static void DuoField(Rect _position, SerializedProperty _property, GUIContent _label, SerializedProperty _secondProperty, GUIContent _secondLabel,
                                     float _secondPropertyWidth, out float _extraHeight) {
             // Prefix label.
-            _label = EnhancedEditorGUIUtility.GetLabelGUI(string.Format(DuoGUIFormat, _label.text, _secondLabel.text));
+            _label = EnhancedEditorGUIUtility.GetLabelGUI(string.Format(DuoGUIFormat, _label.text, _secondLabel.text),
+                                                          string.Format(DuoGUITooltipFormat, _label.tooltip, _secondLabel.tooltip));
+
             Rect _temp = EditorGUI.PrefixLabel(_position, _label);
 
             _temp.width -= _secondPropertyWidth;
@@ -1032,12 +1046,20 @@ namespace EnhancedEditor.Editor {
 
             // Draw both properties.
             using (ZeroIndentScope()) {
-                EditorGUI.PropertyField(_temp, _property, GUIContent.none);
+                IsDrawingDuoProperty = Event.current.type != EventType.Layout;
 
-                _temp.xMin = _temp.xMax + 5f;
-                _temp.xMax = _position.xMax;
+                try {
+                    EditorGUI.PropertyField(_temp, _property, GUIContent.none);
 
-                EditorGUI.PropertyField(_temp, _secondProperty, GUIContent.none);
+                    _temp.xMin = _temp.xMax + 5f;
+                    _temp.xMax = _position.xMax;
+
+                    EditorGUI.PropertyField(_temp, _secondProperty, GUIContent.none);
+                } catch (Exception e) {
+                    Debug.LogException(e);
+                }
+
+                IsDrawingDuoProperty = false;
             }
 
             _extraHeight = ManageDynamicControlHeight(_property, _temp.height - _position.height);
@@ -3478,7 +3500,7 @@ namespace EnhancedEditor.Editor {
             Rect _temp = new Rect(_fieldPosition);
 
             // Draw each tag in the group.
-            for (int _i = 0; _i < _group.Length; _i++) {
+            for (int _i = 0; _i < _group.Count; _i++) {
                 Tag _tag = _group[_i];
 
                 // Remove the tag if it is not referencing a valid data.
@@ -3515,7 +3537,7 @@ namespace EnhancedEditor.Editor {
             // Group context menu.
             if (EnhancedEditorGUIUtility.ContextClick(_position)) {
                 GenericMenu _menu = new GenericMenu();
-                if (_group.Length > 1) {
+                if (_group.Count > 1) {
                     _menu.AddItem(SortTagsGUI, false, _group.SortTagsByName);
                 } else {
                     _menu.AddDisabledItem(SortTagsGUI);
@@ -3759,7 +3781,7 @@ namespace EnhancedEditor.Editor {
         /// <param name="_property">The <see cref="SerializedProperty"/> to make a flag field for.</param>
         /// <param name="_label"><inheritdoc cref="DocumentationMethod(Rect, GUIContent)" path="/param[@name='_label']"/></param>
         public static void FlagField(Rect _position, SerializedProperty _property, GUIContent _label) {
-            SerializedProperty _name = _property.FindPropertyRelative("Name");
+            SerializedProperty _name = _property.FindPropertyRelative("name");
             SerializedProperty _value = _property.FindPropertyRelative("value");
 
             using (var _scope = new EditorGUI.PropertyScope(_position, _label, _property))
@@ -3795,7 +3817,7 @@ namespace EnhancedEditor.Editor {
                 string _text = DoFlagField(ref _position, _label, _flag.Name);
 
                 if (_changeCheck.changed) {
-                    _flag.Name = _text;
+                    _flag.name = _text;
                 }
             }
 
@@ -3848,9 +3870,11 @@ namespace EnhancedEditor.Editor {
             using (var _scope = new EditorGUI.PropertyScope(_position, _label, _property)) {
                 FlagHolder _holder = _holderProperty.objectReferenceValue as FlagHolder;
 
-                if (FlagPicker(_labelPosition, _buttonPosition, _label, _flagGuid.intValue, _holder, out Flag _flag, out _holder)) {
-                    _holderProperty.objectReferenceValue = _holder;
+                if (FlagPicker(_labelPosition, _buttonPosition, _label, _flagGuid.intValue, _holder, out Flag _flag)) {
+                    _holderProperty.objectReferenceValue = _flag.holder;
                     _flagGuid.intValue = _flag.guid;
+
+                    _property.serializedObject.ApplyModifiedProperties();
                 }
             }
         }
@@ -3874,8 +3898,8 @@ namespace EnhancedEditor.Editor {
         public static void FlagReferenceField(Rect _position, GUIContent _label, FlagReference _flag) {
             GetFlagPickerRects(_position, out Rect _labelPosition, out Rect _buttonPosition);
 
-            if (FlagPicker(_labelPosition, _buttonPosition, _label, _flag.guid, _flag.holder, out Flag _selectFlag, out FlagHolder _selectHolder)) {
-                _flag.SerializeFlag(_selectFlag, _selectHolder);
+            if (FlagPicker(_labelPosition, _buttonPosition, _label, _flag.guid, _flag.holder, out Flag _selectFlag)) {
+                _flag.SetFlag(_selectFlag);
             }
         }
         #endregion
@@ -3928,8 +3952,8 @@ namespace EnhancedEditor.Editor {
                 }
 
                 // Flag picker button.
-                if (FlagPicker(_labelPosition, _buttonPosition, _label, _flagGuid.intValue, _holder, out Flag _flag, out _holder)) {
-                    _holderProperty.objectReferenceValue = _holder;
+                if (FlagPicker(_labelPosition, _buttonPosition, _label, _flagGuid.intValue, _holder, out Flag _flag)) {
+                    _holderProperty.objectReferenceValue = _flag.holder;
                     _flagGuid.intValue = _flag.guid;
                 }
             }
@@ -3970,8 +3994,8 @@ namespace EnhancedEditor.Editor {
             }
 
             // Flag picker button.
-            if (FlagPicker(_labelPosition, _buttonPosition, _label, _flag.guid, _holder, out Flag _selectFlag, out _holder)) {
-                _flag.SerializeFlag(_selectFlag, _holder);
+            if (FlagPicker(_labelPosition, _buttonPosition, _label, _flag.guid, _holder, out Flag _selectFlag)) {
+                _flag.SetFlag(_selectFlag);
             }
         }
         #endregion
@@ -4015,7 +4039,7 @@ namespace EnhancedEditor.Editor {
                 FlagHolder _holder = _flagProperty.FindPropertyRelative("holder").objectReferenceValue as FlagHolder;
                 int _guid = _flagProperty.FindPropertyRelative("guid").intValue;
 
-                if ((_holder != null) && _holder.RetrieveFlag(_guid, out Flag _flag)) {
+                if ((_holder != null) && _holder.FindFlag(_guid, out Flag _flag)) {
                     _builder.Append(string.Format(FlagReferenceGroupFormat, _flag.Name));
                 } else {
                     _flags.DeleteArrayElementAtIndex(i);
@@ -4090,7 +4114,7 @@ namespace EnhancedEditor.Editor {
                 FlagReference _ref = _group.Flags[i];
                 FlagHolder _holder = _ref.holder;
 
-                if ((_holder != null) && _holder.RetrieveFlag(_ref.guid, out Flag _flag)) {
+                if ((_holder != null) && _holder.FindFlag(_ref.guid, out Flag _flag)) {
                     _builder.Append(string.Format(FlagReferenceGroupFormat, _flag.Name));
                 } else {
                     _group.RemoveFlagAt(i);
@@ -4152,7 +4176,7 @@ namespace EnhancedEditor.Editor {
                 FlagHolder _holder = _flagProperty.FindPropertyRelative("holder").objectReferenceValue as FlagHolder;
                 int _guid = _flagProperty.FindPropertyRelative("guid").intValue;
 
-                if ((_holder != null) && _holder.RetrieveFlag(_guid, out Flag _flag)) {
+                if ((_holder != null) && _holder.FindFlag(_guid, out Flag _flag)) {
                     _builder.Append(string.Format(FlagValueGroupFormat, _flag.Name, _flagProperty.FindPropertyRelative("Value").boolValue));
                 } else {
                     _flags.DeleteArrayElementAtIndex(i);
@@ -4228,7 +4252,7 @@ namespace EnhancedEditor.Editor {
                 FlagValue _ref = _group.Flags[i];
                 FlagHolder _holder = _ref.holder;
 
-                if ((_holder != null) && _holder.RetrieveFlag(_ref.guid, out Flag _flag)) {
+                if ((_holder != null) && _holder.FindFlag(_ref.guid, out Flag _flag)) {
                     _builder.Append(string.Format(FlagValueGroupFormat, _flag.Name, _ref.Value));
                 } else {
                     _group.RemoveFlagAt(i);
@@ -4268,9 +4292,9 @@ namespace EnhancedEditor.Editor {
 
         // -----------------------
 
-        private static bool FlagPicker(Rect _labelPosition, Rect _buttonPosition, GUIContent _label, int _flagGuid, FlagHolder _flagHolder, out Flag _flag, out FlagHolder _holder) {
+        private static bool FlagPicker(Rect _labelPosition, Rect _buttonPosition, GUIContent _label, int _flagGuid, FlagHolder _flagHolder, out Flag _flag) {
             // Flag label.
-            if ((_flagHolder != null) && _flagHolder.RetrieveFlag(_flagGuid, out _flag)) {
+            if ((_flagHolder != null) && _flagHolder.FindFlag(_flagGuid, out _flag)) {
                 flagReferenceNameGUI.text = _flag.Name;
             } else {
                 flagReferenceNameGUI.text = NullFlagLabel;
@@ -4290,7 +4314,7 @@ namespace EnhancedEditor.Editor {
                 FlagPickerWindow.GetWindow(_id, _flag, _flagHolder);
             }
 
-            return FlagPickerWindow.GetSelectedFlag(_id, out _flag, out _holder);
+            return FlagPickerWindow.GetSelectedFlag(_id, out _flag);
         }
 
         private static bool FlagGroupPicker(Rect _position, GUIContent _label, string _text, Func<FlagGroup> _getFlagGroup, out FlagGroup _group) {
@@ -4366,10 +4390,12 @@ namespace EnhancedEditor.Editor {
         /// <param name="_selectedColor">Color used to draw selected lines.</param>
         /// <param name="_peerColor">Color used to draw peer lines.</param>
         public static void BackgroundLine(Rect _position, bool _isSelected, int _index, Color _selectedColor, Color _peerColor) {
+            if ((_index % 2) == 0) {
+                EditorGUI.DrawRect(_position, _peerColor);
+            }
+
             if (_isSelected) {
                 EditorGUI.DrawRect(_position, _selectedColor);
-            } else if ((_index % 2) == 0) {
-                EditorGUI.DrawRect(_position, _peerColor);
             }
         }
         #endregion

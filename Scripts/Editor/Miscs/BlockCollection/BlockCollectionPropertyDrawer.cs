@@ -90,15 +90,18 @@ namespace EnhancedEditor.Editor {
                     void DrawHeader(Rect _position) {
                         GUIContent _label = EnhancedEditorGUIUtility.GetLabelGUI(string.Format(LabelFormat, _cacheLabel.text, _array.arraySize), _cacheLabel.tooltip);
 
-                        bool _wasExpanded = _list.serializedProperty.isExpanded;
-                        bool _isExpanded = EditorGUI.Foldout(_position, _wasExpanded, _label);
+                        // Temporarily disable hierarchy to avoid foldout padding.
+                        using (var _scope = EnhancedEditorGUI.HierarchyMode.Scope(false)) {
+                            bool _wasExpanded = _list.serializedProperty.isExpanded;
+                            bool _isExpanded = EditorGUI.Foldout(_position, _wasExpanded, _label);
 
-                        // Recreate the list every time is foldout is changed.
-                        if (_isExpanded != _wasExpanded) {
-                            _list.serializedProperty.isExpanded = _isExpanded;
+                            // Recreate the list every time is foldout is changed.
+                            if (_isExpanded != _wasExpanded) {
+                                _list.serializedProperty.isExpanded = _isExpanded;
 
-                            GUI.changed = true;
-                            lists.Remove(_key);
+                                GUI.changed = true;
+                                lists.Remove(_key);
+                            }
                         }
                     }
                 } else {

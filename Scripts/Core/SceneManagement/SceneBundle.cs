@@ -20,8 +20,10 @@ namespace EnhancedEditor {
     /// which can then be used to easily load and unload these scenes together at once.
     /// </summary>
     #pragma warning disable IDE0052
-    [CreateAssetMenu(fileName = "NewSceneBundle", menuName = InternalUtility.MenuPath + "Scene Bundle", order = InternalUtility.MenuOrder)]
+    [CreateAssetMenu(fileName = Prefix + "NewSceneBundle", menuName = InternalUtility.MenuPath + "Scene Bundle", order = InternalUtility.MenuOrder)]
     public class SceneBundle : ScriptableObject {
+        public const string Prefix = "SCB_";
+
         #region Global Members
         [Section("Scene Bundle")]
 
@@ -252,6 +254,16 @@ namespace EnhancedEditor {
         /// <returns>True if this bundle only contain the core scene, false otherwise.</returns>
         public bool IsCoreBundle() {
             return (Scenes.Length == 1) && Scenes[0].IsCoreScene;
+        }
+
+        /// <summary>
+        /// Get this bundle behaviour.
+        /// </summary>
+        /// <typeparam name="T"><see cref="SceneBundleBehaviour"/> to cast this bundle behaviour to.</typeparam>
+        /// <param name="_behaviour">The casted behaviour of this bundle.</param>
+        /// <returns>True if this bundle behaviour could be successfully casted into the given type, false otherwise.</returns>
+        public bool GetBehaviour<T>(out T _behaviour) where T : SceneBundleBehaviour {
+            return Behaviour.GetValue(out _behaviour);
         }
 
         // -------------------------------------------

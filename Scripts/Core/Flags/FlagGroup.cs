@@ -4,11 +4,9 @@
 //
 // ============================================================================ //
 
-#if UNITY_EDITOR || !STRIP_FLAG_NAME
-#define FLAG_NAME
-#endif
-
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Text;
 using System.Runtime.CompilerServices;
 
@@ -17,7 +15,7 @@ namespace EnhancedEditor {
     /// <summary>
     /// Base class to inherit managing <see cref="Flag"/> classes.
     /// </summary>
-    public abstract class FlagGroup {
+    public abstract class FlagGroup : IEnumerable<Flag> {
         #region Global Members
         /// <summary>
         /// The total amount of flags in this group.
@@ -34,13 +32,24 @@ namespace EnhancedEditor {
         public abstract Flag this[int _index] { get; }
         #endregion
 
+        #region IEnumerable
+        public IEnumerator<Flag> GetEnumerator() {
+            for (int i = 0; i < Count; i++) {
+                yield return this[i];
+            }
+        }
+
+        IEnumerator IEnumerable.GetEnumerator() {
+            return GetEnumerator();
+        }
+        #endregion
+
         #region Management
         /// <summary>
         /// Adds a <see cref="Flag"/> into this group.
         /// </summary>
         /// <param name="_flag">The <see cref="Flag"/> to add to the group.</param>
-        /// <param name="_flag">The <see cref="FlagHolder"/> to add to the group.</param>
-        public abstract void AddFlag(Flag _flag, FlagHolder _holder);
+        public abstract void AddFlag(Flag _flag);
 
         /// <summary>
         /// Removes a <see cref="Flag"/> from this group.
@@ -93,27 +102,18 @@ namespace EnhancedEditor {
         public override Flag this[int _index] { get { return Flags[_index].Flag; } }
 
         public override string ToString() {
-            #if FLAG_NAME
             StringBuilder _builder = new StringBuilder(string.Empty);
             foreach (FlagReference _flag in Flags) {
                 _builder.Append($"{_flag.Flag.Name}; ");
             }
 
             return _builder.ToString();
-            #else
-            StringBuilder _builder = new StringBuilder(string.Empty);
-            foreach (FlagReference _flag in Flags) {
-                _builder.Append($"{_flag.Flag}; ");
-            }
-
-            return _builder.ToString();
-            #endif
         }
         #endregion
 
         #region Management
-        public override void AddFlag(Flag _flag, FlagHolder _holder) {
-            ArrayUtility.Add(ref Flags, new FlagReference(_flag, _holder));
+        public override void AddFlag(Flag _flag) {
+            ArrayUtility.Add(ref Flags, new FlagReference(_flag));
         }
 
         public override void RemoveFlag(Flag _flag) {
@@ -173,31 +173,22 @@ namespace EnhancedEditor {
         }
 
         public override string ToString() {
-            #if FLAG_NAME
             StringBuilder _builder = new StringBuilder(string.Empty);
             foreach (FlagValue _flag in Flags) {
                 _builder.Append($"{_flag}; ");
             }
 
             return _builder.ToString();
-            #else
-            StringBuilder _builder = new StringBuilder(string.Empty);
-            foreach (FlagValue _flag in Flags) {
-                _builder.Append($"{_flag.Flag}; ");
-            }
-
-            return _builder.ToString();
-            #endif
         }
         #endregion
 
         #region Management
-        public void AddFlag(Flag _flag, FlagHolder _holder, bool _requiredValue) {
-            ArrayUtility.Add(ref Flags, new FlagValue(_flag, _holder, _requiredValue));
+        public void AddFlag(Flag _flag, bool _requiredValue) {
+            ArrayUtility.Add(ref Flags, new FlagValue(_flag, _requiredValue));
         }
 
-        public override void AddFlag(Flag _flag, FlagHolder _holder) {
-            ArrayUtility.Add(ref Flags, new FlagValue(_flag, _holder));
+        public override void AddFlag(Flag _flag) {
+            ArrayUtility.Add(ref Flags, new FlagValue(_flag));
         }
 
         public override void RemoveFlag(Flag _flag) {

@@ -1027,7 +1027,7 @@ namespace EnhancedEditor.Editor
                 string _presetMetaData = EditorJsonUtility.ToJson(_preset, true);
                 File.WriteAllText(Path.Combine(_buildPath, PresetMetaDataFile), _presetMetaData);
 
-                Process.Start(_buildPath);
+                //Process.Start(_buildPath);
             }
             else
             {

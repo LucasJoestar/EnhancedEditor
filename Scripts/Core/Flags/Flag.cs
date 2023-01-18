@@ -4,10 +4,6 @@
 //
 // ============================================================================ //
 
-#if UNITY_EDITOR || !STRIP_FLAG_NAME
-#define FLAG_NAME
-#endif
-
 using System;
 using System.Runtime.CompilerServices;
 using UnityEngine;
@@ -27,7 +23,7 @@ namespace EnhancedEditor {
         [NonSerialized] private Flag flag = null;
 
         /// <summary>
-        /// The referenced <see cref="Flags.Flag"/>.
+        /// The referenced <see cref="EnhancedEditor.Flag"/>.
         /// </summary>
         public Flag Flag {
             get {
@@ -41,7 +37,7 @@ namespace EnhancedEditor {
                 }
                 #endif
 
-                if ((flag == null) && (guid != 0) && !holder.RetrieveFlag(guid, out flag)) {
+                if ((flag == null) && (guid != 0) && !holder.FindFlag(guid, out flag)) {
                     holder.LogWarning($"The Flag with the guid \'{guid}\' could not be found!");
                 }
 
@@ -54,16 +50,16 @@ namespace EnhancedEditor {
         /// <param name="_guid">The guid of the flag to reference.</param>
         /// <inheritdoc cref="FlagReference(Flag, FlagHolder)"/>
         internal FlagReference(int _guid, FlagHolder _holder) {
-            if (_holder.RetrieveFlag(_guid, out Flag _flag)) {
-                SerializeFlag(_flag, _holder);
+            if (_holder.FindFlag(_guid, out Flag _flag)) {
+                SetFlag(_flag);
             }
         }
 
         /// <param name="_flag"><inheritdoc cref="Flag" path="/summary"/></param>
-        /// <param name="_holder"><inheritdoc cref="SerializeFlag(Flag, FlagHolder)" path="/param[@name='_holder']"/></param>
+        /// <param name="_holder"><inheritdoc cref="SetFlag(Flag, FlagHolder)" path="/param[@name='_holder']"/></param>
         /// <inheritdoc cref="FlagReference"/>
-        public FlagReference(Flag _flag, FlagHolder _holder) {
-            SerializeFlag(_flag, _holder);
+        public FlagReference(Flag _flag) {
+            SetFlag(_flag);
         }
 
         /// <inheritdoc cref="FlagReference"/>
@@ -90,15 +86,30 @@ namespace EnhancedEditor {
 
         #region Utility
         /// <summary>
-        /// Serializes this flag reference.
+        /// Set this flag reference.
         /// </summary>
         /// <param name="_flag"><inheritdoc cref="Flag" path="/summary"/></param>
-        /// <param name="_holder">The <see cref="FlagHolder"/> containing this flag.</param>
-        public void SerializeFlag(Flag _flag, FlagHolder _holder) {
+        public void SetFlag(Flag _flag) {
             flag = _flag;
-            holder = _holder;
+            holder = _flag.holder;
 
             guid = _flag.guid;
+        }
+
+        /// <summary>
+        /// Get the value of this flag.
+        /// </summary>
+        /// <returns>The value of this flag.</returns>
+        public bool GetValue() {
+            return Flag.Value;
+        }
+
+        /// <summary>
+        /// Set the value of this flag.
+        /// </summary>
+        /// <param name="_value">New value of this flag.</param>
+        public void SetValue(bool _value) {
+            Flag.Value = _value;
         }
         #endregion
     }
@@ -118,16 +129,16 @@ namespace EnhancedEditor {
         // -----------------------
 
         /// <param name="_guid">The guid of the flag to reference.</param>
+        /// <param name="_holder"><inheritdoc cref="FlagReference(Flag, FlagHolder)" path="/param[@name='_holder']"/></param>
         /// <inheritdoc cref="FlagValue(Flag, FlagHolder, bool)"/>
         internal FlagValue(int _guid, FlagHolder _holder, bool _value = true) : base(_guid, _holder) {
             Value = _value;
         }
 
         /// <param name="_flag"><inheritdoc cref="Flag" path="/summary"/></param>
-        /// <param name="_holder"><inheritdoc cref="FlagReference(Flag, FlagHolder)" path="/param[@name='_holder']"/></param>
         /// <param name="_value"><inheritdoc cref="Value" path="/summary"/></param>
         /// <inheritdoc cref="FlagValue"/>
-        public FlagValue(Flag _flag, FlagHolder _holder, bool _value = true) : base(_flag, _holder) {
+        public FlagValue(Flag _flag, bool _value = true) : base(_flag) {
             Value = _value;
         }
 
@@ -141,11 +152,7 @@ namespace EnhancedEditor {
         }
 
         public override string ToString() {
-            #if FLAG_NAME
             return $"{Flag.Name}={Value}";
-            #else
-            return IsValid().ToString();
-            #endif
         }
         #endregion
 
@@ -174,20 +181,32 @@ namespace EnhancedEditor {
     /// it can be referenced using a <see cref="FlagReference"/> instance.
     /// </summary>
     [Serializable]
-    [ScriptingDefineSymbol("STRIP_FLAG_NAME", "Strip Game Flag Name (Build Only)")]
     public class Flag {
         #region Global Members
-        #if FLAG_NAME
-        public string Name = "\'New Flag\'";
-        #endif
+        [SerializeField] internal string name   = "\'New Flag\'";
+        [SerializeField] internal int guid      = EnhancedUtility.GenerateGUID();
 
-        [SerializeField] internal int guid = EnhancedUtility.GenerateGUID();
-        [SerializeField] internal bool value = false;
+        [SerializeField] internal FlagHolder holder = null;
+        [SerializeField] internal bool value        = false;
 
         /// <summary>
         /// Called everytime this flag value is changed.
         /// </summary>
         public Action<bool> OnValueChanged = null;
+
+        /// <summary>
+        /// Unique GUID of this flag.
+        /// </summary>
+        public int GUID {
+            get { return guid; }
+        }
+
+        /// <summary>
+        /// <see cref="FlagHolder"/> containing this flag.
+        /// </summary>
+        public FlagHolder Holder {
+            get { return holder; }
+        }
 
         /// <summary>
         /// Value of this flag (enabled or disabled).
@@ -201,8 +220,34 @@ namespace EnhancedEditor {
 
                 this.value = value;
                 OnValueChanged?.Invoke(value);
+
+                #if UNITY_EDITOR
+                if (!Application.isPlaying) {
+                    return;
+                }
+                #endif
+
+                #if DEVELOPMENT
+                Debug.Log($"{Name.Bold()} flag set to {value.ToString().Bold()}");
+                #endif
             }
         }
+
+        /// <summary>
+        /// Name of this flag.
+        /// </summary>
+        public string Name {
+            get { return name; }
+        }
+
+        // -------------------------------------------
+        // Constructor(s)
+        // -------------------------------------------
+
+        /// <summary>
+        /// Prevents from creating new flags in other assemblies.
+        /// </summary>
+        internal protected Flag() { }
         #endregion
 
         #region Operators

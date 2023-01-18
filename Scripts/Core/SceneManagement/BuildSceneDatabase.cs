@@ -115,6 +115,26 @@ namespace EnhancedEditor {
             return sceneBundles[_index];
         }
 
+        /// <summary>
+        /// Get the first <see cref="SceneBundle"/> that matches a given name.
+        /// </summary>
+        /// <param name="_name">Name of the <see cref="SceneBundle"/> to get.</param>
+        /// <param name="_bundle">First found matching <see cref="SceneBundle"/> (null if none).</param>
+        /// <returns>True if a matching <see cref="SceneBundle"/> could be found, false otherwise.</returns>
+        public bool GetSceneBundle(string _name, out SceneBundle _bundle) {
+            _name = _name.Replace(SceneBundle.Prefix, string.Empty);
+
+            foreach (SceneBundle _temp in sceneBundles) {
+                if (_temp.name.Replace(SceneBundle.Prefix, string.Empty) == _name) {
+                    _bundle = _temp;
+                    return true;
+                }
+            }
+
+            _bundle = null;
+            return false;
+        }
+
         // -------------------------------------------
         // Helpers
         // -------------------------------------------

@@ -581,7 +581,7 @@ namespace EnhancedEditor.Editor {
 
                 if (_flag.IsSelected && _flag.IsVisible && _flag.IsSelectable) {
                     if (!group.ContainFlag(_flag.Flag, out _)) {
-                        group.AddFlag(_flag.Flag, _flag.Holder);
+                        group.AddFlag(_flag.Flag);
                     }
 
                     _flag.IsSelected = false;
@@ -622,10 +622,9 @@ namespace EnhancedEditor.Editor {
         /// <param name="_controlID">Control id to get the selected flag for.</param>
         /// <param name="_flag">Selected flag.</param>
         /// <returns>True if the user selected a new flag, false otherwise.</returns>
-        public static bool GetSelectedFlag(int _controlID, out Flag _flag, out FlagHolder _holder) {
+        public static bool GetSelectedFlag(int _controlID, out Flag _flag) {
             if (hasChanged && (_controlID == controlID)) {
                 _flag = selectedFlag.Flag;
-                _holder = selectedFlag.Holder;
 
                 hasChanged = false;
                 GUI.changed = true;
@@ -634,7 +633,6 @@ namespace EnhancedEditor.Editor {
             }
 
             _flag = null;
-            _holder = null;
             return false;
         }
 

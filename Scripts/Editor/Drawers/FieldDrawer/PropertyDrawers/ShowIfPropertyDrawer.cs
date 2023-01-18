@@ -18,10 +18,15 @@ namespace EnhancedEditor.Editor
         #region Drawer Content
         public override bool OnBeforeGUI(Rect _position, SerializedProperty _property, GUIContent _label, out float _height)
         {
+            _height = 0f;
+
+            if (EnhancedEditorGUI.IsDrawingDuoProperty) {
+                return false;
+            }
+
             ShowIfAttribute _attribute = Attribute as ShowIfAttribute;
             bool _hide = _attribute.ConditionMember.GetValue(_property, out bool _value) && (_value != _attribute.ConditionType.Get());
 
-            _height = 0f;
             return _hide;
         }
         #endregion

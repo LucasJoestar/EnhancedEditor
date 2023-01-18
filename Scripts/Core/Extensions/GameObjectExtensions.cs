@@ -86,6 +86,22 @@ namespace EnhancedEditor
             _gameObject.LogWarning($"No {typeof(ExtendedBehaviour).Name} could be found on the object \'{_gameObject.name}\'.");
             return new TagGroup();
         }
+
+        /// <summary>
+        /// Set the <see cref="Tag"/> of this <see cref="GameObject"/>.
+        /// </summary>
+        /// <param name="_gameObject">This <see cref="GameObject"/> to set the tags.</param>
+        /// <param name="_tags"><see cref="TagGroup"/> to assign to this object.</param>
+        /// <returns>True if the <see cref="GameObject"/> tags could be successfully assigned, false otherwise.</returns>
+        public static bool SetTags(this GameObject _gameObject, TagGroup _tags) {
+            if (_gameObject.TryGetComponent(out ExtendedBehaviour _behaviour)) {
+                _behaviour.Tags = _tags;
+                return true;
+            }
+
+            _gameObject.LogWarning($"No {typeof(ExtendedBehaviour).Name} could be found on the object \'{_gameObject.name}\'.");
+            return false;
+        }
         #endregion
     }
 }

@@ -5,6 +5,8 @@
 // ============================================================================ //
 
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 #if UNITY_EDITOR
@@ -17,25 +19,65 @@ namespace EnhancedEditor {
     /// </summary>
     [ResetOnExitPlayMode]
     [CreateAssetMenu(fileName = "FH_NewFlagHplder", menuName = InternalUtility.MenuPath + "Flag Holder", order = InternalUtility.MenuOrder)]
-    public class FlagHolder : ScriptableObject {
+    public class FlagHolder : ScriptableObject, IEnumerable<Flag> {
         #region Global Members
         /// <summary>
         /// All flags contained in this object.
         /// </summary>
         public Flag[] Flags = new Flag[] { new Flag() };
+
+        /// <summary>
+        /// Total amount of <see cref="Flag"/> in this holder.
+        /// </summary>
+        public int Count {
+            get { return Flags.Length; }
+        }
+        #endregion
+
+        #region Operators
+        public virtual Flag this[int _index] {
+            get { return Flags[_index]; }
+            set { Flags[_index] = value; }
+        }
+        #endregion
+
+        #region IEnumerable
+        public IEnumerator<Flag> GetEnumerator() {
+            for (int i = 0; i < Count; i++) {
+                yield return Flags[i];
+            }
+        }
+
+        IEnumerator IEnumerable.GetEnumerator() {
+            return GetEnumerator();
+        }
         #endregion
 
         #region Utility
+        /// <param name="_guid">Guid of the <see cref="Flag"/> to find.</param>
+        /// <inheritdoc cref="FindFlag(string, out Flag)"/>
+        public bool FindFlag(int _guid, out Flag _flag) {
+            foreach (Flag _temp in Flags) {
+                if (_temp == _guid) {
+                    _flag = _temp;
+                    return true;
+                }
+            }
+
+            _flag = null;
+            return false;
+        }
+
         /// <summary>
-        /// Retrieves a flag from this holder.
+        /// Finds a specific <see cref="Flag"/> from this holder.
         /// </summary>
-        /// <param name="_flagGuid">The guid of the <see cref="Flag"/> to retrieve.</param>
-        /// <param name="_flag">The retrieved <see cref="Flag"/> (null if not found).</param>
-        /// <returns>True if the corresponding is found, false otherwise.</returns>
-        public bool RetrieveFlag(int _flagGuid, out Flag _flag) {
-            foreach (Flag _f in Flags) {
-                if (_f == _flagGuid) {
-                    _flag = _f;
+        /// <param name="_name">Name of the <see cref="Flag"/> to find.</param>
+        /// <param name="_flag">The retrieved <see cref="Flag"/> (null if none).</param>
+        /// <returns>True if the corresponding flag could be found, false otherwise.</returns>
+        public bool FindFlag(string _name, out Flag _flag) {
+            foreach (Flag _temp in Flags) {
+                if (_temp.Name == _name) {
+                    _flag = _temp;
                     return true;
                 }
             }
@@ -49,7 +91,7 @@ namespace EnhancedEditor {
         #if UNITY_EDITOR
         private void OnValidate() {
             if (Flags.Length == 0) {
-                ArrayUtility.Add(ref Flags, new Flag() { Name = "\'New Flag\'" });
+                ArrayUtility.Add(ref Flags, new Flag() { name = "\'New Flag\'" });
             } else {
                 // Check that the last added flag guid is unique.
                 int _lastIndex = Flags.Length - 1;
@@ -63,6 +105,11 @@ namespace EnhancedEditor {
                 }
 
                 Sort();
+            }
+
+            // Set holder reference.
+            foreach (Flag _flag in Flags) {
+                _flag.holder = this;
             }
         }
 

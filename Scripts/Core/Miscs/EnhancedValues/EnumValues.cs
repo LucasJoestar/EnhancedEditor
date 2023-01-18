@@ -5,6 +5,8 @@
 // ============================================================================ //
 
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace EnhancedEditor {
@@ -24,6 +26,22 @@ namespace EnhancedEditor {
         /// Enum int value as first, the associated value as second.
         /// </summary>
         public Pair<int, T>[] Values = new Pair<int, T>[0];
+
+        /// <summary>
+        /// Total amount of values in this object.
+        /// </summary>
+        public int Count {
+            get { return Values.Length; }
+        }
+
+        // -------------------------------------------
+        // Constructor(s)
+        // -------------------------------------------
+
+        /// <summary>
+        /// Prevents inheriting from this class in other assemblies.
+        /// </summary>
+        private protected EnumValues() { }
         #endregion
     }
 
@@ -33,7 +51,7 @@ namespace EnhancedEditor {
     /// <typeparam name="Enum">This collection associated <see cref="Enum"/> type.</typeparam>
     /// <typeparam name="T">The type of values to be associated with the enum.</typeparam>
     [Serializable]
-    public class EnumValues<Enum, T> : EnumValues<T>, ISerializationCallbackReceiver where Enum : System.Enum {
+    public sealed class EnumValues<Enum, T> : EnumValues<T>, IEnumerable<T>, ISerializationCallbackReceiver where Enum : System.Enum {
         #region Global Members
         /// <summary>
         /// This enum associated default value.
@@ -46,6 +64,7 @@ namespace EnhancedEditor {
         /// <inheritdoc cref="EnumValues{Enum, T}"/>
         public EnumValues(T _defaultValue = default) {
             DefaultValue = _defaultValue;
+            Fill();
         }
         #endregion
 
@@ -68,6 +87,18 @@ namespace EnhancedEditor {
 
         public override string ToString() {
             return Values.ToString();
+        }
+        #endregion
+
+        #region IEnumerable
+        public IEnumerator<T> GetEnumerator() {
+            for (int i = 0; i < Count; i++) {
+                yield return Values[i].Second;
+            }
+        }
+
+        IEnumerator IEnumerable.GetEnumerator() {
+            return GetEnumerator();
         }
         #endregion
 
@@ -109,16 +140,27 @@ namespace EnhancedEditor {
         // -----------------------
 
         private void Fill() {
-            int[] _values = Array.ConvertAll((Enum[])System.Enum.GetValues(typeof(Enum)), v => Convert.ToInt32(v));
+            Type _type = typeof(Enum);
+            Enum[] _values = (Enum[])System.Enum.GetValues(typeof(Enum));
 
-            for (int i = Values.Length; i-- > 0;) {
-                if (!ArrayUtility.Contains(_values, Values[i].First)) {
+            // Remove ethereal elements.
+            for (int i = _values.Length; i-- > 0;) {
+                var _object = _type.GetField(_values[i].ToString());
+
+                if ((_object != null) && _object.IsDefined(typeof(EtherealAttribute), true)) {
+                    ArrayUtility.RemoveAt(ref _values, i);
+                }
+            }
+
+            int[] _integers = Array.ConvertAll(_values, v => Convert.ToInt32(v));
+
+            for (int i = Count; i-- > 0;) {
+                if (!ArrayUtility.Contains(_integers, Values[i].First)) {
                     RemoveValue(i);
                 }
             }
 
-            for (int i = 0; i < _values.Length; i++) {
-                int _value = _values[i];
+            foreach (int _value in _integers) {
                 if (Array.FindIndex(Values, (v) => v.First == _value) == -1) {
                     AddValue(_value);
                 }

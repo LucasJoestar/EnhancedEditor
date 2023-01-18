@@ -57,7 +57,7 @@ namespace EnhancedEditor {
 
         #region IEnumerable
         public IEnumerator<T> GetEnumerator() {
-            for (int i = Count; i-- > 0;) {
+            for (int i = 0; i < Count; i++) {
                 yield return this[i];
             }
         }

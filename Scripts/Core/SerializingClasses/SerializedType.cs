@@ -93,7 +93,7 @@ namespace EnhancedEditor {
 
 			foreach (var _type in _types) {
 				if ((!_type.IsAbstract || _constraints.HasFlag(SerializedTypeConstraint.Abstract)) && !_type.IsDefined(typeof(EtherealAttribute), false)
-				 && (_type != _defaultType) && !ArrayUtility.Contains(_ignored, _type)) {
+				 && (_type != _defaultType) && (_ignored != null) && !ArrayUtility.Contains(_ignored, _type)) {
 					Type = _type;
 					return;
 				}

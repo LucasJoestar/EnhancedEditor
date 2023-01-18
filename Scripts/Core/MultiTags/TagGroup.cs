@@ -5,18 +5,17 @@
 // ============================================================================ //
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 
-namespace EnhancedEditor
-{
+namespace EnhancedEditor {
     /// <summary>
     /// <see cref="Tag"/>[] wrapper, used to reference multiple tags in a single group.
     /// <para/>
     /// Contains multiple utility methods to dynamically and safely manipulate its content.
     /// </summary>
     [Serializable]
-    public class TagGroup
-    {
+    public class TagGroup : IEnumerable<Tag> {
         #region Global Members
         /// <summary>
         /// All <see cref="Tag"/> defined in this group.
@@ -26,7 +25,9 @@ namespace EnhancedEditor
         /// <summary>
         /// Total amount of <see cref="Tag"/> defined in this group.
         /// </summary>
-        public int Length => Tags.Length;
+        public int Count {
+            get { return Tags.Length; }
+        }
 
         // -----------------------
 
@@ -35,17 +36,27 @@ namespace EnhancedEditor
 
         /// <param name="_tags">All <see cref="Tag"/> to encapsulate in this group.</param>
         /// <inheritdoc cref="TagGroup()"/>
-        public TagGroup(Tag[] _tags)
-        {
+        public TagGroup(Tag[] _tags) {
             Tags = _tags;
         }
         #endregion
 
         #region Operator
-        public Tag this[int _index]
-        {
+        public Tag this[int _index] {
             get => Tags[_index];
             set => Tags[_index] = value;
+        }
+        #endregion
+
+        #region IEnumerable
+        public IEnumerator<Tag> GetEnumerator() {
+            for (int i = 0; i < Count; i++) {
+                yield return this[i];
+            }
+        }
+
+        IEnumerator IEnumerable.GetEnumerator() {
+            return GetEnumerator();
         }
         #endregion
 
@@ -54,10 +65,8 @@ namespace EnhancedEditor
         /// Adds a new <see cref="Tag"/> into this group.
         /// </summary>
         /// <param name="_tag">Tag to add.</param>
-        public void AddTag(Tag _tag)
-        {
-            if (!Contains(_tag))
-            {
+        public void AddTag(Tag _tag) {
+            if (!Contains(_tag)) {
                 ArrayUtility.Add(ref Tags, _tag);
             }
         }
@@ -66,12 +75,18 @@ namespace EnhancedEditor
         /// Removes a <see cref="Tag"/> from this group.
         /// </summary>
         /// <param name="_tag">Tag to remove.</param>
-        public void RemoveTag(Tag _tag)
-        {
-            if (Contains(_tag, out int _index))
-            {
+        public void RemoveTag(Tag _tag) {
+            if (Contains(_tag, out int _index)) {
                 ArrayUtility.RemoveAt(ref Tags, _index);
             }
+        }
+
+        /// <summary>
+        /// Set the tags of this group.
+        /// </summary>
+        /// <param name="_group">Group to copy the tags from.</param>
+        public void SetTags(TagGroup _group) {
+            Tags = _group.Tags;
         }
         #endregion
 
@@ -81,8 +96,7 @@ namespace EnhancedEditor
         // -----------------------
 
         /// <inheritdoc cref="Contains(Tag, out int)"/>
-        public bool Contains(Tag _tag)
-        {
+        public bool Contains(Tag _tag) {
             return ArrayUtility.Contains(Tags, _tag);
         }
 
@@ -92,12 +106,9 @@ namespace EnhancedEditor
         /// <param name="_tag"><see cref="Tag"/> to check presence in group.</param>
         /// <param name="_index">Index of the matching tag in group.</param>
         /// <returns>True if the group contains the specified tag, false otherwise.</returns>
-        public bool Contains(Tag _tag, out int _index)
-        {
-            for (int _i = 0; _i < Tags.Length; _i++)
-            {
-                if (Tags[_i] == _tag)
-                {
+        public bool Contains(Tag _tag, out int _index) {
+            for (int _i = 0; _i < Tags.Length; _i++) {
+                if (Tags[_i] == _tag) {
                     _index = _i;
                     return true;
                 }
@@ -105,6 +116,21 @@ namespace EnhancedEditor
 
             _index = -1;
             return false;
+        }
+
+        /// <summary>
+        /// Get if this group contains all other tags.
+        /// </summary>
+        /// <param name="_tags">All tags to check.</param>
+        /// <returns>True if this group contains all given tags, false otherwise.</returns>
+        public bool ContainsAll(Tag[] _tags) {
+            foreach (Tag _tag in _tags) {
+                if (!Contains(_tag)) {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -118,7 +144,23 @@ namespace EnhancedEditor
                     return true;
                 }
             }
+
             return false;
+        }
+
+        /// <summary>
+        /// Get if this group contains all tags in another group.
+        /// </summary>
+        /// <param name="_group">Group to check the tags.</param>
+        /// <returns>True if this group contains all tags of the other given group, false otherwise.</returns>
+        public bool ContainsAll(TagGroup _group) {
+            foreach (Tag _tag in _group.Tags) {
+                if (!Contains(_tag)) {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -127,27 +169,23 @@ namespace EnhancedEditor
         /// <returns>All <see cref="TagData"/> referenced in this group (with null entries for each tag that could not be found).
         /// <br/> Using a <see cref="List{T}"/> allows to return a direct reference of the cached value instead of allocating a new array.
         /// Please copy its content to a new collection if you intend to modify it.</returns>
-        public List<TagData> GetData()
-        {
+        public List<TagData> GetData() {
             data.Resize(Tags.Length);
 
             // Update data with all tag cached values.
-            for (int _i = 0; _i < Length; _i++)
-            {
+            for (int _i = 0; _i < Count; _i++) {
                 TagData _data = Tags[_i].GetData();
                 data[_i] = _data;
             }
-            
+
             return data;
         }
 
         /// <summary>
         /// Sorts all tags in this group by their name.
         /// </summary>
-        public void SortTagsByName()
-        {
-            Array.Sort(Tags, (a, b) =>
-            {
+        public void SortTagsByName() {
+            Array.Sort(Tags, (a, b) => {
                 return a.GetData().CompareNameTo(b.GetData());
             });
         }

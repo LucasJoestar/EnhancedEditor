@@ -109,7 +109,7 @@ namespace EnhancedEditor.Editor {
                 return true;
             }
 
-            Debug.LogWarning($"SerializedProperty type at path \'{_property.propertyPath}\' could not be found");
+            //Debug.LogWarning($"SerializedProperty type at path \'{_property.propertyPath}\' could not be found");
 
             _type = null;
             return false;

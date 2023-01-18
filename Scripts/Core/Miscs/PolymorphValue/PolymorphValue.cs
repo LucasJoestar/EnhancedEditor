@@ -109,10 +109,13 @@ namespace EnhancedEditor {
         #endregion
 
         #region Constructors
-        /// <inheritdoc cref="PolymorphValue{T}.PolymorphValue(SerializedTypeConstraint, Type, bool, string, Type[])"/>
+        /// <inheritdoc cref="PolymorphValue{T}.PolymorphValue(SerializedTypeConstraint, Type, bool, Type[])"/>
+        public PolymorphValue() : this(SerializedTypeConstraint.Null, null, true, null) { }
+
+        /// <inheritdoc cref="PolymorphValue{T}.PolymorphValue(SerializedTypeConstraint, Type, bool, Type[])"/>
         public PolymorphValue(Type _value, SerializedTypeConstraint _constraints = SerializedTypeConstraint.None) : this(_constraints, _value, true, null) { }
 
-        /// <inheritdoc cref="PolymorphValue{T}.PolymorphValue(SerializedTypeConstraint, Type, bool, string, Type[])"/>
+        /// <inheritdoc cref="PolymorphValue{T}.PolymorphValue(SerializedTypeConstraint, Type, bool, Type[])"/>
         public PolymorphValue(SerializedTypeConstraint _constraints, Type _value, params Type[] _ignored) : this(_constraints, _value, true, _ignored) {  }
 
         /// <param name="_value">This object initial value.</param>

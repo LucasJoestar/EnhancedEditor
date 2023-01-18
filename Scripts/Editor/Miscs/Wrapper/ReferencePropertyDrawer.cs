@@ -17,7 +17,7 @@ namespace EnhancedEditor.Editor {
         protected override float OnEnhancedGUI(Rect _position, SerializedProperty _property, GUIContent _label) {
             _property.NextVisible(true);
             EditorGUI.PropertyField(_position, _property, _label);
-
+            
             return _position.height;
         }
         #endregion

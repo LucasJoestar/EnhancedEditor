@@ -5,8 +5,11 @@
 // ============================================================================ //
 
 using System;
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
+
+using UMessageType = UnityEditor.MessageType;
 
 namespace EnhancedEditor.Editor {
     /// <summary>
@@ -15,13 +18,26 @@ namespace EnhancedEditor.Editor {
     [CustomPropertyDrawer(typeof(EnumValues<>), true)]
     public class EnumValuesPropertyDrawer : EnhancedPropertyEditor {
         #region Drawer Content
-        protected override float OnEnhancedGUI(Rect _position, SerializedProperty _property, GUIContent _label) {
-            // Make sure the target class have at least two generic arguments.
-            Type[] _arguments = GetFieldInfo(_property).FieldType.GetGenericArguments();
+        private const string EmptyEnumMessage           = "This Enum does not contain any value";
+        private const UMessageType EmptyEnumMessageType = UMessageType.Info;
 
-            if (_arguments.Length < 2) {
-                EditorGUI.PropertyField(_position, _property, _label);
-                return _position.height;
+        private const int CacheLimit = 20;
+        private static readonly Dictionary<string, Type> enumInfos = new Dictionary<string, Type>();
+
+        // -----------------------
+
+        protected override float OnEnhancedGUI(Rect _position, SerializedProperty _property, GUIContent _label) {
+            // Register this property to cache its enum type.
+            string _key = EnhancedEditorUtility.GetSerializedPropertyID(_property);
+
+            if (!enumInfos.TryGetValue(_key, out Type _enumType)) {
+                // Clear cache on limit reach.
+                if (enumInfos.Count > CacheLimit) {
+                    enumInfos.Clear();
+                }
+
+                _enumType = EnhancedEditorUtility.GetFieldInfoType(GetFieldInfo(_property));
+                enumInfos.Add(_key, _enumType);
             }
 
             float _height = 0f;
@@ -38,16 +54,26 @@ namespace EnhancedEditor.Editor {
                 // As the EnumValues array is automatically refreshed on serialization,
                 // its associated values and the enum names should have the same index.
                 using (var _scope = new EditorGUI.IndentLevelScope(1)) {
-                    Type _enum = _arguments[0];
-                    string[] _names = Enum.GetNames(_enum);
-
                     SerializedProperty _arrayProperty = _property.FindPropertyRelative("Values");
 
+                    // Empty enum message.
+                    if (_arrayProperty.arraySize == 0) {
+                        _position.height = EnhancedEditorGUIUtility.GetHelpBoxHeight(EmptyEnumMessage, EmptyEnumMessageType, _position.width);
+                        EditorGUI.HelpBox(_position, EmptyEnumMessage, EmptyEnumMessageType);
+
+                        IncrementPosition();
+                        return _height;
+                    }
+
                     for (int i = 0; i < _arrayProperty.arraySize; i++) {
-                        SerializedProperty _valueProperty = _arrayProperty.GetArrayElementAtIndex(i).FindPropertyRelative("Second");
+                        SerializedProperty _elementProperty = _arrayProperty.GetArrayElementAtIndex(i);
+                        SerializedProperty _enumProperty    = _elementProperty.FindPropertyRelative("First");
+                        SerializedProperty _valueProperty   = _elementProperty.FindPropertyRelative("Second");
+
+                        string _name = Enum.GetName(_enumType, _enumProperty.intValue);
 
                         _position.height = EditorGUI.GetPropertyHeight(_valueProperty, true);
-                        EditorGUI.PropertyField(_position, _valueProperty, EnhancedEditorGUIUtility.GetLabelGUI(_names[i]), true);
+                        EditorGUI.PropertyField(_position, _valueProperty, EnhancedEditorGUIUtility.GetLabelGUI(_name), true);
 
                         // Position increment.
                         IncrementPosition();

@@ -29,7 +29,9 @@ namespace EnhancedEditor
         /// </summary>
         public readonly MemberValue<string>? NameMember = null;
 
-        // -----------------------
+        // -------------------------------------------
+        // Constructor(s)
+        // -------------------------------------------
 
         /// <inheritdoc cref="DisplayNameAttribute(string, string)"/>
         public DisplayNameAttribute(string _name)
