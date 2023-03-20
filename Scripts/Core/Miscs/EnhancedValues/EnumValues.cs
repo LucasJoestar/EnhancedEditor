@@ -7,21 +7,23 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using UnityEngine;
 
 namespace EnhancedEditor {
     /// <summary>
-    /// <see cref="EnumValues{Enum, T}"/> base class.
-    /// <para/>
-    /// This class only exist for having a property drawer assigned to it
-    /// <br/>(classes with more than one generic argument cannot have a specific property drawer).
-    /// <para/>
-    /// Should not be used directly, always prefer using <see cref="EnumValues{Enum, T}"/>
+    /// Collection class used to store a specific value associated to each values of an <see cref="Enum"/>.
     /// </summary>
+    /// <typeparam name="Enum">This collection associated <see cref="Enum"/> type.</typeparam>
     /// <typeparam name="T">The type of values to be associated with the enum.</typeparam>
     [Serializable]
-    public abstract class EnumValues<T> {
+    public sealed class EnumValues<Enum, T> : IEnumerable<T>, ISerializationCallbackReceiver where Enum : System.Enum, IConvertible {
         #region Global Members
+        /// <summary>
+        /// This enum associated default value.
+        /// </summary>
+        public readonly T DefaultValue = default;
+
         /// <summary>
         /// Enum int value as first, the associated value as second.
         /// </summary>
@@ -34,30 +36,6 @@ namespace EnhancedEditor {
             get { return Values.Length; }
         }
 
-        // -------------------------------------------
-        // Constructor(s)
-        // -------------------------------------------
-
-        /// <summary>
-        /// Prevents inheriting from this class in other assemblies.
-        /// </summary>
-        private protected EnumValues() { }
-        #endregion
-    }
-
-    /// <summary>
-    /// Collection class used to store a specific value associated to each values of an <see cref="Enum"/>.
-    /// </summary>
-    /// <typeparam name="Enum">This collection associated <see cref="Enum"/> type.</typeparam>
-    /// <typeparam name="T">The type of values to be associated with the enum.</typeparam>
-    [Serializable]
-    public sealed class EnumValues<Enum, T> : EnumValues<T>, IEnumerable<T>, ISerializationCallbackReceiver where Enum : System.Enum {
-        #region Global Members
-        /// <summary>
-        /// This enum associated default value.
-        /// </summary>
-        public readonly T DefaultValue = default;
-
         // -----------------------
 
         /// <param name="_defaultValue"><inheritdoc cref="DefaultValue" path="/summary"/></param>
@@ -68,12 +46,17 @@ namespace EnhancedEditor {
         }
         #endregion
 
-        #region Operators
+        #region Operator
         public T this[Enum _enum] {
             get {
-                return GetValue(_enum);
+                GetValue(_enum, out T _value);
+                return _value;
             } set {
-                Values[GetValueIndex(_enum)].Second = value;
+
+                int _index = GetValueIndex(_enum);
+                if (_index != -1) {
+                    Values[_index].Second = value;
+                }
             }
         }
 
@@ -115,16 +98,45 @@ namespace EnhancedEditor {
         /// Get the value associated with a specific enum value.
         /// </summary>
         /// <param name="_enum">The <see cref="Enum"/> to get the associated value.</param>
-        /// <returns>The value associated with this enum.</returns>
-        public T GetValue(Enum _enum) {
-            return Values[GetValueIndex(_enum)].Second;
+        /// <param name="_value">The value associated with the given enum (-1 if none).</param>
+        /// <returns>True if the value could be successfully found, false otherwise.</returns>
+        public bool GetValue(Enum _enum, out T _value) {
+
+            int _index = GetValueIndex(_enum);
+            if (_index == -1) {
+
+                _value = default;
+                return false;
+            }
+
+            _value = Values[_index].Second;
+            return true;
+        }
+
+        /// <summary>
+        /// Get the enum <see cref="int"/> value associated with a specific value.
+        /// </summary>
+        /// <param name="_value">The value to get the associated enum value.</param>
+        /// <param name="_enumValue">The <see cref="int"/> enum value associated with the given value (-1 if none).</param>
+        /// <returns>True if the value could be successfully found, false otherwise.</returns>
+        public bool GetEnum(T _value, out int _enumValue) {
+
+            int _index = GetEnumIndex(_value);
+            if (_index == -1) {
+
+                _enumValue = -1;
+                return false;
+            }
+
+            _enumValue = Values[_index].First;
+            return true;
         }
 
         /// <summary>
         /// Get the index of the value associated with a specific enum value.
         /// </summary>
         /// <param name="_enum">The <see cref="Enum"/> to get the associated value index.</param>
-        /// <returns>The index of the value associated with this enum.</returns>
+        /// <returns>The index of the value associated with this enum (-1 if none).</returns>
         public int GetValueIndex(Enum _enum) {
             int _enumValue = Convert.ToInt32(_enum);
 
@@ -134,11 +146,28 @@ namespace EnhancedEditor {
                 }
             }
 
-            return AddValue(_enum);
+            return -1;
+        }
+
+        /// <summary>
+        /// Get the index of the enum associated with a specific value.
+        /// </summary>
+        /// <param name="_value">The value to get the associated enum index.</param>
+        /// <returns>The index of the enum associated with this value (-1 if none).</returns>
+        public int GetEnumIndex(T _value) {
+
+            for (int i = 0; i < Values.Length; i++) {
+                if (_value.Equals(Values[i].Second)) {
+                    return i;
+                }
+            }
+
+            return -1;
         }
 
         // -----------------------
 
+        [Conditional("UNITY_EDITOR")]
         private void Fill() {
             Type _type = typeof(Enum);
             Enum[] _values = (Enum[])System.Enum.GetValues(typeof(Enum));

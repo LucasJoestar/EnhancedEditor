@@ -31,18 +31,21 @@ namespace EnhancedEditor.Editor {
         protected override float OnEnhancedGUI(Rect _position, SerializedProperty _property, GUIContent _label) {
             // List registration.
             string _key = EnhancedEditorUtility.GetSerializedPropertyID(_property);
+            _position = EditorGUI.IndentedRect(_position);
 
             if (!lists.TryGetValue(_key, out ReorderableList _list)) {
-                // Cache the label for the original may be modified.
-                SerializedProperty _array = _property.Copy();
-                
+
                 // Get collection property.
+                SerializedProperty _array = _property.Copy();
                 while (!_array.isArray && _array.Next(true)) { }
 
                 if (_array.isArray) {
+
+                    // Cache the label for the original may be modified.
                     GUIContent _cacheLabel = new GUIContent(_label.text, _label.tooltip);
 
                     if (_array.isExpanded) {
+
                         // Functional list.
                         bool _isEditable = _property.FindPropertyRelative("IsEditable").boolValue;
                         bool _isReorderable = _property.FindPropertyRelative("IsReorderable").boolValue;
@@ -91,7 +94,9 @@ namespace EnhancedEditor.Editor {
                         GUIContent _label = EnhancedEditorGUIUtility.GetLabelGUI(string.Format(LabelFormat, _cacheLabel.text, _array.arraySize), _cacheLabel.tooltip);
 
                         // Temporarily disable hierarchy to avoid foldout padding.
-                        using (var _scope = EnhancedEditorGUI.HierarchyMode.Scope(false)) {
+                        using (var _scope = EnhancedEditorGUI.HierarchyMode.Scope(false))
+                        using (var _indentScope = EnhancedEditorGUI.ZeroIndentScope()) {
+
                             bool _wasExpanded = _list.serializedProperty.isExpanded;
                             bool _isExpanded = EditorGUI.Foldout(_position, _wasExpanded, _label);
 
@@ -115,10 +120,11 @@ namespace EnhancedEditor.Editor {
 
             try {
                 _height = _position.height
-                        = (_list.serializedProperty.isExpanded ? _list.GetHeight() : ((_list.count == 0) ? EmptyListHeight : FoldedListHeight));
+                        = _list.serializedProperty.isExpanded ? _list.GetHeight() : ((_list.displayRemove || (_list.count == 0)) ? EmptyListHeight : FoldedListHeight);
 
                 _list.DoList(_position);
-            } catch (ArgumentException) { // This can happen when the SerializedProperty target object is missing.
+
+            } catch (Exception) { // This can happen when the SerializedProperty target object is missing.
                 // Default property drawer.
                 lists.Remove(_key);
 

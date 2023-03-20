@@ -28,7 +28,7 @@ namespace EnhancedEditor {
         public abstract Array Array { get; }
         #endregion
 
-        #region Operators
+        #region Operator
         public abstract Flag this[int _index] { get; }
         #endregion
 
@@ -235,6 +235,22 @@ namespace EnhancedEditor {
         public void SetValues() {
             foreach (FlagValue _flag in Flags) {
                 _flag.SetFlag();
+            }
+        }
+
+        /// <summary>
+        /// Set the value of all flags in this group.
+        /// </summary>
+        /// <param name="_valid">Whether to set or unset these flags.</param>
+        public void SetValues(bool _valid) {
+            foreach (FlagValue _flag in Flags) {
+
+                bool _value = _flag.Value;
+                if (!_valid) {
+                    _value = !_value;
+                }
+
+                _flag.SetValue(_value);
             }
         }
         #endregion

@@ -84,11 +84,11 @@ namespace EnhancedEditor.Editor
             resetRotationGUI.image = _resetIcon;
             resetScaleGUI.image = _resetIcon;
         }
-
+        
         public override void OnInspectorGUI()
         {
             Rect _position = EditorGUILayout.GetControlRect(false, 0f);
-            float _width = EnhancedEditorGUI.ManageDynamicControlHeight(GUIContent.none, _position.width - ResetButtonWidth - Spacing);
+            float _width = EnhancedEditorGUI.ManageDynamicControlHeight(localPosition, _position.width - ResetButtonWidth - Spacing);
 
             // Avoid jitters and first layout event draw.
             if (_width < 0f)

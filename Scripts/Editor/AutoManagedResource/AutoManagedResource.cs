@@ -9,8 +9,7 @@ using System.IO;
 using UnityEditor;
 using UnityEngine;
 
-namespace EnhancedEditor.Editor
-{
+namespace EnhancedEditor.Editor {
     /// <summary>
     /// Auto-managed cached <see cref="ScriptableObject"/> resource assets,
     /// dynamically finding and loading themselves from the editor database.
@@ -19,8 +18,7 @@ namespace EnhancedEditor.Editor
     /// Please use <see cref="Reload"/> to force resources update.
     /// </summary>
     /// <typeparam name="T">Resource type (must inherit from <see cref="ScriptableObject"/>).</typeparam>
-	public class AutoManagedResource<T> where T : ScriptableObject
-    {
+	public class AutoManagedResource<T> where T : ScriptableObject {
         #region Global Members
         private const string EditorFolder = "Editor";
         private const string AssetsFolder = "Assets";
@@ -50,14 +48,11 @@ namespace EnhancedEditor.Editor
         /// <summary>
         /// The directory where all of this type resource assets are created.
         /// </summary>
-        public string Directory
-        {
-            get
-            {
+        public string Directory {
+            get {
                 // Get directory path.
                 string _value = AutoManagedResourceEnhancedSettings.Settings.Folder;
-                if (IsEditorOnly)
-                {
+                if (IsEditorOnly) {
                     _value = Path.Combine(_value, EditorFolder);
                 }
 
@@ -74,8 +69,7 @@ namespace EnhancedEditor.Editor
         public AutoManagedResource(bool _isEditorOnly = true) : this(typeof(T).ToString(), _isEditorOnly) { }
 
         /// <inheritdoc cref="AutoManagedResource{T}(string, string, string, bool)"/>
-        public AutoManagedResource(string _defaultAssetName, bool _isEditorOnly = true)
-        {
+        public AutoManagedResource(string _defaultAssetName, bool _isEditorOnly = true) {
             DefaultAssetName = _defaultAssetName;
             IsEditorOnly = _isEditorOnly;
         }
@@ -88,8 +82,7 @@ namespace EnhancedEditor.Editor
         /// <param name="_suffix"><inheritdoc cref="Suffix" path="/summary"/></param>
         /// <param name="_isEditorOnly"><inheritdoc cref="IsEditorOnly" path="/summary"/></param>
         /// <inheritdoc cref="AutoManagedResource{T}"/>
-        public AutoManagedResource(string _defaultAssetName, string _prefix, string _suffix, bool _isEditorOnly = true) : this(_defaultAssetName, _isEditorOnly)
-        {
+        public AutoManagedResource(string _defaultAssetName, string _prefix, string _suffix, bool _isEditorOnly = true) : this(_defaultAssetName, _isEditorOnly) {
             Prefix = _prefix;
             Suffix = _suffix;
         }
@@ -100,8 +93,7 @@ namespace EnhancedEditor.Editor
         /// Get the first loaded resource of this type. If no matching asset could be found in the database, a new one is automatically created.
         /// </summary>
         /// <returns>First loaded resource asset.</returns>
-        public T GetResource()
-        {
+        public T GetResource() {
             if ((resources.Length == 0) || (resources[0] == null))
                 Reload();
 
@@ -114,8 +106,7 @@ namespace EnhancedEditor.Editor
         /// <param name="_name">Name of the resource asset to find.</param>
         /// <param name="_resource">Found resource asset.</param>
         /// <returns>True if a resource asset with this same exist and was found, false otherwise.</returns>
-        public bool GetResource(string _name, out T _resource)
-        {
+        public bool GetResource(string _name, out T _resource) {
             if (resources.Length == 0)
                 Reload();
 
@@ -124,8 +115,7 @@ namespace EnhancedEditor.Editor
             bool _hasPrefix = !string.IsNullOrEmpty(Prefix);
             bool _hasSuffix = !string.IsNullOrEmpty(Suffix);
 
-            _resource = Array.Find(resources, (r) =>
-            {
+            _resource = Array.Find(resources, (r) => {
                 string _simplifiedName = r.name;
 
                 if (_hasPrefix)
@@ -144,8 +134,7 @@ namespace EnhancedEditor.Editor
         /// Get all loaded resources of this type. Use <see cref="Reload"/> to refresh all cached assets.
         /// </summary>
         /// <returns>All loaded resource assets.</returns>
-        public T[] GetResources()
-        {
+        public T[] GetResources() {
             if (resources.Length == 0)
                 Reload();
 
@@ -157,11 +146,9 @@ namespace EnhancedEditor.Editor
         /// <br/>Use this after creating or destroying an asset of this type in the project.
         /// </summary>
         /// <returns>(Re)loaded resource assets.</returns>
-        public T[] Reload()
-        {
+        public T[] Reload() {
             resources = EnhancedEditorUtility.LoadAssets<T>();
-            if (resources.Length == 0)
-            {
+            if (resources.Length == 0) {
                 string _name = DefaultAssetName;
                 CreateResource(_name);
             }
@@ -170,8 +157,7 @@ namespace EnhancedEditor.Editor
         }
 
         /// <inheritdoc cref="CreateResource(string, T)"/>
-        public T CreateResource(string _name)
-        {
+        public T CreateResource(string _name) {
             T _resource = CreateResource(_name, ScriptableObject.CreateInstance<T>());
             return _resource;
         }
@@ -182,8 +168,7 @@ namespace EnhancedEditor.Editor
         /// <param name="_name">Name of the resource asset to create.</param>
         /// <param name="_resource">Resource instance to write on disk.</param>
         /// <returns>Created resource asset.</returns>
-        public T CreateResource(string _name, T _resource)
-        {
+        public T CreateResource(string _name, T _resource) {
             _name = $"{Prefix}{_name}{Suffix}";
 
             string _directory = Path.Combine(Application.dataPath, Directory);

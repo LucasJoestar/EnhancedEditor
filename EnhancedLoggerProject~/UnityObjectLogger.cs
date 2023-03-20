@@ -5,9 +5,11 @@
 // ============================================================================ //
 
 using System;
+using System.Diagnostics;
 using UnityEngine;
 
-using Object = UnityEngine.Object;
+using Debug     = UnityEngine.Debug;
+using Object    = UnityEngine.Object;
 
 namespace EnhancedEditor {
     /// <summary>
@@ -45,6 +47,7 @@ namespace EnhancedEditor {
         /// </summary>
         /// <param name="_object"><inheritdoc cref="Doc(Object, string, string)" path="/param[@name='_object']"/></param>
         /// <param name="_message"><inheritdoc cref="Doc(Object, string, string)" path="/param[@name='_message']"/></param>
+        [Conditional("ENHANCED_LOGS")]
         public static void Log(this Object _object, object _message) {
             if (!Enabled) {
                 return;
@@ -59,12 +62,13 @@ namespace EnhancedEditor {
         /// <param name="_object"><inheritdoc cref="Doc(Object, string, string)" path="/param[@name='_object']"/></param>
         /// <param name="_message"><inheritdoc cref="Doc(Object, string, string)" path="/param[@name='_message']"/></param>
         /// <param name="_format"><inheritdoc cref="Doc(Object, string, string)" path="/param[@name='_format']"/></param>
+        [Conditional("ENHANCED_LOGS")]
         public static void LogFormat(this Object _object, string _format, params object[] _message) {
             if (!Enabled) {
                 return;
             }
 
-            LogFormat(_object, LogType.Log, _format, _message);
+            DoLogFormat(_object, LogType.Log, _format, _message);
         }
 
         /// <summary>
@@ -72,12 +76,13 @@ namespace EnhancedEditor {
         /// </summary>
         /// <param name="_object"><inheritdoc cref="Doc(Object, string, string)" path="/param[@name='_object']"/></param>
         /// <param name="_message"><inheritdoc cref="Doc(Object, string, string)" path="/param[@name='_message']"/></param>
+        [Conditional("ENHANCED_LOGS")]
         public static void LogMessage<T>(this T _object, object _message) {
             if (!Enabled) {
                 return;
             }
 
-            LogMessage(_object, LogType.Log, _message);
+            DoLogMessage(_object, LogType.Log, _message);
         }
 
         /// <summary>
@@ -86,12 +91,13 @@ namespace EnhancedEditor {
         /// <param name="_object"><inheritdoc cref="Doc(Object, string, string)" path="/param[@name='_object']"/></param>
         /// <param name="_message"><inheritdoc cref="Doc(Object, string, string)" path="/param[@name='_message']"/></param>
         /// <param name="_context"><inheritdoc cref="Doc(Object, LogType)" path="/param[@name='_context']"/></param>
+        [Conditional("ENHANCED_LOGS")]
         public static void LogMessage<T>(this T _object, object _message, Object _context) {
             if (!Enabled) {
                 return;
             }
 
-            LogMessage(_object, LogType.Log, _message, _context);
+            DoLogMessage(_object, LogType.Log, _message, _context);
         }
         #endregion
 
@@ -102,6 +108,7 @@ namespace EnhancedEditor {
         /// </summary>
         /// <param name="_object"><inheritdoc cref="Doc(Object, string, string)" path="/param[@name='_object']"/></param>
         /// <param name="_message"><inheritdoc cref="Doc(Object, string, string)" path="/param[@name='_message']"/></param>
+        [Conditional("ENHANCED_LOGS")]
         public static void LogWarning(this Object _object, object _message) {
             if (!Enabled) {
                 return;
@@ -117,12 +124,13 @@ namespace EnhancedEditor {
         /// <param name="_object"><inheritdoc cref="Doc(Object, string, string)" path="/param[@name='_object']"/></param>
         /// <param name="_message"><inheritdoc cref="Doc(Object, string, string)" path="/param[@name='_message']"/></param>
         /// <param name="_format"><inheritdoc cref="Doc(Object, string, string)" path="/param[@name='_format']"/></param>
+        [Conditional("ENHANCED_LOGS")]
         public static void LogWarningFormat(this Object _object, string _format, params object[] _message) {
             if (!Enabled) {
                 return;
             }
 
-            LogFormat(_object, LogType.Warning, _format, _message);
+            DoLogFormat(_object, LogType.Warning, _format, _message);
         }
 
         /// <summary>
@@ -130,12 +138,13 @@ namespace EnhancedEditor {
         /// </summary>
         /// <param name="_object"><inheritdoc cref="Doc(Object, string, string)" path="/param[@name='_object']"/></param>
         /// <param name="_message"><inheritdoc cref="Doc(Object, string, string)" path="/param[@name='_message']"/></param>
+        [Conditional("ENHANCED_LOGS")]
         public static void LogWarningMessage<T>(this T _object, object _message) {
             if (!Enabled) {
                 return;
             }
 
-            LogMessage(_object, LogType.Warning, _message);
+            DoLogMessage(_object, LogType.Warning, _message);
         }
 
         /// <summary>
@@ -144,12 +153,13 @@ namespace EnhancedEditor {
         /// <param name="_object"><inheritdoc cref="Doc(Object, string, string)" path="/param[@name='_object']"/></param>
         /// <param name="_message"><inheritdoc cref="Doc(Object, string, string)" path="/param[@name='_message']"/></param>
         /// <param name="_context"><inheritdoc cref="Doc(Object, LogType)" path="/param[@name='_context']"/></param>
+        [Conditional("ENHANCED_LOGS")]
         public static void LogWarningMessage<T>(this T _object, object _message, Object _context) {
             if (!Enabled) {
                 return;
             }
 
-            LogMessage(_object, LogType.Warning, _message, _context);
+            DoLogMessage(_object, LogType.Warning, _message, _context);
         }
         #endregion
 
@@ -159,6 +169,7 @@ namespace EnhancedEditor {
         /// </summary>
         /// <param name="_object"><inheritdoc cref="Doc(Object, string, string)" path="/param[@name='_object']"/></param>
         /// <param name="_message"><inheritdoc cref="Doc(Object, string, string)" path="/param[@name='_message']"/></param>
+        [Conditional("ENHANCED_LOGS")]
         public static void LogError(this Object _object, object _message) {
             if (!Enabled) {
                 return;
@@ -173,12 +184,13 @@ namespace EnhancedEditor {
         /// <param name="_object"><inheritdoc cref="Doc(Object, string, string)" path="/param[@name='_object']"/></param>
         /// <param name="_message"><inheritdoc cref="Doc(Object, string, string)" path="/param[@name='_message']"/></param>
         /// <param name="_format"><inheritdoc cref="Doc(Object, string, string)" path="/param[@name='_format']"/></param>
+        [Conditional("ENHANCED_LOGS")]
         public static void LogErrorFormat(this Object _object, string _format, params object[] _message) {
             if (!Enabled) {
                 return;
             }
 
-            LogFormat(_object, LogType.Error, _format, _message);
+            DoLogFormat(_object, LogType.Error, _format, _message);
         }
 
         /// <summary>
@@ -186,12 +198,13 @@ namespace EnhancedEditor {
         /// </summary>
         /// <param name="_object"><inheritdoc cref="Doc(Object, string, string)" path="/param[@name='_object']"/></param>
         /// <param name="_message"><inheritdoc cref="Doc(Object, string, string)" path="/param[@name='_message']"/></param>
+        [Conditional("ENHANCED_LOGS")]
         public static void LogErrorMessage<T>(this T _object, object _message) {
             if (!Enabled) {
                 return;
             }
 
-            LogMessage(_object, LogType.Warning, _message);
+            DoLogMessage(_object, LogType.Error, _message);
         }
 
         /// <summary>
@@ -200,12 +213,13 @@ namespace EnhancedEditor {
         /// <param name="_object"><inheritdoc cref="Doc(Object, string, string)" path="/param[@name='_object']"/></param>
         /// <param name="_message"><inheritdoc cref="Doc(Object, string, string)" path="/param[@name='_message']"/></param>
         /// <param name="_context"><inheritdoc cref="Doc(Object, LogType)" path="/param[@name='_context']"/></param>
+        [Conditional("ENHANCED_LOGS")]
         public static void LogErrorMessage<T>(this T _object, object _message, Object _context) {
             if (!Enabled) {
                 return;
             }
 
-            LogMessage(_object, LogType.Error, _message, _context);
+            DoLogMessage(_object, LogType.Error, _message, _context);
         }
         #endregion
 
@@ -215,6 +229,7 @@ namespace EnhancedEditor {
         /// </summary>
         /// <param name="_object"><inheritdoc cref="Doc(Object, string, string)" path="/param[@name='_object']"/></param>
         /// <param name="_message"><inheritdoc cref="Doc(Object, string, string)" path="/param[@name='_message']"/></param>
+        [Conditional("ENHANCED_LOGS")]
         public static void LogAssertion(this Object _object, object _message) {
             if (!Enabled) {
                 return;
@@ -229,12 +244,13 @@ namespace EnhancedEditor {
         /// <param name="_object"><inheritdoc cref="Doc(Object, string, string)" path="/param[@name='_object']"/></param>
         /// <param name="_message"><inheritdoc cref="Doc(Object, string, string)" path="/param[@name='_message']"/></param>
         /// <param name="_format"><inheritdoc cref="Doc(Object, string, string)" path="/param[@name='_format']"/></param>
+        [Conditional("ENHANCED_LOGS")]
         public static void LogAssertionFormat(this Object _object, string _format, params object[] _message) {
             if (!Enabled) {
                 return;
             }
 
-            LogFormat(_object, LogType.Assert, _format, _message);
+            DoLogFormat(_object, LogType.Assert, _format, _message);
         }
 
         /// <summary>
@@ -242,12 +258,13 @@ namespace EnhancedEditor {
         /// </summary>
         /// <param name="_object"><inheritdoc cref="Doc(Object, string, string)" path="/param[@name='_object']"/></param>
         /// <param name="_message"><inheritdoc cref="Doc(Object, string, string)" path="/param[@name='_message']"/></param>
+        [Conditional("ENHANCED_LOGS")]
         public static void LogAssertionMessage<T>(this T _object, object _message) {
             if (!Enabled) {
                 return;
             }
 
-            LogMessage(_object, LogType.Warning, _message);
+            DoLogMessage(_object, LogType.Assert, _message);
         }
 
         /// <summary>
@@ -256,17 +273,19 @@ namespace EnhancedEditor {
         /// <param name="_object"><inheritdoc cref="Doc(Object, string, string)" path="/param[@name='_object']"/></param>
         /// <param name="_message"><inheritdoc cref="Doc(Object, string, string)" path="/param[@name='_message']"/></param>
         /// <param name="_context"><inheritdoc cref="Doc(Object, LogType)" path="/param[@name='_context']"/></param>
+        [Conditional("ENHANCED_LOGS")]
         public static void LogAssertionMessage<T>(this T _object, object _message, Object _context) {
             if (!Enabled) {
                 return;
             }
 
-            LogMessage(_object, LogType.Assert, _message, _context);
+            DoLogMessage(_object, LogType.Assert, _message, _context);
         }
 
         // -----------------------
 
         /// <inheritdoc cref="Doc(Object, bool, string, string)"/>
+        [Conditional("ENHANCED_LOGS")]
         public static void Assert(this Object _object, bool _condition) {
             if (!Enabled) {
                 return;
@@ -276,6 +295,7 @@ namespace EnhancedEditor {
         }
 
         /// <inheritdoc cref="Doc(Object, bool, string, string)"/>
+        [Conditional("ENHANCED_LOGS")]
         public static void Assert(this Object _object, bool _condition, object _message) {
             if (!Enabled) {
                 return;
@@ -285,6 +305,7 @@ namespace EnhancedEditor {
         }
 
         /// <inheritdoc cref="Doc(Object, bool, string, string)"/>
+        [Conditional("ENHANCED_LOGS")]
         public static void Assert(this Object _object, bool _condition, string _message) {
             if (!Enabled) {
                 return;
@@ -299,6 +320,7 @@ namespace EnhancedEditor {
         /// <param name="_message"><inheritdoc cref="Doc(Object, string, string)" path="/param[@name='_message']"/></param>
         /// <param name="_format"><inheritdoc cref="Doc(Object, string, string)" path="/param[@name='_format']"/></param>
         /// <inheritdoc cref="Doc(Object, bool, string, string)"/>
+        [Conditional("ENHANCED_LOGS")]
         public static void AssertFormat(this Object _object, bool _condition, string _format, params object[] _message) {
             if (!Enabled) {
                 return;
@@ -314,6 +336,7 @@ namespace EnhancedEditor {
         /// </summary>
         /// <param name="_object"><inheritdoc cref="Doc(Object, string, string)" path="/param[@name='_object']"/></param>
         /// <param name="_exception">Runtime exception to display.</param>
+        [Conditional("ENHANCED_LOGS")]
         public static void LogException(this Object _object, Exception _exception) {
             if (!Enabled) {
                 return;
@@ -330,6 +353,7 @@ namespace EnhancedEditor {
         /// <param name="_object"><inheritdoc cref="Doc(Object, string, string)" path="/param[@name='_object']"/></param>
         /// <param name="_type"><inheritdoc cref="Doc(Object, LogType)" path="/param[@name='_type']"/></param>
         /// <param name="_message"><inheritdoc cref="Doc(Object, string, string)" path="/param[@name='_message']"/></param>
+        [Conditional("ENHANCED_LOGS")]
         public static void Log(this Object _object, LogType _type, object _message) {
             if (!Enabled) {
                 return;
@@ -345,6 +369,7 @@ namespace EnhancedEditor {
         /// <param name="_type"><inheritdoc cref="Doc(Object, LogType)" path="/param[@name='_type']"/></param>
         /// <param name="_message"><inheritdoc cref="Doc(Object, string, string)" path="/param[@name='_message']"/></param>
         /// <param name="_format"><inheritdoc cref="Doc(Object, string, string)" path="/param[@name='_format']"/></param>
+        [Conditional("ENHANCED_LOGS")]
         public static void LogFormat(this Object _object, LogType _type, string _format, params object[] _message) {
             if (!Enabled) {
                 return;
@@ -359,6 +384,7 @@ namespace EnhancedEditor {
         /// <param name="_object"><inheritdoc cref="Doc(Object, string, string)" path="/param[@name='_object']"/></param>
         /// <param name="_type"><inheritdoc cref="Doc(Object, LogType)" path="/param[@name='_type']"/></param>
         /// <param name="_message"><inheritdoc cref="Doc(Object, string, string)" path="/param[@name='_message']"/></param>
+        [Conditional("ENHANCED_LOGS")]
         public static void LogMessage<T>(this T _object, LogType _type, object _message) {
             if (!Enabled) {
                 return;
@@ -368,7 +394,7 @@ namespace EnhancedEditor {
                             ? _unityObject
                             : null;
 
-            LogFormat(_context, _type, GetMessageFormat(_object, _type), _message);
+            DoLogFormat(_context, _type, GetMessageFormat(_object, _type), _message);
         }
 
         /// <summary>
@@ -378,12 +404,46 @@ namespace EnhancedEditor {
         /// <param name="_type"><inheritdoc cref="Doc(Object, LogType)" path="/param[@name='_type']"/></param>
         /// <param name="_message"><inheritdoc cref="Doc(Object, string, string)" path="/param[@name='_message']"/></param>
         /// <param name="_context"><inheritdoc cref="Doc(Object, LogType)" path="/param[@name='_context']"/></param>
+        [Conditional("ENHANCED_LOGS")]
         public static void LogMessage<T>(this T _object, LogType _type, object _message, Object _context) {
             if (!Enabled) {
                 return;
             }
 
-            LogFormat(_context, _type, GetMessageFormat(_object, _type), _message);
+            DoLogFormat(_context, _type, GetMessageFormat(_object, _type), _message);
+        }
+        #endregion
+
+        #region Internal
+        /// <inheritdoc cref="LogFormat(Object, LogType, string, object[])"/>
+        private static void DoLogFormat(this Object _object, LogType _type, string _format, params object[] _message) {
+            if (!Enabled) {
+                return;
+            }
+
+            Debug.unityLogger.LogFormat(_type, _object, _format, _message);
+        }
+
+        /// <inheritdoc cref="LogMessage{T}(T, LogType, object)"/>
+        private static void DoLogMessage<T>(this T _object, LogType _type, object _message) {
+            if (!Enabled) {
+                return;
+            }
+
+            Object _context = (_object is Object _unityObject)
+                            ? _unityObject
+                            : null;
+
+            DoLogFormat(_context, _type, GetMessageFormat(_object, _type), _message);
+        }
+
+        /// <inheritdoc cref="LogMessage{T}(T, LogType, object, Object)"/>
+        private static void DoLogMessage<T>(this T _object, LogType _type, object _message, Object _context) {
+            if (!Enabled) {
+                return;
+            }
+
+            DoLogFormat(_context, _type, GetMessageFormat(_object, _type), _message);
         }
 
         // -----------------------

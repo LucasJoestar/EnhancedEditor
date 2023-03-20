@@ -20,7 +20,7 @@ namespace EnhancedEditor {
     /// which can then be used to easily load and unload these scenes together at once.
     /// </summary>
     #pragma warning disable IDE0052
-    [CreateAssetMenu(fileName = Prefix + "NewSceneBundle", menuName = InternalUtility.MenuPath + "Scene Bundle", order = InternalUtility.MenuOrder)]
+    [CreateAssetMenu(fileName = Prefix + "SceneBundle", menuName = InternalUtility.MenuPath + "Scene Bundle", order = InternalUtility.MenuOrder)]
     public class SceneBundle : ScriptableObject {
         public const string Prefix = "SCB_";
 

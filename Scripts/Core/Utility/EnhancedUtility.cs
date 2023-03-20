@@ -6,6 +6,8 @@
 
 using System;
 using System.Reflection;
+using System.Security.Cryptography;
+using System.Text;
 using UnityEngine;
 
 using Object = UnityEngine.Object;
@@ -122,6 +124,60 @@ namespace EnhancedEditor {
         /// <returns>The generated GUID.</returns>
         public static int GenerateGUID() {
             return Guid.NewGuid().GetHashCode();
+        }
+
+        /// <summary>
+        /// Get a persistent hash code for a given <see cref="string"/>.
+        /// </summary>
+        /// <param name="_string"><see cref="string"/> to get a hash code for.</param>
+        /// <returns>The hash code for the given <see cref="string"/>.</returns>
+        public static int GetStableHashCode(string _string) {
+            // Same as GetHashCode, but without any random operation.
+            unchecked {
+                int hash1 = 5381;
+                int hash2 = hash1;
+
+                for (int i = 0; (i < _string.Length) && (_string[i] != '\0'); i += 2) {
+                    hash1 = ((hash1 << 5) + hash1) ^ _string[i];
+                    if ((i == _string.Length - 1) || (_string[i + 1] == '\0')) {
+                        break;
+                    }
+
+                    hash2 = ((hash2 << 5) + hash2) ^ _string[i + 1];
+                }
+
+                return hash1 + (hash2 * 1566083941);
+            }
+        }
+
+        /// <summary>
+        /// Get a persistent hash code for a given <see cref="string"/>, as a <see cref="ulong"/> value.
+        /// </summary>
+        /// <param name="_string"><see cref="string"/> to get a hash code for.</param>
+        /// <returns>The hash code for the given <see cref="string"/>.</returns>
+        public static ulong GetLongStableHashCode(string _string) {
+            ulong hashCode = 0;
+
+            if (!string.IsNullOrEmpty(_string)) {
+                // Unicode Encode Covering all characterset.
+                byte[] byteContents = Encoding.Unicode.GetBytes(_string);
+                SHA256 hash = new SHA256CryptoServiceProvider();
+                byte[] hashText = hash.ComputeHash(byteContents);
+
+                // 32Byte hashText separate
+                //
+                // hashCodeStart = 0~7  8Byte
+                // hashCodeMedium = 8~23  8Byte
+                // hashCodeEnd = 24~31  8Byte
+
+                ulong hashCodeStart = BitConverter.ToUInt64(hashText, 0);
+                ulong hashCodeMedium = BitConverter.ToUInt64(hashText, 8);
+                ulong hashCodeEnd = BitConverter.ToUInt64(hashText, 24);
+
+                hashCode = hashCodeStart ^ hashCodeMedium ^ hashCodeEnd;
+            }
+
+            return hashCode;
         }
         #endregion
     }

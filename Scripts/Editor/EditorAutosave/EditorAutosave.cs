@@ -20,6 +20,7 @@ namespace EnhancedEditor.Editor {
     /// <summary>
     /// Editor toolbar extension that automatically saves assets and open scene(s) at regular intervals.
     /// </summary>
+    [InitializeOnLoad]
     public static class EditorAutosave {
         #region Global Members
         private const float DefaultSaveInterval = 300f;
@@ -42,7 +43,6 @@ namespace EnhancedEditor.Editor {
 
         private static float saveInterval = 0f;
         private static float saveRemainingTime = 0f;
-        private static double lastTimeCheckup = 0f;
         private static bool isEnabled = false;
 
         /// <summary>
@@ -82,11 +82,10 @@ namespace EnhancedEditor.Editor {
         private static void Update() {
             // Do not save in play mode, as it wouldn't be any useful.
             if (isEnabled && !EditorApplication.isPlaying && InternalEditorUtility.isApplicationActive) {
-                double _timeSinceStartup = EditorApplication.timeSinceStartup;
-                float _ellipse = (float)Math.Min(UpdateMaxInterval, _timeSinceStartup - lastTimeCheckup);
-                lastTimeCheckup = _timeSinceStartup;
 
-                saveRemainingTime -= _ellipse;
+                float _deltaTime = Math.Min(UpdateMaxInterval, ChronosUtility.RealDeltaTime);
+
+                saveRemainingTime -= _deltaTime;
                 if (saveRemainingTime < 0f) {
                     EditorSceneManager.SaveOpenScenes();
                     AssetDatabase.SaveAssets();

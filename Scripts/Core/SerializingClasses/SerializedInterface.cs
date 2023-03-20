@@ -11,7 +11,7 @@ using UnityEngine;
 namespace EnhancedEditor {
     /// <summary>
     /// Interface wrapper, used to serialize an interface with the help
-    /// of the <see cref="UnityEngine.GameObject"/> it is attached to.
+    /// of the <see cref="UnityEngine.Component"/> it is attached to.
     /// <para/>
     /// Note:
     /// <br/> Cannot use the <see cref="ISerializationCallbackReceiver"/> interface because the
@@ -19,30 +19,34 @@ namespace EnhancedEditor {
     /// </summary>
     /// <typeparam name="T">Interface type to serialize.</typeparam>
     [Serializable]
-    #pragma warning disable UNT0014
     public class SerializedInterface<T> : IComparer<SerializedInterface<T>> where T : class {
         #region Global Members
-        [SerializeField] protected GameObject gameObject = null;
+        [SerializeField] private Component component = null;
         private T interfaceInstance = default;
 
+        #if UNITY_EDITOR
+        [SerializeField] internal bool required = false;        
+        #endif
+
         /// <summary>
-        /// The <see cref="GameObject"/> the associated interface is attached to.
+        /// The <see cref="UnityEngine.Component"/> the associated interface is attached to.
         /// </summary>
-        public GameObject GameObject {
+        public Component Component {
             get {
-                return gameObject;
+                return component;
             }
             set {
-                gameObject = value;
+                component = value;
                 DeserializeInterfaceValue();
             }
         }
 
         /// <summary>
-        /// The interface attached to the serialized <see cref="UnityEngine.GameObject"/>.
+        /// The interface attached to the serialized <see cref="UnityEngine.Component"/>.
         /// </summary>
         public T Interface {
             get {
+
                 if (interfaceInstance == null) {
                     DeserializeInterfaceValue();
                 }
@@ -51,29 +55,46 @@ namespace EnhancedEditor {
             }
             set {
                 interfaceInstance = value;
-                gameObject = (value is Component _component) ? _component.gameObject : null;
+                component = value as Component;
             }
         }
 
         // -----------------------
 
         /// <inheritdoc cref="SerializedInterface{T}"/>
-        public SerializedInterface() { }
+        public SerializedInterface(bool _required = true) {
+            #if UNITY_EDITOR
+            required = _required;        
+            #endif
+        }
 
         /// <param name="_interface"><inheritdoc cref="Interface" path="/summary"/></param>
+        /// <param name="_required">If true, draw this interface as a required field in the inspector.</param>
         /// <inheritdoc cref="SerializedInterface{T}"/>
-        public SerializedInterface(T _interface) {
+        public SerializedInterface(T _interface, bool _required = true) : this(_required) {
             Interface = _interface;
         }
         #endregion
 
-        #region Operators
+        #region Operator
+        public static bool operator ==(SerializedInterface<T> a, SerializedInterface<T> b) {
+            if (!ReferenceEquals(a, null)) {
+                return a.Equals(b);
+            }
+
+            return ReferenceEquals(b, null);
+        }
+
+        public static bool operator !=(SerializedInterface<T> a, SerializedInterface<T> b) {
+            return !(a == b);
+        }
+
         public static implicit operator T(SerializedInterface<T> _interface) {
             return _interface.Interface;
         }
 
-        public static implicit operator GameObject(SerializedInterface<T> _interface) {
-            return _interface.gameObject;
+        public static implicit operator Component(SerializedInterface<T> _interface) {
+            return _interface.component;
         }
 
         public static implicit operator SerializedInterface<T>(T _interface) {
@@ -86,7 +107,7 @@ namespace EnhancedEditor {
 
         public override bool Equals(object _object) {
             if (_object is SerializedInterface<T> _interface) {
-                return Interface == _interface.Interface;
+                return Equals(_interface);
             }
 
             return base.Equals(_object);
@@ -106,15 +127,29 @@ namespace EnhancedEditor {
         #region Serialization
         private void DeserializeInterfaceValue() {
             // Deserialize the interface value on the game object reference.
-            if (gameObject != null) {
-                interfaceInstance = gameObject.GetComponent<T>();
+            if (component != null) {
 
-                if (interfaceInstance == null) {
-                    gameObject.LogWarning($"The interface '{typeof(T).FullName}' component could not be found on this object!");
+                if (component is T _interface) {
+
+                    Interface = _interface;
+                    return;
                 }
-            } else {
-                interfaceInstance = null;
+
+                component.LogWarning($"The interface '{typeof(T).FullName}' component could not be found on this object!");
             }
+
+            Interface = null;
+        }
+        #endregion
+
+        #region Utility
+        /// <summary>
+        /// Compares this interface with another one.
+        /// </summary>
+        /// <param name="_interface">Interface to compare with this one.</param>
+        /// <returns>True if both interfaces are equal, false otherwise.</returns>
+        public bool Equals(SerializedInterface<T> _interface) {
+            return !ReferenceEquals(_interface, null) && _interface.Interface == Interface;
         }
         #endregion
     }

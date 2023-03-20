@@ -245,7 +245,7 @@ namespace EnhancedEditor.Editor
             }
             else
             {
-                EditorGUILayout.HelpBox($"Cannot draw parameter of type \"{_type}\"!", UnityEditor.MessageType.Error);
+                //EditorGUILayout.HelpBox($"Cannot draw parameter of type \"{_type}\"!", UnityEditor.MessageType.Error);
             }
         }
         #endregion

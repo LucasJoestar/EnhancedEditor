@@ -5,6 +5,7 @@
 // ============================================================================ //
 
 using System;
+using System.IO;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -96,6 +97,13 @@ namespace EnhancedEditor
         {
             get
             {
+                #if UNITY_EDITOR
+                if (!Application.isPlaying) {
+                    string _path = UnityEditor.AssetDatabase.GUIDToAssetPath(guid);
+                    return Path.GetFileNameWithoutExtension(_path);
+                }
+                #endif
+
                 int _buildIndex = BuildIndex;
 
                 // Negative index means that the scene was not included in build.
@@ -129,17 +137,21 @@ namespace EnhancedEditor
         }
         #endregion
 
-        #region Operators
+        #region Operator
         public static implicit operator Scene(SceneAsset _scene) {
             return SceneManager.GetSceneByBuildIndex(_scene.BuildIndex);
         }
 
-        public bool Equals(SceneAsset _scene) {
-            return this == _scene;
+        public static bool operator ==(SceneAsset a, SceneAsset b) {
+            if (!ReferenceEquals(a, null)) {
+                return a.Equals(b);
+            }
+
+            return ReferenceEquals(b, null);
         }
 
-        public bool Equals(Scene _scene) {
-            return BuildIndex == _scene.buildIndex;
+        public static bool operator !=(SceneAsset a, SceneAsset b) {
+            return !(a == b);
         }
 
         public override bool Equals(object _object) {
@@ -273,6 +285,24 @@ namespace EnhancedEditor
         /// <returns>True if the scene can be loaded, false otherwise.</returns>
         public bool CanBeLoaded(LoadSceneMode _mode) {
             return !IsLoaded || (_mode == LoadSceneMode.Single);
+        }
+
+        /// <summary>
+        /// Get if this <see cref="SceneAsset"/> is wrapped around the same scene as another <see cref="SceneAsset"/>.
+        /// </summary>
+        /// <param name="_scene">The <see cref="SceneAsset"/> to check.</param>
+        /// <returns>True if this <see cref="SceneAsset"/> matches the given scene, false otherwise.</returns>
+        public bool Equals(SceneAsset _scene) {
+            return !ReferenceEquals(_scene, null) && guid.Equals(_scene.guid, StringComparison.Ordinal);
+        }
+
+        /// <summary>
+        /// Get if this <see cref="SceneAsset"/> is wrapped around a specific <see cref="Scene"/>.
+        /// </summary>
+        /// <param name="_scene">The <see cref="Scene"/> to check.</param>
+        /// <returns>True if this <see cref="SceneAsset"/> matches the given scene, false otherwise.</returns>
+        public bool Equals(Scene _scene) {
+            return BuildIndex == _scene.buildIndex;
         }
         #endregion
     }

@@ -37,7 +37,7 @@ namespace EnhancedEditor.Editor
         }
         #endregion
 
-        #region Operators
+        #region Operator
         public static implicit operator Color(EditorColor _color)
         {
             return _color.Get();

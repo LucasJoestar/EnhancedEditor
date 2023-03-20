@@ -208,7 +208,7 @@ namespace EnhancedEditor.Editor
                 float _height = _position.y - _yOrigin;
                 _height -= EditorGUIUtility.standardVerticalSpacing;
 
-                _infos.Height = _height;
+                _infos.Height = EnhancedEditorGUI.ManageDynamicControlHeight(_property, _height);
             }
         }
         #endregion

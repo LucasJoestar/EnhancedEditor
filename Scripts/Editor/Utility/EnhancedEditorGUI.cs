@@ -50,52 +50,22 @@ namespace EnhancedEditor.Editor {
         #endregion
 
         #region Context Menu
-        private static readonly string SerializedInterfaceTypeName = typeof(SerializedInterface<>).Name;
-        private static readonly GUIContent SortTagsGUI = new GUIContent("Sort Tags by their Name");
+        private static readonly object[] propertyMenuCallParameters     = new object[2];
 
         // -----------------------
 
         private static void OnContextualPropertyMenu(GenericMenu _menu, SerializedProperty _property) {
-            // TagGroup option: sort tags by their name.
-            if ((_property.type == TagGroupTypeName) && !_property.hasMultipleDifferentValues) {
-                _menu.AddItem(SortTagsGUI, false, () => {
-                    if (EnhancedEditorUtility.FindSerializedPropertyField(_property, out FieldInfo _field)) {
-                        // Get the direct tag group reference and sort its tags.
-                        TagGroup _group = _field.GetValue(_property.serializedObject.targetObject) as TagGroup;
-                        _group.SortTagsByName();
 
-                        // In order for the modifications to be properly registered, update all tags id through their respective serialized property.
-                        // Otherwise, the property state is confused and its data may be disrupted when modifying or saving it.
-                        SerializedProperty _groupProperty = _property.Copy();
-                        _groupProperty.Next(true);
+            // Attribute callback.
+            propertyMenuCallParameters[0] = _menu;
+            propertyMenuCallParameters[1] = _property;
 
-                        for (int _i = 0; _i < _groupProperty.arraySize; _i++) {
-                            SerializedProperty _tagProperty = _groupProperty.GetArrayElementAtIndex(_i);
-                            _tagProperty.Next(true);
+            foreach (MethodInfo _method in TypeCache.GetMethodsWithAttribute<SerializedPropertyMenuAttribute>()) {
+                var _parameters = _method.GetParameters();
 
-                            _tagProperty.longValue = _group.Tags[_i].ID;
-                        }
-
-                        _groupProperty.serializedObject.ApplyModifiedProperties();
-                    }
-                });
-            }
-
-            // SerializedInterface option: get interface reference from object.
-            if (!_property.serializedObject.isEditingMultipleObjects && _property.type.StartsWith(SerializedInterfaceTypeName)
-                && (_property.serializedObject.targetObject is Component _component)) {
-                _menu.AddItem(requiredGetReferenceGUI, false, () => {
-                    if (EnhancedEditorUtility.FindSerializedPropertyField(_property, out FieldInfo _field)) {
-                        Type _type = EnhancedEditorUtility.GetFieldInfoType(_field);
-
-                        if (_component.TryGetComponent(_type, out Component _interface)) {
-                            SerializedProperty _gameObjectProperty = _property.FindPropertyRelative("gameObject");
-
-                            _gameObjectProperty.objectReferenceValue = _interface.gameObject;
-                            _gameObjectProperty.serializedObject.ApplyModifiedProperties();
-                        }
-                    }
-                });
+                if ((_parameters.Length == 2) && (_parameters[0].ParameterType == typeof(GenericMenu)) && (_parameters[1].ParameterType == typeof(SerializedProperty))) {
+                    _method.Invoke(null, propertyMenuCallParameters);
+                }
             }
 
             // Enhanced property drawers context menu.
@@ -1039,7 +1009,11 @@ namespace EnhancedEditor.Editor {
             _label = EnhancedEditorGUIUtility.GetLabelGUI(string.Format(DuoGUIFormat, _label.text, _secondLabel.text),
                                                           string.Format(DuoGUITooltipFormat, _label.tooltip, _secondLabel.tooltip));
 
-            Rect _temp = EditorGUI.PrefixLabel(_position, _label);
+            Rect _temp = _position;
+
+            if (_temp.width > EditorGUIUtility.labelWidth) {
+                _temp = EditorGUI.PrefixLabel(_position, _label);
+            }
 
             _temp.width -= _secondPropertyWidth;
             _temp.height = Mathf.Max(EditorGUI.GetPropertyHeight(_property), EditorGUI.GetPropertyHeight(_secondProperty));
@@ -1049,12 +1023,14 @@ namespace EnhancedEditor.Editor {
                 IsDrawingDuoProperty = Event.current.type != EventType.Layout;
 
                 try {
-                    EditorGUI.PropertyField(_temp, _property, GUIContent.none);
+                    EnhancedPropertyField(_temp, _property, GUIContent.none);
 
                     _temp.xMin = _temp.xMax + 5f;
                     _temp.xMax = _position.xMax;
 
-                    EditorGUI.PropertyField(_temp, _secondProperty, GUIContent.none);
+                    EnhancedPropertyField(_temp, _secondProperty, GUIContent.none);
+                } catch (ExitGUIException) {
+                    throw;
                 } catch (Exception e) {
                     Debug.LogException(e);
                 }
@@ -1955,7 +1931,12 @@ namespace EnhancedEditor.Editor {
             // Property field.
             using (var _scope = new EditorGUI.PropertyScope(Rect.zero, GUIContent.none, _property))
             using (var _changeCheck = new EditorGUI.ChangeCheckScope()) {
-                EditorGUI.PropertyField(_position, _property, _label);
+
+                if (!_requiredTypes.SafeFirst(out Type _fieldType)) {
+                    _fieldType = typeof(GameObject);
+                }
+
+                EditorGUI.ObjectField(_position, _property, _fieldType, _label);
 
                 if (_changeCheck.changed && ResetPickerObjectIfDontMatch(_property.objectReferenceValue, _requiredTypes)) {
                     // Reset object value when changed if it has not all required components.
@@ -2071,14 +2052,14 @@ namespace EnhancedEditor.Editor {
 
         private static Rect DoPickerField(Rect _position, int _id, Object _object, Type _objectType, Type[] _requiredTypes, bool _allowSceneObjects) {
             // Get adjusted field rectangle on screen.
-            Rect _fieldPosition = new Rect(_position)
-            {
+            Rect _fieldPosition = new Rect(_position) {
                 width = _position.width - (EnhancedEditorGUIUtility.IconWidth + 2f)
             };
 
             // Reject any drag and drop operation with non eligible object.
             if (_fieldPosition.Event(out Event _event) == EventType.DragUpdated) {
                 Object[] _drop = DragAndDrop.objectReferences;
+
                 if ((_drop.Length != 1) || ResetPickerObjectIfDontMatch(_drop[0], _requiredTypes)) {
                     DragAndDrop.visualMode = DragAndDropVisualMode.Rejected;
                     _event.Use();
@@ -2715,9 +2696,9 @@ namespace EnhancedEditor.Editor {
         #endregion
 
         #region Required
-        private const string RequiredMessage = "Keep in mind to set a reference to this field!";
+        private const string RequiredMessage = "Missing reference\nKeep in mind to assign its value";
 
-        private static readonly GUIContent requiredGetReferenceGUI = new GUIContent("Get Reference", "Get an object reference from this GameObject.");
+        internal static readonly GUIContent requiredGetReferenceGUI = new GUIContent("Get Reference", "Get an object reference from this GameObject.");
 
         private static int selectedRequiredID = -1;
         private static bool selectRequiredObject = false;
@@ -3345,6 +3326,8 @@ namespace EnhancedEditor.Editor {
         private static readonly string TagGroupTypeName = typeof(TagGroup).Name;
         private static readonly List<TagData> tagGroupContent = new List<TagData>();
 
+        private static readonly GUIContent SortTagsGUI = new GUIContent("Sort Tags by their Name");
+
         // ===== Serialized Property ===== \\
 
         /// <inheritdoc cref="TagGroupField(Rect, SerializedProperty, GUIContent, out float)"/>
@@ -3398,10 +3381,7 @@ namespace EnhancedEditor.Editor {
                 return;
             }
 
-            // ReduceSize the content array if it is too small. Do not reallocate a new array for each call.
-            if (tagGroupContent.Count < _tagGroup.arraySize) {
-                tagGroupContent.Resize(_tagGroup.arraySize);
-            }
+            UpdateArraySize();
 
             // Store the selection tag menu identifiers to display it later.
             int _changedTagControlID = -1;
@@ -3412,6 +3392,18 @@ namespace EnhancedEditor.Editor {
             using (var _scope = new EditorGUI.PropertyScope(Rect.zero, _label, _property)) {
                 Rect _fieldPosition = EditorGUI.PrefixLabel(_position, _label);
                 Rect _temp = new Rect(_fieldPosition);
+
+                // Add tag button.
+                if (DrawTagGroupAddButton(_fieldPosition, ref _temp, tagGroupContent, out long _tagID)) {
+                    int _index = _tagGroup.arraySize;
+                    _tagGroup.InsertArrayElementAtIndex(_index);
+
+                    SerializedProperty _tagProperty = _tagGroup.GetArrayElementAtIndex(_index);
+                    _tagProperty.Next(true);
+
+                    _tagProperty.longValue = _tagID;
+                    UpdateArraySize();
+                }
 
                 // Draw each tag in the group.
                 for (int _i = 0; _i < _tagGroup.arraySize; _i++) {
@@ -3442,7 +3434,6 @@ namespace EnhancedEditor.Editor {
                         }
 
                         tagGroupContent[_i] = _data;
-                        _temp.x += _temp.width + 5f;
                     }
                 }
 
@@ -3459,22 +3450,19 @@ namespace EnhancedEditor.Editor {
                     _changedTagID = -2;
                 }
 
-                // Add tag button.
-                if (DrawTagGroupAddButton(_fieldPosition, ref _temp, tagGroupContent, out long _tagID)) {
-                    int _index = _tagGroup.arraySize;
-                    _tagGroup.InsertArrayElementAtIndex(_index);
-
-                    SerializedProperty _tagProperty = _tagGroup.GetArrayElementAtIndex(_index);
-                    _tagProperty.Next(true);
-
-                    _tagProperty.longValue = _tagID;
-                }
-
                 // Finally, register the total property position.
                 _extraHeight = ManageDynamicControlHeight(_property, _temp.yMax - _position.yMax);
                 _position.yMax = _temp.yMax;
 
                 using (new EditorGUI.PropertyScope(_position, GUIContent.none, _property)) { }
+            }
+
+            void UpdateArraySize() {
+
+                // ReduceSize the content array if it is too small. Do not reallocate a new array for each call.
+                if (tagGroupContent.Count < _tagGroup.arraySize) {
+                    tagGroupContent.Resize(_tagGroup.arraySize);
+                }
             }
         }
 
@@ -3498,6 +3486,12 @@ namespace EnhancedEditor.Editor {
             // Label.
             Rect _fieldPosition = EditorGUI.PrefixLabel(_position, _label);
             Rect _temp = new Rect(_fieldPosition);
+
+            // Add tag button.
+            if (DrawTagGroupAddButton(_fieldPosition, ref _temp, _group.GetData(), out long _tagID)) {
+                Tag _tag = new Tag(_tagID);
+                _group.AddTag(_tag);
+            }
 
             // Draw each tag in the group.
             for (int _i = 0; _i < _group.Count; _i++) {
@@ -3523,12 +3517,6 @@ namespace EnhancedEditor.Editor {
 
                     _temp.x += _temp.width + 5f;
                 }
-            }
-
-            // Add tag button.
-            if (DrawTagGroupAddButton(_fieldPosition, ref _temp, _group.GetData(), out long _tagID)) {
-                Tag _tag = new Tag(_tagID);
-                _group.AddTag(_tag);
             }
 
             _extraHeight = ManageDynamicControlHeight(_label, _temp.yMax - _position.yMax);
@@ -3594,6 +3582,7 @@ namespace EnhancedEditor.Editor {
                 _menu.ShowAsContext();
             }
 
+            _temp.x += _temp.width + 5f;
             return _remove;
         }
 
@@ -3609,6 +3598,9 @@ namespace EnhancedEditor.Editor {
                 GenericMenu _menu = GetTagSelectionMenu(_id, null, _groupContent);
                 _menu.DropDown(_temp);
             }
+
+            _temp.y += 1f;
+            _temp.x += _temp.width + 5f;
 
             // Get selected tag from menu.
             if (GetSelectedTag(_id, out Tag _tag)) {
@@ -3650,6 +3642,39 @@ namespace EnhancedEditor.Editor {
 
             float _extraHeight = _temp.yMax - _position.yMax;
             return _extraHeight;
+        }
+
+        // -----------------------
+
+        [SerializedPropertyMenu]
+        #pragma warning disable IDE0051
+        private static void OnTagGroupContextMenu(GenericMenu _menu, SerializedProperty _property) {
+
+            if ((_property.type == TagGroupTypeName) && !_property.hasMultipleDifferentValues) {
+
+                _menu.AddItem(SortTagsGUI, false, () => {
+
+                    if (EnhancedEditorUtility.FindSerializedPropertyField(_property, out FieldInfo _field)) {
+                        // Get the direct tag group reference and sort its tags.
+                        TagGroup _group = _field.GetValue(_property.serializedObject.targetObject) as TagGroup;
+                        _group.SortTagsByName();
+
+                        // In order for the modifications to be properly registered, update all tags id through their respective serialized property.
+                        // Otherwise, the property state is confused and its data may be disrupted when modifying or saving it.
+                        SerializedProperty _groupProperty = _property.Copy();
+                        _groupProperty.Next(true);
+
+                        for (int _i = 0; _i < _groupProperty.arraySize; _i++) {
+                            SerializedProperty _tagProperty = _groupProperty.GetArrayElementAtIndex(_i);
+                            _tagProperty.Next(true);
+
+                            _tagProperty.longValue = _group.Tags[_i].ID;
+                        }
+
+                        _groupProperty.serializedObject.ApplyModifiedProperties();
+                    }
+                });
+            }
         }
         #endregion
 
@@ -4578,13 +4603,39 @@ namespace EnhancedEditor.Editor {
         #endregion
 
         #region Enhanced Property
+        /// <summary>
+        /// Property field drawer infos wrapper.
+        /// </summary>
+        private class DrawerInfos {
+            // 0 for none, 1 for enhanced editor, 2 for default drawer.
+            public int State = 0;
+            public EnhancedPropertyEditor EnhancedEditor = null;
+            public PropertyDrawer DefaultDrawer = null;
+
+            public void SetEditor(EnhancedPropertyEditor _editor) {
+                EnhancedEditor = _editor;
+                State = 1;
+            }
+
+            public void SetDrawer(PropertyDrawer _drawer) {
+                DefaultDrawer = _drawer;
+                State = 2;
+            }
+        }
+
         private const BindingFlags FieldFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+        private const BindingFlags StaticFlags = BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
+
+        private static readonly Type scriptAttributeUtilityType = Type.GetType("UnityEditor.ScriptAttributeUtility, UnityEditor");
+
+        private static readonly MethodInfo GetDrawerTypeMethod  = scriptAttributeUtilityType.GetMethod("GetDrawerTypeForType", StaticFlags);
 
         private static readonly FieldInfo drawerType =           typeof(CustomPropertyDrawer).GetField("m_Type", FieldFlags);
         private static readonly FieldInfo drawerUseForChildren = typeof(CustomPropertyDrawer).GetField("m_UseForChildren", FieldFlags);
         private static readonly FieldInfo drawerFieldInfo =      typeof(PropertyDrawer).GetField("m_FieldInfo", FieldFlags);
 
-        private static readonly Dictionary<string, EnhancedPropertyEditor> drawers = new Dictionary<string, EnhancedPropertyEditor>();
+        private static readonly Dictionary<string, DrawerInfos> drawers = new Dictionary<string, DrawerInfos>();
+        private static readonly object[] getDrawerTypeParameters = new object[1];
 
         // -----------------------
 
@@ -4609,15 +4660,30 @@ namespace EnhancedEditor.Editor {
         /// <param name="_includeChildren">If true the property including children is drawn; otherwise only the control itself (such as only a foldout but nothing below it).</param>
         /// <returns><inheritdoc cref="DocumentationMethodTotal(Rect, out float)" path="/param[@name='_totalHeight']"/></returns>
         public static float EnhancedPropertyField(Rect _position, SerializedProperty _property, GUIContent _label, bool _includeChildren = true) {
-            EnhancedPropertyEditor _editor = GetPropertyEditor(_property);
+            DrawerInfos _drawer = GetPropertyEditor(_property);
+            float _height;
 
-            // Draw default editor.
-            if (_editor != null) {
-                return _editor.DrawEnhancedProperty(_position, _property, _label);
+            switch (_drawer.State) {
+
+                case 1:
+                    _height = _drawer.EnhancedEditor.DrawEnhancedProperty(_position, _property, _label);
+                    break;
+
+                case 2:
+                    _height = _drawer.DefaultDrawer.GetPropertyHeight(_property, _label);
+                    _position.height = _height;
+
+                    _drawer.DefaultDrawer.OnGUI(_position, _property, _label);
+                    break;
+
+                case 0:
+                default:
+                    _height = EditorGUI.GetPropertyHeight(_property, _label, _includeChildren);
+                    EditorGUI.PropertyField(_position, _property, _label, _includeChildren);
+                    break;
             }
 
-            EditorGUI.PropertyField(_position, _property, _label, _includeChildren);
-            return EditorGUI.GetPropertyHeight(_property, _label, _includeChildren);
+            return ManageDynamicControlHeight(_property, _height);
         }
 
         // -----------------------
@@ -4630,21 +4696,38 @@ namespace EnhancedEditor.Editor {
         /// <param name="_includeChildren">True to get the height for the property children too, false for the property itself.</param>
         /// <returns>The total height used to draw this property.</returns>
         public static float GetEnhancedPropertyHeight(SerializedProperty _property, GUIContent _label, bool _includeChildren = true) {
-            EnhancedPropertyEditor _editor = GetPropertyEditor(_property);
+            DrawerInfos _drawer = GetPropertyEditor(_property);
+            float _height;
 
-            return (_editor != null)
-                 ? _editor.GetDefaultHeight(_property, _label)
-                 : EditorGUI.GetPropertyHeight(_property, _label, _includeChildren);
+            switch (_drawer.State) {
+
+                case 1:
+                    _height = _drawer.EnhancedEditor.GetDefaultHeight(_property, _label);
+                    break;
+
+                case 2:
+                    _height = _drawer.DefaultDrawer.GetPropertyHeight(_property, _label);
+                    break;
+
+                case 0:
+                default:
+                    _height = EditorGUI.GetPropertyHeight(_property, _label, _includeChildren);
+                    break;
+            }
+
+            return _height;
         }
 
-        private static EnhancedPropertyEditor GetPropertyEditor(SerializedProperty _property) {
+        private static DrawerInfos GetPropertyEditor(SerializedProperty _property) {
             string _id = EnhancedEditorUtility.GetSerializedPropertyID(_property);
 
-            if (drawers.TryGetValue(_id, out EnhancedPropertyEditor _editor)) {
-                return _editor;
+            // Enhanced drawer.
+            if (drawers.TryGetValue(_id, out DrawerInfos _drawerInfos)) {
+                return _drawerInfos;
             }
 
             EnhancedEditorUtility.GetSerializedPropertyType(_property, out Type _type);
+            _drawerInfos = new DrawerInfos();
 
             if ((_type != null) && EnhancedEditorUtility.FindSerializedPropertyField(_property, out FieldInfo _field)) {
                 // Get all custom drawers in the project, and retrieve the one with the closest type from the editing property.
@@ -4678,13 +4761,28 @@ namespace EnhancedEditor.Editor {
 
                 // If an associated drawer was found, create a new instance of it to be used.
                 if (_bestDrawer.First != null) {
-                    _editor = Activator.CreateInstance(_bestDrawer.First) as EnhancedPropertyEditor;
+
+                    EnhancedPropertyEditor _editor = Activator.CreateInstance(_bestDrawer.First) as EnhancedPropertyEditor;
                     drawerFieldInfo.SetValue(_editor, _field);
+
+                    _drawerInfos.SetEditor(_editor);
+                } else {
+
+                    // Get default property drawer.
+                    getDrawerTypeParameters[0] = _type;
+                    Type _propertyDrawerType = GetDrawerTypeMethod.Invoke(null, getDrawerTypeParameters) as Type;
+
+                    if (typeof(PropertyDrawer).IsAssignableFrom(_propertyDrawerType)) {
+                        PropertyDrawer _propertyDrawer = Activator.CreateInstance(_propertyDrawerType) as PropertyDrawer;
+                        drawerFieldInfo.SetValue(_propertyDrawer, _field);
+
+                        _drawerInfos.SetDrawer(_propertyDrawer);
+                    }
                 }
             }
 
-            drawers.Add(_id, _editor);
-            return _editor;
+            drawers.Add(_id, _drawerInfos);
+            return _drawerInfos;
         }
         #endregion
 

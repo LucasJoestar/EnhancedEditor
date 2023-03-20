@@ -6,14 +6,33 @@
 
 using UnityEngine;
 
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+
 namespace EnhancedEditor
 {
     /// <summary>
     /// Contains multiple <see cref="GUI"/>-related methods and variables.
     /// </summary>
-	public static class EnhancedGUI
-    {
+	public static class EnhancedGUI {
         #region GUI Buffers
+        /// <summary>
+        /// <see cref="Handles.color"/> buffer system. Use this to dynamically push / pop Handles colors.
+        /// </summary>
+        public static readonly GUIBuffer<Color> HandlesColor = new GUIBuffer<Color>(() => {
+                                                                                        #if UNITY_EDITOR
+                                                                                        return Handles.color;
+                                                                                        #else
+                                                                                        return Color.white;
+                                                                                        #endif
+                                                                                    },
+                                                                                    (c) => {
+                                                                                        #if UNITY_EDITOR
+                                                                                        Handles.color = c;
+                                                                                        #endif
+                                                                                    }, "Handles Color");
+
         /// <summary>
         /// <see cref="Gizmos.color"/> buffer system. Use this to dynamically push / pop gizmos colors.
         /// </summary>

@@ -6,16 +6,14 @@
 
 using UnityEngine;
 
-namespace EnhancedEditor
-{
+namespace EnhancedEditor {
     /// <summary>
     /// Super color: use the extension method <see cref="SuperColorExtensions.Get(SuperColor, float)"/>
     /// to get associated color value.
     /// <para/>
     /// Example: <c>myColor.Get(<see cref="float"/>)</c>
     /// </summary>
-    public enum SuperColor
-    {
+    public enum SuperColor {
         White,
         Silver,
         Grey,
@@ -50,18 +48,16 @@ namespace EnhancedEditor
     /// <summary>
     /// Contains multiple <see cref="SuperColor"/>-related extension methods.
     /// </summary>
-    public static class SuperColorExtensions
-    {
+    public static class SuperColorExtensions {
+        #region Content
         /// <summary>
         /// Get the associated <see cref="Color"/> value.
         /// </summary>
         /// <param name="_superColor">Enum value to get color from.</param>
         /// <param name="_alpha"><see cref="Color"/> alpha value (from 0 to 1).</param>
         /// <returns>New <see cref="Color"/> associated with this <see cref="SuperColor"/>.</returns>
-        public static Color Get(this SuperColor _superColor, float _alpha = 1f)
-        {
-            switch (_superColor)
-            {
+        public static Color Get(this SuperColor _superColor, float _alpha = 1f) {
+            switch (_superColor) {
                 // White to Black
                 case SuperColor.White:
                     return new Color(1f, 1f, 1f, _alpha);
@@ -160,5 +156,6 @@ namespace EnhancedEditor
                     return new Color(1f, 1f, 1f, _alpha);
             }
         }
+        #endregion
     }
 }

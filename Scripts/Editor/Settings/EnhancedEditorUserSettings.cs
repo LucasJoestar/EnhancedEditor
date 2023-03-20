@@ -62,7 +62,7 @@ namespace EnhancedEditor.Editor {
             GUILayout.FlexibleSpace();
             #endif
 
-            if (EnhancedEditorToolbar.Button(Styles.UsetSettingsButtonGUI, GUILayout.Width(32f))) {
+            if (EnhancedEditorToolbar.Button(Styles.UserSettingsButtonGUI, GUILayout.Width(32f))) {
                 OpenSettings();
             }
 

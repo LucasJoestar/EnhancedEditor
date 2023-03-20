@@ -53,7 +53,7 @@ namespace EnhancedEditor {
         }
         #endregion
 
-        #region Operators
+        #region Operator
         public T this[int _index] {
             get { return Values[_index]; }
             set { Values[_index] = value; }

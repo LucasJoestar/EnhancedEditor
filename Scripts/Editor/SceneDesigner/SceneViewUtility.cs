@@ -17,6 +17,7 @@ namespace EnhancedEditor.Editor {
     /// <see cref="SceneView"/> utility class, adding multiple shortcuts and menu options.
     /// </summary>
     [InitializeOnLoad]
+    #pragma warning disable IDE0051
     public static class SceneViewUtility {
         #region Global Members
         private static ContextMenuDelegate[] contextMenuDelegates = new ContextMenuDelegate[] { };

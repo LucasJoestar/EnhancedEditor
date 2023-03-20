@@ -40,7 +40,7 @@ namespace EnhancedEditor.Editor {
         private static readonly GUIContent isCoreSceneEnabledGUI    = new GUIContent("Enabled", "Enables / Disables to core scene system.");
 
 
-        private static readonly int settingsGUID = "AutomaticSetup".GetHashCode();
+        private static readonly int settingsGUID = "CoreSceneSettings".GetHashCode();
         private static CoreSceneEnhancedSettings settings = null;
 
         /// <inheritdoc cref="CoreSceneEnhancedSettings"/>

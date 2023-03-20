@@ -90,9 +90,11 @@ namespace EnhancedEditor
         /// <param name="_array"></param>
         /// <typeparam name="T"></typeparam>
         public static void RemoveNulls<T>(ref T[] _array){
-            for (int i = _array.Length - 1; i >= 0; i--){
-                if (ReferenceEquals(_array[i], null))
+            for (int i = _array.Length; i-- > 0;){
+
+                if ((_array[i] == null) || _array[i].Equals(null)) {
                     RemoveAt(ref _array, i);
+                }
             }
         }
 
@@ -170,7 +172,7 @@ namespace EnhancedEditor
         /// <param name="_oldIndex">Current index of the element to shift.</param>
         /// <param name="_newIndex">New destination index of the element to shift.</param>
         public static void ShiftElement<T>(T[] _array, int _oldIndex, int _newIndex) {
-            if ((_oldIndex == _newIndex) || (_newIndex < 0) || _newIndex >= (_array.Length)) {
+            if ((_oldIndex == _newIndex) || (_newIndex < 0) || (_newIndex >= _array.Length)) {
                 return;
             }
 
@@ -183,6 +185,51 @@ namespace EnhancedEditor
             }
 
             _array[_newIndex] = _element;
+        }
+
+        /// <summary>
+        /// Shifts an element of an array at a specific index to a new index, looping at the array bounds (last become first, and vice-versa).
+        /// </summary>
+        /// <param name="_array">The array to shift elements from.</param>
+        /// <param name="_oldIndex">Current index of the element to shift.</param>
+        /// <param name="_newIndex">New destination index of the element to shift.</param>
+        public static void ShiftLoopElement<T>(T[] _array, int _oldIndex, int _newIndex) {
+            if ((_oldIndex == _newIndex) || (_newIndex < 0) || (_newIndex >= _array.Length) || (_array.Length == 0)) {
+                return;
+            }
+
+            int _count = _newIndex - _oldIndex;
+            Action _delegate;
+
+            if (_count > 0) {
+                _delegate = ShiftRight;
+            } else {
+                _delegate = ShiftLeft;
+            }
+
+            for (int i = 0; i < _count; i++) {
+                _delegate();
+            };
+
+            // ----- Local Methods ----- \\
+
+            void ShiftLeft() {
+                var _tmp = _array.First();
+                for (int i = 1; i < _array.Length; i++) {
+                    _array[i - 1] = _array[i];
+                }
+
+                _array[_array.Length - 1] = _tmp;
+            }
+
+            void ShiftRight() {
+                var _tmp = _array.Last();
+                for (int i = _array.Length; i-- > 1;) {
+                    _array[i] = _array[i - 1];
+                }
+
+                _array[0] = _tmp;
+            }
         }
 
         /// <summary>

@@ -42,7 +42,7 @@ namespace EnhancedEditor
         }
         #endregion
 
-        #region Operators
+        #region Operator
         public static implicit operator MemberValue<T>(string _memberName)
         {
             return new MemberValue<T>(_memberName);

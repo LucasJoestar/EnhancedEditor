@@ -35,7 +35,9 @@ namespace EnhancedEditor {
         /// </summary>
         public bool IsReadonly = false;
 
-        // -----------------------
+        // -------------------------------------------
+        // Constructor(s)
+        // -------------------------------------------
 
         /// <inheritdoc cref="BlockCollection(bool, bool)"/>
         public BlockCollection() : this(true, true) { }
@@ -51,7 +53,7 @@ namespace EnhancedEditor {
         }
         #endregion
 
-        #region Operators
+        #region Operator
         public abstract T this[int _index] { get;set; }
         #endregion
 
@@ -67,8 +69,17 @@ namespace EnhancedEditor {
         }
         #endregion
 
-        #region Initialization
+        #region Utility
+        /// <summary>
+        /// Adds an element to this collection.
+        /// </summary>
+        /// <param name="_element">Element to add.</param>
         public abstract void Add(T _element);
+
+        /// <summary>
+        /// Clears this collection content.
+        /// </summary>
+        public abstract void Clear();
         #endregion
     }
 
@@ -97,7 +108,7 @@ namespace EnhancedEditor {
         public BlockArray(bool _isEditable, bool _isReorderable = true, bool _isReadonly = false) : base(_isEditable, _isReorderable, _isReadonly) { }
         #endregion
 
-        #region Operators
+        #region Operator
         public override T this[int _index] {
             get { return Array[_index]; }
             set { Array[_index] = value; }
@@ -108,9 +119,13 @@ namespace EnhancedEditor {
         }
         #endregion
 
-        #region Initialization
+        #region Utility
         public override void Add(T _element) {
             ArrayUtility.Add(ref Array, _element);
+        }
+
+        public override void Clear() {
+            System.Array.Resize(ref Array, 0);
         }
         #endregion
     }
@@ -140,7 +155,7 @@ namespace EnhancedEditor {
         public BlockList(bool _isEditable, bool _isReorderable = true, bool _isReadonly = false) : base(_isEditable, _isReorderable, _isReadonly) { }
         #endregion
 
-        #region Operators
+        #region Operator
         public override T this[int _index] {
             get { return List[_index]; }
             set { List[_index] = value; }
@@ -151,9 +166,13 @@ namespace EnhancedEditor {
         }
         #endregion
 
-        #region Initialization
+        #region Utility
         public override void Add(T _element) {
             List.Add(_element);
+        }
+
+        public override void Clear() {
+            List.Clear();
         }
         #endregion
     }

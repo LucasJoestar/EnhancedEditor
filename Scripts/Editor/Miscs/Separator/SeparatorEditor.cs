@@ -31,7 +31,7 @@ namespace EnhancedEditor.Editor {
         private const float DefaultHeight = 20f;
 
         private static readonly GUIContent separatorHeightGUI = new GUIContent("Separator Height", "");
-        private static readonly int settingsGUID = "EnhancedEditorAutosaveSetting".GetHashCode();
+        private static readonly int settingsGUID = "EnhancedEditorSeparatorSetting".GetHashCode();
 
         private static FloatEnhancedSettings settings = null;
 

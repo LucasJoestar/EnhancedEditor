@@ -209,7 +209,8 @@ namespace EnhancedEditor {
 
         private static void RegisterContextObject(ref object _message, Object _context) {
             string _string = GetString(_message);
-            if (!_string.Contains(TextBeforeContext)) {
+
+            if (!_string.Contains(TextBeforeContext) && (_context != null)) {
                 _message = $"{_string}{TextBeforeContext}{_context.GetInstanceID()}{TextAfterContext}";
             }
         }

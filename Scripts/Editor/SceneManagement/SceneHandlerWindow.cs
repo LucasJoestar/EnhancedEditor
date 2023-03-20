@@ -223,7 +223,7 @@ namespace EnhancedEditor.Editor
         private const float AddCloseButtonWidth = 50f;
         private const float PlayButtonWidth = 25f;
 
-        private readonly GUIContent moveInGroupGUI = new GUIContent("Move in Group/", "Move this object into one this group.");
+        private readonly GUIContent moveInGroupGUI = new GUIContent("Move in Group/", "Move this object into this group.");
         private readonly GUIContent selectAssetGUI = new GUIContent("Select Asset", "Select this asset in the project window.");
         private readonly GUIContent deleteGUI = new GUIContent("Delete", "Permanently delete this asset from the project.");
 
@@ -425,12 +425,18 @@ namespace EnhancedEditor.Editor
             void OnOpen(int _groupIndex, int _elementIndex)
             {
                 SceneBundle _bundle = Database.bundleGroups[_groupIndex].Bundles[_elementIndex].SceneBundle;
-                if (_bundle.Scenes.Length > 0)
+                if (_bundle.Scenes.Length != 0)
                 {
                     OpenSceneFromGUID(_bundle.Scenes[0].GUID, OpenSceneMode.Single);
                     for (int _i = 1; _i < _bundle.Scenes.Length; _i++)
                     {
                         OpenSceneFromGUID(_bundle.Scenes[_i].GUID, OpenSceneMode.Additive);
+                    }
+
+                    int _activeScene = _bundle.ActiveSceneIndex;
+                    if (_activeScene != -1) {
+                        string _path = AssetDatabase.GUIDToAssetPath(_bundle.Scenes[_activeScene].guid);
+                        SceneManager.SetActiveScene(SceneManager.GetSceneByPath(_path));
                     }
                 }
             }
@@ -441,6 +447,12 @@ namespace EnhancedEditor.Editor
                 for (int _i = 0; _i < _bundle.Scenes.Length; _i++)
                 {
                     OpenSceneFromGUID(_bundle.Scenes[_i].GUID, OpenSceneMode.Additive);
+                }
+
+                int _activeScene = _bundle.ActiveSceneIndex;
+                if (_activeScene != -1) {
+                    string _path = AssetDatabase.GUIDToAssetPath(_bundle.Scenes[_activeScene].guid);
+                    SceneManager.SetActiveScene(SceneManager.GetSceneByPath(_path));
                 }
             }
 

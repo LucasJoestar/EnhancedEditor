@@ -12,8 +12,10 @@ using UnityEditor;
 using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
 using UnityEditor.Callbacks;
+using UnityEditor.SceneManagement;
 using UnityEditorInternal;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 using Object = UnityEngine.Object;
 
@@ -24,7 +26,7 @@ namespace EnhancedEditor.Editor {
     /// These include a preview of the user scripts from the stack, customizable filters,
     /// <br/> colors and textures, and many more.
     /// </summary>
-	public class EnhancedConsoleWindow : EditorWindow, IHasCustomMenu, IPreprocessBuildWithReport {
+	public class EnhancedConsoleWindow : EditorWindow, IHasCustomMenu {
         // ----- Classes & Enums ----- \\
 
         #region Styles
@@ -82,6 +84,24 @@ namespace EnhancedEditor.Editor {
             public static readonly GUIContent RefreshGUI = EditorGUIUtility.IconContent("Refresh", "Refreshes the console logs and filters.");
             public static readonly GUIContent ImportGUI = EditorGUIUtility.IconContent("FolderOpened Icon", "Import console logs from a file.");
             public static readonly GUIContent ExportGUI = EditorGUIUtility.IconContent("SaveAs", "Export this console logs into a file.");
+        }
+        #endregion
+
+        #region Build Preprocessor
+        /// <summary>
+        /// Implements the interface on another class to avoid Unity creating a new instance of the console window.
+        /// </summary>
+        private class BuildPreprocessor : IPreprocessBuildWithReport {
+            int IOrderedCallback.callbackOrder {
+                get { return -1; }
+            }
+
+            void IPreprocessBuildWithReport.OnPreprocessBuild(BuildReport _report) {
+
+                if (HasOpenInstances<EnhancedConsoleWindow>()) {
+                    GetWindow().OnPreprocessBuild(_report);
+                }
+            }
         }
         #endregion
 
@@ -898,8 +918,6 @@ namespace EnhancedEditor.Editor {
         [SerializeField] private Flags flags            = Flags.ClearOnPlay;
         [SerializeField] private string searchFilter    = string.Empty;
 
-        private static EnhancedConsoleWindow console    = null;
-
         private Vector2 logScroll               = new Vector2();
         private Vector2 stackTraceHeaderScroll  = new Vector2();
         private Vector2 stackTraceContentScroll = new Vector2();
@@ -907,8 +925,6 @@ namespace EnhancedEditor.Editor {
         // -----------------------
 
         private void OnEnable() {
-            console = this;
-
             // Load content.
             string _json = EditorPrefs.GetString(EditorPrefKey, string.Empty);
             if (!string.IsNullOrEmpty(_json)) {
@@ -986,7 +1002,6 @@ namespace EnhancedEditor.Editor {
         }
 
         private void OnDisable() {
-            console = null;
             UnregisterCallbacks();
 
             // Save content.
@@ -1002,14 +1017,11 @@ namespace EnhancedEditor.Editor {
         #region Callback
         private const int MaxPendingLog = 9000;
         private static bool requireRepaint = true;
-
-        int IOrderedCallback.callbackOrder {
-            get { return -1; }
-        }
+        private static bool hasUnpersistError = false;
 
         // -----------------------
 
-        void IPreprocessBuildWithReport.OnPreprocessBuild(BuildReport _report) {
+        private void OnPreprocessBuild(BuildReport _) {
             // Clears the console before starting to build.
             if (HasFlag(Flags.ClearOnBuild)) {
                 Clear();
@@ -1052,7 +1064,7 @@ namespace EnhancedEditor.Editor {
 
         private static void RegisterLog(string _log, string _stackTrace, LogType _type, bool _isNative = false) {
             // Used for debug purpose.
-            if ((console != null) && console.HasFlag(Flags.Disabled)) {
+            if (!EnhancedConsoleEnhancedSettings.Enabled) {
                 return;
             }
 
@@ -1062,8 +1074,41 @@ namespace EnhancedEditor.Editor {
                 pendingLogs.RemoveAt(0);
             }
 
+            // Dialog box when object(s) failed to unpersist.
+            if ((_type == LogType.Error) && !hasUnpersistError && _log.Contains("Failed to unpersist")) {
+
+                hasUnpersistError = true;
+                EditorApplication.delayCall += OnUnpersistError;
+            }
+
             // Repaint.
             requireRepaint = true;
+        }
+
+        private static void OnUnpersistError() {
+
+            if (EditorUtility.DisplayDialog("Failed to Unpersist Object(s)", "One or more object(s) failed to unpersist and have been destroyed in the open scene(s).\n" +
+                                            "Would you like to reload them?\n\nAny unsaved modification will be lost.", "Yes please", "No thanks")) {
+
+                // Cache.
+                List<string> _scenePaths = new List<string>();
+                for (int i = 0; i < SceneManager.sceneCount; i++) {
+                    _scenePaths.Add(SceneManager.GetSceneAt(i).path);
+                }
+
+                string _activeScenePath = SceneManager.GetActiveScene().path;
+
+                // Load.
+                EditorSceneManager.OpenScene(_scenePaths[0], OpenSceneMode.Single);
+                for (int i = 0; i < _scenePaths.Count; i++) {
+                    EditorSceneManager.OpenScene(_scenePaths[i], OpenSceneMode.Additive);
+                }
+
+                // Set active scene.
+                SceneManager.SetActiveScene(SceneManager.GetSceneByPath(_activeScenePath));
+            }
+
+            hasUnpersistError = false;
         }
         #endregion
 
@@ -1182,7 +1227,11 @@ namespace EnhancedEditor.Editor {
                 _menu.AddSeparator(string.Empty);
 
                 _menu.AddItem(logButtonsGUI, HasFlag(Flags.LogButton), () => InvertFlag(Flags.LogButton));
-                _menu.AddItem(enabledGUI, !HasFlag(Flags.Disabled), () => InvertFlag(Flags.Disabled));
+                _menu.AddItem(enabledGUI, !HasFlag(Flags.Disabled), () => {
+
+                    InvertFlag(Flags.Disabled);
+                    EnhancedConsoleEnhancedSettings.Enabled = !HasFlag(Flags.Disabled);
+                });
 
                 _position.y += EditorGUIUtility.standardVerticalSpacing;
                 _menu.DropDown(_position);

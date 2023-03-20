@@ -15,11 +15,11 @@ namespace EnhancedEditor.Editor {
     /// <summary>
     /// Custom <see cref="EnumValues{Enum, T}"/> drawer.
     /// </summary>
-    [CustomPropertyDrawer(typeof(EnumValues<>), true)]
+    [CustomPropertyDrawer(typeof(EnumValues<,>), true)]
     public class EnumValuesPropertyDrawer : EnhancedPropertyEditor {
         #region Drawer Content
-        private const string EmptyEnumMessage           = "This Enum does not contain any value";
         private const UMessageType EmptyEnumMessageType = UMessageType.Info;
+        private const string EmptyEnumMessage           = "This Enum does not contain any value";
 
         private const int CacheLimit = 20;
         private static readonly Dictionary<string, Type> enumInfos = new Dictionary<string, Type>();
@@ -43,8 +43,7 @@ namespace EnhancedEditor.Editor {
             float _height = 0f;
 
             // Button.
-            _property.isExpanded = EditorGUI.Foldout(_position, _property.isExpanded, GUIContent.none, true);
-            EditorGUI.LabelField(_position, _label, EditorStyles.boldLabel);
+            _property.isExpanded = EditorGUI.Foldout(_position, _property.isExpanded, _label, true);
 
             IncrementPosition();
 
@@ -70,7 +69,7 @@ namespace EnhancedEditor.Editor {
                         SerializedProperty _enumProperty    = _elementProperty.FindPropertyRelative("First");
                         SerializedProperty _valueProperty   = _elementProperty.FindPropertyRelative("Second");
 
-                        string _name = Enum.GetName(_enumType, _enumProperty.intValue);
+                        string _name = EnumUtility.GetName(_enumType, _enumProperty.intValue);
 
                         _position.height = EditorGUI.GetPropertyHeight(_valueProperty, true);
                         EditorGUI.PropertyField(_position, _valueProperty, EnhancedEditorGUIUtility.GetLabelGUI(_name), true);

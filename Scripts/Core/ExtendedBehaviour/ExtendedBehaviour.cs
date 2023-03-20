@@ -14,6 +14,8 @@ namespace EnhancedEditor {
     /// <summary>
     /// <see cref="GameObject"/>-extending class containing multiple editor notes and runtime features.
     /// </summary>
+    [ScriptGizmos(false, true)]
+    [AddComponentMenu(InternalUtility.MenuPath + "Extended Behaviour"), DisallowMultipleComponent]
     #pragma warning disable IDE0052
     public class ExtendedBehaviour : MonoBehaviour {
         #region Global Members

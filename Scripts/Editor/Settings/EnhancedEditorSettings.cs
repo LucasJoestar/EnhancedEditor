@@ -126,7 +126,7 @@ namespace EnhancedEditor.Editor {
     public abstract class EnhancedEditorSettings : ScriptableObject {
         #region Styles
         internal static class Styles {
-            public static readonly GUIContent UsetSettingsButtonGUI     = new GUIContent(EditorGUIUtility.FindTexture("d_Settings"),
+            public static readonly GUIContent UserSettingsButtonGUI     = new GUIContent(EditorGUIUtility.FindTexture("d_Settings"),
                                                                                          "Opens the EnhancedEditor user preferences.");
 
             public static readonly GUIContent ProjectSettingsButtonGUI  = new GUIContent(EditorGUIUtility.FindTexture("d_Settings"),
@@ -230,7 +230,7 @@ namespace EnhancedEditor.Editor {
         /// Draws a button to open the Enhanced Editor user settings window.
         /// </summary>
         public static void DrawUserSettingsButton(Rect _position) {
-            if (EnhancedEditorGUI.IconButton(_position, Styles.UsetSettingsButtonGUI)) {
+            if (EnhancedEditorGUI.IconButton(_position, Styles.UserSettingsButtonGUI)) {
                 EnhancedEditorUserSettings.OpenSettings();
             }
         }
@@ -246,15 +246,17 @@ namespace EnhancedEditor.Editor {
         #endregion
 
         #region Settings Providers
-        public const string UserSettingsPath        = "Preferences/Enhanced Editor";
-        public const string ProjectSettingsPath     = "Project/Enhanced Editor";
+        public const string UserSettingsPath        = "Preferences/Enhanced Engine";
+        public const string ProjectSettingsPath     = "Project/Enhanced Engine";
 
-        public const string UserSettingsGlobalLabel = "Enhanced Editor";
-        public const string ProjectSettingsLabel    = "Enhanced Editor";
+        public const string UserSettingsGlobalLabel = "Enhanced Engine";
+        public const string ProjectSettingsLabel    = "Enhanced Engine";
 
         public static readonly string[] UserSettingsKeywords    = new string[] {
                                                                     "Enhanced",
+                                                                    "Engine",
                                                                     "Editor",
+                                                                    "Framework",
                                                                     "Autosave",
                                                                     "Build Pipeline",
                                                                     "Chronos",
@@ -264,7 +266,9 @@ namespace EnhancedEditor.Editor {
 
         public static readonly string[] ProjectSettingsKeywords = new string[] {
                                                                     "Enhanced",
+                                                                    "Engine",
                                                                     "Editor",
+                                                                    "Framework",
                                                                     "Core Scene",
                                                                     "Resource",
                                                                     "Instance Tracker",

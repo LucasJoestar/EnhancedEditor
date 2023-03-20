@@ -22,18 +22,28 @@ namespace EnhancedEditor {
             return _component.GetComponent<ExtendedBehaviour>();
         }
 
-        /// <summary>
-        /// Get all <see cref="Tag"/> assigned to this component <see cref="GameObject"/>.
-        /// </summary>
-        /// <param name="_component">This component to get the tags from.</param>
-        /// <returns>The <see cref="TagGroup"/> containing all tag assigned to this component <see cref="GameObject"/>.</returns>
+        /// <param name="_component"><see cref="Component"/> to check.</param>
+        /// <inheritdoc cref="GameObjectExtensions.GetTags(GameObject)"/>
         public static TagGroup GetTags(this Component _component) {
-            if (_component.TryGetComponent(out ExtendedBehaviour _behaviour)) {
-                return _behaviour.Tags;
-            }
+            return _component.gameObject.GetTags();
+        }
 
-            _component.LogWarning($"No {typeof(ExtendedBehaviour).Name} could be found on the object \'{_component.gameObject.name}\'.");
-            return new TagGroup();
+        /// <param name="_component"><see cref="Component"/> to check.</param>
+        /// <inheritdoc cref="GameObjectExtensions.HasTag(GameObject, Tag)"/>
+        public static bool HasTag(this Component _component, Tag _tag) {
+            return _component.gameObject.HasTag(_tag);
+        }
+
+        /// <param name="_component"><see cref="Component"/> to check.</param>
+        /// <inheritdoc cref="GameObjectExtensions.HasTags(GameObject, TagGroup)"/>
+        public static bool HasTags(this Component _component, TagGroup _tags) {
+            return _component.gameObject.HasTags(_tags);
+        }
+
+        /// <param name="_component"><see cref="Component"/> to check.</param>
+        /// <inheritdoc cref="GameObjectExtensions.HasAnyTag(GameObject, TagGroup)"/>
+        public static bool HasAnyTag(this Component _component, TagGroup _tags) {
+            return _component.gameObject.HasAnyTag(_tags);
         }
         #endregion
 

@@ -31,10 +31,14 @@ namespace EnhancedEditor.Editor
         internal static MethodDrawer CreateInstance(Type _type, SerializedObject _serializedObject, EnhancedMethodAttribute _attribute, MethodInfo _methodInfo)
         {
             MethodDrawer _drawer = Activator.CreateInstance(_type) as MethodDrawer;
+
+            DisplayNameAttribute _displayNameAttribute = _methodInfo.GetCustomAttribute<DisplayNameAttribute>(false);
+            string _name = (_displayNameAttribute != null) ? _displayNameAttribute.Label.text : ObjectNames.NicifyVariableName(_methodInfo.Name);
+
             _drawer.SerializedObject = _serializedObject;
             _drawer.Attribute = _attribute;
             _drawer.MethodInfo = _methodInfo;
-            _drawer.Label = new GUIContent(ObjectNames.NicifyVariableName(_methodInfo.Name), _attribute.Tooltip);
+            _drawer.Label = new GUIContent(_name, _attribute.Tooltip);
 
             _drawer.OnEnable();
 

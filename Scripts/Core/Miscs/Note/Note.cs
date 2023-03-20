@@ -10,6 +10,8 @@ namespace EnhancedEditor {
     /// <summary>
     /// Editor utility <see cref="Component"/> with a simple editable note text.
     /// </summary>
+    [ScriptGizmos(false, true)]
+    [AddComponentMenu(InternalUtility.MenuPath + "Note")]
     public class Note : MonoBehaviour {
         #region Global Members
         #if UNITY_EDITOR

@@ -18,7 +18,7 @@ namespace EnhancedEditor {
     /// <see cref="ScriptableObject"/> wrapper class for multiple <see cref="Flag"/>.
     /// </summary>
     [ResetOnExitPlayMode]
-    [CreateAssetMenu(fileName = "FH_NewFlagHplder", menuName = InternalUtility.MenuPath + "Flag Holder", order = InternalUtility.MenuOrder)]
+    [CreateAssetMenu(fileName = "FLG_FlagHolder", menuName = InternalUtility.MenuPath + "Flag Holder", order = InternalUtility.MenuOrder)]
     public class FlagHolder : ScriptableObject, IEnumerable<Flag> {
         #region Global Members
         /// <summary>
@@ -34,7 +34,7 @@ namespace EnhancedEditor {
         }
         #endregion
 
-        #region Operators
+        #region Operator
         public virtual Flag this[int _index] {
             get { return Flags[_index]; }
             set { Flags[_index] = value; }

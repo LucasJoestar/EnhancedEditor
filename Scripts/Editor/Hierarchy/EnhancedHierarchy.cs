@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEditor;
+using UnityEditor.Experimental.SceneManagement;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -178,11 +179,12 @@ namespace EnhancedEditor.Editor {
             }
 
             public bool IsActiveInHierarchy(Rect _position) {
-                return !(hasGameObject && (!gameObject.activeInHierarchy || IsRootPrefab(_position)));
+                bool _isPrefabRoot = !isSearchFilter && !property.isValid && IsRootObject(_position) && (PrefabStageUtility.GetCurrentPrefabStage() != null);
+                return !hasGameObject || (gameObject.activeInHierarchy && !_isPrefabRoot);
             }
 
-            public bool IsRootPrefab(Rect _position) {
-                return !property.isValid && hasGameObject && (_position.x == (LeftMargin + IndentWidth));
+            public bool IsRootObject(Rect _position) {
+                return hasGameObject && (_position.x == (LeftMargin + IndentWidth));
             }
             #endregion
         }
@@ -243,6 +245,7 @@ namespace EnhancedEditor.Editor {
         private static object treeViewController    = null;
         private static List<int> dragSelection      = null;
 
+        private static bool isSearchFilter = false;
         private static bool enabled = true;
 
         // -------------------------------------------
@@ -480,7 +483,7 @@ namespace EnhancedEditor.Editor {
             // Indent dotted lines.
             if (Event.current.type == EventType.Repaint) {
                 // Ignore scene headers.
-                if (!_object.IsSceneHeader && !_object.IsRootPrefab(_position)) {
+                if (!_object.IsSceneHeader && !_object.IsRootObject(_position)) {
                     EnhancedEditorGUI.HorizontalDottedLine(_indentPosition, 1f, 1f);
 
                     while (_position.x < indentPositions.Last().x) {
@@ -528,6 +531,8 @@ namespace EnhancedEditor.Editor {
                 isHierarchyFocused = _focus.titleContent.text == HierarchyWindowTitle;
             }
 
+            isSearchFilter = IsSearchFilter();
+
             // Update the drag selection on update,
             // as the referenced list may be created again.
             dragSelection = GetDragSelection();
@@ -555,6 +560,7 @@ namespace EnhancedEditor.Editor {
 
         private static readonly FieldInfo treeViewField             = hierarchyType.GetField("m_TreeViewState", BindingFlags.Instance | Flags);
         private static readonly FieldInfo treeViewControllerField   = hierarchyType.GetField("m_TreeView", BindingFlags.Instance | Flags);
+        private static readonly FieldInfo searchFilterField         = hierarchyType.GetField("m_SearchFilter", BindingFlags.Instance | Flags);
 
         private static readonly FieldInfo lastHierarchyField        = hierarchyWindowType.GetField("s_LastInteractedHierarchy", BindingFlags.Static | Flags);
         private static readonly FieldInfo hierarchyField            = hierarchyWindowType.GetField("m_SceneHierarchy", BindingFlags.Instance | Flags);
@@ -572,10 +578,7 @@ namespace EnhancedEditor.Editor {
 
         private static void RefreshTreeView() {
             try {
-                var _hierarchyWindow = lastHierarchyField.GetValue(null);
-
-                if (_hierarchyWindow != null) {
-                    var _hierarchy = hierarchyField.GetValue(_hierarchyWindow);
+                if (GetHierarchy(out var _hierarchy)) {
 
                     treeView = treeViewField.GetValue(_hierarchy) as TreeViewState;
                     treeViewController = treeViewControllerField.GetValue(_hierarchy);
@@ -617,6 +620,35 @@ namespace EnhancedEditor.Editor {
             return ((dragSelection != null) && (dragSelection.Count != 0))
                  ? dragSelection.Contains(_id)
                  : treeView.selectedIDs.Contains(_id);
+        }
+
+        private static bool IsSearchFilter() {
+            if (!GetHierarchy(out object _hierarchy)) {
+                return false;
+            } 
+            
+            object _searchFilter = searchFilterField.GetValue(_hierarchy);
+            if (_searchFilter == null) {
+                return false;
+            }
+
+            return !string.IsNullOrEmpty(_searchFilter.ToString());
+        }
+
+        private static bool GetHierarchy(out object _hierarchy) {
+            try {
+                var _hierarchyWindow = lastHierarchyField.GetValue(null);
+
+                if (_hierarchyWindow != null) {
+                    _hierarchy = hierarchyField.GetValue(_hierarchyWindow);
+                    return _hierarchy != null;
+                }
+            } catch (Exception e) {
+                Debug.LogException(e);
+            }
+
+            _hierarchy = null;
+            return false;
         }
 
         internal static void Reset() {

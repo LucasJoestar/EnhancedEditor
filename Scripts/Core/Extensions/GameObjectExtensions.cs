@@ -7,13 +7,11 @@
 using System;
 using UnityEngine;
 
-namespace EnhancedEditor
-{
+namespace EnhancedEditor {
     /// <summary>
     /// Contains multiple <see cref="GameObject"/>-related extension methods.
     /// </summary>
-	public static class GameObjectExtensions
-    {
+	public static class GameObjectExtensions {
         #region Content
         /// <summary>
         /// Adds a specific component to a <see cref="GameObject"/>
@@ -22,8 +20,7 @@ namespace EnhancedEditor
         /// <typeparam name="T">Component type to add.</typeparam>
         /// <param name="_gameObject"><see cref="GameObject"/> to add the component to.</param>
         /// <returns>Newly added or already attached component to the <see cref="GameObject"/>.</returns>
-        public static T AddComponentIfNone<T>(this GameObject _gameObject) where T : Component
-        {
+        public static T AddComponentIfNone<T>(this GameObject _gameObject) where T : Component {
             if (_gameObject.TryGetComponent(out T _component))
                 return _component;
 
@@ -39,7 +36,7 @@ namespace EnhancedEditor
             return _gameObject.AddComponent(_componentType);
         }
 
-#if !UNITY_2019_2_OR_NEWER
+        #if !UNITY_2019_2_OR_NEWER
         /// <summary>
         /// Gets the component of the specified type, if it exists.<br/>
         /// TryGetComponent will attempt to retrieve the component of the given type.The notable difference compared to
@@ -60,7 +57,7 @@ namespace EnhancedEditor
             _component = _gameObject.GetComponent(type);
             return _component != null;
         }
-#endif
+        #endif
         #endregion
 
         #region Extended Behaviour
@@ -100,6 +97,48 @@ namespace EnhancedEditor
             }
 
             _gameObject.LogWarning($"No {typeof(ExtendedBehaviour).Name} could be found on the object \'{_gameObject.name}\'.");
+            return false;
+        }
+
+        /// <summary>
+        /// Get if this <see cref="GameObject"/> has a specific <see cref="Tag"/>.
+        /// </summary>
+        /// <param name="_gameObject"><see cref="GameObject"/> to check.</param>
+        /// <param name="_tag"><see cref="Tag"/> to check.</param>
+        /// <returns>True if the <see cref="GameObject"/> has the given <see cref="Tag"/>, false otherwise.</returns>
+        public static bool HasTag(this GameObject _gameObject, Tag _tag) {
+            if (_gameObject.TryGetComponent(out ExtendedBehaviour _behaviour)) {
+                return _behaviour.Tags.Contains(_tag);
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Get if this <see cref="GameObject"/> has all tags in a given <see cref="TagGroup"/>.
+        /// </summary>
+        /// <param name="_gameObject"><see cref="GameObject"/> to check.</param>
+        /// <param name="_tags"><see cref="TagGroup"/> to check.</param>
+        /// <returns>True if the <see cref="GameObject"/> has all the tags in the given <see cref="TagGroup"/>, false otherwise.</returns>
+        public static bool HasTags(this GameObject _gameObject, TagGroup _tags) {
+            if (_gameObject.TryGetComponent(out ExtendedBehaviour _behaviour)) {
+                return _behaviour.Tags.ContainsAll(_tags);
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Get if this <see cref="GameObject"/> has any tag in a given <see cref="TagGroup"/>.
+        /// </summary>
+        /// <param name="_gameObject"><see cref="GameObject"/> to check.</param>
+        /// <param name="_tags"><see cref="TagGroup"/> to check.</param>
+        /// <returns>True if the <see cref="GameObject"/> has any tag in the given <see cref="TagGroup"/>, false otherwise.</returns>
+        public static bool HasAnyTag(this GameObject _gameObject, TagGroup _tags) {
+            if (_gameObject.TryGetComponent(out ExtendedBehaviour _behaviour)) {
+                return _behaviour.Tags.ContainsAny(_tags);
+            }
+
             return false;
         }
         #endregion

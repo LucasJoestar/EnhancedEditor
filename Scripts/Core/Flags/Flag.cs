@@ -250,7 +250,7 @@ namespace EnhancedEditor {
         internal protected Flag() { }
         #endregion
 
-        #region Operators
+        #region Operator
         public static implicit operator bool(Flag _flag) {
             return _flag.value;
         }

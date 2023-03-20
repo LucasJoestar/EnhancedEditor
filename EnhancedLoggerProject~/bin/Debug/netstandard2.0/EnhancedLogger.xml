@@ -249,6 +249,15 @@
             <param name="_message"><inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,System.String,System.String)" path="/param[@name='_message']"/></param>
             <param name="_context"><inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,UnityEngine.LogType)" path="/param[@name='_context']"/></param>
         </member>
+        <member name="M:EnhancedEditor.UnityObjectLogger.DoLogFormat(UnityEngine.Object,UnityEngine.LogType,System.String,System.Object[])">
+            <inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.LogFormat(UnityEngine.Object,UnityEngine.LogType,System.String,System.Object[])"/>
+        </member>
+        <member name="M:EnhancedEditor.UnityObjectLogger.DoLogMessage``1(``0,UnityEngine.LogType,System.Object)">
+            <inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.LogMessage``1(``0,UnityEngine.LogType,System.Object)"/>
+        </member>
+        <member name="M:EnhancedEditor.UnityObjectLogger.DoLogMessage``1(``0,UnityEngine.LogType,System.Object,UnityEngine.Object)">
+            <inheritdoc cref="M:EnhancedEditor.UnityObjectLogger.LogMessage``1(``0,UnityEngine.LogType,System.Object,UnityEngine.Object)"/>
+        </member>
         <member name="M:EnhancedEditor.UnityObjectLogger.Doc(UnityEngine.Object,System.String,System.String)">
             <summary>
             Documentation method.

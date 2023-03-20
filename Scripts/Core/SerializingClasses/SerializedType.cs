@@ -110,7 +110,7 @@ namespace EnhancedEditor {
 		}
 		#endregion
 
-		#region Operators
+		#region Operator
 		public static implicit operator Type(SerializedType<T> _type) {
 			return _type.type;
 		}

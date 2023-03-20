@@ -13,6 +13,10 @@ namespace EnhancedEditor {
     /// </summary>
     public static class CollectionExtensions {
         #region Random
+        private const int RandomMaxIteration = 5;
+
+        // -----------------------
+
         /// <summary>
         /// Get a random element from this array.
         /// </summary>
@@ -20,6 +24,10 @@ namespace EnhancedEditor {
         /// <param name="_array">Array to get random element from.</param>
         /// <returns>Random element from this array.</returns>
         public static T Random<T>(this T[] _array) {
+            if (_array.Length == 0) {
+                return default;
+            }
+
             return _array[UnityEngine.Random.Range(0, _array.Length)];
         }
 
@@ -27,10 +35,55 @@ namespace EnhancedEditor {
         /// Get a random element from this list.
         /// </summary>
         /// <typeparam name="T">List content type.</typeparam>
-        /// <param name="list">List to get random element from.</param>
+        /// <param name="_list">List to get random element from.</param>
         /// <returns>Random element from this list.</returns>
         public static T Random<T>(this List<T> _list) {
+            if (_list.Count == 0) {
+                return default;
+            }
+
             return _list[UnityEngine.Random.Range(0, _list.Count)];
+        }
+
+        /// <summary>
+        /// Get a random element from this collection.
+        /// </summary>
+        /// <typeparam name="T">Collection content type.</typeparam>
+        /// <param name="_collection">Collection to get random element from.</param>
+        /// <returns>Random element from this collection.</returns>
+        public static T Random<T>(this IList<T> _collection) {
+            if (_collection.Count == 0) {
+                return default;
+            }
+
+            return _collection[UnityEngine.Random.Range(0, _collection.Count)];
+        }
+
+        /// <summary>
+        /// Get a random element from this collection.
+        /// </summary>
+        /// <typeparam name="T">Collection content type.</typeparam>
+        /// <param name="_collection">Collection to get random element from.</param>
+        /// <param name="_lastRandomIndex">Index of the last random element (used to avoid getting the same).</param>
+        /// <returns>Random element from this collection.</returns>
+        public static T Random<T>(this IList<T> _collection, ref int _lastRandomIndex) {
+            if (_collection.Count == 0) {
+                return default;
+            }
+
+            if (_collection.Count == 1) {
+                return _collection[0];
+            }
+
+            int _iteration = RandomMaxIteration;
+            int _index;
+
+            do {
+                _index = UnityEngine.Random.Range(0, _collection.Count);
+            } while ((_collection.Count > 1) && (_index == _lastRandomIndex) && (_iteration-- != RandomMaxIteration));
+
+            _lastRandomIndex = _index;
+            return _collection[_index];
         }
         #endregion
 
@@ -217,6 +270,51 @@ namespace EnhancedEditor {
             _list.RemoveAt(_index);
 
             return true;
+        }
+
+        /// <summary>
+        /// Shifts an element of a list at a specific index to a new index, looping at the list bounds (last become first, and vice-versa).
+        /// </summary>
+        /// <param name="_list">The list to shift elements from.</param>
+        /// <param name="_oldIndex">Current index of the element to shift.</param>
+        /// <param name="_newIndex">New destination index of the element to shift.</param>
+        public static void ShiftLoopElement<T>(this List<T> _list, int _oldIndex, int _newIndex) {
+            if ((_oldIndex == _newIndex) || (_newIndex < 0) || (_newIndex >= _list.Count) || (_list.Count == 0)) {
+                return;
+            }
+            
+            int _count = _newIndex - _oldIndex;
+            Action _delegate;
+
+            if (_count > 0) {
+                _delegate = ShiftRight;
+            } else {
+                _delegate = ShiftLeft;
+            }
+
+            for (int i = 0; i < _count; i++) {
+                _delegate();
+            };
+
+            // ----- Local Methods ----- \\
+
+            void ShiftLeft() {
+                var _tmp = _list.First();
+                for (int i = 1; i < _list.Count; i++) {
+                    _list[i - 1] = _list[i];
+                }
+
+                _list[_list.Count - 1] = _tmp;
+            }
+
+            void ShiftRight() {
+                var _tmp = _list.Last();
+                for (int i = _list.Count; i-- > 1;) {
+                    _list[i] = _list[i - 1];
+                }
+
+                _list[0] = _tmp;
+            }
         }
         #endregion
 

@@ -125,7 +125,7 @@ namespace EnhancedEditor {
             _name = _name.Replace(SceneBundle.Prefix, string.Empty);
 
             foreach (SceneBundle _temp in sceneBundles) {
-                if (_temp.name.Replace(SceneBundle.Prefix, string.Empty) == _name) {
+                if (_temp.name.Replace(SceneBundle.Prefix, string.Empty).Equals(_name, StringComparison.Ordinal)) {
                     _bundle = _temp;
                     return true;
                 }
@@ -144,15 +144,21 @@ namespace EnhancedEditor {
         /// </summary>
         /// <inheritdoc cref="GetSceneBundle(SceneAsset, out SceneBundle)"/>
         public bool GetSceneBundle(Scene _scene, out SceneBundle _bundle) {
+            bool _valid = false;
+            _bundle = null;
+
             foreach (SceneBundle _temp in sceneBundles) {
-                if ((_temp.Scenes.Length == 1) && _temp.ContainScene(_scene)) {
+                if (_temp.ContainScene(_scene)) {
                     _bundle = _temp;
-                    return true;
+                    _valid = true;
+
+                    if (_temp.Scenes.Length == 1) {
+                        return true;
+                    }
                 }
             }
 
-            _bundle = null;
-            return false;
+            return _valid;
         }
 
         /// <summary>
@@ -160,15 +166,21 @@ namespace EnhancedEditor {
         /// </summary>
         /// <inheritdoc cref="GetSceneBundle(SceneAsset[], out SceneBundle)"/>
         public bool GetSceneBundle(Scene[] _scenes, out SceneBundle _bundle) {
+            bool _valid = false;
+            _bundle = null;
+
             foreach (SceneBundle _temp in sceneBundles) {
-                if ((_temp.Scenes.Length == _scenes.Length) && _temp.ContainScenes(_scenes)) {
+                if (_temp.ContainScenes(_scenes)) {
                     _bundle = _temp;
-                    return true;
+                    _valid = true;
+
+                    if (_temp.Scenes.Length == _scenes.Length) {
+                        return true;
+                    }
                 }
             }
 
-            _bundle = null;
-            return false;
+            return _valid;
         }
 
         /// <summary>
@@ -178,15 +190,21 @@ namespace EnhancedEditor {
         /// <param name="_bundle">The bundle associated with the given scene (null if none).</param>
         /// <returns>True if an associated <see cref="SceneBundle"/> could be found, false otherwise.</returns>
         public bool GetSceneBundle(SceneAsset _scene, out SceneBundle _bundle) {
+            bool _valid = false;
+            _bundle = null;
+
             foreach (SceneBundle _temp in sceneBundles) {
-                if ((_temp.Scenes.Length == 1) && _temp.ContainScene(_scene)) {
+                if (_temp.ContainScene(_scene)) {
                     _bundle = _temp;
-                    return true;
+                    _valid = true;
+
+                    if (_temp.Scenes.Length == 1) {
+                        return true;
+                    }
                 }
             }
 
-            _bundle = null;
-            return false;
+            return _valid;
         }
 
         /// <summary>
@@ -196,15 +214,21 @@ namespace EnhancedEditor {
         /// <param name="_bundle">The bundle associated with the given scenes (null if none).</param>
         /// <returns>True if an associated <see cref="SceneBundle"/> could be found, false otherwise.</returns>
         public bool GetSceneBundle(SceneAsset[] _scenes, out SceneBundle _bundle) {
+            bool _valid = false;
+            _bundle = null;
+
             foreach (SceneBundle _temp in sceneBundles) {
-                if ((_temp.Scenes.Length == _scenes.Length) && _temp.ContainScenes(_scenes)) {
+                if (_temp.ContainScenes(_scenes)) {
                     _bundle = _temp;
-                    return true;
+                    _valid = true;
+
+                    if (_temp.Scenes.Length == _scenes.Length) {
+                        return true;
+                    }
                 }
             }
 
-            _bundle = null;
-            return false;
+            return _valid;
         }
         #endregion
 

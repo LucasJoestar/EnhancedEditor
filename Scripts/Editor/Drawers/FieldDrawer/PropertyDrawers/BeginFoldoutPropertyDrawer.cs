@@ -36,7 +36,7 @@ namespace EnhancedEditor.Editor
         public override void OnEnable()
         {
             BeginFoldoutAttribute _attribute = Attribute as BeginFoldoutAttribute;
-            id = SerializedProperty.name + _attribute.Label.text + _attribute.Color.ToString();
+            id = EnhancedEditorUtility.GetSerializedPropertyID(SerializedProperty);
 
             _attribute.foldout = foldout.value
                                = SessionState.GetBool(id, false);

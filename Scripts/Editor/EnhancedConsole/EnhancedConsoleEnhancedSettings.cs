@@ -53,6 +53,7 @@ namespace EnhancedEditor.Editor {
     public class EnhancedConsoleEnhancedSettings : EnhancedSettings {
         #region Global Members
         [SerializeField, HideInInspector] internal int selectedTabIndex = 0;
+        [SerializeField, HideInInspector] internal bool enabled = true;
 
         public BlockArray<LogColumnType> Columns = new BlockArray<LogColumnType>(false, true, true) {
             LogColumnType.Type,
@@ -253,8 +254,8 @@ namespace EnhancedEditor.Editor {
         public const string PreferencesFileExtension = ".txt";
         public const string UndoRecordTitle = "Enhanced Console Preferences change";
 
-        public const string PreferencesPath = EnhancedEditorSettings.UserSettingsPath + "/Console";
-        public const string PreferencesLabel = "Console";
+        public const string PreferencesPath = EnhancedEditorSettings.UserSettingsPath + "/Enhanced Console";
+        public const string PreferencesLabel = "Enhanced Console";
 
         public static readonly string[] PreferencesKeywords = new string[] {
                                                                 "Enhanced",
@@ -295,6 +296,17 @@ namespace EnhancedEditor.Editor {
                 }
 
                 return settings;
+            }
+        }
+
+        /// <summary>
+        /// Whether the enhanced console is currently enabled or not.
+        /// </summary>
+        public static bool Enabled {
+            get { return Settings.enabled; }
+            set {
+                Settings.enabled = value;
+                EnhancedEditorUserSettings.Instance.Save();
             }
         }
 

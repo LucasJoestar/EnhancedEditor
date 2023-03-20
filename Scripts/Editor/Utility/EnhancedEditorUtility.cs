@@ -8,6 +8,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using UnityEditor;
 using UnityEngine;
@@ -27,11 +28,13 @@ namespace EnhancedEditor.Editor {
         #region Global Members
         static EnhancedEditorUtility() {
             // Assembly reloading.
-            AssemblyReloadEvents.beforeAssemblyReload -= OnBeforeAssembliesReload;
-            AssemblyReloadEvents.afterAssemblyReload -= OnAfterAssembliesReload;
+            AssemblyReloadEvents.beforeAssemblyReload   -= OnBeforeAssembliesReload;
+            AssemblyReloadEvents.afterAssemblyReload    -= OnAfterAssembliesReload;
+            AssemblyReloadEvents.afterAssemblyReload    -= ToggleGizmos;
 
-            AssemblyReloadEvents.beforeAssemblyReload += OnBeforeAssembliesReload;
-            AssemblyReloadEvents.afterAssemblyReload += OnAfterAssembliesReload;
+            AssemblyReloadEvents.beforeAssemblyReload   += OnBeforeAssembliesReload;
+            AssemblyReloadEvents.afterAssemblyReload    += OnAfterAssembliesReload;
+            AssemblyReloadEvents.afterAssemblyReload    += ToggleGizmos;
 
             #if LOCALIZATION_ENABLED
             // Project locale setup.
@@ -276,6 +279,15 @@ namespace EnhancedEditor.Editor {
             _type = _value.GetType();
             _field = null;
 
+            if (_paths.Length == 0) {
+                return false;
+            }
+
+            // Get component field base class.
+            while ((_type.GetField(_paths[0], FieldFlags) == null) && (_type.BaseType != null)) {
+                _type = _type.BaseType;
+            }
+
             for (int i = 0; i < _paths.Length - _ignoreCount; i++) {
                 _field = _type.GetField(_paths[i], FieldFlags);
 
@@ -345,8 +357,11 @@ namespace EnhancedEditor.Editor {
 
                 if (_type.IsGenericType)
                     _type = _type.GetGenericArguments()[0];
-            } else if (_type.IsGenericType) {
-                _type = _type.GetGenericArguments()[0];
+            } else {
+
+                while (_type.IsGenericType) {
+                    _type = _type.GetGenericArguments()[0];
+                }
             }
 
             return _type;
@@ -495,6 +510,70 @@ namespace EnhancedEditor.Editor {
         }
         #endregion
 
+        #region Gizmos
+        private const BindingFlags InstanceFlags    = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+        private const BindingFlags StaticFlags      = BindingFlags.Static   | BindingFlags.Public | BindingFlags.NonPublic;
+
+        private static readonly Type annotationUtilityType  = typeof(UnityEditor.Editor).Assembly.GetType("UnityEditor.AnnotationUtility");
+        private static readonly Type annotationType         = typeof(UnityEditor.Editor).Assembly.GetType("UnityEditor.Annotation");
+
+        private static readonly MethodInfo getAnnotationsMethod     = annotationUtilityType.GetMethod("GetAnnotations", StaticFlags);
+        private static readonly MethodInfo setGizmoEnabledMethod    = annotationUtilityType.GetMethod("SetGizmoEnabled", StaticFlags);
+        private static readonly MethodInfo setIconEnabledMethod     = annotationUtilityType.GetMethod("SetIconEnabled", StaticFlags);
+
+        private static readonly FieldInfo classIDField      = annotationType.GetField("classID", InstanceFlags);
+        private static readonly FieldInfo scriptClassField  = annotationType.GetField("scriptClass", InstanceFlags);
+
+        private static readonly object[] setGizmoEnabledArguments   = new object[4];
+        private static readonly object[] setIconEnabledArguments    = new object[3];
+
+        // -----------------------
+
+        private static void ToggleGizmos() {
+
+            IEnumerable _annotations = (IEnumerable)getAnnotationsMethod.Invoke(null, null);
+            var _types = TypeCache.GetTypesWithAttribute<ScriptGizmosAttribute>().ToList();
+
+            foreach (var _annotation in _annotations) {
+
+                string _scriptClass = (string)scriptClassField.GetValue(_annotation);
+                if (string.IsNullOrEmpty(_scriptClass)) {
+                    continue;
+                }
+
+                Type _type = _types.Find(t => t.Name == _scriptClass);
+                if (_type == null) {
+                    continue;
+                }
+
+                bool _showGizmos = true;
+                bool _showIcon = true;
+
+                if (_type.IsDefined(typeof(ScriptGizmosAttribute), false)) {
+
+                    ScriptGizmosAttribute _attribute = _type.GetCustomAttribute<ScriptGizmosAttribute>();
+                    _showGizmos = _attribute.ShowGizmos;
+                    _showIcon = _attribute.ShowIcon;
+                }
+
+                int _classID = (int)classIDField.GetValue(_annotation);
+
+                setGizmoEnabledArguments[0] = _classID;
+                setGizmoEnabledArguments[1] = _scriptClass;
+                setGizmoEnabledArguments[2] = _showGizmos ? 1 : 0;
+                setGizmoEnabledArguments[3] = false;
+
+                setGizmoEnabledMethod.Invoke(null, setGizmoEnabledArguments);
+
+                setIconEnabledArguments[0] = _classID;
+                setIconEnabledArguments[1] = _scriptClass;
+                setIconEnabledArguments[2] = _showIcon ? 1 : 0;
+
+                setIconEnabledMethod.Invoke(null, setIconEnabledArguments);
+            }
+        }
+        #endregion
+
         #region Various
         /// <summary>
         /// Is a specific type either a <see cref="Component"/> or an interface?
@@ -502,7 +581,7 @@ namespace EnhancedEditor.Editor {
         /// <param name="_type">Type to check.</param>
         /// <returns>True if this type is a component or an interface, false otherwise.</returns>
         public static bool IsComponentOrInterface(Type _type) {
-            bool _isPickable = _type.IsInterface || _type.IsSubclassOf(typeof(Component));
+            bool _isPickable = _type.IsInterface || _type.IsSameOrSubclass(typeof(Component));
             return _isPickable;
         }
 
@@ -512,7 +591,7 @@ namespace EnhancedEditor.Editor {
         /// <param name="_type">Type to check.</param>
         /// <returns>True if this type is either a component or a game object, false otherwise.</returns>
         public static bool IsSceneObject(Type _type) {
-            bool _isPickable = (_type == typeof(GameObject)) || _type.IsSubclassOf(typeof(Component));
+            bool _isPickable = (_type == typeof(GameObject)) || _type.IsSameOrSubclass(typeof(Component));
             return _isPickable;
         }
         #endregion

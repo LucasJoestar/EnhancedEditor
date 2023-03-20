@@ -15,16 +15,13 @@ using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine;
 
-namespace EnhancedEditor.Editor
-{
+namespace EnhancedEditor.Editor {
     /// <summary>
     /// <see cref="GameObject"/> and <see cref="Component"/> picker window, allowing to only select objects with some specific components and / or interfaces.
     /// </summary>
-    public class ObjectPickerWindow : EditorWindow
-    {
+    public class ObjectPickerWindow : EditorWindow {
         #region Styles
-        private static class Styles
-        {
+        private static class Styles {
             public static readonly GUIStyle PickerTabStyle = new GUIStyle("ObjectPickerTab");
             public static readonly GUIStyle PickerBackgroundStyle = new GUIStyle("ProjectBrowserIconAreaBg");
             public static readonly GUIStyle ObjectLabelStyle = new GUIStyle("ProjectBrowserGridLabel");
@@ -37,16 +34,14 @@ namespace EnhancedEditor.Editor
         #endregion
 
         #region Object Info
-        private struct ObjectInfo
-        {
+        private struct ObjectInfo {
             public GameObject Object;
             public string Name;
             public bool IsVisible;
 
             // -----------------------
 
-            public ObjectInfo(GameObject _object, string _name)
-            {
+            public ObjectInfo(GameObject _object, string _name) {
                 Object = _object;
                 Name = _name;
                 IsVisible = true;
@@ -64,10 +59,8 @@ namespace EnhancedEditor.Editor
         /// <param name="_objectType">Selected object type.</param>
         /// <inheritdoc cref="GetWindow(int, GameObject, Type[], bool, Action{GameObject}"/>
         public static ObjectPickerWindow GetWindow(int _controlID, Component _selectedObject, Type _objectType, Type[] _requiredTypes, bool _allowSceneObjects,
-                                                   Action<Component> _onSelectObject = null)
-        {
-            if (!ArrayUtility.Contains(_requiredTypes, _objectType))
-            {
+                                                   Action<Component> _onSelectObject = null) {
+            if (!ArrayUtility.Contains(_requiredTypes, _objectType)) {
                 ArrayUtility.Add(ref _requiredTypes, _objectType);
             }
 
@@ -82,7 +75,10 @@ namespace EnhancedEditor.Editor
                 _onSelectObject?.Invoke(_component);
             });
 
-            objectType = _objectType;
+            if (!_requiredTypes.SafeFirst(out objectType)) {
+                objectType = _objectType;
+            }
+
             return _window;
         }
 
@@ -97,8 +93,7 @@ namespace EnhancedEditor.Editor
         /// <param name="_onSelectObject">Callback for whenever a new object is selected by the user.</param>
         /// <returns><see cref="ObjectPickerWindow"/> instance on screen.</returns>
         public static ObjectPickerWindow GetWindow(int _controlID, GameObject _selectedObject, Type[] _requiredTypes, bool _allowSceneObjects,
-                                                   Action<GameObject> _onSelectObject = null)
-        {
+                                                   Action<GameObject> _onSelectObject = null) {
             ObjectPickerWindow _window = GetWindow<ObjectPickerWindow>(true, string.Empty, true);
             _window.minSize = new Vector2(200f, 335f);
 
@@ -153,8 +148,7 @@ namespace EnhancedEditor.Editor
 
         // -----------------------
 
-        private void OnEnable()
-        {
+        private void OnEnable() {
             // Load values.
             string _data = EditorPrefs.GetString(DataKey, JsonUtility.ToJson(this, false));
             JsonUtility.FromJsonOverwrite(_data, this);
@@ -162,22 +156,18 @@ namespace EnhancedEditor.Editor
             ClearEditor();
         }
 
-        private void OnGUI()
-        {
+        private void OnGUI() {
             // Search field.
             Rect _toolbarRect;
-            using (var _scope = new GUILayout.HorizontalScope(EditorStyles.toolbar))
-            {
+            using (var _scope = new GUILayout.HorizontalScope(EditorStyles.toolbar)) {
                 _toolbarRect = EditorGUILayout.GetControlRect();
             }
 
             // Tab selection.
-            using (var _scope = new GUILayout.HorizontalScope(EditorStyles.toolbar))
-            {
+            using (var _scope = new GUILayout.HorizontalScope(EditorStyles.toolbar)) {
                 // Using an array iteration instead of two direct toggles allows to easily add new tabs whenever we want.
                 int _selectedTab = selectedTab;
-                for (int _i = 0; _i < tabsGUI.Length; _i++)
-                {
+                for (int _i = 0; _i < tabsGUI.Length; _i++) {
                     // Simply ignore scene tab in this case.
                     if (!allowSceneObjects && (_i == 1))
                         continue;
@@ -185,14 +175,12 @@ namespace EnhancedEditor.Editor
                     GUIContent _tabGUI = tabsGUI[_i];
                     bool _isSelected = _selectedTab == _i;
 
-                    if (GUILayout.Toggle(_isSelected, _tabGUI, Styles.PickerTabStyle))
-                    {
+                    if (GUILayout.Toggle(_isSelected, _tabGUI, Styles.PickerTabStyle)) {
                         _selectedTab = _i;
                     }
                 }
 
-                if (_selectedTab != selectedTab)
-                {
+                if (_selectedTab != selectedTab) {
                     selectedTab = _selectedTab;
                     scroll = Vector2.zero;
                 }
@@ -211,11 +199,9 @@ namespace EnhancedEditor.Editor
             GUI.Label(_position, GUIContent.none, Styles.PickerBackgroundStyle);
 
             // Object picker.
-            using (var _scope = new GUILayout.ScrollViewScope(scroll))
-            {
+            using (var _scope = new GUILayout.ScrollViewScope(scroll)) {
                 scroll = _scope.scrollPosition;
-                switch (selectedTab)
-                {
+                switch (selectedTab) {
                     case 0:
                         DrawPicker(assetObjects, _position.position);
                         break;
@@ -234,8 +220,7 @@ namespace EnhancedEditor.Editor
 
             // Finally, draw the search field to leave keyboard inputs for selecting objects.
             string _searchFilter = EnhancedEditorGUI.ToolbarSearchField(SearchFieldControlName, _toolbarRect, searchFilter);
-            if (_searchFilter != searchFilter)
-            {
+            if (_searchFilter != searchFilter) {
                 searchFilter = _searchFilter;
 
                 FilterObjects(assetObjects);
@@ -243,20 +228,17 @@ namespace EnhancedEditor.Editor
             }
 
             // Focus this search field once it has been drawn.
-            if (doFocusSearchField)
-            {
+            if (doFocusSearchField) {
                 GUI.FocusControl(SearchFieldControlName);
                 doFocusSearchField = false;
             }
         }
 
-        private void OnLostFocus()
-        {
+        private void OnLostFocus() {
             Close();
         }
 
-        private void OnDisable()
-        {
+        private void OnDisable() {
             ClearEditor();
 
             // Save values.
@@ -266,33 +248,24 @@ namespace EnhancedEditor.Editor
         #endregion
 
         #region Initialization
-        private void Initialize(int _controlID, GameObject _selectedObject, Type[] _requiredTypes, bool _allowSceneObjects, Action<GameObject> _onSelectObject)
-        {
+        private void Initialize(int _controlID, GameObject _selectedObject, Type[] _requiredTypes, bool _allowSceneObjects, Action<GameObject> _onSelectObject) {
             // Only keep eligible types.
-            for (int _i = _requiredTypes.Length; _i-- > 0;)
-            {
+            for (int _i = _requiredTypes.Length; _i-- > 0;) {
                 Type _type = _requiredTypes[_i];
-                if (!EnhancedEditorUtility.IsComponentOrInterface(_type))
-                {
+                if (!EnhancedEditorUtility.IsComponentOrInterface(_type)) {
                     ArrayUtility.RemoveAt(ref _requiredTypes, _i);
                 }
             }
 
             // Title.
             string _title = "Select ";
-            if (_requiredTypes.Length == 0)
-            {
+            if (_requiredTypes.Length == 0) {
                 _title += "GameObject";
-            }
-            else if (_requiredTypes.Length == 1)
-            {
+            } else if (_requiredTypes.Length == 1) {
                 _title += _requiredTypes[0].Name;
-            }
-            else
-            {
+            } else {
                 _title += $"Object with {_requiredTypes[0].Name}";
-                for (int _i = 1; _i < _requiredTypes.Length; _i++)
-                {
+                for (int _i = 1; _i < _requiredTypes.Length; _i++) {
                     _title += $", {_requiredTypes[_i].Name}";
                 }
             }
@@ -310,27 +283,21 @@ namespace EnhancedEditor.Editor
 
             // Objects.
             assetObjects = GetMatchingObjects(EnhancedEditorUtility.LoadAssets<GameObject>());
-            if (_allowSceneObjects)
-            {
+            if (_allowSceneObjects) {
                 sceneObjects = GetMatchingObjects(FindObjectsOfType<GameObject>());
-                selectedTab = Array.Exists(assetObjects, o => o.Object == selectedObject)
+                selectedTab = ((selectedObject != null) && Array.Exists(assetObjects, o => o.Object == selectedObject))
                             ? 0
                             : 1;
-            }
-            else
-            {
+            } else {
                 sceneObjects = new ObjectInfo[] { };
                 selectedTab = 0;
             }
         }
 
-        private ObjectInfo[] GetMatchingObjects(GameObject[] _objects)
-        {
+        private ObjectInfo[] GetMatchingObjects(GameObject[] _objects) {
             List<ObjectInfo> _matchingObjects = new List<ObjectInfo>();
-            foreach (GameObject _gameObject in _objects)
-            {
-                if (IsObjectValid(_gameObject))
-                {
+            foreach (GameObject _gameObject in _objects) {
+                if (IsObjectValid(_gameObject)) {
                     ObjectInfo _object = new ObjectInfo(_gameObject);
                     _matchingObjects.Add(_object);
                 }
@@ -343,10 +310,8 @@ namespace EnhancedEditor.Editor
 
             // ----- Local Method ----- \\
 
-            bool IsObjectValid(GameObject _object)
-            {
-                foreach (Type _type in requiredTypes)
-                {
+            bool IsObjectValid(GameObject _object) {
+                foreach (Type _type in requiredTypes) {
                     if (!_object.GetComponent(_type))
                         return false;
                 }
@@ -379,18 +344,14 @@ namespace EnhancedEditor.Editor
 
         // -----------------------
 
-        private void DrawPicker(ObjectInfo[] _objects, Vector2 _origin)
-        {
+        private void DrawPicker(ObjectInfo[] _objects, Vector2 _origin) {
             bool _focusSelection = doFocusSelection && (Event.current.type == EventType.Repaint);
             int _selectedIndex = -1;
 
             // Display the objects as a list if the slider value is at its minimum, and as a grid otherwise.
-            if (sizeSlider == SizeSliderMinValue)
-            {
-                using (var _scope = new EditorGUI.IndentLevelScope())
-                {
-                    for (int _i = 0; _i < _objects.Length; _i++)
-                    {
+            if (sizeSlider == SizeSliderMinValue) {
+                using (var _scope = new EditorGUI.IndentLevelScope()) {
+                    for (int _i = 0; _i < _objects.Length; _i++) {
                         if (!_objects[_i].IsVisible)
                             continue;
 
@@ -411,13 +372,10 @@ namespace EnhancedEditor.Editor
                         EnhancedEditorGUI.BackgroundLine(_temp, _isSelected, _i);
 
                         // Draw null object (first index) without any Icon.
-                        if (_i == 0)
-                        {
+                        if (_i == 0) {
                             _position.xMin = 18f;
                             EditorGUI.LabelField(_position, _objects[_i].Name);
-                        }
-                        else
-                        {
+                        } else {
                             // Don't store the object content as it can need multiple calls for Unity to properly load it, and is already cached internally.
                             EditorGUI.LabelField(_position, EditorGUIUtility.ObjectContent(_object, typeof(GameObject)));
                         }
@@ -433,13 +391,10 @@ namespace EnhancedEditor.Editor
 
                 // Selected object switch.
                 int _switch = EnhancedEditorGUIUtility.VerticalKeys();
-                switch (_switch)
-                {
+                switch (_switch) {
                     case -1:
-                        if (!SelectFirstObject())
-                        {
-                            for (int _i = _selectedIndex; _i-- > 0;)
-                            {
+                        if (!SelectFirstObject()) {
+                            for (int _i = _selectedIndex; _i-- > 0;) {
                                 if (DoSelectObject(_i))
                                     break;
                             }
@@ -447,10 +402,8 @@ namespace EnhancedEditor.Editor
                         break;
 
                     case 1:
-                        if (!SelectFirstObject())
-                        {
-                            for (int _i = _selectedIndex + 1; _i < _objects.Length; _i++)
-                            {
+                        if (!SelectFirstObject()) {
+                            for (int _i = _selectedIndex + 1; _i < _objects.Length; _i++) {
                                 if (DoSelectObject(_i))
                                     break;
                             }
@@ -460,9 +413,7 @@ namespace EnhancedEditor.Editor
                     default:
                         break;
                 }
-            }
-            else
-            {
+            } else {
                 // Position calculs.
                 float _size = GridObjectSize * sizeSlider;
                 Rect _position = EditorGUILayout.GetControlRect(false, 5f);
@@ -479,28 +430,24 @@ namespace EnhancedEditor.Editor
                 };
 
                 // Draw all objects as a grid.
-                while (_index < _objects.Length)
-                {
+                while (_index < _objects.Length) {
                     if (_index == _objects.Length - 1)
                         break;
 
                     _temp.x = _position.x + _spacing;
 
                     // Line.
-                    for (int _i = 0; _i < _gridCount; _i++)
-                    {
+                    for (int _i = 0; _i < _gridCount; _i++) {
                         // Increment index.
                         _index++;
-                        if (_index == _objects.Length)
-                        {
+                        if (_index == _objects.Length) {
                             if (_i == 0)
                                 _temp.y -= _temp.height + GridVerticalSpacing;
 
                             break;
                         }
 
-                        if (!_objects[_index].IsVisible)
-                        {
+                        if (!_objects[_index].IsVisible) {
                             _i--;
                             continue;
                         }
@@ -512,42 +459,33 @@ namespace EnhancedEditor.Editor
                             _selectedIndex = _index;
 
                         // Do not draw null object preview.
-                        if (_index > 0)
-                        {
+                        if (_index > 0) {
                             // Catch preview null ref exception.
-                            try
-                            {
+                            try {
                                 Texture2D _preview = AssetPreview.GetAssetPreview(_object);
-                                if (_preview != null)
-                                {
+                                if (_preview != null) {
                                     // Drop shadow background.
-                                    if (Event.current.type == EventType.Repaint)
-                                    {
+                                    if (Event.current.type == EventType.Repaint) {
                                         Rect _dropShadowPos = dropShadowBackgroundOffset.Remove(Styles.PreviewDropShadowStyle.border.Add(_temp));
                                         Styles.PreviewDropShadowStyle.Draw(_dropShadowPos, GUIContent.none, false, false, false, false);
                                     }
 
                                     // Preview and selected feedback.
                                     EditorGUI.DrawPreviewTexture(_temp, _preview);
-                                    if (selectedObject == _object)
-                                    {
+                                    if (selectedObject == _object) {
                                         EditorGUI.DrawRect(_temp, gridPreviewSelectedColor);
                                     }
-                                }
-                                else
-                                {
+                                } else {
                                     Color _color = _isSelected
                                                  ? gridContentSelectedColor
                                                  : Color.white;
 
                                     using (var _scope = EnhancedGUI.GUIStyleAlignment.Scope(EditorStyles.label, TextAnchor.MiddleCenter))
-                                    using (var _colorScope = EnhancedGUI.GUIColor.Scope(_color))
-                                    {
+                                    using (var _colorScope = EnhancedGUI.GUIColor.Scope(_color)) {
                                         GUI.Label(_temp, EditorGUIUtility.ObjectContent(_object, typeof(GameObject)).image, EditorStyles.label);
                                     }
                                 }
-                            }
-                            catch (NullReferenceException) { }
+                            } catch (NullReferenceException) { }
                         }
 
                         Rect _labelPos = new Rect(_temp)
@@ -557,13 +495,11 @@ namespace EnhancedEditor.Editor
                         };
 
                         // Only draw the label on repaint event, as the method GUIStyle.Draw is not allowed to be called during another event.
-                        if (Event.current.type == EventType.Repaint)
-                        {
+                        if (Event.current.type == EventType.Repaint) {
                             string _label = _objects[_index].Name;
                             int _length = (int)_labelPos.width / 7;
 
-                            if (_label.Length > _length)
-                            {
+                            if (_label.Length > _length) {
                                 _label = $"{_label.Remove(_length)}...";
                             }
 
@@ -575,8 +511,7 @@ namespace EnhancedEditor.Editor
                             _labelPos.width = Styles.ObjectLabelStyle.CalcSize(_labelGUI).x + 2f;
                             _labelPos.x += (_temp.width - _labelPos.width) * .5f;
 
-                            using (var _scope = EnhancedGUI.GUIBackgroundColor.Scope(_color))
-                            {
+                            using (var _scope = EnhancedGUI.GUIBackgroundColor.Scope(_color)) {
                                 Styles.ObjectLabelStyle.Draw(_labelPos, _labelGUI, false, false, _isSelected, true);
                             }
                         }
@@ -600,18 +535,14 @@ namespace EnhancedEditor.Editor
 
                 // Vertical object switch.
                 int _switch = EnhancedEditorGUIUtility.VerticalKeys();
-                switch (_switch)
-                {
+                switch (_switch) {
                     case -1:
-                        if (!SelectFirstObject())
-                        {
+                        if (!SelectFirstObject()) {
                             int _count = (int)_gridCount;
                             _index = _selectedIndex;
 
-                            for (int _i = _selectedIndex; _i-- > 0;)
-                            {
-                                if (_objects[_i].IsVisible)
-                                {
+                            for (int _i = _selectedIndex; _i-- > 0;) {
+                                if (_objects[_i].IsVisible) {
                                     _index = _i;
                                     _count--;
 
@@ -625,15 +556,12 @@ namespace EnhancedEditor.Editor
                         break;
 
                     case 1:
-                        if (!SelectFirstObject())
-                        {
+                        if (!SelectFirstObject()) {
                             int _count = (int)_gridCount;
                             _index = _selectedIndex;
 
-                            for (int _i = _selectedIndex + 1; _i < _objects.Length; _i++)
-                            {
-                                if (_objects[_i].IsVisible)
-                                {
+                            for (int _i = _selectedIndex + 1; _i < _objects.Length; _i++) {
+                                if (_objects[_i].IsVisible) {
                                     _index = _i;
                                     _count--;
 
@@ -651,16 +579,12 @@ namespace EnhancedEditor.Editor
                 }
 
                 // Horizontal object switch.
-                if (GUIUtility.keyboardControl == 0)
-                {
+                if (GUIUtility.keyboardControl == 0) {
                     _switch = EnhancedEditorGUIUtility.HorizontalSelectionKeys();
-                    switch (_switch)
-                    {
+                    switch (_switch) {
                         case -1:
-                            if (!SelectFirstObject())
-                            {
-                                for (int _i = _selectedIndex; _i-- > 0;)
-                                {
+                            if (!SelectFirstObject()) {
+                                for (int _i = _selectedIndex; _i-- > 0;) {
                                     if (DoSelectObject(_i))
                                         break;
                                 }
@@ -668,10 +592,8 @@ namespace EnhancedEditor.Editor
                             break;
 
                         case 1:
-                            if (!SelectFirstObject())
-                            {
-                                for (int _i = _selectedIndex + 1; _i < _objects.Length; _i++)
-                                {
+                            if (!SelectFirstObject()) {
+                                for (int _i = _selectedIndex + 1; _i < _objects.Length; _i++) {
                                     if (DoSelectObject(_i))
                                         break;
                                 }
@@ -689,29 +611,23 @@ namespace EnhancedEditor.Editor
 
             // ----- Local Methods ----- \\
 
-            void ObjectSelection(Rect _position, GameObject _object)
-            {
-                if (EnhancedEditorGUIUtility.MouseDown(_position))
-                {
+            void ObjectSelection(Rect _position, GameObject _object) {
+                if (EnhancedEditorGUIUtility.MouseDown(_position)) {
                     SelectObject(_object);
-                    if (Event.current.clickCount > 1)
-                    {
+                    if (Event.current.clickCount > 1) {
                         Close();
                     }
                 }
             }
 
-            bool SelectFirstObject()
-            {
+            bool SelectFirstObject() {
                 // Only select the first object if the selected one is not visible.
                 if (_selectedIndex != -1)
                     return false;
 
                 _selectedIndex = 0;
-                for (int _i = 1; _i < _objects.Length; _i++)
-                {
-                    if (_objects[_i].IsVisible)
-                    {
+                for (int _i = 1; _i < _objects.Length; _i++) {
+                    if (_objects[_i].IsVisible) {
                         _selectedIndex = _i;
                         break;
                     }
@@ -721,10 +637,8 @@ namespace EnhancedEditor.Editor
                 return true;
             }
 
-            bool DoSelectObject(int _index)
-            {
-                if (_objects[_index].IsVisible)
-                {
+            bool DoSelectObject(int _index) {
+                if (_objects[_index].IsVisible) {
                     SelectObject(_objects[_index].Object);
                     return true;
                 }
@@ -732,8 +646,7 @@ namespace EnhancedEditor.Editor
                 return false;
             }
 
-            void Focus(Rect _position)
-            {
+            void Focus(Rect _position) {
                 Vector2 _areaSize = position.size - _origin;
                 _areaSize.y -= (inspectorHeight != 0f)
                              ? inspectorHeight
@@ -745,8 +658,7 @@ namespace EnhancedEditor.Editor
             }
         }
 
-        private void DrawInspector()
-        {
+        private void DrawInspector() {
             // Inspector background and separator.
             Rect _position = EditorGUILayout.GetControlRect();
             Rect _temp = new Rect(_position)
@@ -778,17 +690,14 @@ namespace EnhancedEditor.Editor
             int _controlID = EnhancedEditorGUIUtility.GetControlID(FocusType.Passive);
             EventType _eventType = _event.GetTypeForControl(_controlID);
 
-            switch (inspectorResizeState)
-            {
+            switch (inspectorResizeState) {
                 // Not resizing yet.
-                case 0:
-                {
+                case 0: {
                     _temp.y -= 1f;
                     _temp.height = 23f;
 
                     EditorGUIUtility.AddCursorRect(_temp, MouseCursor.ResizeVertical);
-                    if ((_eventType == EventType.MouseDown) && _temp.Contains(_event.mousePosition))
-                    {
+                    if ((_eventType == EventType.MouseDown) && _temp.Contains(_event.mousePosition)) {
                         // Prepare resize.
                         GUIUtility.hotControl = _controlID;
                         inspectorResizeState = 1;
@@ -799,23 +708,19 @@ namespace EnhancedEditor.Editor
                 break;
 
                 // Preparing to resize.
-                case 1:
-                {
+                case 1: {
                     _temp.y -= 1f;
                     _temp.yMax = position.height;
 
                     EditorGUIUtility.AddCursorRect(_temp, MouseCursor.ResizeVertical);
-                    if (_eventType == EventType.MouseDrag)
-                    {
+                    if (_eventType == EventType.MouseDrag) {
                         // Start resize.
                         GUIUtility.hotControl = _controlID;
                         GUI.changed = true;
 
                         inspectorResizeState = 2;
                         _event.Use();
-                    }
-                    else if (_eventType == EventType.MouseUp)
-                    {
+                    } else if (_eventType == EventType.MouseUp) {
                         // Switch inspector wide mode.
                         inspectorHeight = (inspectorHeight == 0f)
                                         ? lastWideInspectorHeight
@@ -835,12 +740,10 @@ namespace EnhancedEditor.Editor
                     _temp.yMax = position.height + ResizeCursorOffset;
 
                     EditorGUIUtility.AddCursorRect(_temp, MouseCursor.ResizeVertical);
-                    if (_eventType == EventType.MouseDrag)
-                    {
+                    if (_eventType == EventType.MouseDrag) {
                         // ReduceSize inspector height.
                         inspectorHeight = Mathf.Clamp(position.height - _event.mousePosition.y, 0f, position.height - PickerMinimumHeight);
-                        if (inspectorHeight < WideInspectorMinimumHeight)
-                        {
+                        if (inspectorHeight < WideInspectorMinimumHeight) {
                             inspectorHeight = (inspectorHeight > (WideInspectorMinimumHeight * .5f))
                                             ? WideInspectorMinimumHeight
                                             : 0f;
@@ -854,9 +757,7 @@ namespace EnhancedEditor.Editor
                         GUI.changed = true;
 
                         _event.Use();
-                    }
-                    else if (_eventType == EventType.MouseUp)
-                    {
+                    } else if (_eventType == EventType.MouseUp) {
                         // Stop resize.
                         GUIUtility.hotControl = 0;
                         inspectorResizeState = 0;
@@ -873,23 +774,19 @@ namespace EnhancedEditor.Editor
             bool _isWideInspector = inspectorHeight != 0f;
             string _label;
 
-            if (selectedObject != null)
-            {
+            if (selectedObject != null) {
                 string _type = ObjectNames.NicifyVariableName(selectedObject.GetType().Name);
                 string _path = AssetDatabase.GetAssetPath(selectedObject);
 
                 _label = _isWideInspector
                        ? $"{selectedObject.name}\n{_type}\n{_path}"
                        : $"{selectedObject.name} ({_type})     {_path}";
-            }
-            else
-            {
+            } else {
                 _label = nullObject.Name;
             }
 
             // Reserve inspector area.
-            if (_isWideInspector)
-            {
+            if (_isWideInspector) {
                 // Make sure that the height of the inspector is never too large, in case the user resizes the window.
                 inspectorHeight = Mathf.Min(inspectorHeight, position.height - PickerMinimumHeight);
 
@@ -903,8 +800,7 @@ namespace EnhancedEditor.Editor
                 _previewPos.width = _previewPos.height;
 
                 // Preview.
-                if (objectEditor != null && objectEditor.HasPreviewGUI())
-                {
+                if (objectEditor != null && objectEditor.HasPreviewGUI()) {
                     objectEditor.OnPreviewGUI(_previewPos, Styles.PreviewBackgroundStyle);
                 }
 
@@ -915,8 +811,7 @@ namespace EnhancedEditor.Editor
             }
 
             using (var _align = EnhancedGUI.GUIStyleAlignment.Scope(Styles.SmallStatusStyle, TextAnchor.MiddleLeft))
-            using (var _scope = new EditorGUI.IndentLevelScope())
-            {
+            using (var _scope = new EditorGUI.IndentLevelScope()) {
                 _position = EditorGUI.IndentedRect(_position);
 
                 GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
@@ -927,10 +822,8 @@ namespace EnhancedEditor.Editor
 
         #region Get Selected Object
         /// <inheritdoc cref="GetSelectedObject(int, out GameObject)"/>
-        public static bool GetSelectedObject(int _id, out Component _object)
-        {
-            if (!GetSelectedObject(_id, out GameObject _gameObject) || (objectType == null))
-            {
+        public static bool GetSelectedObject(int _id, out Component _object) {
+            if (!GetSelectedObject(_id, out GameObject _gameObject) || (objectType == null)) {
                 _object = null;
                 return false;
             }
@@ -945,10 +838,8 @@ namespace EnhancedEditor.Editor
         /// <param name="_controlID">Control id to get selected object for.</param>
         /// <param name="_object">Newly selected object.</param>
         /// <returns>True if the user selected a new object, false otherwise.</returns>
-        public static bool GetSelectedObject(int _controlID, out GameObject _object)
-        {
-            if (hasSelectedObject && (_controlID == controlID))
-            {
+        public static bool GetSelectedObject(int _controlID, out GameObject _object) {
+            if (hasSelectedObject && (_controlID == controlID)) {
                 _object = selectedObject;
                 hasSelectedObject = false;
 
@@ -962,23 +853,19 @@ namespace EnhancedEditor.Editor
         #endregion
 
         #region Utility
-        private static Component GetSelectedComponent(GameObject _object)
-        {
+        private static Component GetSelectedComponent(GameObject _object) {
             Component _component = _object?.GetComponent(objectType);
             return _component;
         }
 
-        private void FilterObjects(ObjectInfo[] _objects)
-        {
+        private void FilterObjects(ObjectInfo[] _objects) {
             string _searchFilter = searchFilter.ToLower();
-            for (int _i = 1; _i < _objects.Length; _i++)
-            {
+            for (int _i = 1; _i < _objects.Length; _i++) {
                 _objects[_i].IsVisible = _objects[_i].Name.ToLower().Contains(_searchFilter);
             }
         }
 
-        private void SelectObject(GameObject _object)
-        {
+        private void SelectObject(GameObject _object) {
             selectedObject = _object;
             hasSelectedObject = true;
             doFocusSelection = true;
@@ -991,14 +878,12 @@ namespace EnhancedEditor.Editor
             InternalEditorUtility.RepaintAllViews();
         }
 
-        private void ClearEditor()
-        {
+        private void ClearEditor() {
             if (objectEditor != null)
                 DestroyImmediate(objectEditor);
         }
 
-        private void CreateEditor()
-        {
+        private void CreateEditor() {
             if (selectedObject != null)
                 objectEditor = UnityEditor.Editor.CreateEditor(selectedObject);
         }

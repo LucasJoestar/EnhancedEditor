@@ -135,7 +135,7 @@ namespace EnhancedEditor {
         }
         #endregion
 
-        #region Operators
+        #region Operator
         public static implicit operator T(PolymorphValue<T> _value) {
             return _value.value;
         }

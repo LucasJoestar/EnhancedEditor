@@ -146,7 +146,8 @@ namespace EnhancedEditor.Editor {
                     return _entry.Type == FlagLogType.Exception;
 
                 case Type.External:
-                    return _entry.LineNumber == -1;
+                    return (_entry.LineNumber == -1)
+                        && ((_entry.Type == FlagLogType.Log) || (_entry.Type == FlagLogType.Warning));
 
                 case Type.Compilation:
                     bool _isError = (_entry.Type != FlagLogType.Log) && (_entry.Type != FlagLogType.Warning);
