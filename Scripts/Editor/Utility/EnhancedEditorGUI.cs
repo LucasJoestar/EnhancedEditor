@@ -368,7 +368,7 @@ namespace EnhancedEditor.Editor {
                 DrawProperty();
             }
 
-            _totalHeight = ManageDynamicControlHeight(_property, _position.yMax - _origin);
+            _totalHeight = _position.yMax - _origin;
 
             // ----- Local Method ----- \\
 
@@ -1038,7 +1038,7 @@ namespace EnhancedEditor.Editor {
                 IsDrawingDuoProperty = false;
             }
 
-            _extraHeight = ManageDynamicControlHeight(_property, _temp.height - _position.height);
+            _extraHeight = _temp.height - _position.height;
         }
         #endregion
 
@@ -1331,7 +1331,7 @@ namespace EnhancedEditor.Editor {
 
             Rect _temp = new Rect(_position);
 
-            _extraHeight = ManageDynamicControlHeight(_property, _extraHeight - _position.height);
+            _extraHeight -= _position.height;
             _position.height += _extraHeight;
 
             // Property field.
@@ -1936,6 +1936,11 @@ namespace EnhancedEditor.Editor {
                     _fieldType = typeof(GameObject);
                 }
 
+                // Drag.
+                if (AcceptPickerObjectDrag(_position, out Object _dragObject, _objectType, _requiredTypes, _allowSceneObjects)) {
+                    _property.objectReferenceValue = _dragObject;
+                }
+
                 EditorGUI.ObjectField(_position, _property, _fieldType, _label);
 
                 if (_changeCheck.changed && ResetPickerObjectIfDontMatch(_property.objectReferenceValue, _requiredTypes)) {
@@ -2033,6 +2038,11 @@ namespace EnhancedEditor.Editor {
             int _id = EnhancedEditorGUIUtility.GetControlID(_label, FocusType.Keyboard);
             _position = DoPickerField(_position, _id, _object, _objectType, _requiredTypes, _allowSceneObjects);
 
+            // Drag.
+            if (AcceptPickerObjectDrag(_position, out Object _dragObject, _objectType, _requiredTypes, _allowSceneObjects)) {
+                _object = _dragObject;
+            }
+
             using (var _scope = new EditorGUI.ChangeCheckScope()) {
                 _object = EditorGUI.ObjectField(_position, _label, _object, _objectType, _allowSceneObjects);
 
@@ -2084,6 +2094,82 @@ namespace EnhancedEditor.Editor {
             }
 
             return _fieldPosition;
+        }
+
+        private static bool AcceptPickerObjectDrag(Rect _position, out Object _object, Type _objectType, Type[] _requiredTypes, bool _allowSceneObjects) {
+
+            // Get adjusted field rectangle on screen.
+            Rect _fieldPosition = new Rect(_position) {
+                width = _position.width - (EnhancedEditorGUIUtility.IconWidth + 2f)
+            };
+
+            EventType _eventType = _fieldPosition.Event(out Event _event);
+            switch (_eventType) {
+
+                // Update.
+                case EventType.DragUpdated:
+
+                    if (GetDragObject(out Object _)) {
+
+                        DragAndDrop.visualMode = DragAndDropVisualMode.Generic;
+                        _event.Use();
+                    }
+
+                    break;
+
+                // Perform drag.
+                case EventType.DragPerform:
+
+                    if (GetDragObject(out _object)) {
+
+                        if (_requiredTypes.Length != 0) {
+                            _objectType = _requiredTypes[0];
+                        }
+
+                        if ((_object is GameObject _gameObject) && (_objectType.IsInterface || _objectType.IsSameOrSubclass(typeof(Component)))) {
+
+                            _object = _gameObject.GetComponent(_objectType);
+
+                        } else if (_object is Component _component) {
+
+                            if (_objectType == typeof(GameObject)) {
+
+                                _object = _component.gameObject;
+                            }
+                        }
+
+                        DragAndDrop.AcceptDrag();
+                        GUI.changed = true;
+
+                        _event.Use();
+                        return true;
+                    }
+
+                    break;
+
+                // Ignore.
+                default:
+                    break;
+            }
+
+            _object = null;
+            return false;
+
+            // ----- Local Method ----- \\
+
+            bool GetDragObject(out Object _object) {
+
+                Object[] _objects = DragAndDrop.objectReferences;
+
+                if ((_objects.Length == 1) && !ResetPickerObjectIfDontMatch(_objects[0], _requiredTypes)) {
+
+                    _object = _objects[0];
+                    return true;
+                }
+
+                _object = null;
+                return false;
+            }
         }
 
         internal static bool ResetPickerObjectIfDontMatch(Object _object, Type[] _requiredTypes) {
@@ -2844,7 +2930,7 @@ namespace EnhancedEditor.Editor {
 
         private static bool PrepareRequiredHelpBox(ref Rect _position, GUIContent _label, Object _object, out string _message) {
             if (_object != null) {
-                _position.height = ManageDynamicControlHeight(_label, 0f);
+                _position.height = 0f;
                 _message = string.Empty;
 
                 return false;
@@ -2857,7 +2943,7 @@ namespace EnhancedEditor.Editor {
             _position = EditorGUI.IndentedRect(_position);
 
             float _height = EnhancedEditorGUIUtility.GetHelpBoxHeight(_message, UnityEditor.MessageType.Error, _position.width) + EditorGUIUtility.standardVerticalSpacing;
-            _position.height = ManageDynamicControlHeight(_label, _height);
+            _position.height = _height;
 
             return true;
         }
@@ -2888,8 +2974,8 @@ namespace EnhancedEditor.Editor {
                 Type _type = _field.FieldType;
 
                 // GetComponent requires the target type to either be a component or an interface.
-                if (EnhancedEditorUtility.IsComponentOrInterface(_type) && _component.TryGetComponent(_type, out Component _objectComponent)) {
-                    _object = _objectComponent;
+                if (EnhancedEditorUtility.IsComponentOrInterface(_type)) {
+                    _object = _component.GetComponentInChildren(_type);
                 } else if (_type == typeof(GameObject)) {
                     _object = (_component.transform.childCount > 0)
                             ? _component.transform.GetChild(0).gameObject
@@ -3158,7 +3244,7 @@ namespace EnhancedEditor.Editor {
             _position = InvisiblePrefixLabel(_position, _labelGUI);
             _height += Mathf.Max(textAreaMinHeight, EnhancedEditorStyles.TextArea.CalcHeight(new GUIContent(_text), _position.width) + 5f);
 
-            return ManageDynamicControlHeight(_label, _height);
+            return _height;
         }
         #endregion
 
@@ -3451,7 +3537,7 @@ namespace EnhancedEditor.Editor {
                 }
 
                 // Finally, register the total property position.
-                _extraHeight = ManageDynamicControlHeight(_property, _temp.yMax - _position.yMax);
+                _extraHeight = _temp.yMax - _position.yMax;
                 _position.yMax = _temp.yMax;
 
                 using (new EditorGUI.PropertyScope(_position, GUIContent.none, _property)) { }
@@ -4683,7 +4769,7 @@ namespace EnhancedEditor.Editor {
                     break;
             }
 
-            return ManageDynamicControlHeight(_property, _height);
+            return _height;
         }
 
         // -----------------------
@@ -4830,18 +4916,53 @@ namespace EnhancedEditor.Editor {
         /// <param name="_margins">Margins on each side of the Icon.</param>
         /// <returns>True if the user clicked the button, false otherwise.</returns>
         public static bool IconButton(Rect _position, GUIContent _icon, GUIStyle _style, float _margins = 0f) {
-            // Draw the Icon outside of the button to avoid dealing with its margins.
-            bool _click = GUI.Button(_position, GUIContent.none, _style);
+
             GUIStyle _labelStyle = GUI.skin.label;
+            return IconButton(_position, _icon, _style, _labelStyle, _margins, DrawLabel);
+
+            // ----- Local Method ----- \\
+
+            void DrawLabel(Rect _position) {
+                GUI.Label(_position, _icon, _labelStyle);
+            }
+        }
+
+        /// <summary>
+        /// Draws a full-size Icon button with a drop shadow label.
+        /// </summary>
+        /// <inheritdoc cref="IconButton(Rect, GUIContent, GUIStyle, float)"/>
+        public static bool IconDropShadowButton(Rect _position, GUIContent _icon, float _margins = 0f) {
+
+            GUIStyle _labelStyle = EditorStyles.boldLabel;
+            return IconButton(_position, _icon, EnhancedEditorStyles.Button, _labelStyle, _margins, DrawLabel);
+
+            // ----- Local Method ----- \\
+
+            void DrawLabel(Rect _position) {
+                EditorGUI.DropShadowLabel(_position, _icon, _labelStyle);
+            }
+        }
+
+        // -----------------------
+
+        private static bool IconButton(Rect _position, GUIContent _icon, GUIStyle _buttonStyle, GUIStyle _labelStyle, float _margins, Action<Rect> _drawLabel) {
+            // Draw the Icon outside of the button to avoid dealing with its margins.
+            bool _click = GUI.Button(_position, GUIContent.none, _buttonStyle);
 
             using (var _scope = EnhancedGUI.GUIStyleAlignment.Scope(_labelStyle, TextAnchor.MiddleCenter)) {
                 _position.width -= _margins;
                 _position.height -= _margins;
-                
-                _position.x += (_margins / 2f) - 1f;
-                _position.y += (_margins / 2f) + 1f;
 
-                GUI.Label(_position, _icon, _labelStyle);
+                _position.x += _margins / 2f;
+                _position.y += _margins / 2f;
+
+                if (_position.height < 20f) {
+
+                    _position.x -= 1f;
+                    _position.y += 1f;
+                }
+
+                _drawLabel.Invoke(_position);
             }
 
             return _click;
@@ -4884,6 +5005,18 @@ namespace EnhancedEditor.Editor {
         #endregion
 
         #region Scriptable Object
+        public static ScriptableObjectDrawerMode ScriptableMode {
+            get {
+                ScriptableObjectDrawerMode _mode = ScriptableObjectDrawerEnhancedSettings.Settings.DefaultMode;
+
+                if (IsDrawingDuoProperty) {
+                    _mode &= ~ScriptableObjectDrawerMode.Button;
+                }
+
+                return _mode;
+            }
+        }
+
         private const string SaveScriptableObjectPanelTitle = "Select a folder where to save the ScriptableObject";
         private const string SaveScriptableObjectPanelMessage = "Oops..;\nSomething bad happened.";
         private const string SaveScriptableObjectPanelExtension = "asset";
@@ -4901,22 +5034,19 @@ namespace EnhancedEditor.Editor {
         /// <inheritdoc cref="ScriptableObjectContentField(Rect, SerializedProperty, GUIContent, ScriptableObjectDrawerMode, out float, bool)"/>
         public static void ScriptableObjectContentField(Rect _position, SerializedProperty _property,
                                                         out float _extraHeight, bool _drawField = true) {
-            ScriptableObjectDrawerMode _mode = ScriptableObjectDrawerEnhancedSettings.Settings.DefaultMode;
-            ScriptableObjectContentField(_position, _property, _mode, out _extraHeight, _drawField);
+            ScriptableObjectContentField(_position, _property, ScriptableMode, out _extraHeight, _drawField);
         }
 
         /// <inheritdoc cref="ScriptableObjectContentField(Rect, SerializedProperty, GUIContent, ScriptableObjectDrawerMode, out float, bool)"/>
         public static void ScriptableObjectContentField(Rect _position, SerializedProperty _property, string _label,
                                                         out float _extraHeight, bool _drawField = true) {
-            ScriptableObjectDrawerMode _mode = ScriptableObjectDrawerEnhancedSettings.Settings.DefaultMode;
-            ScriptableObjectContentField(_position, _property, _label, _mode, out _extraHeight, _drawField);
+            ScriptableObjectContentField(_position, _property, _label, ScriptableMode, out _extraHeight, _drawField);
         }
 
         /// <inheritdoc cref="ScriptableObjectContentField(Rect, SerializedProperty, GUIContent, ScriptableObjectDrawerMode, out float, bool)"/>
         public static void ScriptableObjectContentField(Rect _position, SerializedProperty _property, GUIContent _label,
                                                         out float _extraHeight, bool _drawField = true) {
-            ScriptableObjectDrawerMode _mode = ScriptableObjectDrawerEnhancedSettings.Settings.DefaultMode;
-            ScriptableObjectContentField(_position, _property, _label, _mode, out _extraHeight, _drawField);
+            ScriptableObjectContentField(_position, _property, _label, ScriptableMode, out _extraHeight, _drawField);
         }
 
         /// <inheritdoc cref="ScriptableObjectContentField(Rect, SerializedProperty, GUIContent, ScriptableObjectDrawerMode, out float, bool)"/>
@@ -4974,22 +5104,19 @@ namespace EnhancedEditor.Editor {
         /// <inheritdoc cref="ScriptableObjectContentField(Rect, GUIContent, ScriptableObject, Type, ScriptableObjectDrawerMode, ref bool, out float, bool"/>
         public static ScriptableObject ScriptableObjectContentField(Rect _position, ScriptableObject _scriptableObject, Type _objectType,
                                                                     ref bool _foldout, out float _extraHeight, bool _drawField = true) {
-            ScriptableObjectDrawerMode _mode = ScriptableObjectDrawerEnhancedSettings.Settings.DefaultMode;
-            return ScriptableObjectContentField(_position, _scriptableObject, _objectType, _mode, ref _foldout, out _extraHeight, _drawField);
+            return ScriptableObjectContentField(_position, _scriptableObject, _objectType, ScriptableMode, ref _foldout, out _extraHeight, _drawField);
         }
 
         /// <inheritdoc cref="ScriptableObjectContentField(Rect, GUIContent, ScriptableObject, Type, ScriptableObjectDrawerMode, ref bool, out float, bool"/>
         public static ScriptableObject ScriptableObjectContentField(Rect _position, string _label, ScriptableObject _scriptableObject, Type _objectType,
                                                                     ref bool _foldout, out float _extraHeight, bool _drawField = true) {
-            ScriptableObjectDrawerMode _mode = ScriptableObjectDrawerEnhancedSettings.Settings.DefaultMode;
-            return ScriptableObjectContentField(_position, _label, _scriptableObject, _objectType, _mode, ref _foldout, out _extraHeight, _drawField);
+            return ScriptableObjectContentField(_position, _label, _scriptableObject, _objectType, ScriptableMode, ref _foldout, out _extraHeight, _drawField);
         }
 
         /// <inheritdoc cref="ScriptableObjectContentField(Rect, GUIContent, ScriptableObject, Type, ScriptableObjectDrawerMode, ref bool, out float, bool"/>
         public static ScriptableObject ScriptableObjectContentField(Rect _position, GUIContent _label, ScriptableObject _scriptableObject, Type _objectType,
                                                                     ref bool _foldout, out float _extraHeight, bool _drawField = true) {
-            ScriptableObjectDrawerMode _mode = ScriptableObjectDrawerEnhancedSettings.Settings.DefaultMode;
-            return ScriptableObjectContentField(_position, _label, _scriptableObject, _objectType, _mode, ref _foldout, out _extraHeight, _drawField);
+            return ScriptableObjectContentField(_position, _label, _scriptableObject, _objectType, ScriptableMode, ref _foldout, out _extraHeight, _drawField);
         }
 
         /// <inheritdoc cref="ScriptableObjectContentField(Rect, GUIContent, ScriptableObject, Type, ScriptableObjectDrawerMode, ref bool, out float, bool"/>
@@ -5353,10 +5480,12 @@ namespace EnhancedEditor.Editor {
         internal static float ManageDynamicControlHeight(SerializedProperty _property, float _height) {
             // Get property id.
             int _id = EnhancedEditorUtility.GetSerializedPropertyID(_property).GetHashCode();
+
             return ManageDynamicControlHeight(_id, _height);
         }
 
         internal static float ManageDynamicControlHeight(int _id, float _height) {
+
             // Id registration
             if (!dynamicGUIControlHeight.ContainsKey(_id)) {
                 dynamicGUIControlHeight.Add(_id, _height);
@@ -5366,9 +5495,11 @@ namespace EnhancedEditor.Editor {
             EventType _eventType = Event.current.type;
 
             if ((_eventType != EventType.Layout) && (_eventType != EventType.Used) && (dynamicGUIControlHeight[_id] != _height)) {
+
                 dynamicGUIControlHeight[_id] = _height;
 
                 // When the height has changed, set the GUI state as dirty to force repaint it.
+                //InternalEditorUtility.RepaintAllViews();
                 GUI.changed = true;
             }
 

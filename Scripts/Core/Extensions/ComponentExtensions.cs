@@ -4,7 +4,6 @@
 //
 // ============================================================================ //
 
-using System;
 using UnityEngine;
 
 namespace EnhancedEditor {

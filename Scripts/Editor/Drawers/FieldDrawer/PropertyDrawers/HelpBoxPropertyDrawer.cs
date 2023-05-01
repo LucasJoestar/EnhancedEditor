@@ -44,8 +44,7 @@ namespace EnhancedEditor.Editor {
             _position = EditorGUI.IndentedRect(_position);
 
             float _height = EnhancedEditorGUIUtility.GetHelpBoxHeight(_message, _messageType, _position.width);
-            _position.height = _height
-                             = EnhancedEditorGUI.ManageDynamicControlHeight(_property, _height);
+            _position.height = _height;
 
             EditorGUI.HelpBox(_position, _message, _messageType);
             return _height;

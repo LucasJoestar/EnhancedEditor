@@ -19,14 +19,13 @@ namespace EnhancedEditor {
     /// </summary>
     /// <typeparam name="T">Interface type to serialize.</typeparam>
     [Serializable]
+    #pragma warning disable
     public class SerializedInterface<T> : IComparer<SerializedInterface<T>> where T : class {
         #region Global Members
         [SerializeField] private Component component = null;
         private T interfaceInstance = default;
 
-        #if UNITY_EDITOR
-        [SerializeField] internal bool required = false;        
-        #endif
+        [SerializeField] private bool required = false;        
 
         /// <summary>
         /// The <see cref="UnityEngine.Component"/> the associated interface is attached to.

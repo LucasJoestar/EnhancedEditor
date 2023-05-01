@@ -14,6 +14,7 @@ namespace EnhancedEditor.Editor {
     /// especially used to update the last time a <see cref="GameObject"/> was modified in its <see cref="ExtendedBehaviour"/> component. 
     /// </summary>
     [InitializeOnLoad]
+    #pragma warning disable
     public class AssetModificationProcessor : UnityEditor.AssetModificationProcessor {
         #region Global Members
         private const string ModifiedObjectKey = "ModifiedObjects";
@@ -36,17 +37,20 @@ namespace EnhancedEditor.Editor {
 
         // -----------------------
 
-        #pragma warning disable IDE0051
         private static string[] OnWillSaveAssets(string[] _paths) {
+
             int[] _ids = GetModifiedObjects();
             if (_ids != null) {
+
                 foreach (var _id in _ids) {
+
                     // Retrieve all modified objects and update their last modified state.
                     Object _object = EditorUtility.InstanceIDToObject(_id);
 
                     if (EditorUtility.IsDirty(_object)
                         && (((_object is Component _component) && _component.TryGetComponent(out ExtendedBehaviour _behaviour))
                            || ((_object is GameObject _gameObject) && _gameObject.TryGetComponent(out _behaviour)))) {
+
                         _behaviour.UpdateLastModifiedState();
                         EditorUtility.SetDirty(_behaviour);
                     }
@@ -69,6 +73,11 @@ namespace EnhancedEditor.Editor {
         #region Modification Management
         private static UndoPropertyModification[] UndoPostProcess(UndoPropertyModification[] _propertyModifications) {
             foreach (UndoPropertyModification _property in _propertyModifications) {
+
+                if (_property.currentValue == null) {
+                    continue;
+                }
+
                 Object _object = _property.currentValue.target;
 
                 if ((_object is Component) || (_object is GameObject)) {
@@ -86,7 +95,9 @@ namespace EnhancedEditor.Editor {
         }
 
         private static void OnPlayModeStateChanged(PlayModeStateChange _state) {
+
             if (_state == PlayModeStateChange.ExitingEditMode) {
+
                 // Save dirty objects when exiting edit mode.
                 modifiedObjects = new List<int>(GetModifiedObjects());
 
@@ -97,12 +108,15 @@ namespace EnhancedEditor.Editor {
                 }
 
                 SetModifiedObjects();
+
             } else if (_state == PlayModeStateChange.EnteredEditMode) {
+
                 // When re-entering edit mode, set registered objects as dirty
                 // as they are no longer in this state after play mode.
                 modifiedObjects = new List<int>(GetModifiedObjects());
 
                 foreach (var _id in modifiedObjects) {
+
                     Object _object = EditorUtility.InstanceIDToObject(_id);
 
                     if (!ReferenceEquals(_object, null)) {

@@ -11,14 +11,12 @@ using UnityEditor;
 using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
 
-namespace EnhancedEditor.Editor
-{
+namespace EnhancedEditor.Editor {
     /// <summary>
     /// Editor class manipulating and updating the data contained in the <see cref="BuildSceneDatabase"/>.
     /// </summary>
     [InitializeOnLoad]
-	public class BuildSceneDatabaseManager : IPreprocessBuildWithReport
-    {
+    public class BuildSceneDatabaseManager : IPreprocessBuildWithReport {
         #region Global Members
         private static readonly AutoManagedResource<BuildSceneDatabase> resource = new AutoManagedResource<BuildSceneDatabase>("BuildSceneDatabase", false);
 
@@ -31,8 +29,7 @@ namespace EnhancedEditor.Editor
 
         // -----------------------
 
-        static BuildSceneDatabaseManager()
-        {
+        static BuildSceneDatabaseManager() {
             EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
             EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
 
@@ -41,21 +38,18 @@ namespace EnhancedEditor.Editor
         #endregion
 
         #region Management
-        void IPreprocessBuildWithReport.OnPreprocessBuild(BuildReport _report)
-        {
+        void IPreprocessBuildWithReport.OnPreprocessBuild(BuildReport _report) {
             // Called just before a build is started.
             UpdateDatabase();
             AssetDatabase.SaveAssets();
         }
 
-        private static void OnPlayModeStateChanged(PlayModeStateChange _state)
-        {
+        private static void OnPlayModeStateChanged(PlayModeStateChange _state) {
             if (_state == PlayModeStateChange.EnteredPlayMode)
                 UpdateDatabase();
         }
 
-        private static void UpdateDatabase()
-        {
+        private static void UpdateDatabase() {
             List<string> _allScenesPath = new List<string>(EnhancedEditorUtility.FindAssets<UnityEditor.SceneAsset>());
 
             // Register the GUID of all scenes included in build.
@@ -63,8 +57,7 @@ namespace EnhancedEditor.Editor
             string[] _sceneGUIDs = new string[_buildScenes.Length];
             int _count = 0;
 
-            for (int _i = 0; _i < _sceneGUIDs.Length; _i++)
-            {
+            for (int _i = 0; _i < _sceneGUIDs.Length; _i++) {
                 var _scene = _buildScenes[_i];
 
                 // Skip disabled scenes.
@@ -83,8 +76,7 @@ namespace EnhancedEditor.Editor
 
             // Register the name of all non build scenes for debug.
             BuildSceneDatabase.NonBuildScene[] _nonBuildScenes = new BuildSceneDatabase.NonBuildScene[_allScenesPath.Count];
-            for (int _i = 0; _i < _nonBuildScenes.Length; _i++)
-            {
+            for (int _i = 0; _i < _nonBuildScenes.Length; _i++) {
                 string _path = _allScenesPath[_i];
 
                 string _name = Path.GetFileNameWithoutExtension(_path);
@@ -105,9 +97,9 @@ namespace EnhancedEditor.Editor
             }
 
             // Register informations in the database.
-            Database.sceneBundles       = _sceneBundles.ToArray();
-            Database.buildSceneGUIDs    = _sceneGUIDs;
-            Database.nonBuildScenes     = _nonBuildScenes;
+            Database.sceneBundles = _sceneBundles.ToArray();
+            Database.buildSceneGUIDs = _sceneGUIDs;
+            Database.nonBuildScenes = _nonBuildScenes;
 
             Database.coreSceneIndex = CoreSceneEnhancedSettings.Settings.IsCoreSceneEnabled
                                     ? CoreSceneEnhancedSettings.Settings.CoreScene.BuildIndex

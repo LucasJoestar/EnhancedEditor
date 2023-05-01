@@ -11,11 +11,11 @@ namespace EnhancedEditor.Editor {
     /// <summary>
     /// Custom <see cref="Separator"/> editor.
     /// </summary>
-    [CustomEditor(typeof(Separator), true)]
+    [CustomEditor(typeof(Separator), true), CanEditMultipleObjects]
     public class SeparatorEditor : UnityObjectEditor {
         #region GUI Draw
         public override void OnInspectorGUI() {
-            Rect _rect = EditorGUILayout.GetControlRect(false, Settings.Value); {
+            Rect _rect = EditorGUILayout.GetControlRect(false, -14f + Settings.Value); {
                 _rect.yMin -= 25f;
                 _rect.yMax += 10f;
 

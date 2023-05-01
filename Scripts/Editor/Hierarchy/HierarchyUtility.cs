@@ -5,8 +5,10 @@
 // ============================================================================ //
 
 using System;
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 using Object = UnityEngine.Object;
 
@@ -19,7 +21,7 @@ namespace EnhancedEditor.Editor {
         /// <summary>
         /// Opens an utility window to rename all selected objects.
         /// </summary>
-        [MenuItem("Tools/Enhanced Editor/Rename Multiple #TAB", false, 201)]
+        [MenuItem(InternalUtility.MenuItemPath + "Rename Multiple #TAB", false, 201)]
         public static void RenameMultiple() {
 
             Object[] _objects = Selection.objects;
@@ -45,6 +47,50 @@ namespace EnhancedEditor.Editor {
                 for (int i = 0; i < _objects.Length; i++) {
                     _objects[i].name = $"{_name}{string.Format(_numberFormat, i + 1)}";
                 }
+            }
+        }
+
+        /// <summary>
+        /// Removes missing script(s) from all Game Objects in the currently loaded scene(s).
+        /// </summary>
+        [MenuItem(InternalUtility.MenuItemPath + "Remove Missing Script(s)", false, 202)]
+        public static void RemoveMissingScriptsInLoadedScenes() {
+
+            List<GameObject> _objects = new List<GameObject>();
+            int _count = 0;
+
+            for (int i = 0; i < SceneManager.sceneCount; i++) {
+                SceneManager.GetSceneAt(i).GetRootGameObjects(_objects);
+
+                for (int j = 0; j < _objects.Count; j++) {
+                    _count += RemoveScripts(_objects[j]);
+                }
+            }
+
+            if (_count == 0) {
+                Debug.Log("No missing script was found in the loaded scene(s)");
+            }
+
+            // ----- Local Methods ----- \\
+
+            int RemoveScripts(GameObject _object) {
+
+                // Root.
+                int _count = GameObjectUtility.GetMonoBehavioursWithMissingScriptCount(_object);
+                int _removed = GameObjectUtility.RemoveMonoBehavioursWithMissingScript(_object);
+
+                if (_count != 0) {
+                    Debug.Log($"Found {_count} missing script(s) on Game Object {_object.name.Bold()} - Removed {_removed}", _object);
+                }
+
+                // Children.
+                Transform _transform = _object.transform;
+
+                for (int i = 0; i < _transform.childCount; i++) {
+                    _count += RemoveScripts(_transform.GetChild(i).gameObject);
+                }
+
+                return _count;
             }
         }
         #endregion

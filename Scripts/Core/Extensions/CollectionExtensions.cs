@@ -80,10 +80,61 @@ namespace EnhancedEditor {
 
             do {
                 _index = UnityEngine.Random.Range(0, _collection.Count);
-            } while ((_collection.Count > 1) && (_index == _lastRandomIndex) && (_iteration-- != RandomMaxIteration));
+            } while ((_index == _lastRandomIndex) && (_iteration-- != 0));
 
             _lastRandomIndex = _index;
             return _collection[_index];
+        }
+        #endregion
+
+        #region Reference
+        /// <summary>
+        /// Removes a specific reference instance from a list.
+        /// <br/>Performs an equality comparison.
+        /// <para/>
+        /// Always use this to remove an interface instance, as the default comparer may return true for a different instance.
+        /// </summary>
+        /// <typeparam name="T">This collection content type.</typeparam>
+        /// <param name="_list">List to remove the instance from.</param>
+        /// <param name="_element">Instance to remove from list.</param>
+        /// <returns>True if the instance could be successfully removed, false otherwise.</returns>
+        public static bool RemoveInstance<T>(this List<T> _list, T _element) where T : class {
+            int _index = IndexOfInstance(_list, _element);
+
+            if (_index == -1) {
+                return false;
+            }
+
+            _list.RemoveAt(_index);
+            return true;
+        }
+
+        /// <summary>
+        /// Get the index of a specific element from this collection.
+        /// <br/> Performs an equality comparison.
+        /// <para/>
+        /// Always use this to get the index of an interface instance, as the default comparer may return true for a different instance.
+        /// </summary>
+        /// <typeparam name="T">This collection content type.</typeparam>
+        /// <param name="_list">List to get the instance index from.</param>
+        /// <param name="_element">Instance to get index.</param>
+        /// <returns>True if the instance could be successfully retrieved along with its index, false otherwise.</returns>
+        public static int IndexOfInstance<T>(this List<T> _list, T _element) where T : class {
+            return _list.FindIndex(e => e == _element);
+        }
+
+        /// <summary>
+        /// Get if a specific instance is contained within this collection.
+        /// <br/> Performs an equality comparison.
+        /// <para/>
+        /// Always use this to check the presence of a an interface instance, as the default comparer may return true for a different instance.
+        /// </summary>
+        /// <typeparam name="T">This collection content type.</typeparam>
+        /// <param name="_list">List to check content.</param>
+        /// <param name="_element">Instance to check.</param>
+        /// <returns>True if the instance is contained within the collection, false otherwise.</returns>
+        public static bool ContainsInstance<T>(this List<T> _list, T _element) where T : class {
+            return _list.Exists(e => e == _element);
         }
         #endregion
 

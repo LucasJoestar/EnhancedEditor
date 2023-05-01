@@ -251,7 +251,7 @@ namespace EnhancedEditor.Editor {
         private const float ToolbarHeight = 25f;
         private const float ButtonWidth = 55f;
 
-        public const string PreferencesFileExtension = ".txt";
+        public const string PreferencesFileExtension = "txt";
         public const string UndoRecordTitle = "Enhanced Console Preferences change";
 
         public const string PreferencesPath = EnhancedEditorSettings.UserSettingsPath + "/Enhanced Console";

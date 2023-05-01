@@ -39,7 +39,7 @@ namespace EnhancedEditor {
         // Constructor(s)
         // -------------------------------------------
 
-        /// <inheritdoc cref="BlockCollection(bool, bool)"/>
+        /// <inheritdoc cref="BlockCollection(bool, bool, bool)"/>
         public BlockCollection() : this(true, true) { }
 
         /// <param name="_isEditable"><inheritdoc cref="IsEditable" path="/summary"/></param>
@@ -104,7 +104,7 @@ namespace EnhancedEditor {
         /// <inheritdoc cref="BlockCollection{T}.BlockCollection()"/>
         public BlockArray() : base() { }
 
-        /// <inheritdoc cref="BlockCollection{T}.BlockCollection(bool, bool)"/>
+        /// <inheritdoc cref="BlockCollection{T}.BlockCollection(bool, bool, bool)"/>
         public BlockArray(bool _isEditable, bool _isReorderable = true, bool _isReadonly = false) : base(_isEditable, _isReorderable, _isReadonly) { }
         #endregion
 
@@ -151,7 +151,7 @@ namespace EnhancedEditor {
         /// <inheritdoc cref="BlockCollection{T}.BlockCollection()"/>
         public BlockList() : base() { }
 
-        /// <inheritdoc cref="BlockCollection{T}.BlockCollection(bool, bool)"/>
+        /// <inheritdoc cref="BlockCollection{T}.BlockCollection(bool, bool, bool)"/>
         public BlockList(bool _isEditable, bool _isReorderable = true, bool _isReadonly = false) : base(_isEditable, _isReorderable, _isReadonly) { }
         #endregion
 

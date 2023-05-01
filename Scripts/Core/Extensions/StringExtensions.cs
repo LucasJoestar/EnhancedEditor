@@ -25,6 +25,35 @@ namespace EnhancedEditor {
             return whitespaceRegex.Replace(_value, string.Empty);
         }
 
+        /// <summary>
+        /// Removes all special character(s) from a given input <see cref="string"/>.
+        /// </summary>
+        /// <param name="_value">The <see cref="string"/> to remove all special character(s) from.</param>
+        /// <returns>The new formatted input <see cref="string"/> value.</returns>
+        public static string RemoveSpecialCharacter(this string _value) {
+
+            // Replaces everything that is not (^) a word character (\w), a digit (\d) or whitespace (\s) with an empty string.
+            return Regex.Replace(_value, @"[^\w\d\s]", "");
+        }
+
+        /// <summary>
+        /// Escapes this <see cref="string"/> value.
+        /// </summary>
+        /// <param name="_value">String value to parse.</param>
+        /// <returns>Escaped <see cref="string"/> value.</returns>
+        public static string Escape(this string _value) {
+            return Regex.Escape(_value);
+        }
+
+        /// <summary>
+        /// Unescapes this <see cref="string"/> value.
+        /// </summary>
+        /// <param name="_value">String value to parse.</param>
+        /// <returns>Unescaped <see cref="string"/> value.</returns>
+        public static string Unescape(this string _value) {
+            return Regex.Unescape(_value);
+        }
+
         /// <inheritdoc cref="GetPrefix(string, string)"/>
         public static string GetPrefix(this string _string) {
             return GetPrefix(_string, "_");

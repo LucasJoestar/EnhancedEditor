@@ -5,6 +5,7 @@
 // ============================================================================ //
 
 using System;
+using System.IO;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
@@ -178,6 +179,35 @@ namespace EnhancedEditor {
             }
 
             return hashCode;
+        }
+        #endregion
+
+        #region Directory
+        private const string MyGamesFolder = "My Games";
+
+        // -----------------------
+
+        /// <summary>
+        /// Get the directory path to My Games folder.
+        /// <br/> Works only on Windows. Returns <see cref="Application.persistentDataPath"/> otherwise.
+        /// </summary>
+        /// <param name="_autoCreate">If true, automatically creates this directory if it does not exist.</param>
+        /// <returns>My Games folder path on Windows, <see cref="Application.persistentDataPath"/> otherwise.</returns>
+        public static string GetMyGamesDirectoryPath(bool _autoCreate = true) {
+
+            string _path;
+
+            #if UNITY_STANDALONE_WIN
+            _path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), MyGamesFolder, Application.productName);
+            #else
+            savedGamesPath = Application.persistentDataPath + "/";
+            #endif
+
+            if (_autoCreate && !Directory.Exists(_path)) {
+                Directory.CreateDirectory(_path);
+            }
+
+            return _path;
         }
         #endregion
     }

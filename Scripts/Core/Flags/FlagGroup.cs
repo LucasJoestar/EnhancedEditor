@@ -153,6 +153,22 @@ namespace EnhancedEditor {
 
         public override Array Array { get { return Flags; } }
 
+        /// <summary>
+        /// Are all the flags in this group valid?
+        /// </summary>
+        /// <returns>True if all flags are valid, false otherwise.</returns>
+        public bool Valid {
+            get {
+                foreach (FlagValue _flag in Flags) {
+                    if (!_flag) {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+        }
+
         // -----------------------
 
         /// <inheritdoc cref="FlagValueGroup"/>
@@ -169,7 +185,7 @@ namespace EnhancedEditor {
         public override Flag this[int _index] { get { return Flags[_index].Flag; } }
 
         public static implicit operator bool(FlagValueGroup _group) {
-            return _group.IsValid();
+            return _group.Valid;
         }
 
         public override string ToString() {
@@ -215,20 +231,6 @@ namespace EnhancedEditor {
         #endregion
 
         #region Utility
-        /// <summary>
-        /// Are all the flags in this group valid?
-        /// </summary>
-        /// <returns>True if all flags are valid, false otherwise.</returns>
-        public bool IsValid() {
-            foreach (FlagValue _flag in Flags) {
-                if (!_flag) {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
         /// <summary>
         /// Set the value of all flags in this group.
         /// </summary>

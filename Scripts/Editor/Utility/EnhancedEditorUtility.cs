@@ -11,6 +11,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using UnityEditor;
+using UnityEditor.Presets;
 using UnityEngine;
 
 #if LOCALIZATION_ENABLED
@@ -558,12 +559,17 @@ namespace EnhancedEditor.Editor {
 
                 int _classID = (int)classIDField.GetValue(_annotation);
 
-                setGizmoEnabledArguments[0] = _classID;
-                setGizmoEnabledArguments[1] = _scriptClass;
-                setGizmoEnabledArguments[2] = _showGizmos ? 1 : 0;
-                setGizmoEnabledArguments[3] = false;
+                // Calling this method forces the associated script to unfold in this inspector,
+                // so until a solution is found, we won't call it anymore.
+                bool _setGizmos = false;
+                if (_setGizmos) {
+                    setGizmoEnabledArguments[0] = _classID;
+                    setGizmoEnabledArguments[1] = _scriptClass;
+                    setGizmoEnabledArguments[2] = _showGizmos ? 1 : 0;
+                    setGizmoEnabledArguments[3] = false;
 
-                setGizmoEnabledMethod.Invoke(null, setGizmoEnabledArguments);
+                    setGizmoEnabledMethod.Invoke(null, setGizmoEnabledArguments);
+                }
 
                 setIconEnabledArguments[0] = _classID;
                 setIconEnabledArguments[1] = _scriptClass;
@@ -593,6 +599,92 @@ namespace EnhancedEditor.Editor {
         public static bool IsSceneObject(Type _type) {
             bool _isPickable = (_type == typeof(GameObject)) || _type.IsSameOrSubclass(typeof(Component));
             return _isPickable;
+        }
+
+        // -----------------------
+
+        /// <inheritdoc cref="CreateObject(string, GameObject, Vector3, Type[])"/>
+        public static GameObject CreateObject(string _name, params Type[] _components) {
+            return CreateObject(_name, null, _components);
+        }
+
+        /// <inheritdoc cref="CreateObject(string, GameObject, Vector3, Type[])"/>
+        public static GameObject CreateObject(string _name, GameObject _context, params Type[] _components) {
+            GameObject _object = new GameObject(_name);
+            return CreateObject(_object, _context, _components);
+        }
+
+        /// <inheritdoc cref="CreateObject(string, GameObject, Vector3, Type[])"/>
+        public static GameObject CreateObject(GameObject _prefab, string _name, GameObject _context, params Type[] _components) {
+            GameObject _object = PrefabUtility.InstantiatePrefab(_prefab) as GameObject;
+            _object.name = _name;
+
+            return CreateObject(_object, _context, _components);
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="GameObject"/> in the active scene.
+        /// </summary>
+        /// <param name="_name">Name of the object to create.</param>
+        /// <param name="_context">Context object.</param>
+        /// <param name="_position">World position of the object.</param>
+        /// <param name="_components">Base component(s) of this object.</param>
+        /// <returns>Newly created object instance.</returns>
+        public static GameObject CreateObject(string _name, GameObject _context, Vector3 _position, params Type[] _components) {
+            GameObject _object = CreateObject(_name, _context, _components);
+            _object.transform.position = _position;
+
+            return _object;
+        }
+
+        private static GameObject CreateObject(GameObject _object, GameObject _context, params Type[] _components) {
+
+            for (int i = 0; i < _components.Length; i++) {
+                CreateComponent(_object, _components[i]);
+            }
+
+            if (_context != null) {
+                GameObjectUtility.SetParentAndAlign(_object, _context);
+            }
+
+            GameObjectUtility.EnsureUniqueNameForSibling(_object);
+
+            Undo.RegisterCreatedObjectUndo(_object, "Create " + _object.name);
+
+            EditorGUIUtility.PingObject(_object);
+            Selection.activeObject = _object;
+
+            return _object;
+        }
+
+        // -----------------------
+
+        /// <inheritdoc cref="CreateComponent(GameObject, Type, bool)"/>
+        public static T CreateComponent<T>(GameObject _object, bool _allowDuplicate = false) where T : class {
+            return CreateComponent(_object, typeof(T), _allowDuplicate) as T;
+        }
+
+        /// <summary>
+        /// Creates, adds and setups a specific <see cref="Component"/> type on a <see cref="GameObject"/>.
+        /// </summary>
+        /// <param name="_object"><see cref="GameObject"/> on which to add the component.</param>
+        /// <param name="_componentType">Type of the component to create.</param>
+        /// <param name="_allowDuplicate">If true, create the component even in another one is already on the same object..</param>
+        /// <returns>The created <see cref="Component"/>.</returns>
+        public static Component CreateComponent(GameObject _object, Type _componentType, bool _allowDuplicate = false) {
+
+            if (!_allowDuplicate && _object.TryGetComponent(_componentType, out Component _component)) {
+                return _component;
+            }
+
+            _component = Undo.AddComponent(_object, _componentType);
+            Preset[] _presets = Preset.GetDefaultPresetsForObject(_component);
+
+            if (_presets.Length != 0) {
+                _presets[0].ApplyTo(_component);
+            }
+
+            return _component;
         }
         #endregion
 

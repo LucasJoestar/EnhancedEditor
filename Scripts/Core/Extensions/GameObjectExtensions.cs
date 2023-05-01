@@ -7,12 +7,30 @@
 using System;
 using UnityEngine;
 
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+
 namespace EnhancedEditor {
     /// <summary>
     /// Contains multiple <see cref="GameObject"/>-related extension methods.
     /// </summary>
 	public static class GameObjectExtensions {
         #region Content
+        /// <summary>
+        /// Sets the layer of this <see cref="GameObject"/> and all its children.
+        /// </summary>
+        /// <param name="_gameObject"><see cref="GameObject"/> instance to set layer.</param>
+        /// <param name="_layer">Layer to assign.</param>
+        public static void SetLayer(this GameObject _gameObject, int _layer) {
+
+            _gameObject.layer = _layer;
+
+            foreach (Transform _child in _gameObject.transform) {
+                SetLayer(_child.gameObject, _layer);
+            }
+        }
+
         /// <summary>
         /// Adds a specific component to a <see cref="GameObject"/>
         /// if none of that type is already attached to it, and return it.
@@ -24,6 +42,12 @@ namespace EnhancedEditor {
             if (_gameObject.TryGetComponent(out T _component))
                 return _component;
 
+            #if UNITY_EDITOR
+            if (!Application.isPlaying) {
+                return Undo.AddComponent<T>(_gameObject);
+            }
+            #endif
+
             return _gameObject.AddComponent<T>();
         }
 
@@ -32,6 +56,12 @@ namespace EnhancedEditor {
         public static Component AddComponentIfNone(this GameObject _gameObject, Type _componentType) {
             if (_gameObject.TryGetComponent(_componentType, out Component _component))
                 return _component;
+
+            #if UNITY_EDITOR
+            if (!Application.isPlaying) {
+                return Undo.AddComponent(_gameObject, _componentType);
+            }
+            #endif
 
             return _gameObject.AddComponent(_componentType);
         }

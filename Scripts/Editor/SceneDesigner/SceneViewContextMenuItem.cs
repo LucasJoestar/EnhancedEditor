@@ -16,7 +16,7 @@ namespace EnhancedEditor.Editor {
     /// The methods must be static, with a <see cref="SceneView"/>, a <see cref="GenericMenu"/> and a <see cref="RaycastHit"/> as arguments.
     /// </summary>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
-    public class SceneViewContextMenuItem : Attribute {
+    public class SceneViewContextMenuItemAttribute : Attribute {
         #region Global Members
         /// <summary>
         /// The delegate used for to call this attribute.

@@ -10,14 +10,14 @@ using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 
-using ContextMenuDelegate = EnhancedEditor.Editor.SceneViewContextMenuItem.Delegate;
+using ContextMenuDelegate = EnhancedEditor.Editor.SceneViewContextMenuItemAttribute.Delegate;
 
 namespace EnhancedEditor.Editor {
     /// <summary>
     /// <see cref="SceneView"/> utility class, adding multiple shortcuts and menu options.
     /// </summary>
     [InitializeOnLoad]
-    #pragma warning disable IDE0051
+    #pragma warning disable
     public static class SceneViewUtility {
         #region Global Members
         private static ContextMenuDelegate[] contextMenuDelegates = new ContextMenuDelegate[] { };
@@ -52,18 +52,45 @@ namespace EnhancedEditor.Editor {
 
                 case EventType.MouseUp:
                     // Context menu.
-                    if (isContextClick && (_event.button == 1)
-                     && Physics.Raycast(HandleUtility.GUIPointToWorldRay(_event.mousePosition), out RaycastHit _hit, MaxCastDistance)) {
-                        // Show menu on hit point.
-                        GenericMenu _menu = new GenericMenu();
+                    if (isContextClick && (_event.button == 1)) {
 
-                        foreach (ContextMenuDelegate _delegate in contextMenuDelegates) {
-                            _delegate(_sceneView, _menu, _hit);
+                        switch (_event.modifiers) {
+
+                            // Standard create menu
+                            case EventModifiers.Control:
+                                MenuCommand _command = new MenuCommand(Selection.activeGameObject);
+                                EditorUtility.DisplayPopupMenu(new Rect(Event.current.mousePosition, Vector2.one), "GameObject/", _command);
+                                break;
+
+                            // Custom menu.
+                            case EventModifiers.None:
+                            default:
+
+                                // Require hit target.
+                                if (!Physics.Raycast(HandleUtility.GUIPointToWorldRay(_event.mousePosition), out RaycastHit _hit, MaxCastDistance)) {
+                                    return;
+                                }
+
+                                GenericMenu _menu = new GenericMenu();
+
+                                foreach (ContextMenuDelegate _delegate in contextMenuDelegates) {
+                                    _delegate(_sceneView, _menu, _hit);
+                                }
+
+                                _menu.ShowAsContext();
+                                break;
+
+                            // Ignore.
+                            case EventModifiers.Alt:
+                            case EventModifiers.Shift:
+                            case EventModifiers.Command:
+                            case EventModifiers.Numeric:
+                            case EventModifiers.CapsLock:
+                            case EventModifiers.FunctionKey:
+                                return;
                         }
 
                         _event.Use();
-
-                        _menu.ShowAsContext();
                         _sceneView.Repaint();
                     }
 
@@ -79,15 +106,13 @@ namespace EnhancedEditor.Editor {
                 default:
                     break;
             }
-
-
         }
 
         // -----------------------
 
         private static void GetContextMenuDelegates() {
             // Get matching methods.
-            var _methods = TypeCache.GetMethodsWithAttribute<SceneViewContextMenuItem>();
+            var _methods = TypeCache.GetMethodsWithAttribute<SceneViewContextMenuItemAttribute>();
             List<MethodInfo> _infos = new List<MethodInfo>();
 
             foreach (var _method in _methods) {
@@ -98,8 +123,8 @@ namespace EnhancedEditor.Editor {
 
             // Sort all methods by their order.
             _infos.Sort((a, b) => {
-                var _aAttribute = a.GetCustomAttribute<SceneViewContextMenuItem>();
-                var _bAttribute = b.GetCustomAttribute<SceneViewContextMenuItem>();
+                var _aAttribute = a.GetCustomAttribute<SceneViewContextMenuItemAttribute>();
+                var _bAttribute = b.GetCustomAttribute<SceneViewContextMenuItemAttribute>();
 
                 return _aAttribute.Order.CompareTo(_bAttribute.Order);
             });
@@ -115,10 +140,9 @@ namespace EnhancedEditor.Editor {
         #endregion
 
         #region Context Menu
-        private const string CreateGUI = "Create/";
+        public const string CreateGUI = "Create/";
 
         private static readonly GUIContent createEmptyGUI = new GUIContent($"{CreateGUI}Empty", "Creates an empty GameObject at this position");
-
         private static readonly GUIContent teleportHereGUI = new GUIContent("Teleport Here", "Teleport all selected GameObject(s) to this position");
 
         // -----------------------
@@ -147,19 +171,16 @@ namespace EnhancedEditor.Editor {
             }
         }
 
-        [SceneViewContextMenuItem(Order = 0)]
+        [SceneViewContextMenuItem(Order = -1)]
         private static void CreateObjectItem(SceneView _, GenericMenu _menu, RaycastHit _hit) {
             _menu.AddItem(createEmptyGUI, false, CreateEmpty);
+            _menu.AddSeparator(CreateGUI);
             _menu.AddSeparator(string.Empty);
 
             // ----- Local Method ----- \\
 
             void CreateEmpty() {
-                GameObject _gameObject = new GameObject("New GameObject");
-                _gameObject.transform.position = _hit.point;
-
-                Selection.activeGameObject = _gameObject;
-                EditorGUIUtility.PingObject(_gameObject);
+                EnhancedEditorUtility.CreateObject("GameObject", Selection.activeGameObject, _hit.point);
             }
         }
         #endregion

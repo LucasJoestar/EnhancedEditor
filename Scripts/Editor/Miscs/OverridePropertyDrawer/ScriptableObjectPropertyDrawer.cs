@@ -16,6 +16,9 @@ namespace EnhancedEditor.Editor {
     public class ScriptableObjectPropertyDrawer : EnhancedPropertyEditor {
         #region Drawer Content
         protected override float OnEnhancedGUI(Rect _position, SerializedProperty _property, GUIContent _label) {
+
+            _position.height = EditorGUIUtility.singleLineHeight;
+
             EnhancedEditorGUI.ScriptableObjectContentField(_position, _property, _label, out float _extraHeight, true);
             return _position.height + _extraHeight;
         }

@@ -404,7 +404,9 @@ namespace EnhancedEditor.Editor {
                             string _file = _log.Substring(0, _startLineIndex);
                             _startLineIndex++;
 
-                            if (!int.TryParse(_log.Substring(_startLineIndex, _endLineIndex - _startLineIndex), out int _lineNumber)) {
+                            int _length = Mathf.Max(0, _endLineIndex - _startLineIndex);
+
+                            if (!int.TryParse(_log.Substring(_startLineIndex, _length), out int _lineNumber)) {
                                 _lineNumber = -1;
                             }
 
@@ -549,12 +551,13 @@ namespace EnhancedEditor.Editor {
                 }
 
                 string[] _lines = File.ReadAllLines(_fullPath);
-                int _lineNumber = _call.LineNumber;
+                int _lineNumber = Mathf.Min(_call.LineNumber, _lines.Length);
                 int _index = _lineNumber - 1;
 
                 // Get the call line first.
-                List<Pair<string, int>> _tempLines = new List<Pair<string, int>>();
-                _tempLines.Add(new Pair<string, int>(_lines[_index], _lineNumber));
+                List<Pair<string, int>> _tempLines = new List<Pair<string, int>> {
+                    new Pair<string, int>(_lines[_index], _lineNumber)
+                };
 
                 // Then get previous and next non-empty lines.
                 int _lineCount = GetWindow().stackCallLineCount - 1;
@@ -1123,7 +1126,7 @@ namespace EnhancedEditor.Editor {
 
         private const int StackHeaderMaxLine = 4;
 
-        private const string LogFileExtension = ".txt";
+        private const string LogFileExtension = "txt";
         private const string LogSizeFormat = "Log Size/{0} Lines";
         private const string StackLineCountFormat = "Stack Preview/{0} Lines";
         private const string LogColumnFormat = "Column/{0}";

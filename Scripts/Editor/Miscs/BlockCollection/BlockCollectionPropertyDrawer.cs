@@ -66,7 +66,6 @@ namespace EnhancedEditor.Editor {
 
                             drawElementCallback = (Rect _position, int _index, bool _isActive, bool _isFocused) => {
                                 _position.y += ContentOffset;
-
                                 using (var _scope = new EditorGUI.DisabledGroupScope(_isReadonly)) {
                                     EnhancedEditorGUI.EnhancedPropertyField(_position, _array.GetArrayElementAtIndex(_index), GUIContent.none, true);
                                 }

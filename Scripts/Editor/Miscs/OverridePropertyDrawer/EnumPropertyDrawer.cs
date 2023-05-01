@@ -23,7 +23,7 @@ namespace EnhancedEditor.Editor {
 
             // -----------------------
 
-            public EnumInfos(List<Pair<int, string>> _values) {
+            public EnumInfos(List<EnumValueInfo> _values) {
 
                 int _count = _values.Count;
 
@@ -31,8 +31,8 @@ namespace EnhancedEditor.Editor {
                 Values = new int[_count];
 
                 for (int i = 0; i < _count; i++) {
-                    Names[i] = new GUIContent(ObjectNames.NicifyVariableName(_values[i].Second));
-                    Values[i] = _values[i].First;
+                    Names[i] = new GUIContent(ObjectNames.NicifyVariableName(_values[i].Name), _values[i].Tooltip);
+                    Values[i] = _values[i].Value;
 
                     if (Names[i].text == "_") {
                         Names[i].text = string.Empty;

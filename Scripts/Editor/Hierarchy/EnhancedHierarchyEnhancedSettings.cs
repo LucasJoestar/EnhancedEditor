@@ -175,7 +175,7 @@ namespace EnhancedEditor.Editor {
         #region Hierarchy Settings
         private const float ButtonWidth     = 55f;
 
-        public const string PreferencesFileExtension        = ".txt";
+        public const string PreferencesFileExtension        = "txt";
         public const string PreferencesPath                 = EnhancedEditorSettings.UserSettingsPath + "/Hierarchy";
         public const string PreferencesLabel                = "Hierarchy";
 

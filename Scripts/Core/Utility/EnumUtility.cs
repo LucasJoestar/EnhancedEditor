@@ -7,10 +7,44 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using UnityEngine;
 
-using EnumCollection = System.Collections.Generic.List<EnhancedEditor.Pair<int, string>>;
+using EnumCollection = System.Collections.Generic.List<EnhancedEditor.EnumValueInfo>;
 
 namespace EnhancedEditor {
+    /// <summary>
+    /// <see cref="Enum"/> value info wrapper.
+    /// </summary>
+    public struct EnumValueInfo {
+        #region Content
+        /// <summary>
+        /// <see cref="int"/> value of this enum.
+        /// </summary>
+        public int Value;
+
+        /// <summary>
+        /// Name of this enum value.
+        /// </summary>
+        public string Name;
+
+        /// <summary>
+        /// Tooltip of this enum value.
+        /// </summary>
+        public string Tooltip;
+
+        // -------------------------------------------
+        // Constructor(s)
+        // -------------------------------------------
+
+        /// <inheritdoc cref="EnumValueInfo"/>
+        public EnumValueInfo(int _value, string _name, string _tooltip) {
+            Value = _value;
+            Name = _name;
+            Tooltip = _tooltip;
+        }
+        #endregion
+    }
+
     /// <summary>
     /// <see cref="Enum"/>-related utility class.
     /// </summary>
@@ -43,8 +77,8 @@ namespace EnhancedEditor {
             // Get enum name.
             foreach (var _pair in _enumNames) {
 
-                if (_pair.First == _enumValue) {
-                    _name = _pair.Second;
+                if (_pair.Value == _enumValue) {
+                    _name = _pair.Name;
                     break;
                 }
             }
@@ -70,6 +104,8 @@ namespace EnhancedEditor {
                     Enum _value = (Enum)_values.GetValue(i);
 
                     string _enumName = _value.ToString();
+                    string _enumTooltip = string.Empty;
+
                     FieldInfo _field = _enumType.GetField(_enumName);
 
                     if (_field == null) {
@@ -83,6 +119,12 @@ namespace EnhancedEditor {
                         _enumName = _attribute.Label.text;
                     }
 
+                    // Tooltip.
+                    if (_field.IsDefined(typeof(TooltipAttribute), true)) {
+                        TooltipAttribute _attribute = _field.GetCustomAttribute<TooltipAttribute>(true);
+                        _enumTooltip = _attribute.tooltip;
+                    }
+
                     SeparatorPosition _separator = SeparatorPosition.None;
 
                     // Separator.
@@ -93,7 +135,7 @@ namespace EnhancedEditor {
 
                     AddSeparator(SeparatorPosition.Top);
 
-                    _enumNames.Add(new Pair<int, string>(_value.ToInt(), _enumName));
+                    _enumNames.Add(new EnumValueInfo(_value.ToInt(), _enumName, _enumTooltip));
 
                     AddSeparator(SeparatorPosition.Bottom);
 
@@ -102,7 +144,7 @@ namespace EnhancedEditor {
                     void AddSeparator(SeparatorPosition _position) {
 
                         if (_separator.HasFlag(_position)) {
-                            _enumNames.Add(new Pair<int, string>(-1, string.Empty));
+                            _enumNames.Add(new EnumValueInfo(-1, string.Empty, string.Empty));
                         }
                     }
                 }

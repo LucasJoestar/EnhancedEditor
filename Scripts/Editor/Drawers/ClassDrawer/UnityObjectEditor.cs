@@ -11,12 +11,14 @@ using UnityEngine;
 using UnityEditor;
 using UnityEditorInternal;
 
+using Object = UnityEngine.Object;
+
 namespace EnhancedEditor.Editor {
     /// <summary>
-    /// Base class to derive any <see cref="UnityEngine.Object"/> custom editor from (instead of <see cref="UnityEditor.Editor"/>),
+    /// Base class to derive any <see cref="Object"/> custom editor from (instead of <see cref="UnityEditor.Editor"/>),
     /// performing additional operations related to the <see cref="EnhancedEditor"/> plugin.
     /// </summary>
-    [CustomEditor(typeof(UnityEngine.Object), true), CanEditMultipleObjects]
+    [CustomEditor(typeof(Object), true), CanEditMultipleObjects]
     public class UnityObjectEditor : UnityEditor.Editor {
         #region Method Drawer Group
         private class MethodDrawerGroup {
@@ -61,11 +63,30 @@ namespace EnhancedEditor.Editor {
         #endregion
 
         #region Editor Content
+        private const string ScriptPropertyName     = "m_Script";
+        private const string ChronosPropertyName    = "chronos";
+        protected const float SaveValueButtonWidth = 100f;
+
         private const BindingFlags MethodInfoFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.FlattenHierarchy;
+
+        protected static readonly GUIContent saveValueGUI = new GUIContent(" Save Values", "Automatically save this object values and apply them on play mode exit.");
+        protected static readonly GUIContent loadValueGUI = new GUIContent(" Load Values", "Loads this object saved values.");
+
+        private static readonly Color saveButtonColor = new Color(.25f, 1f, .25f);
+        private static readonly Color loadButtonColor = SuperColor.Orange.Get();
+
+        private static readonly Dictionary<UnityObjectEditor, Type> editors = new Dictionary<UnityObjectEditor, Type>();
         private readonly List<SerializedProperty> properties = new List<SerializedProperty>();
 
         private UnityObjectDrawer[] objectDrawers = new UnityObjectDrawer[] { };
         private MethodDrawerGroup[] methodDrawerGroups = new MethodDrawerGroup[] { };
+
+        /// <summary>
+        /// Indicates if the data of the editing object can be saved.
+        /// </summary>
+        protected virtual bool CanSaveData {
+            get { return false; }
+        }
 
         // -----------------------
 
@@ -79,6 +100,12 @@ namespace EnhancedEditor.Editor {
                 DestroyImmediate(this);
                 return;
             }
+
+            // Registration.
+            editors.Add(this, target.GetType());
+
+            saveValueGUI.image = EditorGUIUtility.FindTexture("SaveAs");
+            loadValueGUI.image = EditorGUIUtility.FindTexture("SaveAs");
 
             // Get properties.
             SerializedProperty _property = serializedObject.GetIterator();
@@ -191,13 +218,26 @@ namespace EnhancedEditor.Editor {
                     if (properties.Count != 0) {
 
                         serializedObject.Update();
+                        int _startIndex = 0;
 
                         // First property is script type, so display it as readonly.
-                        EnhancedEditorGUILayout.ReadonlyField(properties[0], true);
+                        if (properties[0].propertyPath == ScriptPropertyName) {
 
-                        for (int i = 1; i < properties.Count; i++) {
-                            SerializedProperty _property = properties[i];
-                            EditorGUILayout.PropertyField(_property, true);
+                            _startIndex++;
+                            EnhancedEditorGUILayout.ReadonlyField(properties[0], true);
+                        }
+
+                        if ((properties.Count > 2) && (properties[1].propertyPath == ChronosPropertyName)) {
+
+                            _startIndex++;
+                            EnhancedEditorGUILayout.ReadonlyField(properties[1], true);
+                        }
+
+                        if (DrawInspectorGUI()) {
+                            for (int i = _startIndex; i < properties.Count; i++) {
+                                SerializedProperty _property = properties[i];
+                                EditorGUILayout.PropertyField(_property, true);
+                            }
                         }
 
                         serializedObject.ApplyModifiedProperties();
@@ -207,6 +247,8 @@ namespace EnhancedEditor.Editor {
                         // Default inspector.
                         base.OnInspectorGUI();
                     }
+
+                    OnAfterInspectorGUI();
                 }
 
                 GUILayout.Space(10f);
@@ -221,8 +263,206 @@ namespace EnhancedEditor.Editor {
         }
 
         protected virtual void OnDisable() {
-            foreach (var _drawer in objectDrawers)
+
+            // Unegistration.
+            editors.Remove(this);
+
+            foreach (var _drawer in objectDrawers) {
                 _drawer.OnDisable();
+            }
+        }
+
+        // -------------------------------------------
+        // Callback
+        // -------------------------------------------
+
+        /// <summary>
+        /// Override this to implement your own GUI version of this script.
+        /// </summary>
+        /// <returns>True to draw the default inspector, false otherwise.</returns>
+        protected virtual bool DrawInspectorGUI() {
+            return true;
+        }
+        
+        /// <summary>
+        /// Called after this object inspector GUI was drawn.
+        /// </summary>
+        protected virtual void OnAfterInspectorGUI() { }
+
+        /// <summary>
+        /// Saves an object data.
+        /// </summary>
+        /// <param name="_object"><see cref="Object"/> to save data.</param>
+        /// <returns>Object serialized data.</returns>
+        protected virtual PlayModeObjectData SaveData(Object _object) {
+            return new PlayModeObjectData(_object);
+        }
+
+        // -------------------------------------------
+        // Save
+        // -------------------------------------------
+
+        /// <summary>
+        /// Draw buttons to save / load properties.
+        /// </summary>
+        protected void SaveLoadButtonGUILayout() {
+
+            if (Application.isPlaying) {
+
+                // Save properties.
+                SaveButtonGUI(GetSaveLoadButtonPosition());
+
+            } else if (PlayModeDataSave.Contain(target)) {
+
+                // Load properties.
+                LoadButtonGUI(GetSaveLoadButtonPosition());
+            }
+        }
+
+        /// <inheritdoc cref="SaveLoadButtonGUILayout"/>
+        protected void SaveLoadButtonGUI(Rect _position) {
+
+            if (Application.isPlaying) {
+
+                // Save properties.
+                SaveButtonGUI(_position);
+
+            } else if (PlayModeDataSave.Contain(target)) {
+
+                // Load properties.
+                LoadButtonGUI(_position);
+            }
+        }
+
+        /// <summary>
+        /// Draw button to save properties.
+        /// </summary>
+        protected void SaveButtonGUI(Rect _position) {
+
+            using (var _scope = EnhancedGUI.GUIContentColor.Scope(saveButtonColor)) {
+                if (EnhancedEditorGUI.IconDropShadowButton(_position, saveValueGUI)) {
+
+                    foreach (Object _target in targets) {
+
+                        MenuCommand _command = new MenuCommand(_target);
+                        SaveData(_command);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Draw button to load properties.
+        /// </summary>
+        protected void LoadButtonGUI(Rect _position) {
+
+            using (var _scope = EnhancedGUI.GUIContentColor.Scope(loadButtonColor)) {
+                if (EnhancedEditorGUI.IconDropShadowButton(_position, loadValueGUI)) {
+
+                    foreach (Object _target in targets) {
+
+                        MenuCommand _command = new MenuCommand(_target);
+                        LoadData(_command);
+                    }
+                }
+            }
+        }
+
+        // -----------------------
+
+        private Rect GetSaveLoadButtonPosition() {
+
+            Rect _position = EditorGUILayout.GetControlRect(true, 20f);
+            _position.xMin = _position.xMax - SaveValueButtonWidth;
+
+            return _position;
+        }
+        #endregion
+
+        #region Context
+        private const int ContextMenuOrder = 900;
+        private const string SaveDataMenu = "CONTEXT/Component/Save Data";
+        private const string LoadDataMenu = "CONTEXT/Component/Load Data";
+
+        // -------------------------------------------
+        // Save
+        // -------------------------------------------
+
+        /// <summary>
+        /// Saves this context object data.
+        /// </summary>
+        [MenuItem(SaveDataMenu, false, ContextMenuOrder)]
+        public static void SaveData(MenuCommand _command) {
+
+            Object _context = _command.context;
+
+            if (CanSaveObjectData(_context, out UnityObjectEditor _editor)) {
+
+                PlayModeObjectData _data = _editor.SaveData(_context);
+                PlayModeDataSave.SaveData(_data);
+            }
+        }
+
+        /// <summary>
+        /// Get if this context object data can be saved.
+        /// </summary>
+        [MenuItem(SaveDataMenu, true, ContextMenuOrder)]
+        public static bool SaveDataValidate(MenuCommand _command) {
+            return CanSaveObjectData(_command.context, out _) && Application.isPlaying;
+        }
+
+        // -------------------------------------------
+        // Load
+        // -------------------------------------------
+
+        /// <summary>
+        /// Loads this context object data.
+        /// </summary>
+        [MenuItem(LoadDataMenu, false, ContextMenuOrder)]
+        public static void LoadData(MenuCommand _command) {
+
+            Object _context = _command.context;
+
+            if (CanSaveObjectData(_context, out UnityObjectEditor _editor)) {
+
+                PlayModeDataSave.LoadData(_context);
+            }
+        }
+
+        /// <summary>
+        /// Get if this context object data can be loaded.
+        /// </summary>
+        [MenuItem(LoadDataMenu, true, ContextMenuOrder)]
+        public static bool LoadDataValidate(MenuCommand _command) {
+            Object _context = _command.context;
+            return CanSaveObjectData(_context, out _) && PlayModeDataSave.Contain(_context);
+        }
+
+        // -------------------------------------------
+        // Utility
+        // -------------------------------------------
+
+        private static bool CanSaveObjectData(Object _object, out UnityObjectEditor _editor) {
+
+            // Null object.
+            if (_object == null) {
+                _editor = null;
+                return false;
+            }
+
+            Type _type = _object.GetType();
+
+            // Find matching active editor.
+            foreach (var _temp in editors) {
+                if (_type.IsSameOrSubclass(_temp.Value)) {
+
+                    _editor = _temp.Key;
+                    return _editor.CanSaveData;
+                }
+            }
+
+            _editor = null;
+            return false;
         }
         #endregion
     }

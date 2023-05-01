@@ -190,11 +190,6 @@ namespace EnhancedEditor {
         [SerializeField] internal bool value        = false;
 
         /// <summary>
-        /// Called everytime this flag value is changed.
-        /// </summary>
-        public Action<bool> OnValueChanged = null;
-
-        /// <summary>
         /// Unique GUID of this flag.
         /// </summary>
         public int GUID {
@@ -219,7 +214,7 @@ namespace EnhancedEditor {
                 }
 
                 this.value = value;
-                OnValueChanged?.Invoke(value);
+                FlagUtility.OnFlagChanged(this, value);
 
                 #if UNITY_EDITOR
                 if (!Application.isPlaying) {
@@ -228,7 +223,7 @@ namespace EnhancedEditor {
                 #endif
 
                 #if DEVELOPMENT
-                Debug.Log($"{Name.Bold()} flag set to {value.ToString().Bold()}");
+                Debug.Log($"Flag \'{Name.Bold().Color(SuperColor.Turquoise)}\' set to {value.ToString().ToUpper().Bold()}");
                 #endif
             }
         }
