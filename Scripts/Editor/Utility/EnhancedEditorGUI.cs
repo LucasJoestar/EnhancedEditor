@@ -4747,7 +4747,7 @@ namespace EnhancedEditor.Editor {
         /// <returns><inheritdoc cref="DocumentationMethodTotal(Rect, out float)" path="/param[@name='_totalHeight']"/></returns>
         public static float EnhancedPropertyField(Rect _position, SerializedProperty _property, GUIContent _label, bool _includeChildren = true) {
             DrawerInfos _drawer = GetPropertyEditor(_property);
-            float _height;
+            float _height = _position.height;
 
             switch (_drawer.State) {
 
@@ -4765,7 +4765,7 @@ namespace EnhancedEditor.Editor {
                 case 0:
                 default:
                     _height = EditorGUI.GetPropertyHeight(_property, _label, _includeChildren);
-                    EditorGUI.PropertyField(_position, _property, _label, _includeChildren);
+                    EditorGUI.PropertyField(_position, _property, _label, false);
                     break;
             }
 

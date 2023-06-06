@@ -20,8 +20,7 @@ namespace EnhancedEditor.Editor
     /// with the ability to easily open and close them in the editor.
     /// </summary>
     [InitializeOnLoad]
-    public class SceneHandlerWindow : EditorWindow
-    {
+    public class SceneHandlerWindow : EditorWindow, IHasCustomMenu {
         #region Window GUI
         /// <summary>
         /// Returns the first <see cref="SceneHandlerWindow"/> currently on screen.
@@ -59,6 +58,8 @@ namespace EnhancedEditor.Editor
         private const char PlaySceneSeparator = ':';
 
         private static readonly AutoManagedResource<SceneHandler> resource = new AutoManagedResource<SceneHandler>();
+
+        private static readonly GUIContent resetGroupsGUI   = new GUIContent("Reset Groups", "Clears all configured Asset and Bundle groups");
 
         private readonly GUIContent createGroupGUI = new GUIContent(" Create Group", "Create a new group.");
         private readonly GUIContent refreshGUI = new GUIContent("Refresh", "Refresh all scenes and scene bundles.");
@@ -213,6 +214,12 @@ namespace EnhancedEditor.Editor
             EditorSceneManager.sceneLoaded -= OnSceneLoaded;
             EditorSceneManager.sceneUnloaded -= OnSceneUnloaded;
             EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
+        }
+
+        void IHasCustomMenu.AddItemsToMenu(GenericMenu _menu) {
+            _menu.AddItem(resetGroupsGUI, false, () => {
+                Database.ResetGroups();
+            });
         }
         #endregion
 
@@ -800,7 +807,13 @@ namespace EnhancedEditor.Editor
                     if (!string.IsNullOrEmpty(_playScenes))
                     {
                         string _coreScenePath = AssetDatabase.GUIDToAssetPath(CoreSceneEnhancedSettings.Settings.CoreScene.guid);
-                        int _loadedCount = EditorSceneManager.loadedSceneCount;
+                        int _loadedCount;
+
+                        #if UNITY_2022_3_OR_NEWER
+                        _loadedCount = SceneManager.loadedSceneCount;
+                        #else
+                        _loadedCount = SceneManager.sceneCount;
+                        #endif
 
                         string[] _allScenes = _playScenes.Split(PlaySceneSeparator);
                         foreach (string _scenePath in _allScenes)

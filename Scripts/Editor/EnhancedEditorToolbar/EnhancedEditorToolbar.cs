@@ -85,7 +85,7 @@ namespace EnhancedEditor.Editor
             SceneView.duringSceneGui += OnSceneGUI;
 
             // Load foldout value.
-            SetFoldout(EditorPrefs.GetBool(FoldoutKey, foldout));
+            SetFoldout(EditorPrefs.GetBool(FoldoutKey, foldout), true);
             #else
             EditorApplication.update -= Update;
             EditorApplication.update += Update;
@@ -243,7 +243,7 @@ namespace EnhancedEditor.Editor
         private const float ToolbarFoldoutWidth = 25f;
         private const float ToolbarHeaderWidth = 97f;
         private const float ToolbarRightSpace = 60f;
-        private const float ToolbarFoldoutSpeed = 999f;
+        private const float ToolbarFoldoutSpeed = 2000000f;
 
         private static readonly GUIContent foldGUI = new GUIContent(string.Empty, "Hides the Enhanced Editor toolbar.");
         private static readonly GUIContent unfolddGUI = new GUIContent(string.Empty, "Shows the Enhanced Editor toolbar.");
@@ -274,7 +274,7 @@ namespace EnhancedEditor.Editor
                 float _difference = (float)(_time - lastUpdateTime);
 
                 lastUpdateTime = _time;
-                toolbarWidth = Mathf.MoveTowards(toolbarWidth, _targetWidth, _difference * ToolbarFoldoutSpeed);
+                toolbarWidth = Mathf.MoveTowards(toolbarWidth, _targetWidth, _difference * ToolbarFoldoutSpeed * ChronosUtility.RealDeltaTime);
 
                 _view.Repaint();
             }
@@ -317,11 +317,17 @@ namespace EnhancedEditor.Editor
             Handles.EndGUI();
         }
 
-        private static void SetFoldout(bool _foldout)
+        private static void SetFoldout(bool _foldout, bool _instant = false)
         {
             // Set foldout value.
             foldout = _foldout;
             EditorPrefs.SetBool(FoldoutKey, _foldout);
+
+            if (_instant) {
+                toolbarWidth = foldout
+                             ? ToolbarFoldoutWidth
+                             : EnhancedEditorGUIUtility.ScreenWidth;
+            }
 
             lastUpdateTime = EditorApplication.timeSinceStartup;
         }

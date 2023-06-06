@@ -311,7 +311,7 @@ namespace EnhancedEditor.Editor {
             // Position handles.
             bool _drawHandles = GUIUtility.hotControl == 0;
             #if SCENEVIEW_TOOLBAR
-            doDrawHandles &= _event.mousePosition.y > 25f;
+            _drawHandles &= _event.mousePosition.y > 25f;
             #endif
 
             if (_isRotating) {

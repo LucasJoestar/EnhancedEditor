@@ -82,6 +82,18 @@ namespace EnhancedEditor {
         }
         #endregion
 
+        #region Behaviour
+        /// <summary>
+        /// Resets all in-game flags to a FALSE value.
+        /// </summary>
+        public void ResetFlags() {
+
+            foreach (FlagHolder _holder in holders) {
+                _holder.ResetFlags();
+            }
+        }
+        #endregion
+
         #region Utility
         /// <param name="_name"><inheritdoc cref="SetFlag(string, string, bool" path="/param[@name='_flagName']"/></param>
         /// <inheritdoc cref="SetFlag(string, string, bool)"/>

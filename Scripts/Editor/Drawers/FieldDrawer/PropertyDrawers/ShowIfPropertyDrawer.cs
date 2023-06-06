@@ -7,17 +7,14 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace EnhancedEditor.Editor
-{
+namespace EnhancedEditor.Editor {
     /// <summary>
     /// Special drawer for fields with the attribute <see cref="ShowIfAttribute"/> (inherit from <see cref="EnhancedPropertyDrawer"/>).
     /// </summary>
     [CustomDrawer(typeof(ShowIfAttribute))]
-	public class ShowIfPropertyDrawer : EnhancedPropertyDrawer
-    {
+    public class ShowIfPropertyDrawer : EnhancedPropertyDrawer {
         #region Drawer Content
-        public override bool OnBeforeGUI(Rect _position, SerializedProperty _property, GUIContent _label, out float _height)
-        {
+        public override bool OnBeforeGUI(Rect _position, SerializedProperty _property, GUIContent _label, out float _height) {
             _height = 0f;
 
             if (EnhancedEditorGUI.IsDrawingDuoProperty) {

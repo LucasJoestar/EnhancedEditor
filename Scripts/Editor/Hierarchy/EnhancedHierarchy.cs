@@ -10,17 +10,22 @@
 // ============================================================================ //
 
 #if UNITY_2021_1_OR_NEWER
-#define INTEGER_CACHE
+#define UNITY_2021
 #endif
 
 using System;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEditor;
-using UnityEditor.Experimental.SceneManagement;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+
+#if UNITY_2021
+using UnityEditor.SceneManagement;
+#else
+using UnityEditor.Experimental.SceneManagement;
+#endif
 
 namespace EnhancedEditor.Editor {
     /// <summary>
@@ -567,7 +572,7 @@ namespace EnhancedEditor.Editor {
 
         private static readonly FieldInfo dragSelectionField        = treeViewControllerType.GetField("m_DragSelection", BindingFlags.Instance | Flags);
 
-        #if INTEGER_CACHE
+        #if UNITY_2021
         private static readonly Type integerCacheType               = treeViewControllerType.GetNestedType("IntegerCache", Flags);
         private static readonly FieldInfo dragListField             = integerCacheType.GetField("m_List", BindingFlags.Instance | Flags);
         #endif
@@ -595,7 +600,7 @@ namespace EnhancedEditor.Editor {
 
             var _dragSelection = dragSelectionField.GetValue(treeViewController);
 
-            #if INTEGER_CACHE
+            #if UNITY_2021
             return dragListField.GetValue(_dragSelection) as List<int>;
             #else
             return _dragSelection as List<int>;

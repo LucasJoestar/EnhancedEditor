@@ -18,8 +18,7 @@ namespace EnhancedEditor.Editor
     /// which can be manipulated from the <see cref="SceneHandlerWindow"/>.
     /// </summary>
     [NonEditable("Please use the SceneHandler window to edit these settings.")]
-    public class SceneHandler : ScriptableObject
-    {
+    public class SceneHandler : ScriptableObject {
         #region Scene Wrapper
         /// <summary>
         /// Base class for <see cref="UnityEditor.SceneAsset"/> and <see cref="SceneBundle"/> wrappers.
@@ -313,11 +312,19 @@ namespace EnhancedEditor.Editor
         /// </summary>
         internal void Sort()
         {
-            foreach (var _group in sceneGroups)
-                Array.Sort(_group.Scenes);
+            if (sceneGroups.Length > 1) {
 
-            foreach (var _group in bundleGroups)
-                Array.Sort(_group.Bundles);
+                foreach (var _group in sceneGroups) {
+                    Array.Sort(_group.Scenes);
+                }
+            }
+
+            if (bundleGroups.Length > 1) {
+
+                foreach (var _group in bundleGroups) {
+                    Array.Sort(_group.Bundles);
+                }
+            }
 
             SaveChanges();
         }
@@ -334,6 +341,16 @@ namespace EnhancedEditor.Editor
         internal void SaveChanges()
         {
             EditorUtility.SetDirty(this);
+        }
+
+        /// <summary>
+        /// Clears all groups in this handler.
+        /// </summary>
+        public void ResetGroups() {
+            sceneGroups = new SceneGroup[] { new SceneGroup("Default Group") };
+            bundleGroups = new BundleGroup[] { new BundleGroup("Default Group") };
+
+            SaveChanges();
         }
         #endregion
     }

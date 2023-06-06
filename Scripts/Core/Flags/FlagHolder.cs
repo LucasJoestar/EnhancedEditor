@@ -53,6 +53,23 @@ namespace EnhancedEditor {
         }
         #endregion
 
+        #region Behaviour
+        /// <summary>
+        /// Resets all flags in this holder to a FALSE value.
+        /// </summary>
+        [ContextMenu("Reset Flags", false, 10)]
+        public void ResetFlags() {
+
+            foreach (Flag _flag in Flags) {
+
+                _flag.value = false;
+                FlagUtility.OnFlagChanged(_flag, _flag.value);
+            }
+
+            this.LogMessage("Reset Flags");
+        }
+        #endregion
+
         #region Utility
         /// <param name="_guid">Guid of the <see cref="Flag"/> to find.</param>
         /// <inheritdoc cref="FindFlag(string, out Flag)"/>
@@ -110,6 +127,11 @@ namespace EnhancedEditor {
             // Set holder reference.
             foreach (Flag _flag in Flags) {
                 _flag.holder = this;
+
+                // Update.
+                if (Application.isPlaying) {
+                    FlagUtility.OnFlagChanged(_flag, _flag.value);
+                }
             }
         }
 
