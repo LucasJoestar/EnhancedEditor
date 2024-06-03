@@ -4,6 +4,7 @@
 //
 // ============================================================================ //
 
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 namespace EnhancedEditor {
@@ -12,16 +13,16 @@ namespace EnhancedEditor {
     /// <see cref="AsciiEmojiExtensions.Get(AsciiEmoji)"/>.
     /// </summary>
     public enum AsciiEmoji {
-        FlippingTable,
-        AngryFlippingTable,
-        AlarmedFlippingTable,
-        FlippingYou,
-        TableDown,
+        FlippingTable           = 0,
+        AngryFlippingTable      = 1,
+        AlarmedFlippingTable    = 2,
+        FlippingYou             = 3,
+        TableDown               = 4,
 
-        FlowerGirl,
-        Happy,
-        Angry,
-        Sad,
+        FlowerGirl              = 5,
+        Happy                   = 6,
+        Angry                   = 7,
+        Sad                     = 8,
     }
 
     /// <summary>
@@ -66,6 +67,7 @@ namespace EnhancedEditor {
         }
 
         /// <inheritdoc cref="Get(AsciiEmoji, Color)"/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string Get(this AsciiEmoji _emoji, SuperColor _color) {
             return Get(_emoji, _color.Get());
         }
@@ -76,6 +78,7 @@ namespace EnhancedEditor {
         /// <param name="_emoji">The <see cref="AsciiEmoji"/> to get the associated value.</param>
         /// <param name="_color">The color used to get this emoji.</param>
         /// <returns>This emoji ascii <see cref="string"/> value.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string Get(this AsciiEmoji _emoji, Color _color) {
             return RichTextUtility.Color(Get(_emoji), _color);
         }

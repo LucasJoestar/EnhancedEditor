@@ -6,14 +6,12 @@
 
 using UnityEngine;
 
-namespace EnhancedEditor
-{
+namespace EnhancedEditor {
     /// <summary>
     /// Implements a visual representation of this field <see cref="Bounds"/> value in the scene,
     /// with easy-to-edit controls.
     /// </summary>
-	public class EnhancedBoundsAttribute : EnhancedPropertyAttribute
-    {
+	public sealed class EnhancedBoundsAttribute : EnhancedPropertyAttribute {
         #region Global Members
         public const SuperColor DefaultColor = SuperColor.Green;
 
@@ -22,12 +20,13 @@ namespace EnhancedEditor
         /// </summary>
         public readonly Color Color = default;
 
-        // -----------------------
+        // -------------------------------------------
+        // Constructor(s)
+        // -------------------------------------------
 
         /// <param name="_color"><inheritdoc cref="Color" path="/summary"/></param>
         /// <inheritdoc cref="EnhancedBoundsAttribute"/>
-        public EnhancedBoundsAttribute(SuperColor _color = DefaultColor)
-        {
+        public EnhancedBoundsAttribute(SuperColor _color = DefaultColor) {
             Color = _color.Get();
         }
         #endregion

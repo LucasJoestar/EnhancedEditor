@@ -13,13 +13,15 @@ namespace EnhancedEditor.Editor {
     public static class AutoManagedResourceEnhancedSettings {
         #region Project Settings
         public const string AutoManagedResourceDefaultDirectory = "EnhancedEditor/AutoManagedResources";
-        private const string DirectoryPanelTitle = "Auto-Managed Resources Default Directory";
+        private const string DirectoryPanelTitle                = "Auto-Managed Resources Default Directory";
 
         private static readonly GUIContent directoryGUI = new GUIContent("Managed Resource Dir.",
                                                                          "Directory in the project where are created all auto-managed resources.");
 
-        private static readonly int settingsGUID = "AutoManagedResourceDirectory".GetHashCode();
+        private static readonly int settingsGUID       = "AutoManagedResourceDirectory".GetStableHashCode();
         private static FolderEnhancedSettings settings = null;
+
+        // -----------------------
 
         /// <inheritdoc cref="AutoManagedResourceEnhancedSettings"/>
         public static FolderEnhancedSettings Settings {
@@ -35,7 +37,9 @@ namespace EnhancedEditor.Editor {
             }
         }
 
-        // -----------------------
+        // -------------------------------------------
+        // Drawer
+        // -------------------------------------------
 
         [EnhancedEditorProjectSettings(Order = 10)]
         private static void DrawSettings() {

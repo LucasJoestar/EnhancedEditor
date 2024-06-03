@@ -10,10 +10,14 @@
 #define EDITOR_TOOLBAR
 #endif
 
+#if UNITY_2019_1_OR_NEWER
+#define EDITOR_SHORTCUT
+#endif
+
 using UnityEditor;
 using UnityEngine;
 
-#if UNITY_2019_1_OR_NEWER
+#if EDITOR_SHORTCUT
 using UnityEditor.ShortcutManagement;
 #endif
 
@@ -73,7 +77,7 @@ namespace EnhancedEditor.Editor {
         #endregion
 
         #region Shortcuts
-        #if UNITY_2019_1_OR_NEWER
+        #if EDITOR_SHORTCUT
         private const string ShortcutBasePath = "Enhanced Editor/";
 
         private static bool UseShortcuts {

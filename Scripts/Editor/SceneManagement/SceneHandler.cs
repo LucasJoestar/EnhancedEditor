@@ -11,22 +11,20 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 
-namespace EnhancedEditor.Editor
-{
+namespace EnhancedEditor.Editor {
     /// <summary>
     /// <see cref="ScriptableObject"/> storing data about the core scene and scene groups,
     /// which can be manipulated from the <see cref="SceneHandlerWindow"/>.
     /// </summary>
     [NonEditable("Please use the SceneHandler window to edit these settings.")]
-    public class SceneHandler : ScriptableObject {
+    public sealed class SceneHandler : ScriptableObject {
         #region Scene Wrapper
         /// <summary>
         /// Base class for <see cref="UnityEditor.SceneAsset"/> and <see cref="SceneBundle"/> wrappers.
         /// <br/> You should simply ignore this.
         /// </summary>
         [Serializable]
-        public abstract class DataWrapper
-        {
+        public abstract class DataWrapper {
             [NonSerialized] internal bool IsLoaded = false;
             [NonSerialized] internal bool IsVisible = true;
         }
@@ -35,8 +33,7 @@ namespace EnhancedEditor.Editor
         /// Wrapper class for <see cref="UnityEditor.SceneAsset"/> objects.
         /// </summary>
         [Serializable]
-        public class Scene : DataWrapper, IComparable<Scene>
-        {
+        public sealed class Scene : DataWrapper, IComparable<Scene> {
             /// <summary>
             /// GUID of the wrapped scene.
             /// </summary>
@@ -51,8 +48,7 @@ namespace EnhancedEditor.Editor
 
             /// <param name="_guid"><inheritdoc cref="GUID" path="/summary"/></param>
             /// <inheritdoc cref="Scene"/>
-            public Scene(string _guid)
-            {
+            public Scene(string _guid) {
                 string _path = AssetDatabase.GUIDToAssetPath(_guid);
 
                 GUID = _guid;
@@ -61,8 +57,7 @@ namespace EnhancedEditor.Editor
 
             // -----------------------
 
-            int IComparable<Scene>.CompareTo(Scene _other)
-            {
+            int IComparable<Scene>.CompareTo(Scene _other) {
                 return Name.CompareTo(_other.Name);
             }
         }
@@ -71,8 +66,7 @@ namespace EnhancedEditor.Editor
         /// Wrapper class for <see cref="SceneBundle"/> objects.
         /// </summary>
         [Serializable]
-        public class Bundle : DataWrapper, IComparable<Bundle>
-        {
+        public sealed class Bundle : DataWrapper, IComparable<Bundle> {
             /// <summary>
             /// Wrapped <see cref="EnhancedEditor.SceneBundle"/>.
             /// </summary>
@@ -82,15 +76,13 @@ namespace EnhancedEditor.Editor
 
             /// <param name="_bundle"><inheritdoc cref="SceneBundle" path="/summary"/></param>
             /// <inheritdoc cref="Bundle"/>
-            public Bundle(SceneBundle _bundle)
-            {
+            public Bundle(SceneBundle _bundle) {
                 SceneBundle = _bundle;
             }
 
             // -----------------------
 
-            int IComparable<Bundle>.CompareTo(Bundle _other)
-            {
+            int IComparable<Bundle>.CompareTo(Bundle _other) {
                 return SceneBundle.name.CompareTo(_other.SceneBundle.name);
             }
         }
@@ -102,8 +94,7 @@ namespace EnhancedEditor.Editor
         /// <br/> You should simply ignore this.
         /// </summary>
         [Serializable]
-        public abstract class Group : IComparable<Group>
-        {
+        public abstract class Group : IComparable<Group> {
             /// <summary>
             /// Name of this group, displayed in the <see cref="SceneHandlerWindow"/>.
             /// </summary>
@@ -113,15 +104,13 @@ namespace EnhancedEditor.Editor
 
             // -----------------------
 
-            public Group(string _name)
-            {
+            public Group(string _name) {
                 Name = _name;
             }
 
             // -----------------------
 
-            int IComparable<Group>.CompareTo(Group _other)
-            {
+            int IComparable<Group>.CompareTo(Group _other) {
                 return Name.CompareTo(_other.Name);
             }
         }
@@ -130,8 +119,7 @@ namespace EnhancedEditor.Editor
         /// Group used to store multiple <see cref="Scene"/> together in the <see cref="SceneHandlerWindow"/>.
         /// </summary>
         [Serializable]
-        public class SceneGroup : Group
-        {
+        public sealed class SceneGroup : Group {
             /// <summary>
             /// All <see cref="Scene"/> packed in this group.
             /// </summary>
@@ -146,8 +134,7 @@ namespace EnhancedEditor.Editor
         /// Group used to store multiple <see cref="Bundle"/> together in the <see cref="SceneHandlerWindow"/>.
         /// </summary>
         [Serializable]
-        public class BundleGroup : Group
-        {
+        public sealed class BundleGroup : Group {
             /// <summary>
             /// All <see cref="Bundle"/> packed in this group.
             /// </summary>
@@ -160,7 +147,7 @@ namespace EnhancedEditor.Editor
         #endregion
 
         #region Global Members
-        [SerializeField] internal SceneGroup[] sceneGroups = new SceneGroup[] { new SceneGroup("Default Group") };
+        [SerializeField] internal SceneGroup[]  sceneGroups  = new SceneGroup [] { new SceneGroup ("Default Group") };
         [SerializeField] internal BundleGroup[] bundleGroups = new BundleGroup[] { new BundleGroup("Default Group") };
         #endregion
 
@@ -168,34 +155,27 @@ namespace EnhancedEditor.Editor
         /// <summary>
         /// Refresh all scenes and bundles data.
         /// </summary>
-        public void Refresh()
-        {
+        public void Refresh() {
             // Update scene data.
             List<string> _sceneGUIDs = new List<string>(EnhancedEditorUtility.FindAssetsGUID<UnityEditor.SceneAsset>());
-            for (int _i = 1; _i < sceneGroups.Length; _i++)
-            {
-                SceneGroup _group = sceneGroups[_i];
-                for (int _j = 0; _j < _group.Scenes.Length; _j++)
-                {
-                    Scene _scene = _group.Scenes[_j];
+            for (int i = 1; i < sceneGroups.Length; i++) {
+                SceneGroup _group = sceneGroups[i];
+                for (int j = 0; j < _group.Scenes.Length; j++) {
+                    Scene _scene = _group.Scenes[j];
                     int _index = _sceneGUIDs.IndexOf(_scene.GUID);
 
-                    if (_index == -1)
-                    {
+                    if (_index == -1) {
                         // If the scene could not be found, remove it from the group.
-                        ArrayUtility.RemoveAt(ref _group.Scenes, _j);
-                        if (_group.Scenes.Length == 0)
-                        {
-                            ArrayUtility.RemoveAt(ref sceneGroups, _i);
-                            _i--;
+                        ArrayUtility.RemoveAt(ref _group.Scenes, j);
+                        if (_group.Scenes.Length == 0) {
+                            ArrayUtility.RemoveAt(ref sceneGroups, i);
+                            i--;
 
                             break;
                         }
 
-                        _j--;
-                    }
-                    else
-                    {
+                        j--;
+                    } else {
                         // Initialize scene informations.
                         string _path = AssetDatabase.GUIDToAssetPath(_scene.GUID);
                         _scene.Name = Path.GetFileNameWithoutExtension(_path);
@@ -207,38 +187,31 @@ namespace EnhancedEditor.Editor
 
             // Register unregistered scenes.
             Scene[] _defaultGroup = new Scene[_sceneGUIDs.Count];
-            for (int _i = 0; _i < _defaultGroup.Length; _i++)
-            {
-                Scene _scene = new Scene(_sceneGUIDs[_i]);
-                _defaultGroup[_i] = _scene;
+            for (int i = 0; i < _defaultGroup.Length; i++) {
+                Scene _scene = new Scene(_sceneGUIDs[i]);
+                _defaultGroup[i] = _scene;
             }
 
             sceneGroups[0].Scenes = _defaultGroup;
 
             // Update bundle data.
             List<SceneBundle> bundles = new List<SceneBundle>(EnhancedEditorUtility.LoadAssets<SceneBundle>());
-            for (int _i = 1; _i < bundleGroups.Length; _i++)
-            {
-                BundleGroup _group = bundleGroups[_i];
-                for (int _j = 0; _j < _group.Bundles.Length; _j++)
-                {
-                    Bundle _bundle = _group.Bundles[_j];
-                    if (_bundle == null)
-                    {
+            for (int i = 1; i < bundleGroups.Length; i++) {
+                BundleGroup _group = bundleGroups[i];
+                for (int j = 0; j < _group.Bundles.Length; j++) {
+                    Bundle _bundle = _group.Bundles[j];
+                    if (_bundle == null) {
                         // If the scene bundle could not be found, remove it from the group.
-                        ArrayUtility.RemoveAt(ref _group.Bundles, _j);
-                        if (_group.Bundles.Length == 0)
-                        {
-                            ArrayUtility.RemoveAt(ref bundleGroups, _i);
-                            _i--;
+                        ArrayUtility.RemoveAt(ref _group.Bundles, j);
+                        if (_group.Bundles.Length == 0) {
+                            ArrayUtility.RemoveAt(ref bundleGroups, i);
+                            i--;
 
                             break;
                         }
 
-                        _j--;
-                    }
-                    else
-                    {
+                        j--;
+                    } else {
                         // Initialize scene informations.
                         _bundle.IsLoaded = false;
                         bundles.Remove(_bundle.SceneBundle);
@@ -248,10 +221,9 @@ namespace EnhancedEditor.Editor
 
             // Register unregistered bundles.
             Bundle[] _defaultBundles = new Bundle[bundles.Count];
-            for (int _i = 0; _i < _defaultBundles.Length; _i++)
-            {
-                Bundle _bundle = new Bundle(bundles[_i]);
-                _defaultBundles[_i] = _bundle;
+            for (int i = 0; i < _defaultBundles.Length; i++) {
+                Bundle _bundle = new Bundle(bundles[i]);
+                _defaultBundles[i] = _bundle;
             }
 
             bundleGroups[0].Bundles = _defaultBundles;
@@ -264,12 +236,10 @@ namespace EnhancedEditor.Editor
         /// <summary>
         /// Update the state of each scene depending whether it is loaded or not.
         /// </summary>
-        internal void UpdateLoadedScenes(int _unloadedSceneIndex = -2)
-        {
+        internal void UpdateLoadedScenes(int _unloadedSceneIndex = -2) {
             // Get loaded scenes path.
             string[] _loadedScenePaths = new string[EditorSceneManager.sceneCount];
-            for (int _i = 0; _i < _loadedScenePaths.Length; _i++)
-            {
+            for (int _i = 0; _i < _loadedScenePaths.Length; _i++) {
                 UnityEngine.SceneManagement.Scene _scene = EditorSceneManager.GetSceneAt(_i);
                 _loadedScenePaths[_i] = (_scene.buildIndex == _unloadedSceneIndex)
                                       ? string.Empty
@@ -277,26 +247,20 @@ namespace EnhancedEditor.Editor
             }
 
             // Scenes loaded state.
-            foreach (var _group in sceneGroups)
-            {
-                foreach (var _scene in _group.Scenes)
-                {
+            foreach (var _group in sceneGroups) {
+                foreach (var _scene in _group.Scenes) {
                     bool _isLoaded = ArrayUtility.Contains(_loadedScenePaths, AssetDatabase.GUIDToAssetPath(_scene.GUID));
                     _scene.IsLoaded = _isLoaded;
                 }
             }
 
             // Bundles loaded state.
-            foreach (var _group in bundleGroups)
-            {
-                foreach (var _bundle in _group.Bundles)
-                {
+            foreach (var _group in bundleGroups) {
+                foreach (var _bundle in _group.Bundles) {
                     bool _isLoaded = true;
 
-                    foreach (var _scene in _bundle.SceneBundle.Scenes)
-                    {
-                        if (!string.IsNullOrEmpty(AssetDatabase.GUIDToAssetPath(_scene.GUID)) && !ArrayUtility.Contains(_loadedScenePaths, AssetDatabase.GUIDToAssetPath(_scene.GUID)))
-                        {
+                    foreach (var _scene in _bundle.SceneBundle.Scenes) {
+                        if (!string.IsNullOrEmpty(AssetDatabase.GUIDToAssetPath(_scene.GUID)) && !ArrayUtility.Contains(_loadedScenePaths, AssetDatabase.GUIDToAssetPath(_scene.GUID))) {
                             _isLoaded = false;
                             break;
                         }
@@ -310,8 +274,7 @@ namespace EnhancedEditor.Editor
         /// <summary>
         /// Sort all groups and data.
         /// </summary>
-        internal void Sort()
-        {
+        internal void Sort() {
             if (sceneGroups.Length > 1) {
 
                 foreach (var _group in sceneGroups) {
@@ -332,14 +295,11 @@ namespace EnhancedEditor.Editor
 
         #region Utility
         [Button(SuperColor.Green, IsDrawnOnTop = false)]
-        #pragma warning disable IDE0051
-        private static void OpenSceneHandlerWindow()
-        {
+        private static void OpenSceneHandlerWindow() {
             SceneHandlerWindow.GetWindow();
         }
 
-        internal void SaveChanges()
-        {
+        internal void SaveChanges() {
             EditorUtility.SetDirty(this);
         }
 
@@ -347,7 +307,7 @@ namespace EnhancedEditor.Editor
         /// Clears all groups in this handler.
         /// </summary>
         public void ResetGroups() {
-            sceneGroups = new SceneGroup[] { new SceneGroup("Default Group") };
+            sceneGroups  = new SceneGroup[] { new SceneGroup("Default Group") };
             bundleGroups = new BundleGroup[] { new BundleGroup("Default Group") };
 
             SaveChanges();

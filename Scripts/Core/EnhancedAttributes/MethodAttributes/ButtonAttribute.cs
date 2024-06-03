@@ -4,16 +4,13 @@
 //
 // ============================================================================ //
 
-using System;
 using UnityEngine;
 
-namespace EnhancedEditor
-{
+namespace EnhancedEditor {
     /// <summary>
     /// Displays this method as a button in the inspector.
     /// </summary>
-    public class ButtonAttribute : EnhancedMethodAttribute
-    {
+    public sealed class ButtonAttribute : EnhancedMethodAttribute {
         #region Global Members
         public const SuperColor DefaultColor = SuperColor.White;
 
@@ -39,27 +36,26 @@ namespace EnhancedEditor
         /// Button color.
         /// </summary>
         public readonly Color Color = default;
-        #endregion
 
-        #region Constructors
+        // -------------------------------------------
+        // Constructor(s)
+        // -------------------------------------------
+
         /// <inheritdoc cref="ButtonAttribute(ActivationMode, string, ConditionType, SuperColor)"/>
-        public ButtonAttribute(SuperColor _color = DefaultColor)
-        {
+        public ButtonAttribute(SuperColor _color = DefaultColor) {
             Color = _color.Get();
         }
 
         /// <inheritdoc cref="ButtonAttribute(ActivationMode, string, ConditionType, SuperColor)"/>
-        public ButtonAttribute(ActivationMode _mode, SuperColor _color = DefaultColor) : this(_color)
-        {
+        public ButtonAttribute(ActivationMode _mode, SuperColor _color = DefaultColor) : this(_color) {
             Mode = _mode;
         }
 
         /// <inheritdoc cref="ButtonAttribute(ActivationMode, string, ConditionType, SuperColor)"/>
         public ButtonAttribute(string _conditionMember, ConditionType _type = ConditionType.True,
-                               SuperColor _color = DefaultColor) : this(_color)
-        {
+                               SuperColor _color = DefaultColor) : this(_color) {
             ConditionMember = _conditionMember;
-            ConditionType = _type;
+            ConditionType   = _type;
         }
 
         /// <param name="_mode"><inheritdoc cref="Mode" path="/summary"/></param>
@@ -68,8 +64,7 @@ namespace EnhancedEditor
         /// <param name="_color"><inheritdoc cref="Color" path="/summary"/></param>
         /// <inheritdoc cref="ButtonAttribute"/>
         public ButtonAttribute(ActivationMode _mode, string _conditionMember, ConditionType _type = ConditionType.True,
-                               SuperColor _color = DefaultColor) : this(_conditionMember, _type, _color)
-        {
+                               SuperColor _color = DefaultColor) : this(_conditionMember, _type, _color) {
             Mode = _mode;
         }
         #endregion

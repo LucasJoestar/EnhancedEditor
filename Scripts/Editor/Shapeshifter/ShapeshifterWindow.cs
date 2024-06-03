@@ -11,17 +11,14 @@ using UnityEngine;
 
 using Object = UnityEngine.Object;
 
-namespace EnhancedEditor.Editor
-{
+namespace EnhancedEditor.Editor {
     /// <summary>
     /// Editor window available from any <see cref="MonoBehaviour"/> or <see cref="ScriptableObject"/> menu,
     /// allowing users to shape this object into one of its parent or child classes while keeping all of its assigned values.
     /// </summary>
-    public class ShapeshifterWindow : EditorWindow
-    {
+    public sealed class ShapeshifterWindow : EditorWindow {
         #region Styles
-        private static class Styles
-        {
+        private static class Styles {
             public static readonly GUIStyle TabStyle = new GUIStyle("ObjectPickerTab");
             public static readonly GUIStyle BackgroundStyle = new GUIStyle("ProjectBrowserIconAreaBg");
         }
@@ -29,8 +26,7 @@ namespace EnhancedEditor.Editor
 
         #region Shape Type
         [Serializable]
-        private class ShapeType : IComparable<ShapeType>
-        {
+        private sealed class ShapeType : IComparable<ShapeType> {
             public Type Type = null;
 
             public bool IsVisible = true;
@@ -38,15 +34,13 @@ namespace EnhancedEditor.Editor
 
             // -----------------------
 
-            public ShapeType(Type _type)
-            {
+            public ShapeType(Type _type) {
                 Type = _type;
             }
 
             // -----------------------
 
-            int IComparable<ShapeType>.CompareTo(ShapeType _other)
-            {
+            int IComparable<ShapeType>.CompareTo(ShapeType _other) {
                 int _comparison = Type.FullName.CompareTo(_other.Type.FullName);
                 return _comparison;
             }
@@ -62,11 +56,9 @@ namespace EnhancedEditor.Editor
         /// <returns><see cref="ShapeshifterWindow"/> instance on screen.</returns>
         [MenuItem("CONTEXT/MonoBehaviour/Shapeshifter")]
         [MenuItem("CONTEXT/ScriptableObject/Shapeshifter")]
-        public static ShapeshifterWindow GetWindow(MenuCommand _command)
-        {
+        public static ShapeshifterWindow GetWindow(MenuCommand _command) {
             ShapeshifterWindow _window = GetWindow<ShapeshifterWindow>(true, "Shapeshifter");
-            if (_window.Initialize(_command.context))
-            {
+            if (_window.Initialize(_command.context)) {
                 _window.minSize = new Vector2(225f, 300f);
 
                 _window.Show();
@@ -102,11 +94,9 @@ namespace EnhancedEditor.Editor
 
         // -----------------------
 
-        private void OnGUI()
-        {
+        private void OnGUI() {
             // Close the window if it has not been initialized.
-            if (target == null)
-            {
+            if (target == null) {
                 Close();
                 return;
             }
@@ -114,23 +104,19 @@ namespace EnhancedEditor.Editor
             Undo.RecordObject(this, UndoRecordTitle);
 
             // Search field.
-            using (var _scope = new GUILayout.HorizontalScope(EditorStyles.toolbar))
-            {
+            using (var _scope = new GUILayout.HorizontalScope(EditorStyles.toolbar)) {
                 string _searchFilter = EnhancedEditorGUILayout.ToolbarSearchField(searchFilter);
-                if (_searchFilter != searchFilter)
-                {
+                if (_searchFilter != searchFilter) {
                     searchFilter = _searchFilter;
                     FilterTypes();
                 }
             }
 
             // Tab selection.
-            using (var _scope = new GUILayout.HorizontalScope(EditorStyles.toolbar))
-            {
+            using (var _scope = new GUILayout.HorizontalScope(EditorStyles.toolbar)) {
                 // Using an array iteration instead of two direct toggles allows to easily add new tabs whenever we want.
                 int _selectedTab = selectedTab;
-                for (int _i = 0; _i < tabsGUI.Length; _i++)
-                {
+                for (int _i = 0; _i < tabsGUI.Length; _i++) {
                     // Skip ignored tab.
                     if (ignoredTab == _i)
                         continue;
@@ -138,14 +124,12 @@ namespace EnhancedEditor.Editor
                     GUIContent _tabGUI = tabsGUI[_i];
                     bool _isSelected = _selectedTab == _i;
 
-                    if (GUILayout.Toggle(_isSelected, _tabGUI, Styles.TabStyle))
-                    {
+                    if (GUILayout.Toggle(_isSelected, _tabGUI, Styles.TabStyle)) {
                         _selectedTab = _i;
                     }
                 }
 
-                if (_selectedTab != selectedTab)
-                {
+                if (_selectedTab != selectedTab) {
                     selectedTab = _selectedTab;
                     scroll = Vector2.zero;
                 }
@@ -159,19 +143,16 @@ namespace EnhancedEditor.Editor
             GUI.Label(_position, GUIContent.none, Styles.BackgroundStyle);
 
             // Draw shapeshiftable types.
-            using (var _scope = new GUILayout.ScrollViewScope(scroll))
-            {
+            using (var _scope = new GUILayout.ScrollViewScope(scroll)) {
                 scroll = _scope.scrollPosition;
                 Rect _fullPosition = new Rect(Vector2.zero, position.size);
 
-                switch (selectedTab)
-                {
+                switch (selectedTab) {
                     // Parent types.
                     case 0:
                         DrawTypes(parentTypes);
 
-                        if (EnhancedEditorGUIUtility.DeselectionClick(_position))
-                        {
+                        if (EnhancedEditorGUIUtility.DeselectionClick(_position)) {
                             foreach (ShapeType _shapeType in parentTypes)
                                 _shapeType.IsSelected = false;
                         }
@@ -181,8 +162,7 @@ namespace EnhancedEditor.Editor
                     case 1:
                         DrawTypes(childTypes);
 
-                        if (EnhancedEditorGUIUtility.DeselectionClick(_position))
-                        {
+                        if (EnhancedEditorGUIUtility.DeselectionClick(_position)) {
                             foreach (ShapeType _shapeType in childTypes)
                                 _shapeType.IsSelected = false;
                         }
@@ -194,8 +174,7 @@ namespace EnhancedEditor.Editor
             }
         }
 
-        private void OnLostFocus()
-        {
+        private void OnLostFocus() {
             Close();
         }
         #endregion
@@ -206,31 +185,26 @@ namespace EnhancedEditor.Editor
 
         // -----------------------
 
-        private void DrawTypes(ShapeType[] _types)
-        {
+        private void DrawTypes(ShapeType[] _types) {
             // Draw each available class for shapeshifting.
-            using (var _scope = new EditorGUI.IndentLevelScope())
-            {
+            using (var _scope = new EditorGUI.IndentLevelScope()) {
                 string _namespace = string.Empty;
                 int _index = 0;
 
-                foreach (ShapeType _type in _types)
-                {
+                foreach (ShapeType _type in _types) {
                     if (!_type.IsVisible)
                         continue;
 
                     Type _targetType = _type.Type;
 
                     // Namespace header.
-                    if (_targetType.Namespace != _namespace)
-                    {
+                    if (_targetType.Namespace != _namespace) {
                         if (!string.IsNullOrEmpty(_namespace))
                             GUILayout.Space(5f);
 
                         _namespace = _targetType.Namespace;
 
-                        using (EnhancedEditorGUI.ZeroIndentScope())
-                        {
+                        using (EnhancedEditorGUI.ZeroIndentScope()) {
                             Rect _temp = EditorGUILayout.GetControlRect();
                             _temp.xMin += 3f;
 
@@ -263,17 +237,14 @@ namespace EnhancedEditor.Editor
                     _position.height += 2f;
 
                     // Shapeshift button.
-                    if (EnhancedEditorGUI.IconButton(_position, selectGUI, 2f))
-                    {
+                    if (EnhancedEditorGUI.IconButton(_position, selectGUI, 2f)) {
                         Shapeshift(_targetType);
                         break;
                     }
 
                     // Selection.
-                    if (EnhancedEditorGUIUtility.MouseDown(_fullPosition))
-                    {
-                        switch (Event.current.clickCount)
-                        {
+                    if (EnhancedEditorGUIUtility.MouseDown(_fullPosition)) {
+                        switch (Event.current.clickCount) {
                             // Select on click.
                             case 1:
                                 SelectType(_types, _type);
@@ -289,17 +260,14 @@ namespace EnhancedEditor.Editor
                         }
                     }
 
-                    if (_type.IsSelected)
-                    {
+                    if (_type.IsSelected) {
                         Event _event = Event.current;
-                        if ((_event.type == EventType.KeyDown) && (_event.keyCode == KeyCode.Return))
-                        {
+                        if ((_event.type == EventType.KeyDown) && (_event.keyCode == KeyCode.Return)) {
                             _event.Use();
 
                             // When using a key event, the scope began with GUILayout.ScrollViewScope
                             // is somehow lost, so let's begin it again to avoid any error.
-                            if (!Shapeshift(_targetType))
-                            {
+                            if (!Shapeshift(_targetType)) {
                                 GUILayout.BeginScrollView(scroll);
                             }
 
@@ -307,8 +275,7 @@ namespace EnhancedEditor.Editor
                         }
 
                         int _switch = EnhancedEditorGUIUtility.VerticalKeys();
-                        if (_switch != 0)
-                        {
+                        if (_switch != 0) {
                             _switch = Mathf.Clamp(_switch, 0, _types.Length - 1);
 
                             ShapeType _switchType = _types[_switch];
@@ -325,11 +292,9 @@ namespace EnhancedEditor.Editor
         /// Initializes this shapeshifter instance with a specific target object.
         /// </summary>
         /// <param name="_target">Target object to shapeshift.</param>
-        public bool Initialize(Object _target)
-        {
+        public bool Initialize(Object _target) {
             // Shapeshifting can only be performed on MonoBehaviour and ScriptableObject instances.
-            if (!(_target is MonoBehaviour) && !(_target is ScriptableObject))
-            {
+            if (!(_target is MonoBehaviour) && !(_target is ScriptableObject)) {
                 EditorUtility.DisplayDialog("Shapeshifter Not Available",
                                             "Shapeshifting can only be performed on Monobehaviour and ScriptableObject instances.",
                                             "OK");
@@ -345,11 +310,9 @@ namespace EnhancedEditor.Editor
             Type _targetType = _target.GetType();
             Type _baseType = _targetType.BaseType;
 
-            while ((_baseType != null) && (_baseType != typeof(MonoBehaviour)) && (_baseType != typeof(ScriptableObject)))
-            {
+            while ((_baseType != null) && (_baseType != typeof(MonoBehaviour)) && (_baseType != typeof(ScriptableObject))) {
                 // Register all parent types.
-                if (!_baseType.IsAbstract)
-                {
+                if (!_baseType.IsAbstract) {
                     ShapeType _parentType = new ShapeType(_baseType);
                     ArrayUtility.Add(ref parentTypes, _parentType);
                 }
@@ -358,14 +321,11 @@ namespace EnhancedEditor.Editor
             }
 
             Assembly[] _assemblies = AppDomain.CurrentDomain.GetAssemblies();
-            foreach (var _assembly in _assemblies)
-            {
+            foreach (var _assembly in _assemblies) {
                 Type[] _types = _assembly.GetTypes();
-                foreach (var _type in _types)
-                {
+                foreach (var _type in _types) {
                     // Register all child types.
-                    if (!_type.IsAbstract && _type.IsSubclassOf(_targetType))
-                    {
+                    if (!_type.IsAbstract && _type.IsSubclassOf(_targetType)) {
                         ShapeType _childType = new ShapeType(_type);
                         ArrayUtility.Add(ref childTypes, _childType);
                     }
@@ -373,8 +333,7 @@ namespace EnhancedEditor.Editor
             }
 
             // No shapeshifting available.
-            if ((parentTypes.Length == 0) && (childTypes.Length == 0))
-            {
+            if ((parentTypes.Length == 0) && (childTypes.Length == 0)) {
                 Close();
                 EditorUtility.DisplayDialog("No Shapeshifting Available",
                                             "No shapeshiting could be found for the selected object type.\n\n" +
@@ -403,29 +362,24 @@ namespace EnhancedEditor.Editor
             return true;
         }
 
-        private bool Shapeshift(Type _newType)
-        {
+        private bool Shapeshift(Type _newType) {
             if (!EditorUtility.DisplayDialog("Shapeshifting Confirmation",
                                              $"Are you sure you want to shape this object instance into a new {_newType.Name} instance?\n\n" +
                                              "All references to this object will be lost.",
-                                             "Yes", "Cancel"))
-            {
+                                             "Yes", "Cancel")) {
                 Focus();
                 return false;
             }
 
             Object _newShape;
 
-            if (target is ScriptableObject)
-            {
+            if (target is ScriptableObject) {
                 _newShape = CreateInstance(_newType);
 
                 string _path = AssetDatabase.GetAssetPath(target);
                 AssetDatabase.CreateAsset(_newShape, _path);
                 AssetDatabase.Refresh();
-            }
-            else
-            {
+            } else {
                 _newShape = Undo.AddComponent((target as Component).gameObject, _newType);
             }
 
@@ -442,25 +396,21 @@ namespace EnhancedEditor.Editor
 
         // -----------------------
 
-        private void FilterTypes()
-        {
+        private void FilterTypes() {
             string _searchFilter = searchFilter.ToLower();
 
-            foreach (ShapeType _type in parentTypes)
-            {
+            foreach (ShapeType _type in parentTypes) {
                 bool _isVisible = _type.Type.Name.ToLower().Contains(_searchFilter);
                 _type.IsVisible = _isVisible;
             }
 
-            foreach (ShapeType _type in childTypes)
-            {
+            foreach (ShapeType _type in childTypes) {
                 bool _isVisible = _type.Type.Name.ToLower().Contains(_searchFilter);
                 _type.IsVisible = _isVisible;
             }
         }
 
-        private void SelectType(ShapeType[] _types, ShapeType _selectedType)
-        {
+        private void SelectType(ShapeType[] _types, ShapeType _selectedType) {
             foreach (ShapeType _shapeType in _types)
                 _shapeType.IsSelected = false;
 

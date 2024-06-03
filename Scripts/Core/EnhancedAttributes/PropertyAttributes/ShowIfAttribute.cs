@@ -4,15 +4,13 @@
 //
 // ============================================================================ //
 
-namespace EnhancedEditor
-{
+namespace EnhancedEditor {
     /// <summary>
     /// Only shows this field in the inspector when a specific condition is fulfilled.
     /// <para/>
     /// This condition value can be either be a field, a property or a method.
     /// </summary>
-	public class ShowIfAttribute : EnhancedPropertyAttribute
-    {
+	public sealed class ShowIfAttribute : EnhancedPropertyAttribute {
         #region Global Members
         /// <summary>
         /// Name of the class member to get value from,
@@ -27,15 +25,16 @@ namespace EnhancedEditor
         /// </summary>
         public readonly ConditionType ConditionType = ConditionType.True;
 
-        // -----------------------
+        // -------------------------------------------
+        // Constructor(s)
+        // -------------------------------------------
 
         /// <param name="_conditionMember"><inheritdoc cref="ConditionMember" path="/summary"/></param>
         /// <param name="_conditionType"><inheritdoc cref="ConditionType" path="/summary"/></param>
         /// <inheritdoc cref="ShowIfAttribute"/>
-        public ShowIfAttribute(string _conditionMember, ConditionType _conditionType = ConditionType.True)
-        {
+        public ShowIfAttribute(string _conditionMember, ConditionType _conditionType = ConditionType.True) {
             ConditionMember = _conditionMember;
-            ConditionType = _conditionType;
+            ConditionType   = _conditionType;
         }
         #endregion
     }

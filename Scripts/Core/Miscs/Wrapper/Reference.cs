@@ -21,7 +21,9 @@ namespace EnhancedEditor {
         /// </summary>
         [SerializeReference] public T Value;
 
-        // -----------------------
+        // -------------------------------------------
+        // Constructor(s)
+        // -------------------------------------------
 
         /// <param name="_value"><inheritdoc cref="Value" path="/summary"/></param>
         /// <inheritdoc cref="Reference{T}"/>
@@ -41,7 +43,7 @@ namespace EnhancedEditor {
         #endregion
 
         #region Comparer
-        public int CompareTo(Reference<T> _other) {
+        public readonly int CompareTo(Reference<T> _other) {
             return Comparer<T>.Default.Compare(Value, _other.Value);
         }
         #endregion

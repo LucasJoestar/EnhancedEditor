@@ -10,7 +10,7 @@ namespace EnhancedEditor {
     /// <para/>
     /// Use this to perform additional operations when this field value is drawn in the inspector.
     /// </summary>
-    public class DrawMemberAttribute : EnhancedPropertyAttribute {
+    public sealed class DrawMemberAttribute : EnhancedPropertyAttribute {
         #region Global Members
         /// <summary>
         /// Name of the class member to call whenever this field is drawn.
@@ -24,14 +24,16 @@ namespace EnhancedEditor {
         /// </summary>
         public readonly ActivationMode Mode = ActivationMode.Always;
 
-        // -----------------------
+        // -------------------------------------------
+        // Constructor(s)
+        // -------------------------------------------
 
         /// <param name="_drawMember"><inheritdoc cref="DrawMember" path="/summary"/></param>
         /// <param name="_mode"><inheritdoc cref="Mode" path="/summary"/></param>
         /// <inheritdoc cref="DrawMemberAttribute"/>
         public DrawMemberAttribute(string _drawMember, ActivationMode _mode = ActivationMode.Always) {
             DrawMember = _drawMember;
-            Mode = _mode;
+            Mode       = _mode;
         }
         #endregion
     }

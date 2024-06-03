@@ -6,13 +6,11 @@
 
 using UnityEngine;
 
-namespace EnhancedEditor
-{
+namespace EnhancedEditor {
     /// <summary>
     /// Displays this <see cref="AnimationCurve"/> with some extra configurable options.
     /// </summary>
-	public class EnhancedCurveAttribute : EnhancedPropertyAttribute
-    {
+	public sealed class EnhancedCurveAttribute : EnhancedPropertyAttribute {
         #region Global Members
         public const SuperColor DefaultColor = SuperColor.Sapphire;
 
@@ -26,11 +24,12 @@ namespace EnhancedEditor
         /// </summary>
         public readonly Rect Rect = Rect.zero;
 
-        // -----------------------
+        // -------------------------------------------
+        // Constructor(s)
+        // -------------------------------------------
 
         /// <inheritdoc cref="EnhancedCurveAttribute(float, float, float, float, SuperColor)"/>
-        public EnhancedCurveAttribute(SuperColor _color = DefaultColor)
-        {
+        public EnhancedCurveAttribute(SuperColor _color = DefaultColor) {
             Color = _color.Get();
         }
 
@@ -40,8 +39,7 @@ namespace EnhancedEditor
         /// <param name="_maxY">Maximum curve restrained Y-axis oriented value.</param>
         /// <param name="_color"><inheritdoc cref="Color" path="/summary"/></param>
         /// <inheritdoc cref="EnhancedCurveAttribute"/>
-        public EnhancedCurveAttribute(float _minX, float _minY, float _maxX, float _maxY, SuperColor _color = DefaultColor) : this(_color)
-        {
+        public EnhancedCurveAttribute(float _minX, float _minY, float _maxX, float _maxY, SuperColor _color = DefaultColor) : this(_color) {
             Rect = new Rect(_minX, _minY, _maxX - _minX, _maxY - _minY);
         }
         #endregion

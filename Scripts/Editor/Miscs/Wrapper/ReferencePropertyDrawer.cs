@@ -12,7 +12,7 @@ namespace EnhancedEditor.Editor {
     /// Custom <see cref="Reference{T}"/> drawer.
     /// </summary>
     [CustomPropertyDrawer(typeof(Reference<>), true)]
-    public class ReferencePropertyDrawer : EnhancedPropertyEditor {
+    public sealed class ReferencePropertyDrawer : EnhancedPropertyEditor {
         #region Drawer Content
         protected override float OnEnhancedGUI(Rect _position, SerializedProperty _property, GUIContent _label) {
             _property.NextVisible(true);

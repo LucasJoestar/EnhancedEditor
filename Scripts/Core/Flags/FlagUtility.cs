@@ -30,13 +30,13 @@ namespace EnhancedEditor {
         #region Content
         private static readonly List<IFlagCallback> callbacks = new List<IFlagCallback>();
 
-        // -----------------------
-
         /// <inheritdoc cref="IFlagCallback.OnFlagChanged(Flag, bool)"/>
         internal static void OnFlagChanged(Flag _flag, bool _value) {
 
-            for (int i = callbacks.Count; i-- > 0;) {
-                callbacks[i].OnFlagChanged(_flag, _value);
+            List<IFlagCallback> callbackSpan = callbacks;
+
+            for (int i = callbackSpan.Count; i-- > 0;) {
+                callbackSpan[i].OnFlagChanged(_flag, _value);
             }
         }
 

@@ -6,14 +6,12 @@
 
 using UnityEngine;
 
-namespace EnhancedEditor
-{
+namespace EnhancedEditor {
     /// <summary>
     /// Draws a <see cref="Vector2"/> or a <see cref="Vector2Int"/> as a min-max slider,
     /// used to edit both a minimum and a maximum value.
     /// </summary>
-    public class MinMaxAttribute : EnhancedPropertyAttribute
-    {
+    public sealed class MinMaxAttribute : EnhancedPropertyAttribute {
         #region Global Members
         /// <summary>
         /// Slider minimum allowed value.
@@ -34,21 +32,21 @@ namespace EnhancedEditor
         /// </summary>
         public readonly MemberValue<Vector2>? MinMaxMember = null;
 
-        // -----------------------
+        // -------------------------------------------
+        // Constructor(s)
+        // -------------------------------------------
 
         /// <param name="_minValue"><inheritdoc cref="MinValue" path="/summary"/></param>
         /// <param name="_maxValue"><inheritdoc cref="MaxValue" path="/summary"/></param>
         /// <inheritdoc cref="MinMaxAttribute"/>
-        public MinMaxAttribute(float _minValue, float _maxValue)
-        {
+        public MinMaxAttribute(float _minValue, float _maxValue) {
             MinValue = _minValue;
             MaxValue = _maxValue;
         }
 
         /// <param name="_minMaxMember"><inheritdoc cref="MinMaxMember" path="/summary"/></param>
         /// <inheritdoc cref="MinMaxAttribute"/>
-        public MinMaxAttribute(string _minMaxMember)
-        {
+        public MinMaxAttribute(string _minMaxMember) {
             MinMaxMember = _minMaxMember;
         }
         #endregion

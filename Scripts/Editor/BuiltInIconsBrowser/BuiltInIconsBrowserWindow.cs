@@ -13,16 +13,13 @@ using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 
-namespace EnhancedEditor.Editor
-{
+namespace EnhancedEditor.Editor {
     /// <summary>
     /// Editor window used to browse Unity built-in icons.
     /// </summary>
-	public class BuiltInIconsBrowserWindow : EditorWindow
-    {
+	public sealed class BuiltInIconsBrowserWindow : EditorWindow {
         #region Icon Wrapper
-        private class Icon
-        {
+        private class Icon {
             public string Name = string.Empty;
             public GUIContent IconContent = null;
             public GUIContent FullContent = null;
@@ -32,14 +29,12 @@ namespace EnhancedEditor.Editor
 
             // -----------------------
 
-            public Icon(string _name, GUIContent _content)
-            {
+            public Icon(string _name, GUIContent _content) {
                 Texture _texture = _content.image;
 
                 Name = _name;
                 IconContent = _content;
-                FullContent = new GUIContent(_content)
-                {
+                FullContent = new GUIContent(_content) {
                     text = $" {_name}"
                 };
 
@@ -56,8 +51,7 @@ namespace EnhancedEditor.Editor
         /// </summary>
         /// <returns><see cref="BuiltInIconsBrowserWindow"/> instance on screen.</returns>
         [MenuItem(InternalUtility.MenuItemPath + "Built-in Icons Browser", false, 10)]
-        public static BuiltInIconsBrowserWindow GetWindow()
-        {
+        public static BuiltInIconsBrowserWindow GetWindow() {
             BuiltInIconsBrowserWindow _window = GetWindow<BuiltInIconsBrowserWindow>("Built-in Icons Browser");
             _window.Show();
 
@@ -143,21 +137,17 @@ namespace EnhancedEditor.Editor
 
         // -----------------------
 
-        private void OnEnable()
-        {
+        private void OnEnable() {
             List<Icon> _icons = new List<Icon>();
             Texture2D[] _textures;
 
-            try
-            {
+            try {
                 MethodInfo _method = typeof(EditorGUIUtility).GetMethod("GetEditorAssetBundle", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
                 object _bundle = _method.Invoke(null, null);
 
                 AssetBundle _assetBundle = _bundle as AssetBundle;
                 _textures = _assetBundle.LoadAllAssets<Texture2D>();
-            }
-            catch (Exception _e)
-            {
+            } catch (Exception _e) {
                 Debug.LogError("Error => " + _e);
 
                 _textures = Resources.FindObjectsOfTypeAll<Texture2D>();
@@ -167,13 +157,11 @@ namespace EnhancedEditor.Editor
             // As Unity will automatically log an error when a load fails, let's disable the logger temporarily.
             Debug.unityLogger.logEnabled = false;
 
-            foreach (Texture2D _texture in _textures)
-            {
+            foreach (Texture2D _texture in _textures) {
                 string _iconName = _texture.name;
                 GUIContent _content = EditorGUIUtility.IconContent(_iconName, _iconName);
 
-                if ((_content != null) && (_content.image != null))
-                {
+                if ((_content != null) && (_content.image != null)) {
                     // Remove the dark theme prefix of the Icon, as it will load the same anyway.
                     if (_iconName.StartsWith("d_"))
                         _iconName = _iconName.Remove(0, 2);
@@ -209,8 +197,7 @@ namespace EnhancedEditor.Editor
             titleContent.image = EditorGUIUtility.IconContent("search_icon@2x").image;
         }
 
-        private void OnGUI()
-        {
+        private void OnGUI() {
             Undo.RecordObject(this, UndoRecordTitle);
 
             DrawToolbar();
@@ -220,8 +207,7 @@ namespace EnhancedEditor.Editor
             GUILayout.Space(5f);
 
             int _selectedTab = EnhancedEditorGUILayout.CenteredToolbar(selectedTab, tabsGUI, GUILayout.Height(25f));
-            if (_selectedTab != selectedTab)
-            {
+            if (_selectedTab != selectedTab) {
                 selectedTab = _selectedTab;
                 FilterIcons();
             }
@@ -232,32 +218,26 @@ namespace EnhancedEditor.Editor
             DrawIcons();
         }
 
-        private void OnDisable()
-        {
+        private void OnDisable() {
             EditorPrefs.SetFloat(SizeSliderKey, sizeSlider);
             Undo.undoRedoPerformed -= Repaint;
         }
         #endregion
 
         #region GUI Draw
-        private void DrawToolbar()
-        {
-            using (var _scope = new GUILayout.HorizontalScope(EditorStyles.toolbar))
-            {
+        private void DrawToolbar() {
+            using (var _scope = new GUILayout.HorizontalScope(EditorStyles.toolbar)) {
                 // Sorting options.
-                using (var _changeCheck = new EditorGUI.ChangeCheckScope())
-                {
+                using (var _changeCheck = new EditorGUI.ChangeCheckScope()) {
                     EnhancedEditorGUILayout.ToolbarSortOptions(ref selectedSortOption, ref doSortAscending, sortOptionsGUI, GUILayout.Width(SortOptionsWidth));
-                    if (_changeCheck.changed)
-                    {
+                    if (_changeCheck.changed) {
                         SortIcons();
                     }
                 }
 
                 // Search field.
                 string _searchFilter = EnhancedEditorGUILayout.ToolbarSearchField(searchFilter, GUILayout.MinWidth(100f));
-                if (_searchFilter != searchFilter)
-                {
+                if (_searchFilter != searchFilter) {
                     searchFilter = _searchFilter;
                     FilterIcons();
                 }
@@ -272,12 +252,9 @@ namespace EnhancedEditor.Editor
             }
         }
 
-        private void DrawInspector()
-        {
-            using (var _scope = new GUILayout.HorizontalScope(EditorStyles.helpBox, GUILayout.Height(InspectorHeight)))
-            {
-                using (var _verticalScope = new GUILayout.VerticalScope())
-                {
+        private void DrawInspector() {
+            using (var _scope = new GUILayout.HorizontalScope(EditorStyles.helpBox, GUILayout.Height(InspectorHeight))) {
+                using (var _verticalScope = new GUILayout.VerticalScope()) {
                     // Icon name.
                     Rect _position = EditorGUILayout.GetControlRect();
                     float _xMax = _position.xMax;
@@ -303,8 +280,7 @@ namespace EnhancedEditor.Editor
                     GUILayout.Space(5f);
 
                     string _name = icons[selectedIcon].Name;
-                    for (int _i = 0; _i < codeSnippetFormats.Length; _i++)
-                    {
+                    for (int _i = 0; _i < codeSnippetFormats.Length; _i++) {
                         string _snippet = string.Format(codeSnippetFormats[_i], _name);
 
                         _position = EditorGUILayout.GetControlRect();
@@ -324,10 +300,8 @@ namespace EnhancedEditor.Editor
 
                 // Icon preview.
                 using (var _verticalScope = new EditorGUILayout.VerticalScope(GUILayout.Width(InspectorPreviewSize)))
-                using (var _colorScope = EnhancedGUI.GUIBackgroundColor.Scope(isInspectorDarkColor ? inspectorDarkColor : gridColor))
-                {
-                    if (GUILayout.Button(iconContentGUI, EnhancedEditorStyles.Button, GUILayout.Width(InspectorPreviewSize), GUILayout.Height(InspectorPreviewSize)))
-                    {
+                using (var _colorScope = EnhancedGUI.GUIBackgroundColor.Scope(isInspectorDarkColor ? inspectorDarkColor : gridColor)) {
+                    if (GUILayout.Button(iconContentGUI, EnhancedEditorStyles.Button, GUILayout.Width(InspectorPreviewSize), GUILayout.Height(InspectorPreviewSize))) {
                         isInspectorDarkColor = !isInspectorDarkColor;
                     }
 
@@ -336,24 +310,20 @@ namespace EnhancedEditor.Editor
             }
         }
 
-        private void DrawIcons()
-        {
+        private void DrawIcons() {
             bool _useKeySelection = GUIUtility.keyboardControl == 0;
             bool _focusIcon = doFocusSelection && (Event.current.type == EventType.Repaint);
             Vector2 _origin = EditorGUILayout.GetControlRect(false, -EditorGUIUtility.standardVerticalSpacing).position;
 
-            using (var _scope = new GUILayout.ScrollViewScope(scroll))
-            {
+            using (var _scope = new GUILayout.ScrollViewScope(scroll)) {
                 scroll = _scope.scrollPosition;
 
                 // Display the icons as a list if the slider value is at its minimum, and as a grid otherwise.
-                if (sizeSlider == SizeSliderMinValue)
-                {
+                if (sizeSlider == SizeSliderMinValue) {
                     GUILayoutOption _height = GUILayout.Height(ListIconSize);
                     int _index = 0;
 
-                    for (int _i = 0; _i < icons.Length; _i++)
-                    {
+                    for (int _i = 0; _i < icons.Length; _i++) {
                         if (!iconsVisibility[_i])
                             continue;
 
@@ -377,8 +347,7 @@ namespace EnhancedEditor.Editor
                         };
 
                         // Selection button.
-                        if (GUI.Button(_temp, _icon.FullContent, EditorStyles.label))
-                        {
+                        if (GUI.Button(_temp, _icon.FullContent, EditorStyles.label)) {
                             SelectIcon(_i);
                         }
 
@@ -388,22 +357,18 @@ namespace EnhancedEditor.Editor
                     }
 
                     // Selection keys.
-                    if (_useKeySelection)
-                    {
+                    if (_useKeySelection) {
                         int _switch = EnhancedEditorGUIUtility.VerticalKeys();
-                        switch (_switch)
-                        {
+                        switch (_switch) {
                             case -1:
-                                for (int _i = selectedIcon; _i-- > 0;)
-                                {
+                                for (int _i = selectedIcon; _i-- > 0;) {
                                     if (DoSelectIcon(_i))
                                         break;
                                 }
                                 break;
 
                             case 1:
-                                for (int _i = selectedIcon + 1; _i < icons.Length; _i++)
-                                {
+                                for (int _i = selectedIcon + 1; _i < icons.Length; _i++) {
                                     if (DoSelectIcon(_i))
                                         break;
                                 }
@@ -413,9 +378,7 @@ namespace EnhancedEditor.Editor
                                 break;
                         }
                     }
-                }
-                else
-                {
+                } else {
                     // Remove vertical spacing from height as it will be automatically reserved by layout.
                     float _size = GridIconSize * sizeSlider;
                     GUILayoutOption _height = GUILayout.Height(_size - EditorGUIUtility.standardVerticalSpacing);
@@ -425,22 +388,19 @@ namespace EnhancedEditor.Editor
                     float _margin = (_screenWidth % _size) / 2f;
                     int _index = -1;
 
-                    while (_index < icons.Length)
-                    {
+                    while (_index < icons.Length) {
                         Rect _position = EditorGUILayout.GetControlRect(_height);
                         _position.xMin += _margin;
                         _position.width = _size;
                         _position.height += EditorGUIUtility.standardVerticalSpacing;
 
-                        for (int _i = 0; _i < _gridCount; _i++)
-                        {
+                        for (int _i = 0; _i < _gridCount; _i++) {
                             // Increment index.
                             _index++;
                             if (_index == icons.Length)
                                 break;
 
-                            if (!iconsVisibility[_index])
-                            {
+                            if (!iconsVisibility[_index]) {
                                 _i--;
                                 continue;
                             }
@@ -452,10 +412,8 @@ namespace EnhancedEditor.Editor
                                          : gridColor;
 
                             // Selection button.
-                            using (var _colorScope = EnhancedGUI.GUIBackgroundColor.Scope(_color))
-                            {
-                                if (GUI.Button(_position, _icon.IconContent))
-                                {
+                            using (var _colorScope = EnhancedGUI.GUIBackgroundColor.Scope(_color)) {
+                                if (GUI.Button(_position, _icon.IconContent)) {
                                     SelectIcon(_index);
                                 }
                             }
@@ -473,19 +431,16 @@ namespace EnhancedEditor.Editor
 
                     // Horizontal selection keys.
                     int _switch = EnhancedEditorGUIUtility.HorizontalSelectionKeys();
-                    switch (_switch)
-                    {
+                    switch (_switch) {
                         case -1:
-                            for (int _i = selectedIcon; _i-- > 0;)
-                            {
+                            for (int _i = selectedIcon; _i-- > 0;) {
                                 if (DoSelectIcon(_i))
                                     break;
                             }
                             break;
 
                         case 1:
-                            for (int _i = selectedIcon + 1; _i < icons.Length; _i++)
-                            {
+                            for (int _i = selectedIcon + 1; _i < icons.Length; _i++) {
                                 if (DoSelectIcon(_i))
                                     break;
                             }
@@ -497,49 +452,42 @@ namespace EnhancedEditor.Editor
 
                     // Vertical selection keys.
                     _switch = EnhancedEditorGUIUtility.VerticalKeys();
-                    switch (_switch)
-                    {
-                        case -1:
-                            {
-                                int _count = (int)_gridCount;
-                                _index = selectedIcon;
+                    switch (_switch) {
+                        case -1: {
+                            int _count = (int)_gridCount;
+                            _index = selectedIcon;
 
-                                for (int _i = selectedIcon; _i-- > 0;)
-                                {
-                                    if (iconsVisibility[_i])
-                                    {
-                                        _index = _i;
-                                        _count--;
+                            for (int _i = selectedIcon; _i-- > 0;) {
+                                if (iconsVisibility[_i]) {
+                                    _index = _i;
+                                    _count--;
 
-                                        if (_count == 0)
-                                            break;
-                                    }
+                                    if (_count == 0)
+                                        break;
                                 }
-
-                                SelectIcon(_index);
                             }
-                            break;
 
-                        case 1:
-                            {
-                                int _count = (int)_gridCount;
-                                _index = selectedIcon;
+                            SelectIcon(_index);
+                        }
+                        break;
 
-                                for (int _i = selectedIcon + 1; _i < icons.Length; _i++)
-                                {
-                                    if (iconsVisibility[_i])
-                                    {
-                                        _index = _i;
-                                        _count--;
+                        case 1: {
+                            int _count = (int)_gridCount;
+                            _index = selectedIcon;
 
-                                        if (_count == 0)
-                                            break;
-                                    }
+                            for (int _i = selectedIcon + 1; _i < icons.Length; _i++) {
+                                if (iconsVisibility[_i]) {
+                                    _index = _i;
+                                    _count--;
+
+                                    if (_count == 0)
+                                        break;
                                 }
-
-                                SelectIcon(_index);
                             }
-                            break;
+
+                            SelectIcon(_index);
+                        }
+                        break;
 
                         default:
                             break;
@@ -549,8 +497,7 @@ namespace EnhancedEditor.Editor
 
             // ----- Local Methods ----- \\
 
-            void FocusIcon(Rect _position)
-            {
+            void FocusIcon(Rect _position) {
                 Vector2 _areaSize = position.size - _origin;
                 scroll = EnhancedEditorGUIUtility.FocusScrollOnPosition(scroll, _position, _areaSize);
 
@@ -558,10 +505,8 @@ namespace EnhancedEditor.Editor
                 Repaint();
             }
 
-            bool DoSelectIcon(int _index)
-            {
-                if (iconsVisibility[_index])
-                {
+            bool DoSelectIcon(int _index) {
+                if (iconsVisibility[_index]) {
                     SelectIcon(_index);
                     return true;
                 }
@@ -572,25 +517,21 @@ namespace EnhancedEditor.Editor
         #endregion
 
         #region Utility
-        private void FilterIcons()
-        {
+        private void FilterIcons() {
             int _filteredCount = 0;
             string _searchFilter = searchFilter.ToLower();
             bool _useSearchFilter = !string.IsNullOrEmpty(searchFilter);
 
-            for (int _i = 0; _i < icons.Length; _i++)
-            {
+            for (int _i = 0; _i < icons.Length; _i++) {
                 Icon _icon = icons[_i];
-                switch (selectedTab)
-                {
+                switch (selectedTab) {
                     // All icons.
                     case 0:
                         break;
 
                     // Small.
                     case 1:
-                        if (_icon.LargerSide > SmallIconSize)
-                        {
+                        if (_icon.LargerSide > SmallIconSize) {
                             iconsVisibility[_i] = false;
                             continue;
                         }
@@ -599,8 +540,7 @@ namespace EnhancedEditor.Editor
 
                     // Medium.
                     case 2:
-                        if ((_icon.LargerSide < SmallIconSize) || (_icon.LargerSide > LargeIconSize))
-                        {
+                        if ((_icon.LargerSide < SmallIconSize) || (_icon.LargerSide > LargeIconSize)) {
                             iconsVisibility[_i] = false;
                             continue;
                         }
@@ -609,8 +549,7 @@ namespace EnhancedEditor.Editor
 
                     // Big.
                     case 3:
-                        if (_icon.LargerSide < LargeIconSize)
-                        {
+                        if (_icon.LargerSide < LargeIconSize) {
                             iconsVisibility[_i] = false;
                             continue;
                         }
@@ -633,10 +572,8 @@ namespace EnhancedEditor.Editor
             SortIcons();
         }
 
-        private void SortIcons()
-        {
-            switch (selectedSortOption)
-            {
+        private void SortIcons() {
+            switch (selectedSortOption) {
                 // Name.
                 case 0:
                     Array.Sort(icons, CompareByName);
@@ -656,13 +593,11 @@ namespace EnhancedEditor.Editor
 
             // ----- Local Methods ----- \\
 
-            int CompareByName(Icon _a, Icon _b)
-            {
+            int CompareByName(Icon _a, Icon _b) {
                 return _a.Name.CompareTo(_b.Name);
             }
 
-            int CompareBySize(Icon _a, Icon _b)
-            {
+            int CompareBySize(Icon _a, Icon _b) {
                 int _compare = _a.LargerSide.CompareTo(_b.LargerSide);
                 if (_compare == 0)
                     _compare = _a.Name.CompareTo(_b.Name);
@@ -671,8 +606,7 @@ namespace EnhancedEditor.Editor
             }
         }
 
-        private void SelectIcon(int _index)
-        {
+        private void SelectIcon(int _index) {
             Icon _icon = icons[_index];
             selectedIcon = _index;
             doFocusSelection = true;

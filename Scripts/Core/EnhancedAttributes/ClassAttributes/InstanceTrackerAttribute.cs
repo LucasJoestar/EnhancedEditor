@@ -15,5 +15,5 @@ namespace EnhancedEditor
     /// Allowing users to ping these instances in their scene from a simple button,
     /// <br/> these trackers facilitates important scene objects management in the project.
     /// </summary>
-    public class InstanceTrackerAttribute : EnhancedClassAttribute { }
+    public sealed class InstanceTrackerAttribute : EnhancedClassAttribute { }
 }

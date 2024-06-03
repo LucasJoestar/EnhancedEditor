@@ -6,8 +6,7 @@
 
 using System;
 
-namespace EnhancedEditor.Editor
-{
+namespace EnhancedEditor.Editor {
     /// <summary>
     /// Tells an Enhanced Drawer class which attribute type it's a drawer for.
     /// <para/>
@@ -15,8 +14,7 @@ namespace EnhancedEditor.Editor
     /// you need to put this attribute on the drawer class to specify its target type.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
-    public class CustomDrawerAttribute : Attribute
-    {
+    public sealed class CustomDrawerAttribute : Attribute {
         #region Global Members
         /// <summary>
         /// The custom attribute type this is a drawer for.
@@ -25,12 +23,13 @@ namespace EnhancedEditor.Editor
         /// </summary>
         public readonly Type TargetType = null;
 
-        // -----------------------
+        // -------------------------------------------
+        // Constructor(s)
+        // -------------------------------------------
 
         /// <param name="_targetType"><inheritdoc cref="TargetType" path="/summary"/></param>
         /// <inheritdoc cref="CustomDrawerAttribute"/>
-        public CustomDrawerAttribute(Type _targetType)
-        {
+        public CustomDrawerAttribute(Type _targetType) {
             TargetType = _targetType;
         }
         #endregion

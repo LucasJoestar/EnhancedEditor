@@ -10,20 +10,10 @@ using UnityEngine;
 
 namespace EnhancedEditor.Editor {
     /// <summary>
-    /// Enum value used to determine how a <see cref="ScriptableObject"/> is drawn in the editor.
-    /// </summary>
-    [Flags]
-    public enum ScriptableObjectDrawerMode {
-        None = 0,
-        Button,
-        Content,
-    }
-
-    /// <summary>
     /// ScriptableObject drawer related <see cref="EnhancedSettings"/> class.
     /// </summary>
     [Serializable]
-    public class ScriptableObjectDrawerEnhancedSettings : EnhancedSettings {
+    public sealed class ScriptableObjectDrawerEnhancedSettings : EnhancedSettings {
         #region Global Members
         public ScriptableObjectDrawerMode DefaultMode = ScriptableObjectDrawerMode.Button | ScriptableObjectDrawerMode.Content;
 
@@ -40,6 +30,8 @@ namespace EnhancedEditor.Editor {
         private static readonly int settingsGUID = "EnhancedEditorScriptableObjectDrawerSetting".GetHashCode();
         private static ScriptableObjectDrawerEnhancedSettings settings = null;
 
+        // -----------------------
+
         /// <inheritdoc cref="ScriptableObjectDrawerEnhancedSettings"/>
         public static ScriptableObjectDrawerEnhancedSettings Settings {
             get {
@@ -54,7 +46,9 @@ namespace EnhancedEditor.Editor {
             }
         }
 
-        // -----------------------
+        // -------------------------------------------
+        // Drawer
+        // -------------------------------------------
 
         [EnhancedEditorUserSettings(Order = 70)]
         private static void DrawSettings() {

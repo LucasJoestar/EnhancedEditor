@@ -10,7 +10,7 @@ namespace EnhancedEditor {
     /// <summary>
     /// Attribute used to draw another field next to this one in the inspector.
     /// </summary>
-	public class DuoAttribute : EnhancedPropertyAttribute {
+	public sealed class DuoAttribute : EnhancedPropertyAttribute {
         #region Global Members
         public const float DefaultFieldWidth = 50f;
 
@@ -25,13 +25,15 @@ namespace EnhancedEditor {
         /// </summary>
         public readonly float FieldWidth = DefaultFieldWidth;
 
-        // -----------------------
+        // -------------------------------------------
+        // Constructor(s)
+        // -------------------------------------------
 
         /// <param name="_fieldName"><inheritdoc cref="FieldName" path="/summary"/></param>
         /// <param name="_fieldWidth"><inheritdoc cref="FieldWidth" path="/summary"/></param>
         /// <inheritdoc cref="DuoAttribute"/>
         public DuoAttribute(string _fieldName, float _fieldWidth = DefaultFieldWidth) {
-            FieldName = _fieldName;
+            FieldName  = _fieldName;
             FieldWidth = _fieldWidth;
         }
         #endregion

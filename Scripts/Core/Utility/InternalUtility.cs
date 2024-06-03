@@ -10,7 +10,7 @@ namespace EnhancedEditor {
     /// <summary>
     /// <see cref="EnhancedEditor"/>-related general utility class.
     /// </summary>
-	public class InternalUtility {
+	public static class InternalUtility {
         #region Content
         /// <summary>
         /// Name of this plugin.

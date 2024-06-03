@@ -14,9 +14,9 @@ namespace EnhancedEditor.Editor {
     /// <see cref="EnhancedProjectBrowser"/>-related user settings.
     /// </summary>
     [Serializable]
-    public class EnhancedHierarchyEnhancedSettings : EnhancedSettings {
+    public sealed class EnhancedHierarchyEnhancedSettings : EnhancedSettings {
         [Serializable]
-        public class LayerHierarchyStyle {
+        public sealed class LayerHierarchyStyle {
             #region Global Members
             public LayerMask Layer = 1;
 
@@ -31,7 +31,7 @@ namespace EnhancedEditor.Editor {
         private bool enabled = false;
 
         [SerializeField, Tooltip("Toggles the Enhanced Hierarchy activation during play mode")]
-        [Enhanced, ShowIf("enabled")] private bool enabledDuringPlay = true;
+        [Enhanced, ShowIf(nameof(enabled))] private bool enabledDuringPlay = true;
 
         [Space(5f)]
 

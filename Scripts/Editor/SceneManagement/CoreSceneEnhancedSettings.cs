@@ -13,7 +13,7 @@ namespace EnhancedEditor.Editor {
     /// <see cref="EnhancedSettings"/> for the core scene system.
     /// </summary>
     [Serializable]
-    public class CoreSceneEnhancedSettings : EnhancedSettings {
+    public sealed class CoreSceneEnhancedSettings : EnhancedSettings {
         #region Global Members
         /// <summary>
         /// The core scene to load when entering play mode.
@@ -43,6 +43,8 @@ namespace EnhancedEditor.Editor {
         private static readonly int settingsGUID = "CoreSceneSettings".GetHashCode();
         private static CoreSceneEnhancedSettings settings = null;
 
+        // -----------------------
+
         /// <inheritdoc cref="CoreSceneEnhancedSettings"/>
         public static CoreSceneEnhancedSettings Settings {
             get {
@@ -57,7 +59,9 @@ namespace EnhancedEditor.Editor {
             }
         }
 
-        // -----------------------
+        // -------------------------------------------
+        // Drawer
+        // -------------------------------------------
 
         [EnhancedEditorProjectSettings(Order = 25)]
         private static void DrawSettings() {

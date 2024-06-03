@@ -7,8 +7,7 @@
 using System;
 using System.Reflection;
 
-namespace EnhancedEditor
-{
+namespace EnhancedEditor {
     /// <summary>
     /// A <see cref="MemberValue{T}"/> allows you to easily get / set an object member value.
     /// <br/>
@@ -18,8 +17,7 @@ namespace EnhancedEditor
     /// <para/>
     /// The specified member must be convertible to this type:
     /// <br/>for instance, you can use an <see cref="int"/> member for a <see cref="float"/> <see cref="MemberValue{T}"/>.</typeparam>
-	public struct MemberValue<T>
-    {
+	public struct MemberValue<T> {
         #region Global Members
         /// <summary>
         /// Name of the associated object member.
@@ -31,20 +29,20 @@ namespace EnhancedEditor
         /// </summary>
         internal Type type;
 
-        // -----------------------
+        // -------------------------------------------
+        // Constructor(s)
+        // -------------------------------------------
 
         /// <param name="_name"><inheritdoc cref="Name" path="/summary"/></param>
         /// <inheritdoc cref="MemberValue{T}"/>
-        public MemberValue(string _name)
-        {
+        public MemberValue(string _name) {
             Name = _name;
             type = typeof(T);
         }
         #endregion
 
         #region Operator
-        public static implicit operator MemberValue<T>(string _memberName)
-        {
+        public static implicit operator MemberValue<T>(string _memberName) {
             return new MemberValue<T>(_memberName);
         }
         #endregion
@@ -63,7 +61,7 @@ namespace EnhancedEditor
         /// <param name="_object">Object instance to call member from.</param>
         /// <param name="_objectType">Instance object type.</param>
         /// <returns>True if this member value was successfully retrieved, false otherwise.</returns>
-        public bool Call(object _object, Type _objectType) {
+        public readonly bool Call(object _object, Type _objectType) {
             MemberInfo[] _members = _objectType.GetMember(Name, GetMemberFlags);
 
             for (int _i = 0; _i < _members.Length; _i++) {
@@ -95,23 +93,19 @@ namespace EnhancedEditor
         /// <param name="_objectType">Instance object type.</param>
         /// <param name="_value">Member value.</param>
         /// <returns>True if this member value was successfully retrieved, false otherwise.</returns>
-        public bool GetValue(object _object, Type _objectType, out T _value)
-        {
+        public readonly bool GetValue(object _object, Type _objectType, out T _value) {
             MemberInfo[] _members = _objectType.GetMember(Name, GetMemberFlags);
             object _objectValue;
 
-            for (int _i = 0; _i < _members.Length; _i++)
-            {
+            for (int _i = 0; _i < _members.Length; _i++) {
                 MemberInfo _member = _members[_i];
-                switch (_member.MemberType)
-                {
+                switch (_member.MemberType) {
                     // Field.
                     case MemberTypes.Field:
                         FieldInfo _field = (FieldInfo)_member;
                         _objectValue = _field.GetValue(_object);
 
-                        if (CastValue(_objectValue, type, out _value))
-                        {
+                        if (CastValue(_objectValue, type, out _value)) {
                             return true;
                         }
 
@@ -120,11 +114,9 @@ namespace EnhancedEditor
                     // Method.
                     case MemberTypes.Method:
                         MethodInfo _method = (MethodInfo)_member;
-                        if (_method.GetParameters().Length == 0)
-                        {
+                        if (_method.GetParameters().Length == 0) {
                             _objectValue = _method.Invoke(_object, null);
-                            if (CastValue(_objectValue, type, out _value))
-                            {
+                            if (CastValue(_objectValue, type, out _value)) {
                                 return true;
                             }
                         }
@@ -135,8 +127,7 @@ namespace EnhancedEditor
                         PropertyInfo _property = (PropertyInfo)_member;
                         _objectValue = _property.GetValue(_object);
 
-                        if (CastValue(_objectValue, type, out _value))
-                        {
+                        if (CastValue(_objectValue, type, out _value)) {
                             return true;
                         }
                         break;
@@ -163,21 +154,17 @@ namespace EnhancedEditor
         /// <param name="_objectType">Instance object type.</param>
         /// <param name="_value">New member value.</param>
         /// <returns>True if this member value was successfully set, false otherwise.</returns>
-        public bool SetValue(object _object, Type _objectType, T _value)
-        {
+        public readonly bool SetValue(object _object, Type _objectType, T _value) {
             MemberInfo[] _members = _objectType.GetMember(Name, GetMemberFlags);
             object _convertedValue;
 
-            for (int _i = 0; _i < _members.Length; _i++)
-            {
+            for (int _i = 0; _i < _members.Length; _i++) {
                 MemberInfo _member = _members[_i];
-                switch (_member.MemberType)
-                {
+                switch (_member.MemberType) {
                     // Field.
                     case MemberTypes.Field:
                         FieldInfo _field = (FieldInfo)_member;
-                        if (CastValue(_value, type, _field.FieldType, out _convertedValue))
-                        {
+                        if (CastValue(_value, type, _field.FieldType, out _convertedValue)) {
                             _field.SetValue(_object, _convertedValue);
                             return true;
                         }
@@ -188,8 +175,7 @@ namespace EnhancedEditor
                         MethodInfo _method = (MethodInfo)_member;
                         var _parameters = _method.GetParameters();
 
-                        if (_parameters.Length == 1 && CastValue(_value, type, _parameters[0].ParameterType, out _convertedValue))
-                        {
+                        if (_parameters.Length == 1 && CastValue(_value, type, _parameters[0].ParameterType, out _convertedValue)) {
                             setMethodValueParameters[0] = _convertedValue;
                             _method.Invoke(_object, setMethodValueParameters);
 
@@ -200,8 +186,7 @@ namespace EnhancedEditor
                     // Property.
                     case MemberTypes.Property:
                         PropertyInfo _property = (PropertyInfo)_member;
-                        if (_property.CanWrite && CastValue(_value, type, _property.PropertyType, out _convertedValue))
-                        {
+                        if (_property.CanWrite && CastValue(_value, type, _property.PropertyType, out _convertedValue)) {
                             _property.SetValue(_object, _convertedValue);
                             return true;
                         }
@@ -223,21 +208,16 @@ namespace EnhancedEditor
         /// <param name="_targetType">The type to which you want to cast the object.</param>
         /// <param name="_value">Outputs the cast object.</param>
         /// <returns>Returns true if the cast has been applied successfully, otherwise false.</returns>
-        private bool CastValue(T _object, Type _objectType, Type _targetType, out object _value)
-        {
-            if (_objectType == _targetType)
-            {
+        private readonly bool CastValue(T _object, Type _objectType, Type _targetType, out object _value) {
+            if (_objectType == _targetType) {
                 _value = _object;
                 return true;
             }
 
-            try
-            {
+            try {
                 _value = Convert.ChangeType(_object, _targetType);
                 return true;
-            }
-            catch (InvalidCastException)
-            {
+            } catch (InvalidCastException) {
                 _value = default;
                 return false;
             }
@@ -245,20 +225,15 @@ namespace EnhancedEditor
 
         /// <inheritdoc cref="CastValue(T, Type, Type, out object)"/>
         /// <param name="_type">The type to which you want to cast the object.</param>
-        private bool CastValue(object _object, Type _type, out T _value)
-        {
-            if (_object is T)
-            {
+        private readonly bool CastValue(object _object, Type _type, out T _value) {
+            if (_object is T) {
                 _value = (T)_object;
                 return true;
             }
-            try
-            {
+            try {
                 _value = (T)Convert.ChangeType(_object, _type);
                 return true;
-            }
-            catch (InvalidCastException)
-            {
+            } catch (InvalidCastException) {
                 _value = default;
                 return false;
             }

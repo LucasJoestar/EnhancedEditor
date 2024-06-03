@@ -37,7 +37,7 @@ namespace EnhancedEditor.Editor {
         /// Wrapper built around a <see cref="HierarchyProperty"/> and a <see cref="GameObject"/>,
         /// with none of them guaranteed to be valid.
         /// </summary>
-        private class HierarchyObject {
+        private sealed class HierarchyObject {
             #region Global Members
             public readonly int ID = 0;
 
@@ -496,7 +496,7 @@ namespace EnhancedEditor.Editor {
                     }
 
                     // Vertical line.
-                    if (!indentPositions.Last(out Rect _lastIndentPosition) || (_lastIndentPosition.y >= _position.y)) {
+                    if (!indentPositions.SafeLast(out Rect _lastIndentPosition) || (_lastIndentPosition.y >= _position.y)) {
                         _lastIndentPosition = new Rect(_position.x, 0f, 1f, 1f);
                     }
 

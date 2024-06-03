@@ -12,7 +12,7 @@ namespace EnhancedEditor.Editor {
     /// Special <see cref="EnhancedPropertyDrawer"/> for fields with the attribute <see cref="ToggleButtonAttribute"/>.
     /// </summary>
     [CustomDrawer(typeof(ToggleButtonAttribute))]
-    public class ToggleButtonPropertyDrawer : EnhancedPropertyDrawer {
+    public sealed class ToggleButtonPropertyDrawer : EnhancedPropertyDrawer {
         #region Decorator Content
         public override bool OnGUI(Rect _position, SerializedProperty _property, GUIContent _label, out float _height) {
 
@@ -22,7 +22,7 @@ namespace EnhancedEditor.Editor {
                 return false;
             }
 
-            ToggleButtonAttribute _attribute = Attribute as ToggleButtonAttribute;
+            var _attribute = Attribute as ToggleButtonAttribute;
 
             _position = EditorGUI.PrefixLabel(_position, _label);
             _position.size = new Vector2(_attribute.Width, _attribute.Height);

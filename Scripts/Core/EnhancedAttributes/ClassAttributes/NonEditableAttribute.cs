@@ -11,7 +11,7 @@ namespace EnhancedEditor {
     /// Replaces the default inspector of all of this class instances
     /// by a simple customizable label.
     /// </summary>
-	public class NonEditableAttribute : EnhancedClassAttribute {
+	public sealed class NonEditableAttribute : EnhancedClassAttribute {
         #region Global Members
         public const string DefaultLabel = "Edition of this object is not allowed.\nThese data may be sensitive.";
 
@@ -20,7 +20,9 @@ namespace EnhancedEditor {
         /// </summary>
         public readonly GUIContent Label = null;
 
-        // -----------------------
+        // -------------------------------------------
+        // Constructor(s)
+        // -------------------------------------------
 
         /// <inheritdoc cref="NonEditableAttribute(string)"/>
         public NonEditableAttribute() : this(DefaultLabel) { }

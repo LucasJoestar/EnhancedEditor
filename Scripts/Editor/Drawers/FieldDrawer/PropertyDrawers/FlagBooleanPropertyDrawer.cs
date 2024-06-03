@@ -12,7 +12,7 @@ namespace EnhancedEditor.Editor {
     /// Special drawer for fields with the attribute <see cref="FlagBooleanAttribute"/> (inherit from <see cref="EnhancedPropertyDrawer"/>).
     /// </summary>
     [CustomDrawer(typeof(FlagBooleanAttribute))]
-    public class FlagBooleanPropertyDrawer : EnhancedPropertyDrawer {
+    public sealed class FlagBooleanPropertyDrawer : EnhancedPropertyDrawer {
         #region Drawer Content
         public override bool OnGUI(Rect _position, SerializedProperty _property, GUIContent _label, out float _height) {
             EnhancedEditorGUI.BoolPopupField(_position, _property, _label);

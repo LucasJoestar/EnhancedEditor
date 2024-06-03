@@ -15,13 +15,13 @@ namespace EnhancedEditor.Editor {
     /// Custom <see cref="SphereCollider"/> editor, adding save and load utilities.
     /// </summary>
     [CustomEditor(typeof(SphereCollider), true), CanEditMultipleObjects]
-    public class SphereColliderEditor : UnityObjectEditor {
+    public sealed class SphereColliderEditor : UnityObjectEditor {
         #region Data
         /// <summary>
         /// Serializable <see cref="SphereCollider"/> data.
         /// </summary>
         [Serializable]
-        private class Data : PlayModeObjectData {
+        private sealed class Data : PlayModeObjectData {
             public Vector3 Center;
             public float Radius;
             public bool IsTrigger;

@@ -409,7 +409,7 @@ namespace EnhancedEditor.Editor {
         #region Event and Clicks
         public const float ResizeHandlerExtent = 3f;
 
-        private static readonly int resizeControlID = "ReduceSize".GetHashCode();
+        private static readonly int resizeControlID = "ReduceSize".GetStableHashCode();
         private static Vector2 mouseDownPosition = new Vector2();
 
         // -----------------------
@@ -861,7 +861,7 @@ namespace EnhancedEditor.Editor {
         /// <param name="_minWidth">Minimum allowed width of the area.</param>
         /// <param name="_maxWidth">Maximum allowed width of the area.</param>
         /// <returns>The new width of the area. Make sure to only modify it when <see cref="GUI.changed"/> is set to true.</returns>
-        public static float HorizontalSplitterHandle(Rect _area, float _minWidth, float  _maxWidth) {
+        public static float HorizontalSplitterHandle(Rect _area, float _minWidth, float _maxWidth) {
             int _controlID = GetControlID(resizeControlID, FocusType.Passive);
             Rect _splitter = new Rect(_area) {
                 x = _area.x - ResizeHandlerExtent,

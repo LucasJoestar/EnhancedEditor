@@ -6,13 +6,11 @@
 
 using UnityEngine;
 
-namespace EnhancedEditor
-{
+namespace EnhancedEditor {
     /// <summary>
     /// Restricts a <see cref="float"/> or an <see cref="int"/> value to a specific range.
     /// </summary>
-    public class RangeAttribute : EnhancedPropertyAttribute
-    {
+    public sealed class RangeAttribute : EnhancedPropertyAttribute {
         #region Global Members
         /// <summary>
         /// Range allowed value.
@@ -27,13 +25,14 @@ namespace EnhancedEditor
         /// </summary>
         public readonly MemberValue<Vector2>? RangeMember = null;
 
-        // -----------------------
+        // -------------------------------------------
+        // Constructor(s)
+        // -------------------------------------------
 
         /// <param name="_minValue">Minimum allowed value.</param>
         /// <param name="_maxValue">Maximum allowed value.</param>
         /// <inheritdoc cref="RangeAttribute"/>
-        public RangeAttribute(float _minValue, float _maxValue)
-        {
+        public RangeAttribute(float _minValue, float _maxValue) {
             Range = new Vector2(_minValue, _maxValue);
         }
 

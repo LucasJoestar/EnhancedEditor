@@ -13,7 +13,7 @@ namespace EnhancedEditor.Editor {
     /// Custom <see cref="CollectionValues{T}"/> drawer.
     /// </summary>
     [CustomPropertyDrawer(typeof(CollectionValues<>), true)]
-    public class CollectionValuesPropertyDrawer : EnhancedPropertyEditor {
+    public sealed class CollectionValuesPropertyDrawer : EnhancedPropertyEditor {
         #region Drawer Content
         private const string NotFoundMemberMessage = "The member \'{0}\' could not be found in the script \'{1}\'";
 

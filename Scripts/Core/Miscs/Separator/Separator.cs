@@ -12,5 +12,5 @@ namespace EnhancedEditor {
     /// </summary>
     [ScriptGizmos(false, true)]
     [AddComponentMenu(InternalUtility.MenuPath + "Separator")]
-    public class Separator : MonoBehaviour { }
+    public sealed class Separator : MonoBehaviour { }
 }

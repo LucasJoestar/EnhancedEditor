@@ -4,6 +4,10 @@
 //
 // ============================================================================ //
 
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+#define NON_BUILD_SCENES
+#endif
+
 using System;
 using System.Runtime.CompilerServices;
 using UnityEngine;
@@ -16,7 +20,7 @@ namespace EnhancedEditor {
     /// <para/> Should not be used directly.
     /// </summary>
     [NonEditable("This data is sensitive and should not be manipulated manually.")]
-    public class BuildSceneDatabase : ScriptableObject {
+    public sealed class BuildSceneDatabase : ScriptableSettings {
         #region Non Build Scene
         [Serializable]
         internal struct NonBuildScene {
@@ -66,8 +70,6 @@ namespace EnhancedEditor {
                 if (database == null) {
                     Debug.LogError($"Unassigned {typeof(BuildSceneDatabase).Name} reference!\nYou must manually set this database " +
                                    $"reference on game start to be able to properly use {typeof(SceneAsset).Name}s and {typeof(SceneBundle).Name}s.");
-
-                    database = CreateInstance<BuildSceneDatabase>();
                 }
                 #endif
 
@@ -87,9 +89,15 @@ namespace EnhancedEditor {
 
         [SerializeField] internal int coreSceneIndex                = -1;
 
-        #if UNITY_EDITOR || DEVELOPMENT_BUILD
+        #if NON_BUILD_SCENES
         [SerializeField] internal NonBuildScene[] nonBuildScenes    = new NonBuildScene[0];
         #endif
+        #endregion
+
+        #region Initialization
+        internal protected override void Init() {
+            Database = this;
+        }
         #endregion
 
         #region Scene Bundle
@@ -122,9 +130,13 @@ namespace EnhancedEditor {
         /// <param name="_bundle">First found matching <see cref="SceneBundle"/> (null if none).</param>
         /// <returns>True if a matching <see cref="SceneBundle"/> could be found, false otherwise.</returns>
         public bool GetSceneBundle(string _name, out SceneBundle _bundle) {
+
+            int _length = sceneBundles.Length;
             _name = _name.Replace(SceneBundle.Prefix, string.Empty);
 
-            foreach (SceneBundle _temp in sceneBundles) {
+            for (int i = 0; i < _length; i++) {
+                SceneBundle _temp = sceneBundles[i];
+
                 if (_temp.name.Replace(SceneBundle.Prefix, string.Empty).Equals(_name, StringComparison.Ordinal)) {
                     _bundle = _temp;
                     return true;
@@ -249,7 +261,7 @@ namespace EnhancedEditor {
         /// <param name="_sceneGUID">GUID of the non included in build scene.</param>
         /// <returns>Name of this scene if in editor or in a development build, and an empty string otherwise.</returns>
         internal static string GetNonBuildSceneName(string _sceneGUID) {
-            #if UNITY_EDITOR || DEVELOPMENT_BUILD
+            #if NON_BUILD_SCENES
             foreach (NonBuildScene _scene in Database.nonBuildScenes) {
                 if (_scene.GUID == _sceneGUID)
                     return _scene.Name;
@@ -268,6 +280,31 @@ namespace EnhancedEditor {
         /// <returns>True if this is the core scene, false otherwise.</returns>
         public bool IsCoreScene(Scene _scene) {
             return _scene.buildIndex == coreSceneIndex;
+        }
+
+        /// <summary>
+        /// Setups this database (called from editor script).
+        /// </summary>
+        internal void Setup(SceneBundle[] _sceneBundles, string[] _sceneGUIDS, NonBuildScene[] _nonBuildScenes, int _coreSceneIndex) {
+            // Ensure that each bundle has a unique GUID.
+            for (int i = _sceneBundles.Length; i-- > 0;) {
+                SceneBundle _bundle = _sceneBundles[i];
+
+                for (int j = 0; j < i; j++) {
+                    if (_bundle.GUID == _sceneBundles[j].GUID) {
+                        _bundle.RegenerateGUID();
+                    }
+                }
+            }
+
+            sceneBundles = _sceneBundles;
+            buildSceneGUIDs = _sceneGUIDS;
+
+            #if NON_BUILD_SCENES
+            nonBuildScenes = _nonBuildScenes;
+            #endif
+
+            coreSceneIndex = _coreSceneIndex;
         }
         #endregion
     }

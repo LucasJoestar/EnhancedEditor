@@ -14,5 +14,5 @@ namespace EnhancedEditor.Editor {
     /// The method must accept a <see cref="GenericMenu"/> and a <see cref="SerializedProperty"/> as arguments.
     /// </summary>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
-    public class SerializedPropertyMenuAttribute : Attribute { }
+    public sealed class SerializedPropertyMenuAttribute : Attribute { }
 }

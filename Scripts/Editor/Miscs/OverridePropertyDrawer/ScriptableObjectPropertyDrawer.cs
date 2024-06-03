@@ -13,7 +13,7 @@ namespace EnhancedEditor.Editor {
     /// <br/> and drawing its script content within a folder.
     /// </summary>
     [CustomPropertyDrawer(typeof(ScriptableObject), true)]
-    public class ScriptableObjectPropertyDrawer : EnhancedPropertyEditor {
+    public sealed class ScriptableObjectPropertyDrawer : EnhancedPropertyEditor {
         #region Drawer Content
         protected override float OnEnhancedGUI(Rect _position, SerializedProperty _property, GUIContent _label) {
 

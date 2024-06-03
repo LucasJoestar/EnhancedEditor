@@ -180,7 +180,7 @@ namespace EnhancedEditor.Editor {
             // ----- Local Method ----- \\
 
             void CreateEmpty() {
-                EnhancedEditorUtility.CreateObject("GameObject", Selection.activeGameObject, _hit.point);
+                EnhancedEditorUtility.CreateObject("GameObject", Selection.activeGameObject, _hit.point, false);
             }
         }
         #endregion

@@ -14,6 +14,7 @@ namespace EnhancedEditor {
     [Flags]
     public enum FlagLogType {
         None        = 0,
+
         Log         = 1 << 1,
         Warning     = 1 << 2,
         Error       = 1 << 3,

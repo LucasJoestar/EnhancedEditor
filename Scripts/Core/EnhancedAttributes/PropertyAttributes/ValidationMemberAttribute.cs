@@ -10,7 +10,7 @@ namespace EnhancedEditor {
     /// <para/>
     /// Use this to perform additional operations when this field value is changed in the inspector.
     /// </summary>
-    public class ValidationMemberAttribute : EnhancedPropertyAttribute {
+    public sealed class ValidationMemberAttribute : EnhancedPropertyAttribute {
         #region Global Members
         /// <summary>
         /// Name of the class member to set whenever this value is changed.
@@ -24,7 +24,9 @@ namespace EnhancedEditor {
         /// </summary>
         public readonly ActivationMode Mode = ActivationMode.Always;
 
-        // -----------------------
+        // -------------------------------------------
+        // Constructor(s)
+        // -------------------------------------------
 
         /// <param name="_validationMember"><inheritdoc cref="ValidationMember" path="/summary"/></param>
         /// <param name="_mode"><inheritdoc cref="Mode" path="/summary"/></param>

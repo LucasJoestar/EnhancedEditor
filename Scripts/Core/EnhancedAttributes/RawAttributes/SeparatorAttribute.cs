@@ -13,6 +13,7 @@ namespace EnhancedEditor {
     [Flags]
     public enum SeparatorPosition {
         None    = 0,
+
         Top     = 1,
         Bottom  = 2,
     }
@@ -28,7 +29,9 @@ namespace EnhancedEditor {
         /// </summary>
         public readonly SeparatorPosition Position = SeparatorPosition.None;
 
-        // -----------------------
+        // -------------------------------------------
+        // Constructor(s)
+        // -------------------------------------------
 
         /// <param name="_position"><inheritdoc cref="Position" path="/summary"/></param>
         /// <inheritdoc cref="SeparatorAttribute"/>

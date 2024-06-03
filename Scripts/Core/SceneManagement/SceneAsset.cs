@@ -9,14 +9,12 @@ using System.IO;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace EnhancedEditor
-{
+namespace EnhancedEditor {
     /// <summary>
     /// Exception raised when trying to load or unload a scene that was not included in build.
     /// </summary>
     [Serializable]
-    public class NonBuildSceneException : Exception
-    {
+    public sealed class NonBuildSceneException : Exception {
         #region Global Members
         public const string MessageFormat = "Scene {0} was not included in build and cannot be loaded or unloaded";
 
@@ -42,33 +40,32 @@ namespace EnhancedEditor
     /// or with the help of the multiple loading / unloading methods.
     /// </summary>
     [Serializable]
-	public class SceneAsset : IEquatable<SceneAsset>, IEquatable<Scene>
-    {
+    public sealed class SceneAsset : IEquatable<SceneAsset>, IEquatable<Scene> {
         #region Global Members
-        [SerializeField] internal string guid = string.Empty;
-        [NonSerialized] private int buildIndex = -2;
+        [SerializeField] internal string guid   = string.Empty;
+        [NonSerialized]  private int buildIndex = -2;
+
+        // -----------------------
 
         /// <summary>
         /// The GUID of this scene asset in the project.
         /// </summary>
-        public string GUID => guid;
+        public string GUID {
+            get { return guid; }
+        }
 
         /// <summary>
         /// Get the index of this scene in the Build Settings.
         /// <br/> Returns -1 if this scene was not included in build.
         /// </summary>
-        public int BuildIndex
-        {
-            get
-            {
+        public int BuildIndex {
+            get {
                 #if UNITY_EDITOR
-                if (!Application.isPlaying)
-                {
+                if (!Application.isPlaying) {
                     string _path = UnityEditor.AssetDatabase.GUIDToAssetPath(guid);
                     int _index = 0;
 
-                    foreach (var _scene in UnityEditor.EditorBuildSettings.scenes)
-                    {
+                    foreach (var _scene in UnityEditor.EditorBuildSettings.scenes) {
                         if (!_scene.enabled)
                             continue;
 
@@ -93,10 +90,8 @@ namespace EnhancedEditor
         /// Get the name of this scene.
         /// <br/> Returns an empty string if this scene was not included in build.
         /// </summary>
-        public string Name
-        {
-            get
-            {
+        public string Name {
+            get {
                 #if UNITY_EDITOR
                 if (!Application.isPlaying) {
                     string _path = UnityEditor.AssetDatabase.GUIDToAssetPath(guid);
@@ -124,16 +119,17 @@ namespace EnhancedEditor
             }
         }
 
-        // -----------------------
+        // -------------------------------------------
+        // Constructor(s)
+        // -------------------------------------------
 
         /// <inheritdoc cref="SceneAsset(string)"/>
         public SceneAsset() { }
 
         /// <inheritdoc cref="SceneAsset"/>
         /// <param name="_guid"><inheritdoc cref="GUID" path="/summary"/></param>
-        public SceneAsset(string _guid)
-        {
-            guid = _guid;
+        public SceneAsset(string _guid) {
+            SetGUID(_guid);
         }
         #endregion
 
@@ -143,11 +139,11 @@ namespace EnhancedEditor
         }
 
         public static bool operator ==(SceneAsset a, SceneAsset b) {
-            if (!ReferenceEquals(a, null)) {
+            if (a is not null) {
                 return a.Equals(b);
             }
 
-            return ReferenceEquals(b, null);
+            return b is null;
         }
 
         public static bool operator !=(SceneAsset a, SceneAsset b) {
@@ -222,16 +218,14 @@ namespace EnhancedEditor
         /// </summary>
         /// <param name="_mode">Allows you to specify whether or not to load this scene additively.</param>
         /// <returns>A handle to the scene being loaded.</returns>
-        public Scene Load(LoadSceneMode _mode = LoadSceneMode.Single)
-        {
+        public Scene Load(LoadSceneMode _mode = LoadSceneMode.Single) {
             LoadSceneParameters _parameters = new LoadSceneParameters(_mode, LocalPhysicsMode.None);
             return Load(_parameters);
         }
 
         /// <param name="_parameters">Various parameters used to load this scene.</param>
         /// <inheritdoc cref="Load(LoadSceneMode)"/>
-        public Scene Load(LoadSceneParameters _parameters)
-        {
+        public Scene Load(LoadSceneParameters _parameters) {
             if (!IsValid || !CanBeLoaded(_parameters.loadSceneMode)) {
                 return default;
             }
@@ -255,9 +249,7 @@ namespace EnhancedEditor
         /// </summary>
         public bool IsLoaded {
             get {
-                return IsValid
-                     ? SceneManager.GetSceneByBuildIndex(BuildIndex).isLoaded
-                     : false;
+                return IsValid && SceneManager.GetSceneByBuildIndex(BuildIndex).isLoaded;
             }
         }
 
@@ -293,7 +285,7 @@ namespace EnhancedEditor
         /// <param name="_scene">The <see cref="SceneAsset"/> to check.</param>
         /// <returns>True if this <see cref="SceneAsset"/> matches the given scene, false otherwise.</returns>
         public bool Equals(SceneAsset _scene) {
-            return !ReferenceEquals(_scene, null) && guid.Equals(_scene.guid, StringComparison.Ordinal);
+            return (_scene is not null) && guid.Equals(_scene.guid, StringComparison.Ordinal);
         }
 
         /// <summary>
@@ -303,6 +295,15 @@ namespace EnhancedEditor
         /// <returns>True if this <see cref="SceneAsset"/> matches the given scene, false otherwise.</returns>
         public bool Equals(Scene _scene) {
             return BuildIndex == _scene.buildIndex;
+        }
+
+        /// <summary>
+        /// Set this wrapper referencing scene guid.
+        /// </summary>
+        /// <param name="_guid">GUID of the scene referenced by this wrapper.</param>
+        public void SetGUID(string _guid) {
+            guid       = _guid;
+            buildIndex = -2;
         }
         #endregion
     }

@@ -8,5 +8,5 @@ namespace EnhancedEditor {
     /// <summary>
     /// Draws a boolean variable as a selectable flag popup.
     /// </summary>
-    public class FlagBooleanAttribute : EnhancedPropertyAttribute { }
+    public sealed class FlagBooleanAttribute : EnhancedPropertyAttribute { }
 }

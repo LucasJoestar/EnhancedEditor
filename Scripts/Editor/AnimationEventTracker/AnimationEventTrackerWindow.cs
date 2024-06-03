@@ -12,17 +12,14 @@ using UnityEngine;
 
 using Object = UnityEngine.Object;
 
-namespace EnhancedEditor.Editor
-{
+namespace EnhancedEditor.Editor {
     /// <summary>
     /// Editor window used to track down all animation events in the project,
     /// and find among them corrupted ones which are referencing obsolete methods.
     /// </summary>
-    public class AnimationEventTrackerWindow : EditorWindow
-    {
+    public sealed class AnimationEventTrackerWindow : EditorWindow {
         #region Event Method Wrapper
-        private enum EventMethodParameterType
-        {
+        private enum EventMethodParameterType {
             None,
             Int,
             Enum,
@@ -31,8 +28,7 @@ namespace EnhancedEditor.Editor
             Object
         }
 
-        private class EventMethodWrapper
-        {
+        private class EventMethodWrapper {
             public MethodInfo MethodInfo = null;
             public EventMethodParameterType Type = EventMethodParameterType.None;
 
@@ -44,20 +40,17 @@ namespace EnhancedEditor.Editor
 
             // -----------------------
 
-            public EventMethodWrapper(MethodInfo _method, string _label, EventMethodParameterType _type)
-            {
+            public EventMethodWrapper(MethodInfo _method, string _label, EventMethodParameterType _type) {
                 MethodInfo = _method;
                 Type = _type;
 
                 Label = new GUIContent(_label);
                 MethodLabel = new GUIContent($"<color=green>{_label.Replace('/', '.')}</color>");
 
-                if (_type != EventMethodParameterType.None)
-                {
+                if (_type != EventMethodParameterType.None) {
                     MethodLabel.text = MethodLabel.text.Replace("(", "(</color><color=olive>").Replace(")", ":   ");
 
-                    switch (_type)
-                    {
+                    switch (_type) {
                         case EventMethodParameterType.Enum:
                             Type _parameterType = _method.GetParameters()[0].ParameterType;
                             _parameterType.GetEnumNames();
@@ -74,8 +67,7 @@ namespace EnhancedEditor.Editor
 
         #region Corrupted Animator
         [Serializable]
-        private class CorruptedAnimator
-        {
+        private class CorruptedAnimator {
             public Animator Animator = null;
             public string[] CorruptedClips = new string[] { };
             public bool Foldout = false;
@@ -84,8 +76,7 @@ namespace EnhancedEditor.Editor
 
             public CorruptedAnimator() { }
 
-            public CorruptedAnimator(Animator _animator, string[] _corruptedClips)
-            {
+            public CorruptedAnimator(Animator _animator, string[] _corruptedClips) {
                 Animator = _animator;
                 CorruptedClips = _corruptedClips;
             }
@@ -99,8 +90,7 @@ namespace EnhancedEditor.Editor
         /// </summary>
         /// <returns><see cref="AnimationEventTrackerWindow"/> instance on screen.</returns>
         [MenuItem(InternalUtility.MenuItemPath + "Animation Event Tracker", false, 101)]
-        public static AnimationEventTrackerWindow GetWindow()
-        {
+        public static AnimationEventTrackerWindow GetWindow() {
             AnimationEventTrackerWindow _window = GetWindow<AnimationEventTrackerWindow>("Animation Event Tracker");
             _window.Show();
 
@@ -129,8 +119,7 @@ namespace EnhancedEditor.Editor
 
         // -----------------------
 
-        private void OnEnable()
-        {
+        private void OnEnable() {
             Undo.undoRedoPerformed -= OnUndoRedoOperation;
             Undo.undoRedoPerformed += OnUndoRedoOperation;
 
@@ -140,15 +129,12 @@ namespace EnhancedEditor.Editor
             InitializeCorruptedEventTracker();
         }
 
-        private void OnGUI()
-        {
+        private void OnGUI() {
             Undo.RecordObject(this, UndoRecordTitle);
 
             // Toolbar.
-            using (var _scope = new GUILayout.HorizontalScope(EditorStyles.toolbar))
-            {
-                if (GUILayout.Button(refreshGUI, EditorStyles.toolbarButton, GUILayout.Width(60f)))
-                {
+            using (var _scope = new GUILayout.HorizontalScope(EditorStyles.toolbar)) {
+                if (GUILayout.Button(refreshGUI, EditorStyles.toolbarButton, GUILayout.Width(60f))) {
                     RefreshAnimatorInfos();
                 }
 
@@ -156,8 +142,7 @@ namespace EnhancedEditor.Editor
             }
 
             // Content.
-            using (var _scroll = new GUILayout.ScrollViewScope(scroll))
-            {
+            using (var _scroll = new GUILayout.ScrollViewScope(scroll)) {
                 scroll = _scroll.scrollPosition;
                 GUILayout.Space(5f);
 
@@ -166,8 +151,7 @@ namespace EnhancedEditor.Editor
 
                 GUILayout.Space(5f);
 
-                switch (selectedTab)
-                {
+                switch (selectedTab) {
                     case 0:
                         DrawAnimatorTracker();
                         break;
@@ -185,15 +169,13 @@ namespace EnhancedEditor.Editor
             }
         }
 
-        private void OnDisable()
-        {
+        private void OnDisable() {
             Undo.undoRedoPerformed -= OnUndoRedoOperation;
         }
 
         // -----------------------
 
-        private void OnUndoRedoOperation()
-        {
+        private void OnUndoRedoOperation() {
             // Refresh the window content on undo / redo operation, as clip and method infos might require a reload.
             RefreshAnimatorInfos(selectedClip);
             Repaint();
@@ -246,8 +228,7 @@ namespace EnhancedEditor.Editor
 
         // -----------------------
 
-        private void InitializeAnimatorTracker()
-        {
+        private void InitializeAnimatorTracker() {
             missingEventGUI.image = EditorGUIUtility.FindTexture("console.erroricon@2x");
             validEventGUI.image = EditorGUIUtility.FindTexture("d_FilterSelectedOnly");
 
@@ -255,44 +236,37 @@ namespace EnhancedEditor.Editor
             RefreshAnimatorInfos(selectedClip);
         }
 
-        private void DrawAnimatorTracker()
-        {
+        private void DrawAnimatorTracker() {
             bool _drawEvents;
 
             // Left some space on each window sides.
-            using (var _scope = new GUILayout.HorizontalScope())
-            {
+            using (var _scope = new GUILayout.HorizontalScope()) {
                 GUILayout.Space(5f);
 
-                using (var _verticalScope = new GUILayout.VerticalScope(GUILayout.Width(position.width - 15f)))
-                {
+                using (var _verticalScope = new GUILayout.VerticalScope(GUILayout.Width(position.width - 15f))) {
                     _drawEvents = DrawAnimatorOverview();
                 }
 
                 GUILayout.Space(5f);
             }
 
-            if (_drawEvents)
-            {
+            if (_drawEvents) {
                 GUILayout.Space(5f);
                 DrawAnimatorClipEvents();
             }
         }
 
-        private bool DrawAnimatorOverview()
-        {
+        private bool DrawAnimatorOverview() {
             // Button.
             GUILayout.Space(5f);
             EnhancedEditorGUILayout.UnderlinedLabel(headerGUI, EditorStyles.boldLabel);
             GUILayout.Space(5f);
 
             // Animator reference.
-            using (var _changeCheck = new EditorGUI.ChangeCheckScope())
-            {
+            using (var _changeCheck = new EditorGUI.ChangeCheckScope()) {
                 Animator _animator = EnhancedEditorGUILayout.PickerField(animator.Animator, typeof(Animator), typeof(Animator)) as Animator;
 
-                if (_changeCheck.changed && (_animator != animator.Animator))
-                {
+                if (_changeCheck.changed && (_animator != animator.Animator)) {
                     animator.Animator = _animator;
                     RefreshAnimatorInfos();
                 }
@@ -301,8 +275,7 @@ namespace EnhancedEditor.Editor
             autoSelectClip = EditorGUILayout.Toggle(autoSelectGUI, autoSelectClip);
 
             // No animator, nothing to see.
-            if (!animator.Animator)
-            {
+            if (!animator.Animator) {
                 GUILayout.Space(5f);
                 EditorGUILayout.HelpBox(NoAnimatorMessage, UnityEditor.MessageType.Info);
                 return false;
@@ -312,15 +285,13 @@ namespace EnhancedEditor.Editor
             EnhancedEditorGUILayout.Section(animatorGUI);
 
             // No clip, nothing to see.
-            if (clips.Length == 0)
-            {
+            if (clips.Length == 0) {
                 EditorGUILayout.HelpBox(NoClipMessage, UnityEditor.MessageType.Info);
                 return false;
             }
 
             // Informations about corrupted clips.
-            if (animator.CorruptedClips.Length > 0)
-            {
+            if (animator.CorruptedClips.Length > 0) {
                 DrawCorruptedClipInfos(animator);
                 GUILayout.Space(5f);
             }
@@ -330,35 +301,29 @@ namespace EnhancedEditor.Editor
             _position.xMax -= SelectButtonWidth + 10f;
 
             int _selectedClip = EditorGUI.Popup(_position, clipGUI, selectedClip, clipsGUI);
-            if (_selectedClip != selectedClip)
-            {
+            if (_selectedClip != selectedClip) {
                 SetClip(_selectedClip);
             }
 
             // Animation window clip selection.
             _position.Set(_position.xMax + 10f, _position.y - 2f, SelectButtonWidth, _position.height + 4f);
 
-            using (var _scope = EnhancedGUI.GUIColor.Scope(buttonColor))
-            {
-                if (GUI.Button(_position, selectGUI))
-                {
+            using (var _scope = EnhancedGUI.GUIColor.Scope(buttonColor)) {
+                if (GUI.Button(_position, selectGUI)) {
                     SelectAnimationClip();
                 }
             }
 
             // Quick switches.
             GUILayout.Space(5f);
-            using (var _scope = EnhancedGUI.GUIColor.Scope(switchClipColor))
-            {
+            using (var _scope = EnhancedGUI.GUIColor.Scope(switchClipColor)) {
                 _position = EditorGUILayout.GetControlRect(true, 25f);
                 _position.xMin = _position.xMax - ((SwitchButtonWidth * 2f) + 5f);
                 _position.width = SwitchButtonWidth;
 
                 // Previous.
-                using (var _enabledScope = EnhancedGUI.GUIEnabled.Scope(selectedClip > 0))
-                {
-                    if (GUI.Button(_position, previousGUI))
-                    {
+                using (var _enabledScope = EnhancedGUI.GUIEnabled.Scope(selectedClip > 0)) {
+                    if (GUI.Button(_position, previousGUI)) {
                         SetClip(selectedClip - 1);
                     }
                 }
@@ -366,10 +331,8 @@ namespace EnhancedEditor.Editor
                 _position.x += SwitchButtonWidth + 5f;
 
                 // Next.
-                using (var _enabledScope = EnhancedGUI.GUIEnabled.Scope(selectedClip < (clips.Length - 1)))
-                {
-                    if (GUI.Button(_position, nextGUI))
-                    {
+                using (var _enabledScope = EnhancedGUI.GUIEnabled.Scope(selectedClip < (clips.Length - 1))) {
+                    if (GUI.Button(_position, nextGUI)) {
                         SetClip(selectedClip + 1);
                     }
                 }
@@ -390,13 +353,10 @@ namespace EnhancedEditor.Editor
             return true;
         }
 
-        private void DrawAnimatorClipEvents()
-        {
+        private void DrawAnimatorClipEvents() {
             // Draw each events on an indented level.
-            using (var _scope = new EditorGUI.IndentLevelScope())
-            {
-                for (int _i = 0; _i < events.Length; _i++)
-                {
+            using (var _scope = new EditorGUI.IndentLevelScope()) {
+                for (int _i = 0; _i < events.Length; _i++) {
                     Rect _position = new Rect(EditorGUILayout.GetControlRect(false, EventHeight))
                     {
                         x = 0f,
@@ -415,24 +375,21 @@ namespace EnhancedEditor.Editor
                     DrawEventEditor(_position, _animationEvent);
 
                     // Select event on click.
-                    if (EnhancedEditorGUIUtility.MouseDown(_position))
-                    {
+                    if (EnhancedEditorGUIUtility.MouseDown(_position)) {
                         selectedEvent = _i;
                     }
                 }
 
                 // Unselect on empty space click.
                 Event _event = Event.current;
-                if (_event.type == EventType.MouseDown)
-                {
+                if (_event.type == EventType.MouseDown) {
                     selectedEvent = -1;
                     _event.Use();
                 }
             }
         }
 
-        private void DrawEventEditor(Rect _position, AnimationEvent _animationEvent)
-        {
+        private void DrawEventEditor(Rect _position, AnimationEvent _animationEvent) {
             EventMethodWrapper _wrapper = Array.Find(methods, (e) => e.MethodInfo.Name == _animationEvent.functionName);
             GUIStyle _style = EnhancedEditorStyles.BoldRichText;
 
@@ -443,8 +400,7 @@ namespace EnhancedEditor.Editor
             };
 
             bool _isCorrupted = _wrapper == null;
-            if (_isCorrupted)
-            {
+            if (_isCorrupted) {
                 // Missing event informations.
                 EditorGUI.LabelField(_temp, missingEventGUI);
 
@@ -455,12 +411,9 @@ namespace EnhancedEditor.Editor
                 EditorGUI.LabelField(_temp, $"<color=brown>Unassiged Event, missing method:   </color>" +
                                             $"<color=purple>{_animationEvent.functionName} ( )</color>",
                                             _style);
-            }
-            else
-            {
+            } else {
                 // Valid event display.
-                using (var _scope = EnhancedGUI.GUIColor.Scope(Color.green))
-                {
+                using (var _scope = EnhancedGUI.GUIColor.Scope(Color.green)) {
                     EditorGUI.LabelField(_temp, validEventGUI);
                 }
 
@@ -469,19 +422,16 @@ namespace EnhancedEditor.Editor
                 _temp.height = EditorGUIUtility.singleLineHeight;
 
                 EditorGUI.LabelField(_temp, _wrapper.MethodLabel, _style);
-                if (_wrapper.Type != EventMethodParameterType.None)
-                {
+                if (_wrapper.Type != EventMethodParameterType.None) {
                     EditorGUI.LabelField(_temp, _wrapper.MethodLabel, _style);
 
                     float _width = _style.CalcSize(_wrapper.MethodLabel).x;
                     _temp.xMin += _width;
                     _temp.xMax -= 15f;
 
-                    using (var _changeCheck = new EditorGUI.ChangeCheckScope())
-                    {
+                    using (var _changeCheck = new EditorGUI.ChangeCheckScope()) {
                         // Event parameter field.
-                        switch (_wrapper.Type)
-                        {
+                        switch (_wrapper.Type) {
                             case EventMethodParameterType.Int:
                                 _animationEvent.intParameter = EditorGUI.DelayedIntField(_temp, _animationEvent.intParameter);
                                 break;
@@ -504,8 +454,7 @@ namespace EnhancedEditor.Editor
                         }
 
                         // Save on any change.
-                        if (_changeCheck.changed)
-                        {
+                        if (_changeCheck.changed) {
                             SaveEvents();
                         }
                     }
@@ -518,8 +467,7 @@ namespace EnhancedEditor.Editor
             }
 
             // Event time on clip infos.
-            using (EnhancedGUI.GUIStyleAlignment.Scope(_style, TextAnchor.MiddleRight))
-            {
+            using (EnhancedGUI.GUIStyleAlignment.Scope(_style, TextAnchor.MiddleRight)) {
                 _temp.Set(_position.x, _temp.yMax, _position.width - 120f, 20f);
                 EditorGUI.LabelField(_temp, $"{((_animationEvent.time / clips[selectedClip].length) * 100):0.##} % " +
                                             $"<color=teal>[{_animationEvent.time:0.##} / {clips[selectedClip].length:0.##} seconds]</color>",
@@ -527,24 +475,19 @@ namespace EnhancedEditor.Editor
             }
 
             // Copy / paste event method on context click.
-            if (EnhancedEditorGUIUtility.ContextClick(_position))
-            {
+            if (EnhancedEditorGUIUtility.ContextClick(_position)) {
                 ShowContextMenu(_animationEvent, !_isCorrupted);
             }
 
             // Set event button.
-            using (var _scope = EnhancedGUI.GUIColor.Scope(buttonColor))
-            {
+            using (var _scope = EnhancedGUI.GUIColor.Scope(buttonColor)) {
                 _temp.Set(_position.xMax - (SetEventButtonWidth + 10f), _position.y + 3f, SetEventButtonWidth, _position.height - 8f);
 
-                if (GUI.Button(_temp, setEventGUI))
-                {
+                if (GUI.Button(_temp, setEventGUI)) {
                     GenericMenu _menu = new GenericMenu();
-                    foreach (EventMethodWrapper _method in methods)
-                    {
+                    foreach (EventMethodWrapper _method in methods) {
                         bool _isOn = _method.MethodInfo.Name == _animationEvent.functionName;
-                        _menu.AddItem(new GUIContent(_method.Label), _isOn, () =>
-                        {
+                        _menu.AddItem(new GUIContent(_method.Label), _isOn, () => {
                             SetEvent(_animationEvent, _method.MethodInfo.Name);
                         });
                     }
@@ -554,26 +497,19 @@ namespace EnhancedEditor.Editor
             }
         }
 
-        private void ShowContextMenu(AnimationEvent _event, bool _canCopy)
-        {
+        private void ShowContextMenu(AnimationEvent _event, bool _canCopy) {
             // Copy option.
             GenericMenu _menu = new GenericMenu();
-            if (_canCopy)
-            {
+            if (_canCopy) {
                 _menu.AddItem(copyGUI, false, CopyToBuffer);
-            }
-            else
-            {
+            } else {
                 _menu.AddDisabledItem(copyGUI, false);
             }
 
             // Paste option.
-            if (!string.IsNullOrEmpty(eventMethodBuffer))
-            {
+            if (!string.IsNullOrEmpty(eventMethodBuffer)) {
                 _menu.AddItem(pasteGUI, false, PasteFromBuffer);
-            }
-            else
-            {
+            } else {
                 _menu.AddDisabledItem(pasteGUI, false);
             }
 
@@ -581,13 +517,11 @@ namespace EnhancedEditor.Editor
 
             // ----- Local Methods ----- \\
 
-            void CopyToBuffer()
-            {
+            void CopyToBuffer() {
                 eventMethodBuffer = _event.functionName;
             }
 
-            void PasteFromBuffer()
-            {
+            void PasteFromBuffer() {
                 SetEvent(_event, eventMethodBuffer);
             }
         }
@@ -618,8 +552,7 @@ namespace EnhancedEditor.Editor
 
         // -----------------------
 
-        private void InitializeCorruptedEventTracker()
-        {
+        private void InitializeCorruptedEventTracker() {
             corruptedSceneAnimators.Clear();
             corruptedDatabaseAnimators.Clear();
 
@@ -627,32 +560,27 @@ namespace EnhancedEditor.Editor
             hasCheckedDatabaseAnimators = false;
         }
 
-        private void DrawSceneTracker()
-        {
+        private void DrawSceneTracker() {
             DrawTracker(sceneTrackerGUI, corruptedSceneAnimators, ref hasCheckedSceneAnimators, GetSceneAnimators);
 
             // ----- Local Method ----- \\
 
-            Animator[] GetSceneAnimators()
-            {
+            Animator[] GetSceneAnimators() {
                 Animator[] _animators = FindObjectsOfType<Animator>();
                 return _animators;
             }
         }
 
-        private void DrawDatabaseTracker()
-        {
+        private void DrawDatabaseTracker() {
             DrawTracker(databaseTrackerGUI, corruptedDatabaseAnimators, ref hasCheckedDatabaseAnimators, GetDatabaseAnimators);
 
             // ----- Local Method ----- \\
 
-            Animator[] GetDatabaseAnimators()
-            {
+            Animator[] GetDatabaseAnimators() {
                 GameObject[] _objects = EnhancedEditorUtility.LoadAssets<GameObject>();
                 List<Animator> _animators = new List<Animator>();
 
-                foreach (GameObject _object in _objects)
-                {
+                foreach (GameObject _object in _objects) {
                     _animators.AddRange(_object.GetComponentsInChildren<Animator>());
                 }
 
@@ -660,25 +588,19 @@ namespace EnhancedEditor.Editor
             }
         }
 
-        private void DrawTracker(GUIContent _label, List<CorruptedAnimator> _corruptedAnimators, ref bool _hasTrackedAnimators, Func<Animator[]> _animatorSeeker)
-        {
-            using (var _scope = new GUILayout.HorizontalScope())
-            {
+        private void DrawTracker(GUIContent _label, List<CorruptedAnimator> _corruptedAnimators, ref bool _hasTrackedAnimators, Func<Animator[]> _animatorSeeker) {
+            using (var _scope = new GUILayout.HorizontalScope()) {
                 GUILayout.FlexibleSpace();
-                using (var _colorScope = EnhancedGUI.GUIColor.Scope(trackButtonColor))
-                {
+                using (var _colorScope = EnhancedGUI.GUIColor.Scope(trackButtonColor)) {
                     // Find corrupted animators.
-                    if (GUILayout.Button(_label, GUILayout.Width(TrackerButtonWidth), GUILayout.Height(TrackerButtonHeight)))
-                    {
+                    if (GUILayout.Button(_label, GUILayout.Width(TrackerButtonWidth), GUILayout.Height(TrackerButtonHeight))) {
                         EditorUtility.DisplayProgressBar(ProgressBarTitle, ProgressBarInfos, 1f);
 
                         Animator[] _animators = _animatorSeeker();
                         _corruptedAnimators.Clear();
 
-                        foreach (Animator _animator in _animators)
-                        {
-                            if (AnalyzeAnimator(_animator, out var _corruptedClips))
-                            {
+                        foreach (Animator _animator in _animators) {
+                            if (AnalyzeAnimator(_animator, out var _corruptedClips)) {
                                 CorruptedAnimator _corruptedAnimator = new CorruptedAnimator(_animator, _corruptedClips);
                                 _corruptedAnimators.Add(_corruptedAnimator);
                             }
@@ -693,23 +615,19 @@ namespace EnhancedEditor.Editor
             }
 
             // No corrupted event, nothing to see.
-            if (_hasTrackedAnimators && (_corruptedAnimators.Count == 0))
-            {
+            if (_hasTrackedAnimators && (_corruptedAnimators.Count == 0)) {
                 EditorGUILayout.HelpBox(NoCorruptedEventMessage, UnityEditor.MessageType.Info);
                 return;
             }
 
             // Draw informations about each corrupted animator.
-            using (var _scope = new GUILayout.HorizontalScope())
-            {
+            using (var _scope = new GUILayout.HorizontalScope()) {
                 GUILayout.Space(5f);
 
-                using (var _verticalScope = new GUILayout.VerticalScope(GUILayout.Width(position.width - 15f)))
-                {
+                using (var _verticalScope = new GUILayout.VerticalScope(GUILayout.Width(position.width - 15f))) {
                     GUILayout.Space(5f);
 
-                    for (int _i = 0; _i < _corruptedAnimators.Count; _i++)
-                    {
+                    for (int _i = 0; _i < _corruptedAnimators.Count; _i++) {
                         GUILayout.Space(5f);
 
                         CorruptedAnimator _corruptedAnimator = _corruptedAnimators[_i];
@@ -719,11 +637,9 @@ namespace EnhancedEditor.Editor
                         EnhancedEditorGUI.UnderlinedLabel(_position, EnhancedEditorGUIUtility.GetLabelGUI($"{_animator.name}:"), EditorStyles.boldLabel);
 
                         // Object selection.
-                        using (var _colorScope = EnhancedGUI.GUIColor.Scope(buttonColor))
-                        {
+                        using (var _colorScope = EnhancedGUI.GUIColor.Scope(buttonColor)) {
                             _position.xMin = _position.xMax - 75f;
-                            if (GUI.Button(_position, selectGUI))
-                            {
+                            if (GUI.Button(_position, selectGUI)) {
                                 EditorGUIUtility.PingObject(_animator);
 
                                 selectedTab = 0;
@@ -750,11 +666,9 @@ namespace EnhancedEditor.Editor
 
         // -----------------------
 
-        private void RefreshAnimatorInfos(int _clipIndex = 0)
-        {
+        private void RefreshAnimatorInfos(int _clipIndex = 0) {
             AnalyzeAnimator();
-            clipsGUI = Array.ConvertAll(clips, (c) =>
-            {
+            clipsGUI = Array.ConvertAll(clips, (c) => {
                 GUIContent _content = new GUIContent(c.name.Replace('_', '/'));
                 return _content;
             });
@@ -765,8 +679,7 @@ namespace EnhancedEditor.Editor
             SetClip(_clipIndex);
         }
 
-        private void SetEvent(AnimationEvent _event, string _method)
-        {
+        private void SetEvent(AnimationEvent _event, string _method) {
             _event.functionName = _method;
             SaveEvents();
 
@@ -776,22 +689,18 @@ namespace EnhancedEditor.Editor
 
             // ----- Local Method ----- \\
 
-            void UpdateAnimators(List<CorruptedAnimator> _animators)
-            {
+            void UpdateAnimators(List<CorruptedAnimator> _animators) {
                 int _index = _animators.FindIndex((a) => (a.Animator == animator.Animator) && (a.Animator.name == animator.Animator.name));
-                if (_index > -1)
-                {
+                if (_index > -1) {
                     CorruptedAnimator _animator = _animators[_index];
-                    if (!AnalyzeAnimator(_animator.Animator, out _animator.CorruptedClips))
-                    {
+                    if (!AnalyzeAnimator(_animator.Animator, out _animator.CorruptedClips)) {
                         _animators.RemoveAt(_index);
                     }
                 }
             }
         }
 
-        private void SetClip(int _index)
-        {
+        private void SetClip(int _index) {
             SessionState.SetInt(SelectedClipKey, _index);
 
             selectedClip = _index;
@@ -803,8 +712,7 @@ namespace EnhancedEditor.Editor
                 SelectAnimationClip();
         }
 
-        private void SelectAnimationClip()
-        {
+        private void SelectAnimationClip() {
             if (clips.Length == 0)
                 return;
 
@@ -815,8 +723,7 @@ namespace EnhancedEditor.Editor
             Selection.activeTransform = _animator.transform;
 
             // Open the associated prefab when using an asset.
-            if (PrefabUtility.IsPartOfPrefabAsset(_animator))
-            {
+            if (PrefabUtility.IsPartOfPrefabAsset(_animator)) {
                 AssetDatabase.OpenAsset(_animator);
             }
 
@@ -834,8 +741,7 @@ namespace EnhancedEditor.Editor
             #endif
         }
 
-        private void SaveEvents()
-        {
+        private void SaveEvents() {
             AnimationClip _clip = clips[selectedClip];
 
             Undo.RecordObject(_clip, "Animation Event Change");
@@ -844,27 +750,22 @@ namespace EnhancedEditor.Editor
 
         // -----------------------
 
-        private void DrawCorruptedClipInfos(CorruptedAnimator _animator)
-        {
+        private void DrawCorruptedClipInfos(CorruptedAnimator _animator) {
             // Short infos box.
             EditorGUILayout.HelpBox(string.Format(MissingEventMessageFormat, _animator.CorruptedClips.Length), UnityEditor.MessageType.Error);
 
             Rect _position = GUILayoutUtility.GetLastRect();
-            if (EnhancedEditorGUIUtility.MainMouseUp(_position))
-            {
+            if (EnhancedEditorGUIUtility.MainMouseUp(_position)) {
                 _animator.Foldout = !_animator.Foldout;
             }
 
             // Draw detailed informations on corrupted clips when unfolded.
-            if (_animator.Foldout)
-            {
-                using (var _scope = new EditorGUI.IndentLevelScope())
-                {
+            if (_animator.Foldout) {
+                using (var _scope = new EditorGUI.IndentLevelScope()) {
                     string _missingFormat = "<color=brown>{0}</color>";
                     string _label = string.Format(_missingFormat, _animator.CorruptedClips[0]);
 
-                    for (int _i = 1; _i < _animator.CorruptedClips.Length; _i++)
-                    {
+                    for (int _i = 1; _i < _animator.CorruptedClips.Length; _i++) {
                         _label += string.Format($" ; {_missingFormat}", _animator.CorruptedClips[_i]);
                     }
 
@@ -873,24 +774,20 @@ namespace EnhancedEditor.Editor
             }
         }
 
-        private void AnalyzeAnimator()
-        {
+        private void AnalyzeAnimator() {
             var _methods = AnalyzeAnimator(animator.Animator, out animator.CorruptedClips, out clips, true);
             methods = _methods.ToArray();
 
             Array.Sort(methods, (a, b) => a.Label.text.CompareTo(b.Label.text));
         }
 
-        private bool AnalyzeAnimator(Animator _animator, out string[] _corruptedClips)
-        {
+        private bool AnalyzeAnimator(Animator _animator, out string[] _corruptedClips) {
             AnalyzeAnimator(_animator, out _corruptedClips, out _);
             return _corruptedClips.Length > 0;
         }
 
-        private List<EventMethodWrapper> AnalyzeAnimator(Animator _animator, out string[] _corruptedClips, out AnimationClip[] _clips, bool _getWrappers = false)
-        {
-            if (!_animator)
-            {
+        private List<EventMethodWrapper> AnalyzeAnimator(Animator _animator, out string[] _corruptedClips, out AnimationClip[] _clips, bool _getWrappers = false) {
+            if (!_animator) {
                 _corruptedClips = new string[] { };
                 _clips = new AnimationClip[] { };
 
@@ -904,12 +801,9 @@ namespace EnhancedEditor.Editor
                     ? _animator.runtimeAnimatorController.animationClips
                     : new AnimationClip[] { };
 
-            for (int _i = _clips.Length - 1; _i > -1; _i--)
-            {
-                for (int _j = 0; _j < _i; _j++)
-                {
-                    if (_clips[_j].name == _clips[_i].name)
-                    {
+            for (int _i = _clips.Length - 1; _i > -1; _i--) {
+                for (int _j = 0; _j < _i; _j++) {
+                    if (_clips[_j].name == _clips[_i].name) {
                         ArrayUtility.RemoveAt(ref _clips, _i);
                     }
                 }
@@ -923,58 +817,45 @@ namespace EnhancedEditor.Editor
 
             Component[] _components = _animator.GetComponents<Component>();
 
-            foreach (Component _component in _components)
-            {
+            foreach (Component _component in _components) {
                 Type _type;
-                try
-                {
+                try {
                     _type = _component.GetType();
-                }
-                catch (NullReferenceException)
-                {
+                } catch (NullReferenceException) {
                     continue;
                 }
 
                 MethodInfo[] _methodInfos = _type.GetMethods(GetMethodBindingFlags);
-                foreach (MethodInfo _methodInfo in _methodInfos)
-                {
+                foreach (MethodInfo _methodInfo in _methodInfos) {
                     // Only get non-internal methods from custom scripts, and public void ones among other components.
                     if ((_methodInfo.DeclaringType.IsSubclassOf(typeof(MonoBehaviour)) && !_methodInfo.IsAssembly)
-                        || (_methodInfo.IsPublic && !_methodInfo.IsSpecialName && (_methodInfo.ReturnType == typeof(void)) && !_type.IsSubclassOf(typeof(MonoBehaviour))))
-                    {
+                        || (_methodInfo.IsPublic && !_methodInfo.IsSpecialName && (_methodInfo.ReturnType == typeof(void)) && !_type.IsSubclassOf(typeof(MonoBehaviour)))) {
                         ParameterInfo[] _parameters = _methodInfo.GetParameters();
 
                         // Discard overloads and methods with more than one argument.
-                        if ((_parameters.Length > 1) || Array.Exists(_methodInfos, (m) => (m != _methodInfo) && (m.Name == _methodInfo.Name) && (m.GetParameters().Length < 2)))
-                        {
+                        if ((_parameters.Length > 1) || Array.Exists(_methodInfos, (m) => (m != _methodInfo) && (m.Name == _methodInfo.Name) && (m.GetParameters().Length < 2))) {
                             continue;
                         }
 
-                        if (_parameters.Length == 0)
-                        {
+                        if (_parameters.Length == 0) {
                             // Non parameter method.
                             _methods.Add(_methodInfo);
 
-                            if (_getWrappers)
-                            {
+                            if (_getWrappers) {
                                 string _label = $"{_type.Name}/{_methodInfo.Name} ( )";
 
                                 EventMethodWrapper _method = new EventMethodWrapper(_methodInfo, _label, EventMethodParameterType.None);
                                 _wrappers.Add(_method);
                             }
-                        }
-                        else
-                        {
+                        } else {
                             // One parameter method.
                             Type _parameterType = _parameters[0].ParameterType;
                             EventMethodParameterType _eventType = GetEventType(_parameterType);
 
-                            if (_eventType > 0)
-                            {
+                            if (_eventType > 0) {
                                 _methods.Add(_methodInfo);
 
-                                if (_getWrappers)
-                                {
+                                if (_getWrappers) {
                                     string _label = $"{_type.Name}/{_methodInfo.Name} ({_parameterType.Name})";
 
                                     EventMethodWrapper _method = new EventMethodWrapper(_methodInfo, _label, _eventType);
@@ -988,12 +869,9 @@ namespace EnhancedEditor.Editor
 
             // Get corrupted clips.
             List<string> _corruptedClipsTemp = new List<string>();
-            foreach (AnimationClip _clip in _clips)
-            {
-                foreach (AnimationEvent _event in _clip.events)
-                {
-                    if (!_methods.Exists((m) => m.Name == _event.functionName))
-                    {
+            foreach (AnimationClip _clip in _clips) {
+                foreach (AnimationEvent _event in _clip.events) {
+                    if (!_methods.Exists((m) => m.Name == _event.functionName)) {
                         _corruptedClipsTemp.Add(_clip.name);
                         break;
                     }
@@ -1004,26 +882,16 @@ namespace EnhancedEditor.Editor
             return _wrappers;
         }
 
-        private EventMethodParameterType GetEventType(Type _parameterType)
-        {
-            if (_parameterType == typeof(int))
-            {
+        private EventMethodParameterType GetEventType(Type _parameterType) {
+            if (_parameterType == typeof(int)) {
                 return EventMethodParameterType.Int;
-            }
-            else if (_parameterType.IsSubclassOf(typeof(Enum)))
-            {
+            } else if (_parameterType.IsSubclassOf(typeof(Enum))) {
                 return EventMethodParameterType.Enum;
-            }
-            else if (_parameterType == typeof(float))
-            {
+            } else if (_parameterType == typeof(float)) {
                 return EventMethodParameterType.Float;
-            }
-            else if (_parameterType == typeof(string))
-            {
+            } else if (_parameterType == typeof(string)) {
                 return EventMethodParameterType.String;
-            }
-            else if (_parameterType.IsSubclassOf(typeof(Object)))
-            {
+            } else if (_parameterType.IsSubclassOf(typeof(Object))) {
                 return EventMethodParameterType.Object;
             }
 

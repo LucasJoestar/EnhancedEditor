@@ -9,15 +9,13 @@ using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 
-namespace EnhancedEditor.Editor
-{
+namespace EnhancedEditor.Editor {
     /// <summary>
     /// Base class to derive any custom <see cref="EnhancedMethodAttribute"/> drawer from.
     /// <para/>
     /// Use this to draw additional GUI elements to represent your method in the inspector.
     /// </summary>
-	public abstract class MethodDrawer
-    {
+	public abstract class MethodDrawer {
         #region Internal Behaviour
         /// <summary>
         /// Creates a new instance of a <see cref="MethodDrawer"/>,
@@ -28,17 +26,16 @@ namespace EnhancedEditor.Editor
         /// <param name="_attribute"><inheritdoc cref="Attribute" path="/summary"/></param>
         /// <param name="_methodInfo"><inheritdoc cref="MethodInfo" path="/summary"/></param>.
         /// <returns>Newly created <see cref="MethodDrawer"/> instance.</returns>
-        internal static MethodDrawer CreateInstance(Type _type, SerializedObject _serializedObject, EnhancedMethodAttribute _attribute, MethodInfo _methodInfo)
-        {
+        internal static MethodDrawer CreateInstance(Type _type, SerializedObject _serializedObject, EnhancedMethodAttribute _attribute, MethodInfo _methodInfo) {
             MethodDrawer _drawer = Activator.CreateInstance(_type) as MethodDrawer;
 
             DisplayNameAttribute _displayNameAttribute = _methodInfo.GetCustomAttribute<DisplayNameAttribute>(false);
             string _name = (_displayNameAttribute != null) ? _displayNameAttribute.Label.text : ObjectNames.NicifyVariableName(_methodInfo.Name);
 
             _drawer.SerializedObject = _serializedObject;
-            _drawer.Attribute = _attribute;
-            _drawer.MethodInfo = _methodInfo;
-            _drawer.Label = new GUIContent(_name, _attribute.Tooltip);
+            _drawer.Attribute   = _attribute;
+            _drawer.MethodInfo  = _methodInfo;
+            _drawer.Label       = new GUIContent(_name, _attribute.Tooltip);
 
             _drawer.OnEnable();
 
@@ -61,7 +58,7 @@ namespace EnhancedEditor.Editor
         /// The reflection <see cref="System.Reflection.MethodInfo"/> for the method this drawer represents.
         /// </summary>
         public MethodInfo MethodInfo { get; private set; } = null;
-        
+
         /// <summary>
         /// Label associated with this method.
         /// </summary>
@@ -79,8 +76,7 @@ namespace EnhancedEditor.Editor
         /// <br/>Use this to draw additional GUI element(s) above, like a specific message or a feedback.
         /// </summary>
         /// <returns>True to stop drawing this method and prevent its associated GUI representation from being drawn, false otherwise.</returns>
-        public virtual bool OnBeforeGUI()
-        {
+        public virtual bool OnBeforeGUI() {
             return false;
         }
 
@@ -88,8 +84,7 @@ namespace EnhancedEditor.Editor
         /// Use this to implement this method main GUI representation.
         /// </summary>
         /// <returns>True to prevent any other GUI representations of this method from being drawn, false otherwise.</returns>
-        public virtual bool OnGUI()
-        {
+        public virtual bool OnGUI() {
             return false;
         }
 

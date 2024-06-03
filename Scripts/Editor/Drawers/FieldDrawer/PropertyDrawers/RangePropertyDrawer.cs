@@ -7,16 +7,15 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace EnhancedEditor.Editor
-{
+namespace EnhancedEditor.Editor {
     /// <summary>
     /// Special drawer for fields with the attribute <see cref="RangeAttribute"/> (inherit from <see cref="EnhancedPropertyDrawer"/>).
     /// </summary>
     [CustomDrawer(typeof(RangeAttribute))]
-    public class RangePropertyDrawer : EnhancedPropertyDrawer {
+    public sealed class RangePropertyDrawer : EnhancedPropertyDrawer {
         #region Drawer Content
         public override bool OnGUI(Rect _position, SerializedProperty _property, GUIContent _label, out float _height) {
-            RangeAttribute _attribute = Attribute as RangeAttribute;
+            var _attribute = Attribute as RangeAttribute;
             Vector2 _rangeValue;
 
             // Get minimum allowed value and floor property value.
@@ -35,15 +34,21 @@ namespace EnhancedEditor.Editor
                     int _rangeX = (int)_rangeValue.x;
                     int _rangeY = (int)_rangeValue.y;
 
-                    _property.intValue = Mathf.Clamp(_property.intValue, _rangeX, _rangeY);
-                    EditorGUI.IntSlider(_position, _property, _rangeX, _rangeY);
+                    if (!_property.hasMultipleDifferentValues) {
+                        _property.intValue = Mathf.Clamp(_property.intValue, _rangeX, _rangeY);
+                    }
+
+                    EditorGUI.IntSlider(_position, _property, _rangeX, _rangeY, _label);
                     break;
 
                 case SerializedPropertyType.Float:
-                    _property.floatValue = Mathf.Clamp(_property.floatValue, _rangeValue.x, _rangeValue.y);
-                    EditorGUI.Slider(_position, _property, _rangeValue.x, _rangeValue.y);
+                    if (!_property.hasMultipleDifferentValues) {
+                        _property.floatValue = Mathf.Clamp(_property.floatValue, _rangeValue.x, _rangeValue.y);
+                    }
+
+                    EditorGUI.Slider(_position, _property, _rangeValue.x, _rangeValue.y, _label);
                     break;
-                
+
                 default:
                     EditorGUI.PropertyField(_position, _property, _label);
                     break;

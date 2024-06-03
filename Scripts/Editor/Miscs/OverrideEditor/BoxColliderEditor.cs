@@ -15,13 +15,13 @@ namespace EnhancedEditor.Editor {
     /// Custom <see cref="BoxCollider"/> editor, adding save and load utilities.
     /// </summary>
     [CustomEditor(typeof(BoxCollider), true), CanEditMultipleObjects]
-    public class BoxColliderEditor : UnityObjectEditor {
+    public sealed class BoxColliderEditor : UnityObjectEditor {
         #region Data
         /// <summary>
         /// Serializable <see cref="BoxCollider"/> data.
         /// </summary>
         [Serializable]
-        private class Data : PlayModeObjectData {
+        private sealed class Data : PlayModeObjectData {
             [SerializeField] public Vector3 Center  = Vector3.zero;
             [SerializeField] public Vector3 Size    = Vector3.one;
             [SerializeField] public bool IsTrigger  = false;

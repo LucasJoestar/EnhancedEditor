@@ -339,6 +339,7 @@ namespace EnhancedEditor.Editor {
             SerializedProperty _next = _property.Copy();
             _next.NextVisible(false);
 
+            string _nextPropertyPath = _next.propertyPath;
             float _origin = _position.y;
 
             // Property label header.
@@ -373,9 +374,10 @@ namespace EnhancedEditor.Editor {
             // ----- Local Method ----- \\
 
             void DrawProperty() {
+
                 do {
                     // Break when getting outside of this property class / struct.
-                    if (SerializedProperty.EqualContents(_current, _next))
+                    if (_current.propertyPath == _nextPropertyPath)
                         break;
 
                     _position.y += _position.height + EditorGUIUtility.standardVerticalSpacing;
@@ -1711,19 +1713,30 @@ namespace EnhancedEditor.Editor {
         /// <param name="_minLimit">Slider minimum allowed value.</param>
         /// <param name="_maxLimit">Slider maximum allowed value.</param>
         public static void MinMaxField(Rect _position, SerializedProperty _property, GUIContent _label, float _minLimit, float _maxLimit) {
-            using (var _scope = new EditorGUI.PropertyScope(_position, _label, _property)) {
+            using (var _scope = new EditorGUI.PropertyScope(_position, _label, _property))
+            using (var _changeScope = new EditorGUI.ChangeCheckScope()) {
                 switch (_property.propertyType) {
                     // Vector2.
                     case SerializedPropertyType.Vector2: {
                         Vector2 _value = _property.vector2Value;
-                        _property.vector2Value = MinMaxField(_position, _label, _value, _minLimit, _maxLimit);
+                        Vector2 _newValue = MinMaxField(_position, _label, _value, _minLimit, _maxLimit);
+
+                        if (_changeScope.changed) {
+                            _newValue = _property.vector2Value = _newValue;
+                        }
+
                         break;
                     }
 
                     // Vector2Int.
                     case SerializedPropertyType.Vector2Int: {
                         Vector2Int _value = _property.vector2IntValue;
-                        _property.vector2IntValue = MinMaxField(_position, _label, _value, (int)_minLimit, (int)_maxLimit);
+                        Vector2Int _newValue = MinMaxField(_position, _label, _value, (int)_minLimit, (int)_maxLimit);
+
+                        if (_changeScope.changed) {
+                            _newValue = _property.vector2IntValue = _newValue;
+                        }
+
                         break;
                     }
 
@@ -3301,6 +3314,464 @@ namespace EnhancedEditor.Editor {
         }
         #endregion
 
+        // --- Multi-Curve --- \\
+
+        #region Multi Curve Wrapper
+        private class MultiCurveWrapper {
+            public object CurveEditor     = null;
+            public bool[] SelectedCurves  = new bool[0];
+            public Rect[] LegendPositions = new Rect[0];
+            public object[] CurveWrappers = new object[0];
+            public Array WrapperArray     = null;
+        }
+        #endregion
+
+        #region Multi Curve
+        private const string XAxisLabelValue = "Duration";
+
+        private static readonly Type curveEditorSettingsType = typeof(UnityEditor.Editor).Assembly.GetType("UnityEditor.CurveEditorSettings");
+        private static readonly Type curveEditorType         = typeof(UnityEditor.Editor).Assembly.GetType("UnityEditor.CurveEditor");
+
+        private static readonly Type editorGUIExtType        = typeof(UnityEditor.Editor).Assembly.GetType("UnityEditor.EditorGUIExt");
+        private static readonly Type skinnedColorType        = typeof(EditorGUIUtility).GetNestedType("SkinnedColor", BindingFlags.Public | BindingFlags.NonPublic);
+
+        private static readonly Type normalCurveRendererType = typeof(UnityEditor.Editor).Assembly.GetType("UnityEditor.NormalCurveRenderer");
+        private static readonly Type curveWrapperType        = typeof(UnityEditor.Editor).Assembly.GetType("UnityEditor.CurveWrapper");
+        private static readonly Type tickStyleType           = typeof(UnityEditor.Editor).Assembly.GetType("UnityEditor.TickStyle");
+
+        private static readonly PropertyInfo hRangeLockedProperty       = GetPropertyInfo(curveEditorType, "hRangeLocked");
+        private static readonly PropertyInfo vRangeLockedProperty       = GetPropertyInfo(curveEditorType, "vRangeLocked");
+        private static readonly PropertyInfo rectProperty               = GetPropertyInfo(curveEditorType, "rect");
+        private static readonly PropertyInfo animationCurvesProperty    = GetPropertyInfo(curveEditorType, "animationCurves");
+
+        private static readonly PropertyInfo changedProperty            = GetPropertyInfo(curveWrapperType, "changed");
+        private static readonly PropertyInfo curveProperty              = GetPropertyInfo(curveWrapperType, "curve");
+
+        private static readonly PropertyInfo rendererProperty           = GetPropertyInfo(curveWrapperType, "renderer");
+        private static readonly FieldInfo idField                       = GetFieldInfo(curveWrapperType, "id");
+        private static readonly FieldInfo groupIdField                  = GetFieldInfo(curveWrapperType, "groupId");
+        private static readonly FieldInfo colorField                    = GetFieldInfo(curveWrapperType, "color");
+        private static readonly FieldInfo hiddenField                   = GetFieldInfo(curveWrapperType, "hidden");
+        private static readonly FieldInfo readOnlyField                 = GetFieldInfo(curveWrapperType, "readOnly");
+        private static readonly FieldInfo useScalingInKeyEditorField    = GetFieldInfo(curveWrapperType, "useScalingInKeyEditor");
+        private static readonly FieldInfo xAxisLabelField               = GetFieldInfo(curveWrapperType, "xAxisLabel");
+        private static readonly FieldInfo yAxisLabelField               = GetFieldInfo(curveWrapperType, "yAxisLabel");
+
+        private static readonly MethodInfo onGUIMethod                  = GetMethodInfo(curveEditorType, "OnGUI");
+        private static readonly MethodInfo inLiveEditMethod             = GetMethodInfo(curveEditorType, "InLiveEdit");
+        private static readonly MethodInfo getCurveWrapperFromIDMethod  = GetMethodInfo(curveEditorType, "GetCurveWrapperFromID");
+        private static readonly MethodInfo drawSelectionMethod          = GetMethodInfo(editorGUIExtType, "DragSelection");
+        private static readonly MethodInfo setCustomRangeMethod         = GetMethodInfo(normalCurveRendererType, "SetCustomRange");
+
+        private static readonly object[] getCurveWrapperFromIDMethodArgs    = new object[1];
+        private static readonly object[] setCustomRangeArgs                 = new object[2] { 0f, 1f };
+        private static readonly object[] drawSelectionArgs                  = new object[3];
+
+        private static GUIStyle profilerPaneSubLabelStyle = null;
+
+        private static readonly Dictionary<int, MultiCurveWrapper> multiCurveWrappers = new Dictionary<int, MultiCurveWrapper>();
+        private static readonly MultiCurve multiCurveBuffer                           = new MultiCurve(new MultiCurve.Curve[0], Vector2.zero, true, true);
+        private static readonly List<MultiCurve.Curve> curveBuffer                    = new List<MultiCurve.Curve>();
+
+        private static object curveEditorSettings = null;
+
+        // ===== Serialized Property ===== \\
+
+        /// <inheritdoc cref="MultiCurveField(Rect, SerializedProperty, GUIContent, out float)"/>
+        public static void MultiCurveField(Rect _position, SerializedProperty _property, out float _extraHeight) {
+            GUIContent _label = EnhancedEditorGUIUtility.GetPropertyLabel(_property);
+            MultiCurveField(_position, _property, _label, out _extraHeight);
+
+        }
+
+        /// <inheritdoc cref="MultiCurveField(Rect, SerializedProperty, GUIContent, out float)"/>
+        public static void MultiCurveField(Rect _position, SerializedProperty _property, string _label, out float _extraHeight) {
+            GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
+            MultiCurveField(_position, _property, _labelGUI, out _extraHeight);
+        }
+
+        /// <param name="_property"><see cref="SerializedProperty"/> to draw a multi-curve field for (must by of type <see cref="MultiCurve"/>).</param>
+        /// <inheritdoc cref="MultiCurveField(Rect, MultiCurve, GUIContent, out float)"/>
+        public static void MultiCurveField(Rect _position, SerializedProperty _property, GUIContent _label, out float _extraHeight) {
+            const string DisplayHeaderName  = "DisplayHeader";
+            const string DisplayLegendName  = "DisplayLegend";
+            const string RangeName          = "Range";
+            const string FieldSizeName      = "FieldSize";
+            const string CurvesName         = "Curves";
+            const string AnimationCurveName = "AnimationCurve";
+            const string LabelName          = "Label";
+            const string ColorName          = "Color";
+
+            // Setup buffer instance.
+            MultiCurve _multiCurve = multiCurveBuffer;
+
+            _multiCurve.DisplayHeader = _property.FindPropertyRelative(DisplayHeaderName).boolValue;
+            _multiCurve.DisplayLegend = _property.FindPropertyRelative(DisplayLegendName).boolValue;
+            _multiCurve.Range = _property.FindPropertyRelative(RangeName).vector2Value;
+            _multiCurve.FieldSize = _property.FindPropertyRelative(FieldSizeName).vector2Value;
+
+            _multiCurve.id = _property.serializedObject.targetObject.GetInstanceID() + _property.propertyPath.GetStableHashCode();
+            _multiCurve.Curves.Clear();
+
+            SerializedProperty _curvesProperty = _property.FindPropertyRelative(CurvesName);
+            for (int i = 0; i < _curvesProperty.arraySize; i++) {
+                SerializedProperty _curveProperty = _curvesProperty.GetArrayElementAtIndex(i);
+                _multiCurve.Curves.Add(GetTempCurve(_curveProperty, i));
+            }
+
+            // Field.
+            using (var _scope = new EditorGUI.PropertyScope(_position, _label, _property))
+            using (var _changeCheck = new EditorGUI.ChangeCheckScope()) {
+                MultiCurveField(_position, _multiCurve, _label, out _extraHeight);
+
+                // Save new value.
+                if (_changeCheck.changed) {
+                    for (int i = 0; i < _curvesProperty.arraySize; i++) {
+                        SerializedProperty _curveProperty = _curvesProperty.GetArrayElementAtIndex(i);
+                        MultiCurve.Curve _curve = _multiCurve.Curves[i];
+
+                        _curveProperty.FindPropertyRelative(AnimationCurveName).animationCurveValue = _curve.AnimationCurve;
+                    }
+                }
+            }
+
+            Rect _temp = new Rect(_position.x, _position.yMax, _position.width, _extraHeight);
+            using (new EditorGUI.PropertyScope(_temp, GUIContent.none, _property)) { }
+
+            // ----- Local Method ----- \\
+
+            static MultiCurve.Curve GetTempCurve(SerializedProperty _property, int _index) {
+                AnimationCurve _animationCurve = _property.FindPropertyRelative(AnimationCurveName).animationCurveValue;
+                string _label = _property.FindPropertyRelative(LabelName).stringValue;
+                Color _color  = _property.FindPropertyRelative(ColorName).colorValue;
+
+                List<MultiCurve.Curve> _buffer = curveBuffer;
+                while (_buffer.Count <= _index) {
+                    _buffer.Add(new MultiCurve.Curve("", Color.clear));
+                }
+
+                MultiCurve.Curve _curve = _buffer[_index];
+
+                _curve.AnimationCurve = _animationCurve;
+                _curve.Label = _label;
+                _curve.Color = _color;
+
+                return _curve;
+            }
+        }
+
+        // ===== Multi-Curve ===== \\
+
+        /// <inheritdoc cref="MultiCurveField(Rect, MultiCurve, GUIContent, out float)"/>
+        public static void MultiCurveField(Rect _position, MultiCurve _multiCurve, out float _extraHeight) {
+            GUIContent _label = GUIContent.none;
+            MultiCurveField(_position, _multiCurve, _label, out _extraHeight);
+        }
+
+        /// <inheritdoc cref="MultiCurveField(Rect, MultiCurve, GUIContent, out float)"/>
+        public static void MultiCurveField(Rect _position, MultiCurve _multiCurve, string _label, out float _extraHeight) {
+            GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
+            MultiCurveField(_position, _multiCurve, _labelGUI, out _extraHeight);
+        }
+
+        /// <summary>
+        /// Makes a <see cref="MultiCurve"/> field, allowing to edit multiple <see cref="AnimationCurve"/> within a single grid.
+        /// </summary>
+        /// <param name="_position"><inheritdoc cref="DocumentationMethodExtra(Rect, ref bool, out float, GUIStyle)" path="/param[@name='_position']"/></param>
+        /// <param name="_multiCurve"><see cref="MultiCurve"/> to draw a field for.</param>
+        /// <param name="_label"><inheritdoc cref="DocumentationMethod(Rect, GUIContent)" path="/param[@name='_label']"/></param>
+        /// <param name="_extraHeight"><inheritdoc cref="DocumentationMethodExtra(Rect, ref bool, out float, GUIStyle)" path="/param[@name='_extraHeight']"/></param>
+        public static void MultiCurveField(Rect _position, MultiCurve _multiCurve, GUIContent _label, out float _extraHeight) {
+            Rect _origin = _position;
+            int _id = _multiCurve.id;
+
+            MultiCurveWrapper _wrapper = GetMultiCurveWrapper(_id, _multiCurve);
+            object _curveEditor = _wrapper.CurveEditor;
+
+            float _height = 0f;
+
+            _position.xMin += _position.width * (1f - _multiCurve.FieldSize.x);
+
+            // Header.
+            if (_multiCurve.DisplayHeader) {
+                _position.height = EditorGUIUtility.singleLineHeight;
+
+                EditorGUI.LabelField(_position, _label);
+
+                _position.y += _position.height + EditorGUIUtility.standardVerticalSpacing;
+                _height += _position.height + EditorGUIUtility.standardVerticalSpacing;
+            }
+
+            // Content.
+            _position.height = (_position.width / 1.333f) * _multiCurve.FieldSize.y;
+            _height += _position.height;
+
+            if ((Event.current.type != EventType.Layout) && (Event.current.type != EventType.Used)) {
+                rectProperty.SetValue(_curveEditor, _position);
+            }
+
+            // Draw Curve Editor
+            RefreshCurves(_multiCurve, _wrapper);
+            GUI.Label(_position, GUIContent.none, EditorStyles.textField);
+
+            hRangeLockedProperty.SetValue(_curveEditor, Event.current.shift);
+            vRangeLockedProperty.SetValue(_curveEditor, EditorGUI.actionKey);
+
+            onGUIMethod.Invoke(_curveEditor, null);
+
+            // Draw legend
+            _height += DrawLegend(_position, _multiCurve, _wrapper);
+
+            // Save values.
+            if (!(bool)inLiveEditMethod.Invoke(_curveEditor, null)) {
+                // Check if any of the curves changed
+                for (int i = 0; i < _multiCurve.Curves.Count; i++) {
+                    MultiCurve.Curve _curve = _multiCurve.Curves[i];
+
+                    getCurveWrapperFromIDMethodArgs[0] = i;
+                    object _curveWrapper = getCurveWrapperFromIDMethod.Invoke(_curveEditor, getCurveWrapperFromIDMethodArgs);
+
+                    if ((_curveWrapper != null) && ((bool)changedProperty.GetValue(_curveWrapper))) {
+                        AnimationCurve changedCurve = curveProperty.GetValue(_curveWrapper) as AnimationCurve;
+
+                        // Never save a curve with no keys.
+                        if (changedCurve.length > 0) {
+                            _curve.AnimationCurve = changedCurve;
+                            changedProperty.SetValue(_curveWrapper, false);
+                        }
+                    }
+                }
+            }
+
+            _extraHeight = _height - _origin.height;
+        }
+
+        // -------------------------------------------
+        // Utility
+        // -------------------------------------------
+
+        private static MultiCurveWrapper GetMultiCurveWrapper(int _id, MultiCurve _multiCurve) {
+            // Settings.
+            object _curveEditorSettings = curveEditorSettings;
+
+            if (_curveEditorSettings == null) {
+                _curveEditorSettings = Activator.CreateInstance(curveEditorSettingsType);
+
+                // Settings.
+                SetPropertyValue(curveEditorSettingsType, _curveEditorSettings, "hRangeMin", 0f);
+                SetPropertyValue(curveEditorSettingsType, _curveEditorSettings, "vRangeMin", _multiCurve.Range.x);
+                SetPropertyValue(curveEditorSettingsType, _curveEditorSettings, "vRangeMax", _multiCurve.Range.y);
+                SetPropertyValue(curveEditorSettingsType, _curveEditorSettings, "hRangeMax", 1f);
+
+                SetPropertyValue(curveEditorSettingsType, _curveEditorSettings, "vSlider", false);
+                SetPropertyValue(curveEditorSettingsType, _curveEditorSettings, "hSlider", false);
+
+                var hTS = Activator.CreateInstance(tickStyleType);
+                SetPropertyValue(skinnedColorType, GetFieldValue(tickStyleType, hTS, "tickColor"), "color", new Color(0f, 0f, 0f, .15f));
+                SetFieldValue(tickStyleType, hTS, "distLabel", 30);
+                SetPropertyValue(curveEditorSettingsType, _curveEditorSettings, "hTickStyle", hTS);
+
+                var vTS = Activator.CreateInstance(tickStyleType);
+                SetPropertyValue(skinnedColorType, GetFieldValue(tickStyleType, vTS, "tickColor"), "color", new Color(0f, 0f, 0f, .15f));
+                SetFieldValue(tickStyleType, vTS, "distLabel", 20);
+                SetPropertyValue(curveEditorSettingsType, _curveEditorSettings, "vTickStyle", vTS);
+
+                SetFieldValue(curveEditorSettingsType, _curveEditorSettings, "undoRedoSelection", true);
+
+                curveEditorSettings = _curveEditorSettings;
+            }
+
+            // Wrapper & Curve Editor.
+            if (!multiCurveWrappers.TryGetValue(_id, out MultiCurveWrapper _wrapper)) {
+                object _curveEditor = Activator.CreateInstance(curveEditorType, new Rect(0f, 0f, 1000f, 100f), Array.CreateInstance(curveWrapperType, 0), false);
+
+                SetPropertyValue(curveEditorType, _curveEditor, "settings", _curveEditorSettings);
+                SetPropertyValue(curveEditorType, _curveEditor, "margin", 25);
+
+                CallMethod(curveEditorType, _curveEditor, "SetShownHRangeInsideMargins", 0f, 1f);
+                CallMethod(curveEditorType, _curveEditor, "SetShownVRangeInsideMargins", 0f, 1f);
+
+                SetPropertyValue(curveEditorType, _curveEditor, "ignoreScrollWheelUntilClicked", true);
+
+                int _curveCount = _multiCurve.Curves.Count;
+                _wrapper = new MultiCurveWrapper() {
+                    CurveEditor = _curveEditor,
+                    SelectedCurves = new bool[_curveCount],
+                    LegendPositions = new Rect[_curveCount],
+                    CurveWrappers = new object[_curveCount],
+                    WrapperArray = Array.CreateInstance(curveWrapperType, _curveCount),
+                };
+
+                ArrayUtility.Fill(_wrapper.SelectedCurves, true);
+
+                multiCurveWrappers.Add(_id, _wrapper);
+            }
+
+            return _wrapper;
+        }
+
+        private static float DrawLegend(Rect _position, MultiCurve _multiCurve, MultiCurveWrapper _wrapper) {
+            if (!_multiCurve.DisplayLegend)
+                return 0f;
+
+            int _curveCount = _multiCurve.Curves.Count;
+
+            // Legend.
+            Rect _legendRect   = new Rect(_position.x, _position.y + _position.height + 15f, _position.width, 25f);
+            _legendRect.x += 4f + EditorGUI.indentLevel;
+            _legendRect.width -= 8f + EditorGUI.indentLevel;
+
+            // Graph's position acts as reference for Legends.
+            int _width = Mathf.Min(75, Mathf.FloorToInt(_legendRect.width / _curveCount));
+            for (int i = 0; i < _curveCount; i++) {
+                _wrapper.LegendPositions[i] = new Rect(_legendRect.x + _width * i, _legendRect.y, _width, _legendRect.height);
+            }
+
+            bool _resetSelections = false;
+            if (_curveCount != _wrapper.SelectedCurves.Length) {
+                Array.Resize(ref _wrapper.SelectedCurves, _curveCount);
+                _resetSelections = true;
+            }
+
+            drawSelectionArgs[0] = _wrapper.LegendPositions;
+            drawSelectionArgs[1] = _wrapper.SelectedCurves;
+            drawSelectionArgs[2] = GUIStyle.none;
+
+            if ((bool)drawSelectionMethod.Invoke(null, drawSelectionArgs) || _resetSelections) {
+                // If none are selected, select all.
+                bool _someSelected = false;
+                for (int i = 0; i < _curveCount; i++) {
+                    if (_wrapper.SelectedCurves[i])
+                        _someSelected = true;
+                }
+
+                if (!_someSelected) {
+                    for (int i = 0; i < _curveCount; i++) {
+                        _wrapper.SelectedCurves[i] = true;
+                    }
+                }
+
+                SyncShownCurvesToLegend(_multiCurve, _wrapper);
+            }
+
+            // Label.
+            if (profilerPaneSubLabelStyle == null) {
+                profilerPaneSubLabelStyle = "ProfilerPaneSubLabel";
+            }
+
+            for (int i = 0; i < _curveCount; i++) {
+                MultiCurve.Curve _curve = _multiCurve.Curves[i];
+
+                string _label   = _curve.Label;
+                bool _enabled   = _wrapper.SelectedCurves[i];
+                Color _color    = _enabled ? _curve.Color : new Color(.5f, .5f, .5f, .45f);
+                Rect _temp      = _wrapper.LegendPositions[i];
+
+                _temp = new Rect(_temp.x + 2f, _temp.y + 2f, _temp.width - 2f, _temp.height - 2f);
+
+                using (var _scope = EnhancedGUI.GUIBackgroundColor.Scope(_color)) {
+                    GUI.Label(_temp, _label, profilerPaneSubLabelStyle);
+                }
+
+                /*if (_curveProperty.hasMultipleDifferentValues)
+                {
+                    GUI.Button(new Rect(_legendPositions[i].x, _legendPositions[i].y + 20f, _legendPositions[i].width, 20f), "Different");
+                }*/
+            }
+
+            return _legendRect.yMax - _position.yMax;
+        }
+
+        private static void SyncShownCurvesToLegend(MultiCurve _multiCurve, MultiCurveWrapper _wrapper) {
+            int _curveCount = _multiCurve.Curves.Count;
+
+            if (_curveCount != _wrapper.SelectedCurves.Length)
+                return; // Selected curves in sync'ed later in this frame
+
+            Array _curves = _wrapper.WrapperArray;
+
+            for (int i = 0; i < _curveCount; i++) {
+                getCurveWrapperFromIDMethodArgs[0] = i;
+                var _curveWrapper = getCurveWrapperFromIDMethod.Invoke(_wrapper.CurveEditor, getCurveWrapperFromIDMethodArgs);
+
+                hiddenField.SetValue(_curveWrapper, !_wrapper.SelectedCurves[i]);
+                _curves.SetValue(_curveWrapper, i);
+            }
+
+            // Sync.
+            animationCurvesProperty.SetValue(_wrapper.CurveEditor, _curves);
+        }
+
+        private static void RefreshCurves(MultiCurve _multiCurve, MultiCurveWrapper _wrapper) {
+            object _curveEditor = _wrapper.CurveEditor;
+
+            // Ignore while editing.
+            if ((bool)inLiveEditMethod.Invoke(_curveEditor, null))
+                return;
+
+            // Prevent rebuilding wrappers if any curve has changes.
+            if (animationCurvesProperty.GetValue(_curveEditor) is Array _curves) {
+                for (int i = 0; i < _curves.Length; i++) {
+                    if ((bool)changedProperty.GetValue(_curves.GetValue(i)))
+                        return;
+                }
+            }
+
+            // Refresh curves.
+            int _curveCount = _multiCurve.Curves.Count;
+            _curves = _wrapper.WrapperArray;
+
+            for (int i = 0; i < _curveCount; i++) {
+                _curves.SetValue(GetCurveWrapper(_multiCurve.Curves[i], i, _wrapper), i);
+            }
+
+            animationCurvesProperty.SetValue(_curveEditor, _curves);
+        }
+
+        private static object GetCurveWrapper(MultiCurve.Curve _curve, int _index, MultiCurveWrapper _multiCurveWrapper) {
+            float _colorMultiplier = EditorGUIUtility.isProSkin ? 1f : .9f;
+            Color _colorMult = new Color(_colorMultiplier, _colorMultiplier, _colorMultiplier, 1f);
+
+            object _wrapper = _multiCurveWrapper.CurveWrappers[_index];
+
+            // Creation.
+            if (_wrapper == null) {
+                _wrapper = Activator.CreateInstance(curveWrapperType);
+
+                // General.
+                idField.SetValue(_wrapper, _index);
+                groupIdField.SetValue(_wrapper, -1);
+                readOnlyField.SetValue(_wrapper, false);
+                useScalingInKeyEditorField.SetValue(_wrapper, true);
+
+                // Renderer.
+                AnimationCurve _animationCurve = _curve.AnimationCurve;
+                object _renderer = Activator.CreateInstance(normalCurveRendererType, _animationCurve);
+
+                setCustomRangeMethod.Invoke(_renderer, setCustomRangeArgs);
+
+                rendererProperty.SetValue(_wrapper, _renderer);
+
+                // Legend.
+                string _text = _curve.Label;
+
+                xAxisLabelField.SetValue(_wrapper, XAxisLabelValue);
+                yAxisLabelField.SetValue(_wrapper, _text);
+
+                _multiCurveWrapper.CurveWrappers[_index] = _wrapper;
+            }
+
+            // Curve values.
+            Color _color   = _curve.Color * _colorMult;
+            bool _isHidden = !_multiCurveWrapper.SelectedCurves[_index];
+
+            colorField.SetValue(_wrapper, _color);
+            hiddenField.SetValue(_wrapper, _isHidden);
+
+            return _wrapper;
+        }
+        #endregion
+
         // --- Multi-Tags --- \\
 
         #region Tag
@@ -4692,7 +5163,7 @@ namespace EnhancedEditor.Editor {
         /// <summary>
         /// Property field drawer infos wrapper.
         /// </summary>
-        private class DrawerInfos {
+        public class DrawerInfos {
             // 0 for none, 1 for enhanced editor, 2 for default drawer.
             public int State = 0;
             public EnhancedPropertyEditor EnhancedEditor = null;
@@ -4765,7 +5236,7 @@ namespace EnhancedEditor.Editor {
                 case 0:
                 default:
                     _height = EditorGUI.GetPropertyHeight(_property, _label, _includeChildren);
-                    EditorGUI.PropertyField(_position, _property, _label, false);
+                    EditorGUI.PropertyField(_position, _property, _label, _includeChildren);
                     break;
             }
 
@@ -4804,7 +5275,7 @@ namespace EnhancedEditor.Editor {
             return _height;
         }
 
-        private static DrawerInfos GetPropertyEditor(SerializedProperty _property) {
+        public static DrawerInfos GetPropertyEditor(SerializedProperty _property) {
             string _id = EnhancedEditorUtility.GetSerializedPropertyID(_property);
 
             // Enhanced drawer.
@@ -5146,9 +5617,9 @@ namespace EnhancedEditor.Editor {
 
         private static ScriptableObject DoScriptableObjectContentField(Rect _position, GUIContent _label, ScriptableObject _scriptableObject, Type _objectType,
                                                                        ScriptableObjectDrawerMode _mode, ref bool _foldout, out float _extraHeight, bool _drawField) {
-            bool _isContent = _scriptableObject != null;
-            bool _drawButton = _mode.HasFlag(ScriptableObjectDrawerMode.Button) && _drawField;
-            bool _drawContent = _mode.HasFlag(ScriptableObjectDrawerMode.Content) && _isContent;
+            bool _isContent   = _scriptableObject != null;
+            bool _drawButton  = _mode.HasFlagUnsafe(ScriptableObjectDrawerMode.Button) && _drawField;
+            bool _drawContent = _mode.HasFlagUnsafe(ScriptableObjectDrawerMode.Content) && _isContent;
 
             // Object registration.
             SerializedObject _serializedObject = null;
@@ -5222,7 +5693,7 @@ namespace EnhancedEditor.Editor {
             }
 
             // Content.
-            if (_drawContent && _foldout) {
+            if (_drawContent && (_foldout || !_drawField)) {
                 _serializedObject.UpdateIfRequiredOrScript();
 
                 if (_drawField) {
@@ -5236,6 +5707,7 @@ namespace EnhancedEditor.Editor {
                 _serializedObject.ApplyModifiedProperties();
             }
 
+            _extraHeight = Mathf.Max(_extraHeight, 0f);
             return _scriptableObject;
 
             // ----- Local Methods ----- \\
@@ -5471,20 +5943,20 @@ namespace EnhancedEditor.Editor {
 
         // -----------------------
 
-        internal static float ManageDynamicControlHeight(GUIContent _label, float _height) {
+        public static float ManageDynamicControlHeight(GUIContent _label, float _height) {
             // Get control id.
             int _id = EnhancedEditorGUIUtility.GetControlID(_label, FocusType.Keyboard);
             return ManageDynamicControlHeight(_id, _height);
         }
 
-        internal static float ManageDynamicControlHeight(SerializedProperty _property, float _height) {
+        public static float ManageDynamicControlHeight(SerializedProperty _property, float _height) {
             // Get property id.
             int _id = EnhancedEditorUtility.GetSerializedPropertyID(_property).GetHashCode();
 
             return ManageDynamicControlHeight(_id, _height);
         }
 
-        internal static float ManageDynamicControlHeight(int _id, float _height) {
+        public static float ManageDynamicControlHeight(int _id, float _height) {
 
             // Id registration
             if (!dynamicGUIControlHeight.ContainsKey(_id)) {
@@ -5548,6 +6020,55 @@ namespace EnhancedEditor.Editor {
             var _scope = new EditorGUI.IndentLevelScope(-_indentLevel);
 
             return _scope;
+        }
+        #endregion
+
+        #region Reflection
+        private const BindingFlags Flags = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy;
+
+        // -------------------------------------------
+        // Reflection
+        // -------------------------------------------
+
+        private static object GetFieldValue(Type _type, object _instance, string _name) {
+            FieldInfo field = GetFieldInfo(_type, _name);
+            return field.GetValue(_instance);
+        }
+
+        private static void SetFieldValue(Type _type, object _instance, string _name, object _value) {
+            FieldInfo field = GetFieldInfo(_type, _name);
+            field.SetValue(_instance, _value);
+        }
+
+        private static object GetPropertyValue(Type _type, object _instance, string _name) {
+            PropertyInfo property = GetPropertyInfo(_type, _name);
+            return property.GetValue(_instance);
+        }
+
+        private static void SetPropertyValue(Type _type, object _instance, string _name, object _value) {
+            PropertyInfo property = GetPropertyInfo(_type, _name);
+            property.SetValue(_instance, _value);
+        }
+
+        private static object CallMethod(Type _type, object _instance, string _name, params object[] _parameters) {
+            MethodInfo method = GetMethodInfo(_type, _name);
+            return method.Invoke(_instance, _parameters);
+        }
+
+        // -------------------------------------------
+        // Member Getter
+        // -------------------------------------------
+
+        private static FieldInfo GetFieldInfo(Type _type, string _name) {
+            return _type.GetField(_name, Flags);
+        }
+
+        private static PropertyInfo GetPropertyInfo(Type _type, string _name) {
+            return _type.GetProperty(_name, Flags);
+        }
+
+        private static MethodInfo GetMethodInfo(Type _type, string _name) {
+            return _type.GetMethod(_name, Flags);
         }
         #endregion
 

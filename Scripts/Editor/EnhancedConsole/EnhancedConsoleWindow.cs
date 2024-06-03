@@ -26,7 +26,7 @@ namespace EnhancedEditor.Editor {
     /// These include a preview of the user scripts from the stack, customizable filters,
     /// <br/> colors and textures, and many more.
     /// </summary>
-	public class EnhancedConsoleWindow : EditorWindow, IHasCustomMenu {
+	public sealed class EnhancedConsoleWindow : EditorWindow, IHasCustomMenu {
         // ----- Classes & Enums ----- \\
 
         #region Styles
@@ -366,6 +366,9 @@ namespace EnhancedEditor.Editor {
             public const StringComparison Comparison = StringComparison.Ordinal;
             public const int DefaultTrimIndex = 999;
 
+            public const string NativeLogStacktraceSeparator = "UnityEngine.StackTraceUtility:ExtractStackTrace ()";
+            public const string NativeLogTypeIndicator = "UnityEngine.Debug:Log";
+
             public const string TextBeforeFilePath  = " (at ";
             public const string TextBeforeLineIndex = ":";
             public const string TextAfterFilePath   = ")";
@@ -541,7 +544,6 @@ namespace EnhancedEditor.Editor {
             /// <summary>
             /// Fills a stack call lines from its associated file.
             /// </summary>
-            /// <param name="_call"></param>
             public static void FillStackCallLines(LogStackCall _call) {
                 // File content preview.
                 string _fullPath = $"{EnhancedEditorUtility.GetProjectPath()}{_call.FilePath}";
@@ -621,6 +623,112 @@ namespace EnhancedEditor.Editor {
 
                     string _line = _pair.First;
                     _call.Lines.Add(new LogStackLine(string.IsNullOrEmpty(_line) ? _line : _line.Substring(_startIndex), _pair.Second));
+                }
+            }
+
+            /// <summary>
+            /// Parses a given native Unity log file content.
+            /// </summary>
+            public static bool ParseUnityLog(string _path) {
+                List<ValueTuple<string, string, LogType>> _logBuffer = new List<(string, string, LogType)>();
+                string[] _lines = File.ReadAllLines(_path);
+                int _index = 0;
+
+                for (int i = 0; i < _lines.Length; i++) {
+                    // Does the current line mark a new log entry?
+                    if (_lines[i] != NativeLogStacktraceSeparator)
+                        continue;
+
+                    // 1) Find the start index of the log entry by searching for an empty line before
+                    int _startIndex = i - 1;
+                    while ((_startIndex > _index) && !string.IsNullOrWhiteSpace(_lines[_startIndex])) {
+                        _startIndex--;
+                    }
+
+                    // 2) Determine the log type by inspecting lines within the log entry
+                    LogType _logType = LogType.Log;
+                    int _logTypeIndex = i + 1;
+
+                    while ((_logTypeIndex < _lines.Length) && !string.IsNullOrWhiteSpace(_lines[_logTypeIndex])) {
+                        if (_lines[_logTypeIndex].StartsWith(NativeLogTypeIndicator, StringComparison.Ordinal)) {
+                            int _typeIndex = _lines[_logTypeIndex].IndexOf(' ', NativeLogTypeIndicator.Length);
+                            if (_typeIndex != -1) {
+                                string typeIndicator = _lines[_logTypeIndex].Substring(NativeLogTypeIndicator.Length,  _typeIndex - NativeLogTypeIndicator.Length);
+                                switch (typeIndicator) {
+                                    case "Warning":
+                                        _logType = LogType.Warning;
+                                        break;
+                                    case "Error":
+                                        _logType = LogType.Error;
+                                        break;
+                                    case "Assert":
+                                        _logType = LogType.Assert;
+                                        break;
+                                    case "Exception":
+                                        _logType = LogType.Exception;
+                                        break;
+
+                                    case "":
+                                    default:
+                                        break;
+                                }
+
+                                break;
+                            }
+                        }
+
+                        _logTypeIndex++;
+                    }
+
+                    // 3) Find the end index of the log entry by searching for an empty line after
+                    int _endIndex = _logTypeIndex + 1;
+                    while ((_endIndex < _lines.Length) && !string.IsNullOrWhiteSpace(_lines[_endIndex])) {
+                        _endIndex++;
+                    }
+
+                    _startIndex++;
+                    _endIndex--;
+
+                    // 4) Get the log content & stacktrace by joining relevant lines from the log entry
+                    string _logContent = $"{string.Join("\n", _lines, _startIndex, i - _startIndex)}";
+                    string _stackTrace = string.Join("\n", _lines, i, _endIndex - i);
+
+                    _logBuffer.Add((_logContent, _stackTrace, _logType));
+
+                    _index = _endIndex + 1;
+                    i = _index;
+                }
+
+                int _logCount = _logBuffer.Count;
+                bool _valid = _logCount > 0;
+
+                if (_valid) {
+                    ImportLogsWindow.GetWindow(_logCount, ImportLogs);
+                }
+
+                return _valid;
+
+                // ----- Local Method ----- \\
+
+                void ImportLogs(Vector2Int _range) {
+
+                    GetWindow().Clear();
+
+                    // Trim logs.
+                    if (_range.y < _logBuffer.Count) {
+                        _logBuffer.RemoveRange(_range.y, _logBuffer.Count - _range.y);
+                    }
+
+                    if (_range.x > 0) {
+                        _logBuffer.RemoveRange(0, _range.x - 1);
+                    }
+
+                    // Import.
+                    foreach ((string, string, LogType) _log in _logBuffer) {
+                        RegisterLog(_log.Item1, _log.Item2, _log.Item3);
+                    }
+
+                    GetWindow().UpdateLogs(false);
                 }
             }
 
@@ -897,13 +1005,15 @@ namespace EnhancedEditor.Editor {
         private const string UndoRecordTitle    = "Enhanced Console Change";
 
         private const int DefaultLogCapacity = 50;
+        private const float SearchCooldownDuration = .5f;
 
         private static readonly GUIContent openPreferencesGUI   = new GUIContent("Open Preferences", "Opens the enhanced console preferences window");
         private static readonly List<LogWrapper> pendingLogs    = new List<LogWrapper>();
 
         [SerializeReference] private List<LogEntry> logs = new List<LogEntry>(DefaultLogCapacity);
 
-        [SerializeField] private LogColumn[] logColumns = new LogColumn[] {
+        [SerializeField]
+        private LogColumn[] logColumns = new LogColumn[] {
             new LogColumn(LogColumnType.Icon,       ColumnVisibility.AlwaysVisible, 25f),
             new LogColumn(LogColumnType.Type,       ColumnVisibility.Visible, 50f, 25f),
 
@@ -924,6 +1034,8 @@ namespace EnhancedEditor.Editor {
         private Vector2 logScroll               = new Vector2();
         private Vector2 stackTraceHeaderScroll  = new Vector2();
         private Vector2 stackTraceContentScroll = new Vector2();
+
+        private float searchCooldown = 0f;
 
         // -----------------------
 
@@ -964,8 +1076,8 @@ namespace EnhancedEditor.Editor {
         }
 
         private void OnGUI() {
+
             // Update pending logs.
-            UpdateLogs();
             requireRepaint = false;
 
             // Toolbar.
@@ -1018,7 +1130,7 @@ namespace EnhancedEditor.Editor {
         #endregion
 
         #region Callback
-        private const int MaxPendingLog = 9000;
+        private const int MaxPendingLog = 500;
         private static bool requireRepaint = true;
         private static bool hasUnpersistError = false;
 
@@ -1052,6 +1164,8 @@ namespace EnhancedEditor.Editor {
             if (requireRepaint) {
                 Repaint();
             }
+
+            UpdateLogs();
         }
 
         private static void OnLogMessageReceived(string _log, string _stackTrace, LogType _type) {
@@ -1066,16 +1180,17 @@ namespace EnhancedEditor.Editor {
         // -----------------------
 
         private static void RegisterLog(string _log, string _stackTrace, LogType _type, bool _isNative = false) {
+
             // Used for debug purpose.
-            if (!EnhancedConsoleEnhancedSettings.Enabled) {
-                return;
+            try {
+                if (!EnhancedConsoleEnhancedSettings.Enabled) {
+                    return;
+                }
+            } catch (UnityException) {
+                // Ignore exceptions when log is not send on the main thread.
             }
 
             pendingLogs.Add(new LogWrapper(_log.TrimEnd(), _stackTrace.TrimEnd(), _type, _isNative));
-
-            while (pendingLogs.Count > MaxPendingLog) {
-                pendingLogs.RemoveAt(0);
-            }
 
             // Dialog box when object(s) failed to unpersist.
             if ((_type == LogType.Error) && !hasUnpersistError && _log.Contains("Failed to unpersist")) {
@@ -1126,7 +1241,8 @@ namespace EnhancedEditor.Editor {
 
         private const int StackHeaderMaxLine = 4;
 
-        private const string LogFileExtension = "txt";
+        private const string ImportLogFileExtension = "txt,log";
+        private const string ExportLogFileExtension = "txt";
         private const string LogSizeFormat = "Log Size/{0} Lines";
         private const string StackLineCountFormat = "Stack Preview/{0} Lines";
         private const string LogColumnFormat = "Column/{0}";
@@ -1159,6 +1275,8 @@ namespace EnhancedEditor.Editor {
 
         private bool doFocusSelection = false;
         private int selectedLogIndex = -1;
+
+        private int updateSelectionUtil = -2;
 
         // -----------------------
 
@@ -1251,9 +1369,18 @@ namespace EnhancedEditor.Editor {
             // Search filter.
             string _searchFilter = EnhancedEditorGUILayout.ToolbarSearchField(searchFilter, GUILayout.MinWidth(50f), GUILayout.ExpandWidth(true));
             if (_searchFilter != searchFilter) {
+
+                float _duration = string.IsNullOrEmpty(_searchFilter) ? 0f : SearchCooldownDuration;
+
+                searchCooldown = _duration;
+                searchFilter = _searchFilter;
+            }
+
+            // Refresh filter.
+            if ((searchCooldown > 0f) && ((searchCooldown -= ChronosUtility.RealDeltaTime) <= 0f)) {
+
                 // Record object state.
                 Undo.RecordObject(this, UndoRecordTitle);
-                searchFilter = _searchFilter;
 
                 // Filter.
                 FilterLogs();
@@ -1263,24 +1390,36 @@ namespace EnhancedEditor.Editor {
 
             // Import / export logs.
             if (GUILayout.Button(Styles.ImportGUI, _buttonStyle, GUILayout.Width(25f))) {
-                string _path = EditorUtility.OpenFilePanel("Import Logs", string.Empty, LogFileExtension);
+                string _path = EditorUtility.OpenFilePanel("Import Logs", string.Empty, ImportLogFileExtension);
                 if (!string.IsNullOrEmpty(_path)) {
-
+                    const string FailToLoadMsg  = "The specified log file could not be loaded.\n\n" +
+                                                  "Please select a valid file and try again.";
+                    const string NoEntryMsg     = "Could not load any console entry from the selected log file.\n\n" +
+                                                  "Please select another file and try again.";
                     try {
-                        string _json = File.ReadAllText(_path);
-                        LogsWrapper _logs = JsonUtility.FromJson<LogsWrapper>(_json);
+                        if (_path.EndsWith(".log")) // Unity log
+                        {
+                            if (!LogStackUtility.ParseUnityLog(_path)) {
+                                EditorUtility.DisplayDialog("Log Import", NoEntryMsg, "Ok");
+                            }
+                        } else // Json log
+                          {
+                            string _json = File.ReadAllText(_path);
+                            LogsWrapper _logs = JsonUtility.FromJson<LogsWrapper>(_json);
 
-                        logs = _logs.Logs;
-                        RefreshFilters();
-                    } catch (Exception e) when ((e is ArgumentException) || (e is IOException)) {
-                        EditorUtility.DisplayDialog("Log Import", "Could not load any console entry from the selected log file.\n\n" +
-                                                    "Please select another file and try again.", "Ok");
+                            SetLogs(_logs.Logs);
+                            RefreshFilters();
+                        }
+                    } catch (ArgumentException) {
+                        EditorUtility.DisplayDialog("Log Import", NoEntryMsg, "Ok");
+                    } catch (IOException) {
+                        EditorUtility.DisplayDialog("Log Import", FailToLoadMsg, "Ok");
                     }
                 }
             }
 
             if (GUILayout.Button(Styles.ExportGUI, _buttonStyle, GUILayout.Width(25f))) {
-                string _path = EditorUtility.SaveFilePanel("Export Logs", string.Empty, "ConsoleLogs", LogFileExtension);
+                string _path = EditorUtility.SaveFilePanel("Export Logs", string.Empty, "ConsoleLogs", ExportLogFileExtension);
                 if (!string.IsNullOrEmpty(_path)) {
                     File.WriteAllText(_path, EditorJsonUtility.ToJson(new LogsWrapper() { Logs = logs }, true));
                 }
@@ -1320,7 +1459,8 @@ namespace EnhancedEditor.Editor {
                 }
 
                 string _count = _filter.DisplayedCount.ToString();
-                GUIContent _label = EnhancedEditorGUIUtility.GetLabelGUI(_filter.Icon, $"{_filter.Name} [{_count}]"); {
+                GUIContent _label = EnhancedEditorGUIUtility.GetLabelGUI(_filter.Icon, $"{_filter.Name} [{_count}]");
+                {
                     _label.text = _count;
                 }
 
@@ -1364,7 +1504,8 @@ namespace EnhancedEditor.Editor {
                         EditorGUI.LabelField(_position, _column.Label, Styles.LogColumnStyle);
 
                         // Separator.
-                        Rect _splitter = new Rect(_position); {
+                        Rect _splitter = new Rect(_position);
+                        {
                             _splitter.xMin = _position.xMax - 1f;
                             _splitter.yMin -= EditorGUIUtility.standardVerticalSpacing;
                         }
@@ -1435,7 +1576,8 @@ namespace EnhancedEditor.Editor {
                 // As the area scope starts with a zero position, and the scroll position to it.
                 int _count = 0;
                 Rect _area = new Rect(logScroll, _scope.rect.size);
-                Rect _position = EditorGUILayout.GetControlRect(true, 0f); {
+                Rect _position = EditorGUILayout.GetControlRect(true, 0f);
+                {
                     _position.x = 0f;
                     _position.width += 7f;
                 }
@@ -1445,9 +1587,10 @@ namespace EnhancedEditor.Editor {
                 bool _updateHeight = _logWidth != previousLogWidth;
 
                 float _origin = _position.y;
+                EventType _type = Event.current.type;
 
                 for (int i = 0; i < logs.Count; i++) {
-                    if (DrawLog(ref _position, i, _area, _collapse, _count, _height, _logColumn, _updateHeight)) {
+                    if (DrawLog(ref _position, i, _area, _collapse, _count, _height, _logColumn, _updateHeight, _type)) {
                         _count++;
                     }
                 }
@@ -1485,7 +1628,9 @@ namespace EnhancedEditor.Editor {
             }
         }
 
-        private bool DrawLog(ref Rect _position, int _index, Rect _area, bool _collapse, int _count, float _height, LogColumn _logColumn, bool _updateHeight) {
+        private bool DrawLog(ref Rect _position, int _index, Rect _area, bool _collapse, int _count, float _height, LogColumn _logColumn, bool _updateHeight, EventType _eventType) {
+
+            const float LineHeight = 18f; // => EditorGUIUtility.singleLineHeight
             LogEntry _log = logs[_index];
 
             // Hide duplicates on collapse.
@@ -1505,10 +1650,11 @@ namespace EnhancedEditor.Editor {
             }
 
             _position.y += _position.height;
-            _position.height = EditorGUIUtility.singleLineHeight;
+            _position.height = LineHeight;
 
             // Optimization for non-used events.
-            switch (Event.current.type) {
+            switch (_eventType) {
+
                 case EventType.Layout:
                     return true;
 
@@ -1516,22 +1662,35 @@ namespace EnhancedEditor.Editor {
                     break;
             }
 
+            bool _notVisible = ((_position.yMax < _area.y) || (_position.y > _area.yMax)) && (!doFocusSelection || (selectedLogIndex != _index));
+            _position.height = _height;
+
             // Clamp the log height depending on its log string.
             // Only recalculate the height on column size change.
             if (_logColumn.IsVisible) {
-                if ((_updateHeight || (_entry.Height == 0f)) && !_entry.IsDuplicate) {
-                    float _logHeight = Styles.LogWordWrapStyle.CalcHeight(EnhancedEditorGUIUtility.GetLabelGUI(_entry.LogString), _logColumn.GetRect(position).width);
-                    _entry.Height = Mathf.Min(_logHeight, _height);
+
+                float _lineHeight;
+
+                /*if (_notVisible)
+                {
+                    _lineHeight = (_entry.Height != 0f) ? _entry.Height : _height;
+                }
+                else*/
+                {
+                    if (!_log.IsDuplicate && (_updateHeight || (_entry.Height == 0f))) {
+                        float _logHeight = Styles.LogWordWrapStyle.CalcHeight(EnhancedEditorGUIUtility.GetLabelGUI(_entry.LogString), _logColumn.GetRect(position).width);
+                        _entry.Height = Mathf.Min(_logHeight, _height);
+                    }
+
+                    _lineHeight = _entry.Height;
                 }
 
-                _height = _entry.Height;
-                if (_height > _position.height) {
-                    _position.height = _height;
-                }
+                _position.height = _height
+                                 = _lineHeight;
             }
 
             // Ignore out-of-position logs.
-            if (((_position.yMax < _area.y) || (_position.y > _area.yMax)) && (!doFocusSelection || (selectedLogIndex != _index))) {
+            if (_notVisible) {
                 return true;
             }
 
@@ -1542,7 +1701,8 @@ namespace EnhancedEditor.Editor {
             }
 
             // Separator.
-            Rect _separator = new Rect(_position); {
+            Rect _separator = new Rect(_position);
+            {
                 _separator.yMin = _separator.yMax - 1f;
             }
 
@@ -1647,7 +1807,8 @@ namespace EnhancedEditor.Editor {
             }
 
             // Select on click.
-            Rect _selection = new Rect(_position); {
+            Rect _selection = new Rect(_position);
+            {
                 _selection.yMax = Mathf.Min(_selection.yMax, _area.yMax - EnhancedEditorGUIUtility.ResizeHandlerExtent);
             }
 
@@ -1719,7 +1880,8 @@ namespace EnhancedEditor.Editor {
 
             // Separator.
             // Draw a bit over the header content to leave some space between labels on top of the separator.
-            Rect _separatorPosition = GUILayoutUtility.GetRect(position.width, 1f); {
+            Rect _separatorPosition = GUILayoutUtility.GetRect(position.width, 1f);
+            {
                 _separatorPosition.yMin -= StackHeaderSpacing + 1f;
             }
 
@@ -1780,7 +1942,8 @@ namespace EnhancedEditor.Editor {
                             GUIContent _header = _call.Header;
 
                             float _height = _style.CalcHeight(_header, EnhancedEditorGUIUtility.GetControlRect().width - StackContentOffset);
-                            Rect _position = EditorGUILayout.GetControlRect(true, EnhancedEditorGUI.ManageDynamicControlHeight(_header, _height)); {
+                            Rect _position = EditorGUILayout.GetControlRect(true, EnhancedEditorGUI.ManageDynamicControlHeight(_header, _height));
+                            {
                                 _position.xMin += StackContentOffset;
                             }
 
@@ -1808,12 +1971,35 @@ namespace EnhancedEditor.Editor {
         private void SelectLog(int _index, bool _isSelected) {
             logs[_index].IsSelected = _isSelected;
 
-            if (_isSelected) {
-                SelectLog(_index);
-                doFocusSelection = true;
-            } else {
-                SelectLog(logs.FindIndex(l => l.IsSelected));
+            switch (updateSelectionUtil) {
+                case -2:
+                    updateSelectionUtil = _isSelected ? _index : -1;
+                    break;
+
+                case -1:
+                    if (_isSelected) {
+                        updateSelectionUtil = _index;
+                    }
+                    break;
+
+                default:
+                    break;
             }
+        }
+
+        private void RefreshSelectionLog() {
+            // No update.
+            if (updateSelectionUtil == -2)
+                return;
+
+            if (updateSelectionUtil == -1) {
+                SelectLog(logs.FindIndex(l => l.IsSelected));
+            } else {
+                SelectLog(updateSelectionUtil);
+                doFocusSelection = true;
+            }
+
+            updateSelectionUtil = -2;
         }
 
         // -----------------------
@@ -1837,14 +2023,14 @@ namespace EnhancedEditor.Editor {
 
         #region Flags
         private bool HasFlag(Flags _flag) {
-            return flags.HasFlag(_flag);
+            return flags.HasFlagUnsafe(_flag);
         }
 
         private void SetFlag(Flags _flag, bool _enabled) {
             if (_enabled) {
-                flags |= _flag;
+                flags.AddFlagRef(_flag);
             } else {
-                flags &= ~_flag;
+                flags.RemoveFlagRef(_flag);
             }
         }
 
@@ -1924,7 +2110,6 @@ namespace EnhancedEditor.Editor {
 
         private static readonly FieldInfo messageField              = logEntryType.GetField("message", InstanceFlags);
         private static readonly FieldInfo modeField                 = logEntryType.GetField("mode", InstanceFlags);
-        private static readonly FieldInfo instanceIDIField          = logEntryType.GetField("instanceID", InstanceFlags);
         private static readonly FieldInfo callstackStartField       = logEntryType.GetField("callstackTextStartUTF16", InstanceFlags);
 
         private static readonly object[] getEntryParams = new object[2];
@@ -1963,7 +2148,7 @@ namespace EnhancedEditor.Editor {
                 Debug.LogException(e);
             }
         }
-        
+
         private void ClearNativeConsole() {
             clearMethod.Invoke(null, null);
         }
@@ -1971,7 +2156,7 @@ namespace EnhancedEditor.Editor {
         // -------------------------------------------
         // Utility 
         // -------------------------------------------
-        
+
         private LogType GetLogType(LogMessageFlags _flags) {
             if (HasFlag(LogMessageFlags.Exception)) {
                 return LogType.Exception;
@@ -2001,18 +2186,40 @@ namespace EnhancedEditor.Editor {
 
         #region Utility
         /// <summary>
+        /// Set the current logs of the console.
+        /// </summary>
+        private void SetLogs(List<LogEntry> _logs) {
+            logs = _logs;
+            RefreshFilters();
+        }
+
+        /// <summary>
         /// Updates pending logs.
         /// </summary>
-        private void UpdateLogs() {
+        private void UpdateLogs(bool _useMaxCount = true) {
+
+            RefreshSelectionLog();
+
             // Disabled debug.
             if (HasFlag(Flags.Disabled)) {
+
                 pendingLogs.Clear();
                 return;
             }
 
+            // Trim excess.
+            int _maxLogCount = EnhancedConsoleEnhancedSettings.MaxLogCount;
+
+            while ((_maxLogCount > 0) && (logs.Count > _maxLogCount)) {
+                DeleteLog(0);
+            }
+
+            // Buffer logs.
             if (pendingLogs.Count == 0) {
                 return;
             }
+
+            bool _clear = true;
 
             for (int i = 0; i < pendingLogs.Count; i++) {
                 LogWrapper _log = pendingLogs[i];
@@ -2044,13 +2251,24 @@ namespace EnhancedEditor.Editor {
                             break;
                     }
                 }
+
+                if (_useMaxCount && (i > MaxPendingLog)) {
+
+                    pendingLogs.RemoveRange(0, i);
+                    _clear = false;
+
+                    break;
+                }
+            }
+
+            if (_clear) {
+                pendingLogs.Clear();
             }
 
             // Save content.
             string _json = EditorJsonUtility.ToJson(this);
             EditorPrefs.SetString(EditorPrefKey, _json);
 
-            pendingLogs.Clear();
             Repaint();
 
             // ----- Local Method ----- \\
@@ -2108,6 +2326,9 @@ namespace EnhancedEditor.Editor {
         /// </summary>
         /// <param name="_index">Index of the log to select.</param>
         private void SelectLog(int _index) {
+
+            _index = Mathf.Min(_index, logs.Count - 1);
+
             selectedLogIndex = _index;
 
             if ((selectedLogIndex != -1) && GetEntry(selectedLogIndex) != selectedLogStackTrace.Entry) {
@@ -2171,6 +2392,7 @@ namespace EnhancedEditor.Editor {
         /// Deletes the log at a specific index.
         /// </summary>
         private void DeleteLog(int _index) {
+
             LogEntry _entry = logs[_index];
             OriginalLogEntry _origin = _entry.GetEntry(logs);
 
@@ -2255,7 +2477,7 @@ namespace EnhancedEditor.Editor {
             Application.logMessageReceivedThreaded += OnLogMessageReceived;
 
             EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
-            EditorApplication.update               += OnUpdate;
+            EditorApplication.update += OnUpdate;
         }
 
         /// <summary>
@@ -2265,7 +2487,7 @@ namespace EnhancedEditor.Editor {
             // The console window might be destroyed when maximazing another window,
             // so keep registered on logs independently.
             EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
-            EditorApplication.update               -= OnUpdate;
+            EditorApplication.update -= OnUpdate;
         }
 
         /// <summary>
@@ -2282,6 +2504,123 @@ namespace EnhancedEditor.Editor {
             }
 
             GetNativeConsoleLogs();
+        }
+        #endregion
+
+        // ----- Sub Window ----- \\
+
+        #region Import Log Window
+        /// <summary>
+        /// Utility window displayed when importing a large log file.
+        /// </summary>
+        public class ImportLogsWindow : EditorWindow {
+            /// <summary>
+            /// Creates and shows a new <see cref="ImportLogsWindow"/> instance,
+            /// used to create a new build preset in the project.
+            /// </summary>
+            /// <returns><see cref="ImportLogsWindow"/> instance on screen.</returns>
+            public static ImportLogsWindow GetWindow(int _logCount, Action<Vector2Int> _onImport) {
+                ImportLogsWindow _window = GetWindow<ImportLogsWindow>(true, "Import Logs", true);
+
+                _window.minSize = _window.maxSize
+                                = new Vector2(400f, 120f);
+
+                _window.maxLogCount = _logCount;
+                _window.onImport = _onImport;
+
+                int _range = Mathf.Min(_logCount, DefaultLogCount);
+
+                _window.logRange = new Vector2Int(_logCount - _range, _logCount);
+
+                _window.ShowUtility();
+                return _window;
+            }
+
+            // -------------------------------------------
+            // Window GUI
+            // -------------------------------------------
+
+            private const int MaxLogCount        = 25000;
+            private const int DefaultLogCount    = 10000;
+            private const string UndoRecordTitle = "Import Logs Window Changes";
+
+            private readonly string importInfoMessage    = "Select the range of logs you wish to import from the selected file";
+            private readonly string largeLogCountMessage = $"Selected log count is superior to the recommanded value ({MaxLogCount})\nNote that this may cause noticeable slowdowns";
+
+            private readonly GUIContent logCountGUI = new GUIContent("Log Count", "The total number of logs to import from this file.");
+            private readonly GUIContent logRangeGUI = new GUIContent("Import Range", "The range of logs to import from this file.");
+            private readonly GUIContent importLogsGUI = new GUIContent("Import", "Import these logs.");
+
+            [SerializeField] private int maxLogCount = 0;
+            [SerializeField] private Vector2Int logRange = new Vector2Int();
+
+            private Action<Vector2Int> onImport = null;
+
+            // -----------------------
+
+            private void OnGUI() {
+                Undo.RecordObject(this, UndoRecordTitle);
+
+                // Log count.
+                const float Indent = 110f;
+
+                Rect _position = new Rect(5f, 5f, Indent, EditorGUIUtility.singleLineHeight);
+                EditorGUI.LabelField(_position, logRangeGUI);
+
+                _position.x += Indent;
+                _position.width = position.width - _position.x - 5f;
+
+                logRange = EnhancedEditorGUI.MinMaxField(_position, logRange, 0, maxLogCount);
+
+                GUILayout.Space(3f);
+
+                int _count = logRange.y - logRange.x;
+
+                _position.x -= Indent;
+                _position.width = Indent;
+                _position.y += _position.height + 5f;
+
+                EditorGUI.LabelField(_position, logCountGUI);
+
+                _position.x += Indent;
+                _position.width = position.width - _position.x - 5f;
+
+                EditorGUI.LabelField(_position, _count.ToString());
+
+                // Large log count message.
+                if (_count > MaxLogCount) {
+                    DrawHelpBox(largeLogCountMessage, UnityEditor.MessageType.Warning, position.width - 10f);
+                } else {
+                    DrawHelpBox(importInfoMessage, UnityEditor.MessageType.Info, position.width - 10f);
+                }
+
+                _position = new Rect() {
+                    x = position.width - 55f,
+                    y = position.height - 30f,
+                    width = 50f,
+                    height = 25f
+                };
+
+                // Import button.
+                if (GUI.Button(_position, importLogsGUI)) {
+                    onImport?.Invoke(logRange);
+                    Close();
+                }
+
+                // ----- Local Method ----- \\
+
+                void DrawHelpBox(string _message, UnityEditor.MessageType _messageType, float _width) {
+                    Rect _temp = new Rect()
+                    {
+                        x = 5f,
+                        y = _position.y + _position.height + 5f,
+                        height = EnhancedEditorGUIUtility.GetHelpBoxHeight(_message, _messageType, _width),
+                        width = _width
+                    };
+
+                    EditorGUI.HelpBox(_temp, _message, _messageType);
+                }
+            }
         }
         #endregion
     }

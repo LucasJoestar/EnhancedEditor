@@ -15,13 +15,13 @@ namespace EnhancedEditor.Editor {
     /// Custom <see cref="Transform"/> editor, adding multiple shortcuts and utilities in the inspector.
     /// </summary>
     [CustomEditor(typeof(Transform), true), CanEditMultipleObjects]
-    public class TransformEditor : UnityObjectEditor {
+    public sealed class TransformEditor : UnityObjectEditor {
         #region Data
         /// <summary>
         /// Serializable <see cref="Transform"/> data.
         /// </summary>
         [Serializable]
-        private class Data : PlayModeObjectData {
+        private sealed class Data : PlayModeObjectData {
             public Vector3 Position;
             public Vector3 Rotation;
             public Vector3 Scale;

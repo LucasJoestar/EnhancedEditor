@@ -12,7 +12,8 @@ namespace EnhancedEditor {
     /// </summary>
     [ScriptGizmos(false, true)]
     [AddComponentMenu(InternalUtility.MenuPath + "Note")]
-    public class Note : MonoBehaviour {
+    #pragma warning disable
+    public sealed class Note : MonoBehaviour {
         #region Global Members
         #if UNITY_EDITOR
         [SerializeField, Enhanced, EnhancedTextArea(true)] private string note = string.Empty;

@@ -12,7 +12,7 @@ namespace EnhancedEditor.Editor {
     /// Custom <see cref="AxisConstraints"/> drawer.
     /// </summary>
     [CustomPropertyDrawer(typeof(AxisConstraints), true)]
-    public class AxisConstraintsPropertyDrawer : EnhancedPropertyEditor {
+    public sealed class AxisConstraintsPropertyDrawer : EnhancedPropertyEditor {
         #region Drawer Content
         private static readonly Pair<AxisConstraints, GUIContent>[] constraints = new Pair<AxisConstraints, GUIContent>[] {
             new Pair<AxisConstraints, GUIContent>(AxisConstraints.X, new GUIContent("X")),

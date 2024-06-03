@@ -7,17 +7,14 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace EnhancedEditor.Editor
-{
+namespace EnhancedEditor.Editor {
     /// <summary>
     /// Special drawer for classes with the attribute <see cref="NonEditableAttribute"/> (inherit from <see cref="UnityObjectDrawer"/>).
     /// </summary>
     [CustomDrawer(typeof(NonEditableAttribute))]
-    public class NonEditableObjectDrawer : UnityObjectDrawer
-    {
+    public sealed class NonEditableObjectDrawer : UnityObjectDrawer {
         #region Drawer Content
-        public override bool OnInspectorGUI()
-        {
+        public override bool OnInspectorGUI() {
             var _attribute = Attribute as NonEditableAttribute;
 
             GUILayout.Space(100f);

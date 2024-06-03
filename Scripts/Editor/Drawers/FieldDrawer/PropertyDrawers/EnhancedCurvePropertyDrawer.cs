@@ -7,25 +7,21 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace EnhancedEditor.Editor
-{
+namespace EnhancedEditor.Editor {
     /// <summary>
     /// Special drawer for fields with the attribute <see cref="EnhancedCurveAttribute"/> (inherit from <see cref="EnhancedPropertyDrawer"/>).
     /// </summary>
     [CustomDrawer(typeof(EnhancedCurveAttribute))]
-	public class EnhancedCurvePropertyDrawer : EnhancedPropertyDrawer
-    {
+    public sealed class EnhancedCurvePropertyDrawer : EnhancedPropertyDrawer {
         #region Drawer Content
-        public override bool OnGUI(Rect _position, SerializedProperty _property, GUIContent _label, out float _height)
-        {
-            EnhancedCurveAttribute _attribute = Attribute as EnhancedCurveAttribute;
+        public override bool OnGUI(Rect _position, SerializedProperty _property, GUIContent _label, out float _height) {
+            var _attribute = Attribute as EnhancedCurveAttribute;
             _position.height = _height
                              = EditorGUIUtility.singleLineHeight;
 
             // On curve context click, do not open the curve editor.
             Rect _temp = EnhancedEditorGUI.InvisiblePrefixLabel(_position, _label);
-            if ((_temp.Event(out Event _event) == EventType.MouseDown) && (_event.button == 1))
-            {
+            if ((_temp.Event(out Event _event) == EventType.MouseDown) && (_event.button == 1)) {
                 _event.Use();
             }
 
@@ -33,8 +29,7 @@ namespace EnhancedEditor.Editor
             return true;
         }
 
-        public override void OnContextMenu(GenericMenu _menu, SerializedProperty _property)
-        {
+        public override void OnContextMenu(GenericMenu _menu, SerializedProperty _property) {
             AnimationCurvePropertyDrawer.OnContextMenu(_menu, _property);
         }
         #endregion

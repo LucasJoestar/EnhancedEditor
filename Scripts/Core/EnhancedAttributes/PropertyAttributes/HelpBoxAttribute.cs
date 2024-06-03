@@ -11,7 +11,7 @@ namespace EnhancedEditor {
     /// Draws a help box above or below this field.
     /// </summary>
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = true, Inherited = true)]
-    public class HelpBoxAttribute : EnhancedPropertyAttribute {
+    public sealed class HelpBoxAttribute : EnhancedPropertyAttribute {
         #region Global Members
         /// <summary>
         /// Message displayed in the help box.
@@ -37,6 +37,11 @@ namespace EnhancedEditor {
         public readonly bool IsAbove = true;
 
         /// <summary>
+        /// Spacing between this help box and its field.
+        /// </summary>
+        public readonly float Spacing = 0f;
+
+        /// <summary>
         /// Name of the class member to get value from,
         /// used as a condition to know if this help box should be visible or not.
         /// <para/>
@@ -56,34 +61,36 @@ namespace EnhancedEditor {
         /// <param name="_message"><inheritdoc cref="Message" path="/summary"/></param>
         /// <param name="_messageType"><inheritdoc cref="MessageType" path="/summary"/></param>
         /// <param name="_isAbove"><inheritdoc cref="IsAbove" path="/summary"/></param>
+        /// <param name="_spacing"><inheritdoc cref="Spacing" path="/summary"/></param>
         /// <inheritdoc cref="HelpBoxAttribute"/>
-        public HelpBoxAttribute(string _message, MessageType _messageType, bool _isAbove = true) {
-            Message = _message;
+        public HelpBoxAttribute(string _message, MessageType _messageType, bool _isAbove = true, float _spacing = 0f) {
+            Message     = _message;
             MessageType = _messageType;
-            IsAbove = _isAbove;
+            IsAbove     = _isAbove;
+            Spacing     = _spacing;
         }
 
         /// <param name="_conditionMember"><inheritdoc cref="ConditionMember" path="/summary"/></param>
         /// <param name="_conditionType"><inheritdoc cref="ConditionType" path="/summary"/></param>
-        /// <inheritdoc cref="HelpBoxAttribute(string, MessageType, bool)"/>
-        public HelpBoxAttribute(string _message, MessageType _messageType, string _conditionMember, ConditionType _conditionType = ConditionType.True, bool _isAbove = true) :
-                                this(_message, _messageType, _isAbove) {
+        /// <inheritdoc cref="HelpBoxAttribute(string, MessageType, bool, float)"/>
+        public HelpBoxAttribute(string _message, MessageType _messageType, string _conditionMember, ConditionType _conditionType = ConditionType.True, bool _isAbove = true, float _spacing = 0f) :
+                                this(_message, _messageType, _isAbove, _spacing) {
             ConditionMember = _conditionMember;
-            ConditionType = _conditionType;
+            ConditionType   = _conditionType;
         }
 
         /// <param name="_">Useless parameter, only here to differenciate this constructor from the one with an explicit name.</param>
-        /// <inheritdoc cref="HelpBoxAttribute(bool, string, MessageType, string, ConditionType, bool)"/>
-        public HelpBoxAttribute(bool _, string _messageMember, MessageType _messageType, bool _isAbove = true) : this(string.Empty, _messageType, _isAbove) {
+        /// <inheritdoc cref="HelpBoxAttribute(bool, string, MessageType, string, ConditionType, bool, float)"/>
+        public HelpBoxAttribute(bool _, string _messageMember, MessageType _messageType, bool _isAbove = true, float _spacing = 0f) : this(string.Empty, _messageType, _isAbove, _spacing) {
             MessageMember = _messageMember;
         }
 
         /// <param name="_messageMember"><inheritdoc cref="MessageMember" path="/summary"/></param>
         /// <param name="_">Useless parameter, only here to differenciate this constructor from the one with an explicit message.</param>
-        /// <inheritdoc cref="HelpBoxAttribute(string, MessageType, string, ConditionType, bool)"/>
+        /// <inheritdoc cref="HelpBoxAttribute(string, MessageType, string, ConditionType, bool, float)"/>
         public HelpBoxAttribute(bool _, string _messageMember, MessageType _messageType, string _conditionMember,
-                                ConditionType _conditionType = ConditionType.True, bool _isAbove = true) :
-                                this(string.Empty, _messageType, _conditionMember, _conditionType, _isAbove) {
+                                ConditionType _conditionType = ConditionType.True, bool _isAbove = true, float _spacing = 0f) :
+                                this(string.Empty, _messageType, _conditionMember, _conditionType, _isAbove, _spacing) {
             MessageMember = _messageMember;
         }
         #endregion

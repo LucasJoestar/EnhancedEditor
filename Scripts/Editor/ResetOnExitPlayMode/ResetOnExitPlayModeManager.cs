@@ -4,13 +4,20 @@
 //
 // ============================================================================ //
 
+#if !UNITY_2019_2_OR_NEWER
+#define ASSEMBLY_REFLECTION
+#endif
+
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 
 using Object = UnityEngine.Object;
+
+#if ASSEMBLY_REFLECTION
+using System.Reflection;
+#endif
 
 namespace EnhancedEditor.Editor {
     /// <summary>
@@ -20,12 +27,12 @@ namespace EnhancedEditor.Editor {
     internal static class ResetOnExitPlayModeManager {
         #region Serialization Wrappers
         [Serializable]
-        private class JsonWrapper {
+        private sealed class JsonWrapper {
             public List<ObjectWrapper> Objects = new List<ObjectWrapper>();
         }
 
         [Serializable]
-        private class ObjectWrapper {
+        private sealed class ObjectWrapper {
             public string GUID = string.Empty;
             public string Json = string.Empty;
 
@@ -120,7 +127,7 @@ namespace EnhancedEditor.Editor {
             Type _scriptableType = typeof(ScriptableObject);
             resetTypes.Clear();
 
-            #if UNITY_2019_2_OR_NEWER
+            #if !ASSEMBLY_REFLECTION
             foreach (var _type in TypeCache.GetTypesWithAttribute<ResetOnExitPlayModeAttribute>()) {
                 if (_type.IsSubclassOf(_scriptableType)) {
                     resetTypes.Add(_type);

@@ -4,25 +4,24 @@
 //
 // ============================================================================ //
 
-namespace EnhancedEditor
-{
+namespace EnhancedEditor {
     /// <summary>
     /// Use this on a <see cref="string"/> to make it a folder selection field.
     /// </summary>
-	public class FolderAttribute : EnhancedPropertyAttribute
-    {
+	public sealed class FolderAttribute : EnhancedPropertyAttribute {
         #region Global Members
         /// <summary>
         /// Allow or not to select a folder located outside the project.
         /// </summary>
         public readonly bool AllowOutsideProjectFolder = false;
 
-        // -----------------------
+        // -------------------------------------------
+        // Constructor(s)
+        // -------------------------------------------
 
         /// <param name="_allowOutsideProjectFolder"><inheritdoc cref="AllowOutsideProjectFolder" path="/summary"/></param>
         /// <inheritdoc cref="FolderAttribute"/>
-        public FolderAttribute(bool _allowOutsideProjectFolder = false)
-        {
+        public FolderAttribute(bool _allowOutsideProjectFolder = false) {
             AllowOutsideProjectFolder = _allowOutsideProjectFolder;
         }
         #endregion

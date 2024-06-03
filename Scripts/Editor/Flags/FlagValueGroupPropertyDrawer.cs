@@ -12,7 +12,7 @@ namespace EnhancedEditor.Editor {
     /// Custom <see cref="FlagValueGroup"/> drawer.
     /// </summary>
     [CustomPropertyDrawer(typeof(FlagValueGroup), true)]
-    public class FlagValueGroupPropertyDrawer : EnhancedPropertyEditor {
+    public sealed class FlagValueGroupPropertyDrawer : EnhancedPropertyEditor {
         #region Drawer Content
         protected override float OnEnhancedGUI(Rect _position, SerializedProperty _property, GUIContent _label) {
             EnhancedEditorGUI.FlagValueGroupField(_position, _property, _label);

@@ -4,30 +4,34 @@
 //
 // ============================================================================ //
 
+#if !UNITY_2019_2_OR_NEWER
+#define ASSEMBLY_REFLECTION
+#endif
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Reflection;
 using UnityEditor;
 using UnityEditor.Build.Reporting;
 using UnityEditorInternal;
 using UnityEngine;
 
+#if ASSEMBLY_REFLECTION
+using System.Reflection;
+#endif
+
 using Debug = UnityEngine.Debug;
 
-namespace EnhancedEditor.Editor
-{
+namespace EnhancedEditor.Editor {
     /// <summary>
     /// Editor window focused on the build pipeline, used to build with additional parameters,
     /// launch existing builds, and manage custom scripting define symbols activation.
     /// </summary>
-    public class BuildPipelineWindow : EditorWindow
-    {
+    public sealed class BuildPipelineWindow : EditorWindow {
         #region Build Info
         [Serializable]
-        private class BuildInfo
-        {
+        private class BuildInfo {
             public string Name = string.Empty;
             public string Path = string.Empty;
             public string Platform = string.Empty;
@@ -37,8 +41,7 @@ namespace EnhancedEditor.Editor
 
             // -----------------------
 
-            public BuildInfo(string _path)
-            {
+            public BuildInfo(string _path) {
                 Name = System.IO.Path.GetFileName(System.IO.Path.GetDirectoryName(_path));
                 Path = _path;
 
@@ -54,8 +57,7 @@ namespace EnhancedEditor.Editor
 
         #region Scene Wrapper
         [Serializable]
-        private class SceneWrapper
-        {
+        private class SceneWrapper {
             public UnityEditor.SceneAsset Scene = null;
             public GUIContent Label = null;
             public bool IsEnabled = false;
@@ -64,8 +66,7 @@ namespace EnhancedEditor.Editor
 
             // -----------------------
 
-            public SceneWrapper(UnityEditor.SceneAsset _scene, bool _isEnabled)
-            {
+            public SceneWrapper(UnityEditor.SceneAsset _scene, bool _isEnabled) {
                 Scene = _scene;
                 Label = new GUIContent(_scene?.name);
                 IsEnabled = _isEnabled;
@@ -77,8 +78,7 @@ namespace EnhancedEditor.Editor
 
         #region Scripting Define Symbol Info
         [Serializable]
-        private class ScriptingDefineSymbolInfo
-        {
+        private class ScriptingDefineSymbolInfo {
             public ScriptingDefineSymbolAttribute DefineSymbol = null;
             public GUIContent Label = null;
             public bool IsEnabled = false;
@@ -87,8 +87,7 @@ namespace EnhancedEditor.Editor
 
             // -----------------------
 
-            public ScriptingDefineSymbolInfo(ScriptingDefineSymbolAttribute _symbol)
-            {
+            public ScriptingDefineSymbolInfo(ScriptingDefineSymbolAttribute _symbol) {
                 DefineSymbol = _symbol;
                 Label = new GUIContent(_symbol.Description, _symbol.Symbol);
 
@@ -105,8 +104,7 @@ namespace EnhancedEditor.Editor
         /// </summary>
         /// <returns><see cref="BuildPipelineWindow"/> instance on screen.</returns>
         [MenuItem(InternalUtility.MenuItemPath + "Build/Build Pipeline", false, 30)]
-        public static BuildPipelineWindow GetWindow()
-        {
+        public static BuildPipelineWindow GetWindow() {
             BuildPipelineWindow _window = GetWindow<BuildPipelineWindow>("Build Pipeline");
             _window.Show();
 
@@ -117,21 +115,16 @@ namespace EnhancedEditor.Editor
         /// Launches the last created game build.
         /// </summary>
         [MenuItem(InternalUtility.MenuItemPath + "Build/Launch Last Build", false, 31)]
-        public static void LaunchLastBuild()
-        {
+        public static void LaunchLastBuild() {
             string[] _builds = GetBuilds();
-            if (_builds.Length > 0)
-            {
-                Array.Sort(_builds, (a, b) =>
-                {
+            if (_builds.Length > 0) {
+                Array.Sort(_builds, (a, b) => {
                     return Directory.GetCreationTime(b).CompareTo(Directory.GetCreationTime(a));
                 });
 
                 string _build = _builds[0];
                 LaunchBuild(_build);
-            }
-            else
-            {
+            } else {
                 EditorUtility.DisplayDialog("No Build",
                                             $"No build could be found in the directory: \n\"{BuildDirectory}\".\n\n" +
                                             "Make sure you have selected a valid folder in the Preferences settings.",
@@ -208,8 +201,7 @@ namespace EnhancedEditor.Editor
 
         // -----------------------
 
-        private void OnEnable()
-        {
+        private void OnEnable() {
             EditorBuildSettings.sceneListChanged -= RefreshAllScenes;
             EditorBuildSettings.sceneListChanged += RefreshAllScenes;
 
@@ -225,8 +217,7 @@ namespace EnhancedEditor.Editor
             InitializeConfiguration();
         }
 
-        private void OnGUI()
-        {
+        private void OnGUI() {
             Undo.RecordObject(this, UndoRecordTitle);
             GUILayout.Space(5f);
 
@@ -235,17 +226,13 @@ namespace EnhancedEditor.Editor
             GUILayout.Space(5f);
 
             // Selected tab content.
-            using (var _scroll = new GUILayout.ScrollViewScope(scroll))
-            {
+            using (var _scroll = new GUILayout.ScrollViewScope(scroll)) {
                 scroll = _scroll.scrollPosition;
-                using (var _scope = new GUILayout.HorizontalScope())
-                {
+                using (var _scope = new GUILayout.HorizontalScope()) {
                     GUILayout.Space(5f);
 
-                    using (var _verticalScope = new GUILayout.VerticalScope())
-                    {
-                        switch (selectedTab)
-                        {
+                    using (var _verticalScope = new GUILayout.VerticalScope()) {
+                        switch (selectedTab) {
                             case 0:
                                 DrawBuilder();
                                 break;
@@ -267,25 +254,21 @@ namespace EnhancedEditor.Editor
             }
         }
 
-        private void OnFocus()
-        {
+        private void OnFocus() {
             // Refresh presets if any have been destroyed.
-            if (ArrayUtility.Contains(buildPresets, null))
-            {
+            if (ArrayUtility.Contains(buildPresets, null)) {
                 RefreshBuildPresets();
             }
         }
 
-        private void OnDisable()
-        {
+        private void OnDisable() {
             EditorBuildSettings.sceneListChanged -= RefreshAllScenes;
             Undo.undoRedoPerformed -= OnUndoRedoOperation;
         }
 
         // -----------------------
 
-        private void OnBuildResetLayout()
-        {
+        private void OnBuildResetLayout() {
             // When building, the editor loses all of its horizontal and vertical layout scopes,
             // so begin them once again to avoid errors in the console.
             GUILayout.BeginScrollView(scroll);
@@ -293,10 +276,8 @@ namespace EnhancedEditor.Editor
             GUILayout.BeginVertical();
         }
 
-        private void OnUndoRedoOperation()
-        {
-            switch (selectedTab)
-            {
+        private void OnUndoRedoOperation() {
+            switch (selectedTab) {
                 // Builder.
                 case 0:
                     OnBuilderUndoRedo();
@@ -372,8 +353,7 @@ namespace EnhancedEditor.Editor
 
         // -----------------------
 
-        private void DrawBuilder()
-        {
+        private void DrawBuilder() {
             // Get control IDs to use for keyboard focus on scene(s) selection.
             buildSceneControlID = EnhancedEditorGUIUtility.GetControlID(828, FocusType.Keyboard);
             projectSceneControlID = EnhancedEditorGUIUtility.GetControlID(829, FocusType.Keyboard);
@@ -387,10 +367,8 @@ namespace EnhancedEditor.Editor
                     ref buildScenesScroll);
         }
 
-        private void DrawBuilderHeader()
-        {
-            using (var _scope = new GUILayout.HorizontalScope())
-            {
+        private void DrawBuilderHeader() {
+            using (var _scope = new GUILayout.HorizontalScope()) {
                 GUIStyle _style = EditorStyles.boldLabel;
 
                 EditorGUILayout.LabelField(buildScenesHeaderGUI, _style, GUILayout.Width((position.width * SectionWidthCoef) + 8f));
@@ -398,46 +376,37 @@ namespace EnhancedEditor.Editor
             }
         }
 
-        private void DrawBuilderSectionToolbar()
-        {
+        private void DrawBuilderSectionToolbar() {
             // Search filter.
             string _searchFilter = EnhancedEditorGUILayout.ToolbarSearchField(buildScenesSearchFilter, GUILayout.MinWidth(50f));
-            if (_searchFilter != buildScenesSearchFilter)
-            {
+            if (_searchFilter != buildScenesSearchFilter) {
                 buildScenesSearchFilter = _searchFilter;
                 FilterBuildScenes();
             }
 
             // Refresh button.
-            if (GUILayout.Button(refreshBuildScenesGUI, EditorStyles.toolbarButton, GUILayout.Width(RefreshButtonWidth)))
-            {
+            if (GUILayout.Button(refreshBuildScenesGUI, EditorStyles.toolbarButton, GUILayout.Width(RefreshButtonWidth))) {
                 RefreshAllScenes();
             }
         }
 
-        private void DrawBuilderSection()
-        {
+        private void DrawBuilderSection() {
             if (buildScenes.Length == 0)
                 return;
 
             // Build scenes.
-            if (string.IsNullOrEmpty(buildScenesSearchFilter))
-            {
+            if (string.IsNullOrEmpty(buildScenesSearchFilter)) {
                 buildScenesList.DoLayoutList();
-            }
-            else
-            {
+            } else {
                 DrawScenes(buildScenes, DrawBuildScene);
             }
         }
 
-        private void DrawScenes(SceneWrapper[] _scenes, Action<Rect, int> _onDrawScene)
-        {
+        private void DrawScenes(SceneWrapper[] _scenes, Action<Rect, int> _onDrawScene) {
             GUILayout.Space(3f);
 
             int _index = 0;
-            for (int _i = 0; _i < _scenes.Length; _i++)
-            {
+            for (int _i = 0; _i < _scenes.Length; _i++) {
                 SceneWrapper _scene = _scenes[_i];
                 if (!_scene.IsVisible)
                     continue;
@@ -450,25 +419,21 @@ namespace EnhancedEditor.Editor
             }
         }
 
-        private void DrawSceneBackground(Rect _position, SceneWrapper _scene, int _index)
-        {
+        private void DrawSceneBackground(Rect _position, SceneWrapper _scene, int _index) {
             EnhancedEditorGUI.BackgroundLine(_position, _scene.IsSelected, _index, selectedColor, peerColor);
         }
 
-        private void DrawBuildScene(Rect _position, int _index)
-        {
+        private void DrawBuildScene(Rect _position, int _index) {
             SceneWrapper _scene = buildScenes[_index];
             Rect _temp = new Rect(_position.x + 5f, _position.y, 20f, _position.height);
 
-            if (string.IsNullOrEmpty(buildScenesSearchFilter))
-            {
+            if (string.IsNullOrEmpty(buildScenesSearchFilter)) {
                 // Scene build index.
                 EditorGUI.LabelField(_temp, _index.ToString(), EditorStyles.boldLabel);
             }
 
             // Scene name.
-            _temp = new Rect(_position)
-            {
+            _temp = new Rect(_position) {
                 xMin = _position.x + 25f,
                 xMax = _position.xMax - 25f
             };
@@ -480,15 +445,13 @@ namespace EnhancedEditor.Editor
             _temp.width = 25f;
 
             bool _enabled = GUI.Toggle(_temp, _scene.IsEnabled, buildSceneEnabledGUI);
-            if (_enabled != _scene.IsEnabled)
-            {
+            if (_enabled != _scene.IsEnabled) {
                 _scene.IsEnabled = _enabled;
                 UpdateBuildScenes();
             }
 
             // Scroll focus.
-            if ((_index == lastSelectedBuildScene) && doFocusBuildScene && (Event.current.type == EventType.Repaint))
-            {
+            if ((_index == lastSelectedBuildScene) && doFocusBuildScene && (Event.current.type == EventType.Repaint)) {
                 Vector2 _areaSize = new Vector2(0f, SectionHeight - 21f);
                 buildScenesScroll = EnhancedEditorGUIUtility.FocusScrollOnPosition(buildScenesScroll, _position, _areaSize);
 
@@ -500,11 +463,9 @@ namespace EnhancedEditor.Editor
             EnhancedEditorGUIUtility.MultiSelectionClick(_position, buildScenes, _index, IsBuildSceneSelected, CanSelectBuildScene, SelectBuildScene);
         }
 
-        private void BuilderSectionEvents(Rect _position)
-        {
+        private void BuilderSectionEvents(Rect _position) {
             // Unselect on empty space click.
-            if (EnhancedEditorGUIUtility.DeselectionClick(_position))
-            {
+            if (EnhancedEditorGUIUtility.DeselectionClick(_position)) {
                 foreach (SceneWrapper _scene in buildScenes)
                     _scene.IsSelected = false;
 
@@ -512,28 +473,22 @@ namespace EnhancedEditor.Editor
             }
 
             // Multi-selection keys.
-            if (GUIUtility.keyboardControl == buildSceneControlID)
-            {
+            if (GUIUtility.keyboardControl == buildSceneControlID) {
                 EnhancedEditorGUIUtility.VerticalMultiSelectionKeys(buildScenes, IsBuildSceneSelected, CanSelectBuildScene, SelectBuildScene, lastSelectedBuildScene);
             }
 
             // Context click menu.
-            if ((lastSelectedBuildScene > -1) && EnhancedEditorGUIUtility.ContextClick(_position))
-            {
+            if ((lastSelectedBuildScene > -1) && EnhancedEditorGUIUtility.ContextClick(_position)) {
                 GenericMenu _menu = new GenericMenu();
-                _menu.AddItem(enableScenesForBuildGUI, false, () =>
-                {
-                    foreach (SceneWrapper _scene in buildScenes)
-                    {
+                _menu.AddItem(enableScenesForBuildGUI, false, () => {
+                    foreach (SceneWrapper _scene in buildScenes) {
                         if (_scene.IsSelected && _scene.IsVisible)
                             _scene.IsEnabled = true;
                     }
                 });
 
-                _menu.AddItem(disableScenesForBuildGUI, false, () =>
-                {
-                    foreach (SceneWrapper _scene in buildScenes)
-                    {
+                _menu.AddItem(disableScenesForBuildGUI, false, () => {
+                    foreach (SceneWrapper _scene in buildScenes) {
                         if (_scene.IsSelected && _scene.IsVisible)
                             _scene.IsEnabled = false;
                     }
@@ -546,16 +501,13 @@ namespace EnhancedEditor.Editor
             }
         }
 
-        private void DrawBuilderRightSide()
-        {
-            using (var _scope = new EditorGUILayout.VerticalScope(GUILayout.Height(ProjectScenesSectionHeight)))
-            {
+        private void DrawBuilderRightSide() {
+            using (var _scope = new EditorGUILayout.VerticalScope(GUILayout.Height(ProjectScenesSectionHeight))) {
                 Rect _position = _scope.rect;
                 DrawSectionBackground(_position);
 
                 // Toolbar.
-                using (var _toolbarScope = new EditorGUILayout.HorizontalScope(EditorStyles.toolbar))
-                {
+                using (var _toolbarScope = new EditorGUILayout.HorizontalScope(EditorStyles.toolbar)) {
                     // Draw an empty button all over the toolbar to draw its bounds.
                     {
                         Rect _toolbarPosition = _toolbarScope.rect;
@@ -566,29 +518,25 @@ namespace EnhancedEditor.Editor
 
                     // Search filter.
                     string _searchFilter = EnhancedEditorGUILayout.ToolbarSearchField(projectScenesSearchFilter, GUILayout.MinWidth(50f));
-                    if (_searchFilter != projectScenesSearchFilter)
-                    {
+                    if (_searchFilter != projectScenesSearchFilter) {
                         projectScenesSearchFilter = _searchFilter;
                         FilterProjectScenes();
                     }
 
                     // Refresh button.
-                    if (GUILayout.Button(refreshProjectScenesGUI, EditorStyles.toolbarButton, GUILayout.Width(RefreshButtonWidth)))
-                    {
+                    if (GUILayout.Button(refreshProjectScenesGUI, EditorStyles.toolbarButton, GUILayout.Width(RefreshButtonWidth))) {
                         RefreshProjectScenes();
                     }
                 }
 
                 // Project scenes.
-                using (var _scrollScope = new GUILayout.ScrollViewScope(projectScenesScroll))
-                {
+                using (var _scrollScope = new GUILayout.ScrollViewScope(projectScenesScroll)) {
                     projectScenesScroll = _scrollScope.scrollPosition;
                     DrawScenes(projectScenes, DrawProjectScene);
                 }
 
                 // Unselect on empty space click.
-                if (EnhancedEditorGUIUtility.DeselectionClick(_position))
-                {
+                if (EnhancedEditorGUIUtility.DeselectionClick(_position)) {
                     foreach (SceneWrapper _scene in projectScenes)
                         _scene.IsSelected = false;
 
@@ -596,14 +544,12 @@ namespace EnhancedEditor.Editor
                 }
 
                 // Multi-selection keys.
-                if (GUIUtility.keyboardControl == projectSceneControlID)
-                {
+                if (GUIUtility.keyboardControl == projectSceneControlID) {
                     EnhancedEditorGUIUtility.VerticalMultiSelectionKeys(projectScenes, IsProjectSceneSelected, CanSelectProjectScene, SelectProjectScene, lastSelectedProjectScene);
                 }
 
                 // Context click menu.
-                if ((lastSelectedProjectScene > -1) && EnhancedEditorGUIUtility.ContextClick(_position))
-                {
+                if ((lastSelectedProjectScene > -1) && EnhancedEditorGUIUtility.ContextClick(_position)) {
                     GenericMenu _menu = new GenericMenu();
 
                     _menu.AddItem(addScenesToBuildGUI, false, AddScenesToBuild);
@@ -615,17 +561,14 @@ namespace EnhancedEditor.Editor
 
             GUILayout.Space(5f);
 
-            using (var _scope = new GUILayout.HorizontalScope())
-            {
+            using (var _scope = new GUILayout.HorizontalScope()) {
                 GUILayout.FlexibleSpace();
                 bool _enabled = lastSelectedProjectScene > -1;
 
                 using (EnhancedGUI.GUIEnabled.Scope(_enabled))
-                using (EnhancedGUI.GUIColor.Scope(validColor))
-                {
+                using (EnhancedGUI.GUIColor.Scope(validColor)) {
                     // Button to add selected scene(s) to build.
-                    if (GUILayout.Button(addScenesToBuildGUI, GUILayout.Width(AddButtonWidth), GUILayout.Height(ButtonHeight)))
-                    {
+                    if (GUILayout.Button(addScenesToBuildGUI, GUILayout.Width(AddButtonWidth), GUILayout.Height(ButtonHeight))) {
                         AddScenesToBuild();
                     }
                 }
@@ -635,27 +578,23 @@ namespace EnhancedEditor.Editor
             GUILayout.FlexibleSpace();
             DrawBuildDirectory(builderDirectoryGUI);
 
-            using (var _scope = new GUILayout.HorizontalScope())
-            {
+            using (var _scope = new GUILayout.HorizontalScope()) {
                 EditorGUILayout.LabelField(buildVersionGUI, GUILayout.Width(90f));
                 string _version = EditorGUILayout.TextField(buildVersion);
 
-                if (_version != buildVersion)
-                {
+                if (_version != buildVersion) {
                     buildVersion = _version;
                     PlayerSettings.bundleVersion = buildVersion;
                 }
             }
 
-            using (var _scope = new GUILayout.HorizontalScope())
-            {
+            using (var _scope = new GUILayout.HorizontalScope()) {
                 EditorGUILayout.LabelField(buildIdentifierGUI, GUILayout.Width(90f));
                 buildIdentifier = EditorGUILayout.TextField(buildIdentifier);
             }
         }
 
-        private void DrawProjectScene(Rect _position, int _index)
-        {
+        private void DrawProjectScene(Rect _position, int _index) {
             SceneWrapper _scene = projectScenes[_index];
             Rect _temp = new Rect(_position)
             {
@@ -666,8 +605,7 @@ namespace EnhancedEditor.Editor
             EditorGUI.LabelField(_temp, _scene.Label);
 
             // Scroll focus.
-            if ((_index == lastSelectedProjectScene) && doFocusProjectScene && (Event.current.type == EventType.Repaint))
-            {
+            if ((_index == lastSelectedProjectScene) && doFocusProjectScene && (Event.current.type == EventType.Repaint)) {
                 Vector2 _areaSize = new Vector2(0f, ProjectScenesSectionHeight - 21f);
                 projectScenesScroll = EnhancedEditorGUIUtility.FocusScrollOnPosition(projectScenesScroll, _position, _areaSize);
 
@@ -679,16 +617,13 @@ namespace EnhancedEditor.Editor
             EnhancedEditorGUIUtility.MultiSelectionClick(_position, projectScenes, _index, IsProjectSceneSelected, CanSelectProjectScene, SelectProjectScene);
         }
 
-        private void DrawBuilderBottom()
-        {
+        private void DrawBuilderBottom() {
             bool _enabled = lastSelectedBuildScene > -1;
 
             using (EnhancedGUI.GUIEnabled.Scope(_enabled))
-            using (EnhancedGUI.GUIColor.Scope(warningColor))
-            {
+            using (EnhancedGUI.GUIColor.Scope(warningColor)) {
                 // Button to remove selected scene(s) from build.
-                if (GUILayout.Button(removeScenesFromBuildGUI, GUILayout.Width(RemoveButtonWidth), GUILayout.Height(ButtonHeight)))
-                {
+                if (GUILayout.Button(removeScenesFromBuildGUI, GUILayout.Width(RemoveButtonWidth), GUILayout.Height(ButtonHeight))) {
                     RemoveScenesFromBuild();
                 }
             }
@@ -700,10 +635,8 @@ namespace EnhancedEditor.Editor
                           BuildButtonWidth,
                           LargeButtonHeight);
 
-            using (var _scope = EnhancedGUI.GUIColor.Scope(validColor))
-            {
-                if (GUI.Button(_position, buildButtonGUI))
-                {
+            using (var _scope = EnhancedGUI.GUIColor.Scope(validColor)) {
+                if (GUI.Button(_position, buildButtonGUI)) {
                     Build();
                 }
             }
@@ -723,8 +656,7 @@ namespace EnhancedEditor.Editor
 
         // -----------------------
 
-        private bool IsBuildSceneSelected(int _index)
-        {
+        private bool IsBuildSceneSelected(int _index) {
             SceneWrapper _scene = buildScenes[_index];
             bool _isSelected = _scene.IsSelected && _scene.IsVisible;
 
@@ -736,27 +668,22 @@ namespace EnhancedEditor.Editor
             return _scene.IsVisible;
         }
 
-        private void SelectBuildScene(int _index, bool _isSelected)
-        {
+        private void SelectBuildScene(int _index, bool _isSelected) {
             SceneWrapper _scene = buildScenes[_index];
             _scene.IsSelected = _isSelected;
 
             // Last selected index update.
-            if (_isSelected)
-            {
+            if (_isSelected) {
                 lastSelectedBuildScene = _index;
                 doFocusBuildScene = true;
 
                 GUIUtility.keyboardControl = buildSceneControlID;
-            }
-            else if (!Array.Exists(buildScenes, (s) => s.IsSelected))
-            {
+            } else if (!Array.Exists(buildScenes, (s) => s.IsSelected)) {
                 lastSelectedBuildScene = -1;
             }
         }
 
-        private bool IsProjectSceneSelected(int _index)
-        {
+        private bool IsProjectSceneSelected(int _index) {
             SceneWrapper _scene = projectScenes[_index];
             bool _isSelected = _scene.IsSelected && _scene.IsVisible;
 
@@ -768,8 +695,7 @@ namespace EnhancedEditor.Editor
             return _scene.IsVisible;
         }
 
-        private void SelectProjectScene(int _index, bool _isSelected)
-        {
+        private void SelectProjectScene(int _index, bool _isSelected) {
             SceneWrapper _scene = projectScenes[_index];
             if (_isSelected && !_scene.IsVisible)
                 return;
@@ -777,37 +703,30 @@ namespace EnhancedEditor.Editor
             _scene.IsSelected = _isSelected;
 
             // Last selected index update.
-            if (_isSelected)
-            {
+            if (_isSelected) {
                 lastSelectedProjectScene = _index;
                 doFocusProjectScene = true;
 
                 GUIUtility.keyboardControl = projectSceneControlID;
-            }
-            else if (!Array.Exists(projectScenes, (s) => s.IsSelected))
-            {
+            } else if (!Array.Exists(projectScenes, (s) => s.IsSelected)) {
                 lastSelectedProjectScene = -1;
             }
         }
 
         // -----------------------
 
-        private void InitializeBuilder()
-        {
+        private void InitializeBuilder() {
             // Configures the build scene reorderable list.
-            buildScenesList = new ReorderableList(buildScenes, typeof(SceneWrapper), true, false, false, false)
-            {
+            buildScenesList = new ReorderableList(buildScenes, typeof(SceneWrapper), true, false, false, false) {
                 drawElementCallback = (Rect _position, int _index, bool _isFocused, bool _isSelected) => DrawBuildScene(_position, _index),
-                drawElementBackgroundCallback = (Rect _position, int _index, bool _isFocused, bool _isSelected) =>
-                {
+                drawElementBackgroundCallback = (Rect _position, int _index, bool _isFocused, bool _isSelected) => {
                     _position.xMin += 1f;
                     _position.xMax -= 1f;
                     DrawSceneBackground(_position, buildScenes[_index], _index);
                 },
 
                 showDefaultBackground = false,
-                onReorderCallback = (r) =>
-                {
+                onReorderCallback = (r) => {
                     UpdateBuildScenes();
                     FilterBuildScenes();
                 },
@@ -823,23 +742,19 @@ namespace EnhancedEditor.Editor
             RefreshAllScenes();
         }
 
-        private void OnBuilderUndoRedo()
-        {
+        private void OnBuilderUndoRedo() {
             // In case of any changes made to build scenes, update them.
-            if (!UpdateBuildScenes())
-            {
+            if (!UpdateBuildScenes()) {
                 buildScenesList.list = buildScenes;
             }
 
             // Update build version.
-            if (buildVersion != Application.version)
-            {
+            if (buildVersion != Application.version) {
                 PlayerSettings.bundleVersion = buildVersion;
             }
         }
 
-        private bool UpdateBuildScenes()
-        {
+        private bool UpdateBuildScenes() {
             bool _refresh = false;
             isManualSceneUpdate = true;
 
@@ -847,32 +762,27 @@ namespace EnhancedEditor.Editor
             int _length = buildScenes.Length;
             ArrayUtility.Filter(ref buildScenes, (s) => s.Scene != null);
 
-            if (_length != buildScenes.Length)
-            {
+            if (_length != buildScenes.Length) {
                 RefreshBuildScenes();
                 _refresh = true;
             }
 
-            EditorBuildSettings.scenes = Array.ConvertAll(buildScenes, (s) =>
-            {
+            EditorBuildSettings.scenes = Array.ConvertAll(buildScenes, (s) => {
                 return new EditorBuildSettingsScene(AssetDatabase.GetAssetPath(s.Scene), s.IsEnabled);
             });
 
             return _refresh;
         }
 
-        private void RefreshAllScenes()
-        {
+        private void RefreshAllScenes() {
             // Do not refresh scenes on manual updates.
-            if (isManualSceneUpdate)
-            {
+            if (isManualSceneUpdate) {
                 isManualSceneUpdate = false;
                 return;
             }
 
             // Get all build scenes without null entries.
-            buildScenes = Array.ConvertAll(EditorBuildSettings.scenes, (s) =>
-            {
+            buildScenes = Array.ConvertAll(EditorBuildSettings.scenes, (s) => {
                 return new SceneWrapper(AssetDatabase.LoadAssetAtPath<UnityEditor.SceneAsset>(s.path), s.enabled);
             });
 
@@ -885,20 +795,16 @@ namespace EnhancedEditor.Editor
             Repaint();
         }
 
-        private void RefreshBuildScenes()
-        {
+        private void RefreshBuildScenes() {
             buildScenesList.list = buildScenes;
             FilterBuildScenes();
         }
 
-        private void RefreshProjectScenes()
-        {
+        private void RefreshProjectScenes() {
             UnityEditor.SceneAsset[] _projectScenes = EnhancedEditorUtility.LoadAssets<UnityEditor.SceneAsset>();
-            for (int _i = _projectScenes.Length; _i-- > 0;)
-            {
+            for (int _i = _projectScenes.Length; _i-- > 0;) {
                 UnityEditor.SceneAsset _scene = _projectScenes[_i];
-                if (Array.Exists(buildScenes, (b) => b.Scene == _scene))
-                {
+                if (Array.Exists(buildScenes, (b) => b.Scene == _scene)) {
                     ArrayUtility.RemoveAt(ref _projectScenes, _i);
                 }
             }
@@ -906,53 +812,43 @@ namespace EnhancedEditor.Editor
             projectScenes = Array.ConvertAll(_projectScenes, (s) => new SceneWrapper(s, false));
             lastSelectedProjectScene = -1;
 
-            Array.Sort(projectScenes, (a, b) =>
-            {
+            Array.Sort(projectScenes, (a, b) => {
                 return a.Scene.name.CompareTo(b.Scene.name);
             });
 
             FilterProjectScenes();
         }
 
-        private void FilterBuildScenes()
-        {
+        private void FilterBuildScenes() {
             FilterScenes(buildScenes, buildScenesSearchFilter);
         }
 
-        private void FilterProjectScenes()
-        {
+        private void FilterProjectScenes() {
             FilterScenes(projectScenes, projectScenesSearchFilter);
         }
 
-        private void FilterScenes(SceneWrapper[] _scenes, string _searchFilter)
-        {
+        private void FilterScenes(SceneWrapper[] _scenes, string _searchFilter) {
             _searchFilter = _searchFilter.ToLower();
-            foreach (SceneWrapper _scene in _scenes)
-            {
+            foreach (SceneWrapper _scene in _scenes) {
                 bool _isVisible = _scene.Scene.name.ToLower().Contains(_searchFilter);
                 _scene.IsVisible = _isVisible;
             }
         }
 
-        private void AddScenesToBuild()
-        {
+        private void AddScenesToBuild() {
             MoveSelectedScenes(ref projectScenes, ref buildScenes);
             lastSelectedProjectScene = -1;
         }
 
-        private void RemoveScenesFromBuild()
-        {
+        private void RemoveScenesFromBuild() {
             MoveSelectedScenes(ref buildScenes, ref projectScenes);
             lastSelectedBuildScene = -1;
         }
 
-        private void MoveSelectedScenes(ref SceneWrapper[] _removeFrom, ref SceneWrapper[] _addTo)
-        {
-            for (int _i = _removeFrom.Length; _i-- > 0;)
-            {
+        private void MoveSelectedScenes(ref SceneWrapper[] _removeFrom, ref SceneWrapper[] _addTo) {
+            for (int _i = _removeFrom.Length; _i-- > 0;) {
                 SceneWrapper _scene = _removeFrom[_i];
-                if (_scene.IsSelected)
-                {
+                if (_scene.IsSelected) {
                     ArrayUtility.Add(ref _addTo, _scene);
                     ArrayUtility.RemoveAt(ref _removeFrom, _i);
 
@@ -967,8 +863,7 @@ namespace EnhancedEditor.Editor
             FilterProjectScenes();
         }
 
-        private void Build()
-        {
+        private void Build() {
             BuildPreset _preset = buildPresets[selectedPreset];
             Build(_preset);
         }
@@ -978,12 +873,10 @@ namespace EnhancedEditor.Editor
         /// </summary>
         /// <param name="_preset">Preset to build with.</param>
         /// <returns>True if the build succeeded, false otherwise.</returns>
-        public bool Build(BuildPreset _preset)
-        {
+        public bool Build(BuildPreset _preset) {
             // Get application short name.
             string _appName = string.Empty;
-            foreach (char _char in Application.productName)
-            {
+            foreach (char _char in Application.productName) {
                 string _string = _char.ToString();
                 if (!string.IsNullOrEmpty(_string) && (_string == _string.ToUpper()) && (_string != " "))
                     _appName += _string;
@@ -1019,8 +912,7 @@ namespace EnhancedEditor.Editor
             SetScriptingDefineSymbols(_options.targetGroup, _preset.ScriptingDefineSymbols);
 
             bool _succeed = BuildPipeline.BuildPlayer(_options).summary.result == BuildResult.Succeeded;
-            if (_succeed)
-            {
+            if (_succeed) {
                 _preset.buildCount++;
                 SaveBuildPreset(_preset);
 
@@ -1028,9 +920,7 @@ namespace EnhancedEditor.Editor
                 File.WriteAllText(Path.Combine(_buildPath, PresetMetaDataFile), _presetMetaData);
 
                 //Process.Start(_buildPath);
-            }
-            else
-            {
+            } else {
                 Directory.Delete(_buildPath, true);
             }
 
@@ -1087,8 +977,7 @@ namespace EnhancedEditor.Editor
 
         // -----------------------
 
-        private void DrawLauncher()
-        {
+        private void DrawLauncher() {
             // Get control ID to use for keyboard focus on build selection.
             buildControlID = EnhancedEditorGUIUtility.GetControlID(827, FocusType.Keyboard);
 
@@ -1101,40 +990,33 @@ namespace EnhancedEditor.Editor
                     ref buildsScroll);
         }
 
-        private void DrawLauncherHeader()
-        {
+        private void DrawLauncherHeader() {
             EditorGUILayout.LabelField(launcherHeaderGUI, EditorStyles.boldLabel);
         }
 
-        private void DrawLauncherSectionToolbar()
-        {
+        private void DrawLauncherSectionToolbar() {
             // Sort options.
-            using (var _scope = new EditorGUI.ChangeCheckScope())
-            {
+            using (var _scope = new EditorGUI.ChangeCheckScope()) {
                 EnhancedEditorGUILayout.ToolbarSortOptions(ref selectedBuildSortOption, ref doSortBuildsAscending, buildSortOptionsGUI, GUILayout.Width(SortByButtonWidth));
-                if (_scope.changed)
-                {
+                if (_scope.changed) {
                     SortBuilds();
                 }
             }
 
             // Search filter.
             string _searchFilter = EnhancedEditorGUILayout.ToolbarSearchField(buildsSearchFilter, GUILayout.MinWidth(50f));
-            if (_searchFilter != buildsSearchFilter)
-            {
+            if (_searchFilter != buildsSearchFilter) {
                 buildsSearchFilter = _searchFilter;
                 FilterBuilds();
             }
 
             // Refresh button.
-            if (GUILayout.Button(refreshBuildsGUI, EditorStyles.toolbarButton, GUILayout.Width(RefreshButtonWidth)))
-            {
+            if (GUILayout.Button(refreshBuildsGUI, EditorStyles.toolbarButton, GUILayout.Width(RefreshButtonWidth))) {
                 RefreshBuilds();
             }
         }
 
-        private void DrawLauncherSection()
-        {
+        private void DrawLauncherSection() {
             // Filtered Builds.
             GUILayout.Space(3f);
 
@@ -1143,8 +1025,7 @@ namespace EnhancedEditor.Editor
                                      ? builds[selectedBuild]
                                      : null;
 
-            for (int _i = 0; _i < builds.Length; _i++)
-            {
+            for (int _i = 0; _i < builds.Length; _i++) {
                 BuildInfo _build = builds[_i];
                 if (!_build.IsVisible)
                     continue;
@@ -1158,8 +1039,7 @@ namespace EnhancedEditor.Editor
                 _index++;
 
                 // Scroll focus.
-                if (_isSelected && doFocusBuild && (Event.current.type == EventType.Repaint))
-                {
+                if (_isSelected && doFocusBuild && (Event.current.type == EventType.Repaint)) {
                     Vector2 _areaSize = new Vector2(0f, SectionHeight - 21f);
                     buildsScroll = EnhancedEditorGUIUtility.FocusScrollOnPosition(buildsScroll, _position, _areaSize);
 
@@ -1168,8 +1048,7 @@ namespace EnhancedEditor.Editor
                 }
 
                 // Build selection.
-                if (EnhancedEditorGUIUtility.MouseDown(_position))
-                {
+                if (EnhancedEditorGUIUtility.MouseDown(_position)) {
                     SetSelectedBuild(_i);
                 }
 
@@ -1182,29 +1061,23 @@ namespace EnhancedEditor.Editor
             }
         }
 
-        private void LauncherSectionEvents(Rect _position)
-        {
+        private void LauncherSectionEvents(Rect _position) {
             // Unselect on empty space click.
-            if (EnhancedEditorGUIUtility.DeselectionClick(_position))
-            {
+            if (EnhancedEditorGUIUtility.DeselectionClick(_position)) {
                 SetSelectedBuild(-1);
             }
 
             // Selection keys.
-            if ((selectedBuild != -1) && (GUIUtility.keyboardControl == buildControlID))
-            {
+            if ((selectedBuild != -1) && (GUIUtility.keyboardControl == buildControlID)) {
                 int _switch = EnhancedEditorGUIUtility.VerticalKeys();
-                if (_switch != 0)
-                {
+                if (_switch != 0) {
                     int _index = selectedBuild;
-                    while (true)
-                    {
+                    while (true) {
                         _index += _switch;
                         if ((_index == -1) || (_index == builds.Length))
                             break;
 
-                        if (builds[_index].IsVisible)
-                        {
+                        if (builds[_index].IsVisible) {
                             SetSelectedBuild(_index);
                             break;
                         }
@@ -1213,8 +1086,7 @@ namespace EnhancedEditor.Editor
             }
 
             // Context click menu.
-            if ((selectedBuild != -1) && EnhancedEditorGUIUtility.ContextClick(_position))
-            {
+            if ((selectedBuild != -1) && EnhancedEditorGUIUtility.ContextClick(_position)) {
                 BuildInfo _build = builds[selectedBuild];
 
                 GenericMenu _menu = new GenericMenu();
@@ -1227,21 +1099,18 @@ namespace EnhancedEditor.Editor
 
             // ----- Local Method ----- \\
 
-            void DeleteBuild()
-            {
+            void DeleteBuild() {
                 BuildInfo _build = builds[selectedBuild];
 
                 if (EditorUtility.DisplayDialog("Delete build", $"Are you sure you want to delete the build \"{_build.Name}\"?\n\n" +
-                                                "This action cannot be undone.", "Yes", "Cancel"))
-                {
+                                                "This action cannot be undone.", "Yes", "Cancel")) {
                     Directory.Delete(Path.GetDirectoryName(_build.Path), true);
                     RefreshBuilds();
                 }
             }
         }
 
-        private void DrawLauncherRightSide()
-        {
+        private void DrawLauncherRightSide() {
             EditorGUILayout.GetControlRect(false, -EditorGUIUtility.standardVerticalSpacing * 4f);
 
             // Build directory.
@@ -1252,8 +1121,7 @@ namespace EnhancedEditor.Editor
             EnhancedEditorGUILayout.UnderlinedLabel(buildInfoGUI, EditorStyles.boldLabel);
             GUILayout.Space(3f);
 
-            if (selectedBuild != -1)
-            {
+            if (selectedBuild != -1) {
                 BuildInfo _build = builds[selectedBuild];
                 GUIStyle _style = EnhancedEditorStyles.WordWrappedRichText;
 
@@ -1264,36 +1132,27 @@ namespace EnhancedEditor.Editor
                 GUILayout.Space(10f);
 
                 // Open build directory button.
-                using (var _scope = new GUILayout.HorizontalScope())
-                {
+                using (var _scope = new GUILayout.HorizontalScope()) {
                     GUILayout.FlexibleSpace();
-                    using (var _colorScope = EnhancedGUI.GUIColor.Scope(validColor))
-                    {
-                        if (GUILayout.Button(openBuildDirectoryGUI, GUILayout.Width(OpenBuildDirectoryButtonWidth), GUILayout.Height(LargeButtonHeight)))
-                        {
+                    using (var _colorScope = EnhancedGUI.GUIColor.Scope(validColor)) {
+                        if (GUILayout.Button(openBuildDirectoryGUI, GUILayout.Width(OpenBuildDirectoryButtonWidth), GUILayout.Height(LargeButtonHeight))) {
                             OpenBuildDirectory();
                         }
                     }
                 }
-            }
-            else
-            {
+            } else {
                 EditorGUILayout.HelpBox(SelectedBuildHelpBox, UnityEditor.MessageType.Info);
             }
         }
 
-        private void DrawLauncherBottom()
-        {
-            using (var _scope = new GUILayout.HorizontalScope(GUILayout.Width(position.width * SectionWidthCoef)))
-            {
+        private void DrawLauncherBottom() {
+            using (var _scope = new GUILayout.HorizontalScope(GUILayout.Width(position.width * SectionWidthCoef))) {
                 bool _canLaunch = selectedBuild != -1;
 
                 using (EnhancedGUI.GUIEnabled.Scope(_canLaunch))
-                using (EnhancedGUI.GUIColor.Scope(launcherColor))
-                {
+                using (EnhancedGUI.GUIColor.Scope(launcherColor)) {
                     // Launch button.
-                    if (GUILayout.Button(launchBuildGUI, GUILayout.Width(LaunchButtonWidth), GUILayout.Height(LargeButtonHeight)))
-                    {
+                    if (GUILayout.Button(launchBuildGUI, GUILayout.Width(LaunchButtonWidth), GUILayout.Height(LargeButtonHeight))) {
                         string _path = builds[selectedBuild].Path;
                         LaunchBuild(_path, launchInstance);
                     }
@@ -1301,17 +1160,14 @@ namespace EnhancedEditor.Editor
 
                 GUILayout.FlexibleSpace();
 
-                using (new GUILayout.VerticalScope())
-                {
+                using (new GUILayout.VerticalScope()) {
                     GUILayout.Space(5f);
-                    using (new GUILayout.HorizontalScope())
-                    {
+                    using (new GUILayout.HorizontalScope()) {
                         // Launch instance amount.
                         EditorGUILayout.LabelField(launchAmountGUI, GUILayout.Width(100f));
 
                         int _launchAmount = EditorGUILayout.IntField(launchInstance, GUILayout.Width(50f));
-                        if (_launchAmount != launchInstance)
-                        {
+                        if (_launchAmount != launchInstance) {
                             launchInstance = Mathf.Clamp(_launchAmount, 1, 10);
                         }
                     }
@@ -1319,8 +1175,7 @@ namespace EnhancedEditor.Editor
             }
 
             // Draw associated build preset if one.
-            if (selectedBuildPreset != null)
-            {
+            if (selectedBuildPreset != null) {
                 GUILayout.Space(9f);
                 EnhancedEditorGUILayout.UnderlinedLabel(selectedBuildPresetGUI, EditorStyles.boldLabel);
 
@@ -1334,13 +1189,11 @@ namespace EnhancedEditor.Editor
 
         // -----------------------
 
-        private void InitializeLauncher()
-        {
+        private void InitializeLauncher() {
             RefreshBuilds();
         }
 
-        private void OnLauncherUndoRedo()
-        {
+        private void OnLauncherUndoRedo() {
             // Refresh selected build.
             if (selectedBuild >= builds.Length)
                 selectedBuild = -1;
@@ -1348,8 +1201,7 @@ namespace EnhancedEditor.Editor
             SetSelectedBuild(selectedBuild);
         }
 
-        private void RefreshBuilds()
-        {
+        private void RefreshBuilds() {
             string[] _builds = GetBuilds();
             builds = Array.ConvertAll(_builds, (b) => new BuildInfo(b));
 
@@ -1359,40 +1211,33 @@ namespace EnhancedEditor.Editor
             FilterBuilds();
         }
 
-        private void FilterBuilds()
-        {
+        private void FilterBuilds() {
             string _searchFilter = buildsSearchFilter.ToLower();
-            foreach (BuildInfo _build in builds)
-            {
+            foreach (BuildInfo _build in builds) {
                 bool _isVisible = _build.Name.ToLower().Contains(_searchFilter);
                 _build.IsVisible = _isVisible;
             }
         }
 
-        private void SortBuilds()
-        {
-            switch (selectedBuildSortOption)
-            {
+        private void SortBuilds() {
+            switch (selectedBuildSortOption) {
                 // Creation date.
                 case 0:
-                    Array.Sort(builds, (a, b) =>
-                    {
+                    Array.Sort(builds, (a, b) => {
                         return Directory.GetCreationTime(a.Path).CompareTo(Directory.GetCreationTime(b.Path));
                     });
                     break;
 
                 // Name.
                 case 1:
-                    Array.Sort(builds, (a, b) =>
-                    {
+                    Array.Sort(builds, (a, b) => {
                         return a.Name.CompareTo(b.Name);
                     });
                     break;
 
                 // Platform.
                 case 2:
-                    Array.Sort(builds, (a, b) =>
-                    {
+                    Array.Sort(builds, (a, b) => {
                         return (a.Platform != b.Platform)
                                ? a.Platform.CompareTo(b.Platform)
                                : a.Name.CompareTo(b.Name);
@@ -1404,10 +1249,8 @@ namespace EnhancedEditor.Editor
                 Array.Reverse(builds);
         }
 
-        private bool SetSelectedBuild(int _selectedBuild)
-        {
-            if (_selectedBuild == -1)
-            {
+        private bool SetSelectedBuild(int _selectedBuild) {
+            if (_selectedBuild == -1) {
                 selectedBuild = _selectedBuild;
                 selectedBuildPreset = null;
 
@@ -1417,8 +1260,7 @@ namespace EnhancedEditor.Editor
             BuildInfo _build = builds[_selectedBuild];
 
             // Unvalid build: remove it.
-            if (!File.Exists(_build.Path))
-            {
+            if (!File.Exists(_build.Path)) {
                 ArrayUtility.RemoveAt(ref builds, _selectedBuild);
 
                 selectedBuild = -1;
@@ -1437,28 +1279,22 @@ namespace EnhancedEditor.Editor
             return true;
         }
 
-        private void OpenBuildDirectory()
-        {
+        private void OpenBuildDirectory() {
             string _path = builds[selectedBuild].Path;
             Process.Start(Path.GetDirectoryName(_path));
         }
 
-        private static bool LoadPresetFromBuild(BuildInfo _build)
-        {
+        private static bool LoadPresetFromBuild(BuildInfo _build) {
             string _presetPath = Path.Combine(Path.GetDirectoryName(_build.Path), PresetMetaDataFile);
-            if (File.Exists(_presetPath))
-            {
-                try
-                {
-                    if (selectedBuildPreset == null)
-                    {
+            if (File.Exists(_presetPath)) {
+                try {
+                    if (selectedBuildPreset == null) {
                         selectedBuildPreset = CreateInstance<BuildPreset>();
                     }
 
                     EditorJsonUtility.FromJsonOverwrite(File.ReadAllText(_presetPath), selectedBuildPreset);
                     return true;
-                }
-                catch (ArgumentException) { }
+                } catch (ArgumentException) { }
             }
 
             selectedBuildPreset = null;
@@ -1500,8 +1336,7 @@ namespace EnhancedEditor.Editor
 
         // -----------------------
 
-        private void DrawConfiguration()
-        {
+        private void DrawConfiguration() {
             // Get control ID to use for keyboard focus on symbol selection.
             customSymbolControlID = EnhancedEditorGUIUtility.GetControlID(826, FocusType.Keyboard);
 
@@ -1514,36 +1349,30 @@ namespace EnhancedEditor.Editor
                     ref customSymbolsScroll);
         }
 
-        private void DrawConfigurationHeader()
-        {
+        private void DrawConfigurationHeader() {
             EditorGUILayout.LabelField(customSymbolHeaderGUI, EditorStyles.boldLabel);
         }
 
-        private void DrawConfigurationSectionToolbar()
-        {
+        private void DrawConfigurationSectionToolbar() {
             // Search filter.
             string _searchFilter = EnhancedEditorGUILayout.ToolbarSearchField(customSymbolsSearchFilter, GUILayout.MinWidth(50f));
-            if (_searchFilter != customSymbolsSearchFilter)
-            {
+            if (_searchFilter != customSymbolsSearchFilter) {
                 customSymbolsSearchFilter = _searchFilter;
                 FilterCustomSymbols();
             }
 
             // Refresh button.
-            if (GUILayout.Button(refreshSymbolsGUI, EditorStyles.toolbarButton, GUILayout.Width(RefreshButtonWidth)))
-            {
+            if (GUILayout.Button(refreshSymbolsGUI, EditorStyles.toolbarButton, GUILayout.Width(RefreshButtonWidth))) {
                 RefreshSymbols();
             }
         }
 
-        private void DrawConfigurationSection()
-        {
+        private void DrawConfigurationSection() {
             GUILayout.Space(3f);
             int _index = 0;
 
             // Custom symbols.
-            for (int _i = 0; _i < customSymbols.Length; _i++)
-            {
+            for (int _i = 0; _i < customSymbols.Length; _i++) {
                 ScriptingDefineSymbolInfo _symbol = customSymbols[_i];
                 if (!_symbol.IsVisible)
                     continue;
@@ -1571,8 +1400,7 @@ namespace EnhancedEditor.Editor
                 EditorGUI.LabelField(_temp, _symbol.Label);
 
                 // Scroll focus.
-                if ((_i == lastSelectedSymbol) && doFocusSymbol && (Event.current.type == EventType.Repaint))
-                {
+                if ((_i == lastSelectedSymbol) && doFocusSymbol && (Event.current.type == EventType.Repaint)) {
                     Vector2 _areaSize = new Vector2(0f, SectionHeight - 21f);
                     customSymbolsScroll = EnhancedEditorGUIUtility.FocusScrollOnPosition(customSymbolsScroll, _position, _areaSize);
 
@@ -1585,11 +1413,9 @@ namespace EnhancedEditor.Editor
             }
         }
 
-        private void ConfigurationSectionEvents(Rect _position)
-        {
+        private void ConfigurationSectionEvents(Rect _position) {
             // Unselect on empty space click.
-            if (EnhancedEditorGUIUtility.DeselectionClick(_position))
-            {
+            if (EnhancedEditorGUIUtility.DeselectionClick(_position)) {
                 foreach (var _customSymbol in customSymbols)
                     _customSymbol.IsSelected = false;
 
@@ -1597,30 +1423,22 @@ namespace EnhancedEditor.Editor
             }
 
             // Multi-selection keys.
-            if (GUIUtility.keyboardControl == customSymbolControlID)
-            {
+            if (GUIUtility.keyboardControl == customSymbolControlID) {
                 EnhancedEditorGUIUtility.VerticalMultiSelectionKeys(customSymbols, IsSymbolSelected, CanSelectSymbol, SelectSymbol, lastSelectedSymbol);
             }
 
             // Context click menu.
-            if ((lastSelectedSymbol != -1) && EnhancedEditorGUIUtility.ContextClick(_position))
-            {
+            if ((lastSelectedSymbol != -1) && EnhancedEditorGUIUtility.ContextClick(_position)) {
                 GenericMenu _menu = new GenericMenu();
-                if (Array.Exists(customSymbols, (s) => s.IsSelected && !s.IsEnabled))
-                {
+                if (Array.Exists(customSymbols, (s) => s.IsSelected && !s.IsEnabled)) {
                     _menu.AddItem(enableSymbolsGUI, false, EnableSymbols);
-                }
-                else
-                {
+                } else {
                     _menu.AddDisabledItem(enableSymbolsGUI);
                 }
 
-                if (Array.Exists(customSymbols, (s) => s.IsSelected && s.IsEnabled))
-                {
+                if (Array.Exists(customSymbols, (s) => s.IsSelected && s.IsEnabled)) {
                     _menu.AddItem(disableSymbolsGUI, false, DisableSymbols);
-                }
-                else
-                {
+                } else {
                     _menu.AddDisabledItem(disableSymbolsGUI);
 
                 }
@@ -1631,30 +1449,24 @@ namespace EnhancedEditor.Editor
 
             // ----- Local Methods ----- \\
 
-            void EnableSymbols()
-            {
-                foreach (var _symbol in customSymbols)
-                {
+            void EnableSymbols() {
+                foreach (var _symbol in customSymbols) {
                     if (_symbol.IsSelected)
                         EnableSymbol(_symbol, true);
                 }
             }
 
-            void DisableSymbols()
-            {
-                foreach (var _symbol in customSymbols)
-                {
+            void DisableSymbols() {
+                foreach (var _symbol in customSymbols) {
                     if (_symbol.IsSelected)
                         EnableSymbol(_symbol, false);
                 }
             }
         }
 
-        private void DrawConfigurationRightSide()
-        {
+        private void DrawConfigurationRightSide() {
             // Draw all currently active symbols.
-            using (var _scroll = new GUILayout.ScrollViewScope(activeSymbolsScroll, GUILayout.Height(SectionHeight)))
-            {
+            using (var _scroll = new GUILayout.ScrollViewScope(activeSymbolsScroll, GUILayout.Height(SectionHeight))) {
                 activeSymbolsScroll = _scroll.scrollPosition;
                 EditorGUILayout.GetControlRect(false, -EditorGUIUtility.standardVerticalSpacing * 4f);
 
@@ -1664,22 +1476,18 @@ namespace EnhancedEditor.Editor
                 DrawSymbols(activeSymbols);
 
                 // Need to apply symbols message.
-                if (doNeedToApplySymbols)
-                {
+                if (doNeedToApplySymbols) {
                     GUILayout.Space(5f);
                     EditorGUILayout.HelpBox(NeedToApplySymbolsMessage, UnityEditor.MessageType.Warning);
                 }
             }
         }
 
-        private void DrawConfigurationBottom()
-        {
+        private void DrawConfigurationBottom() {
             // Apply symbols button.
             using (var _scope = EnhancedGUI.GUIEnabled.Scope(doNeedToApplySymbols))
-            using (EnhancedGUI.GUIColor.Scope(validColor))
-            {
-                if (GUILayout.Button(applySymbolsGUI, GUILayout.Width(ApplySymbolsButtonWidth), GUILayout.Height(ButtonHeight)))
-                {
+            using (EnhancedGUI.GUIColor.Scope(validColor)) {
+                if (GUILayout.Button(applySymbolsGUI, GUILayout.Width(ApplySymbolsButtonWidth), GUILayout.Height(ButtonHeight))) {
                     SetScriptingDefineSymbol();
                 }
             }
@@ -1694,10 +1502,8 @@ namespace EnhancedEditor.Editor
             bool _enabled = lastSelectedSymbol != -1;
 
             using (var _scope = EnhancedGUI.GUIEnabled.Scope(_enabled))
-            using (EnhancedGUI.GUIColor.Scope(configurationColor))
-            {
-                if (GUI.Button(_position, useSelectedSymbolsGUI))
-                {
+            using (EnhancedGUI.GUIColor.Scope(configurationColor)) {
+                if (GUI.Button(_position, useSelectedSymbolsGUI)) {
                     UseSelectedSymbolsOnPreset();
                 }
             }
@@ -1717,8 +1523,7 @@ namespace EnhancedEditor.Editor
 
         // -----------------------
 
-        private bool IsSymbolSelected(int _index)
-        {
+        private bool IsSymbolSelected(int _index) {
             ScriptingDefineSymbolInfo _symbol = customSymbols[_index];
             bool _isSelected = _symbol.IsSelected && _symbol.IsVisible;
 
@@ -1730,8 +1535,7 @@ namespace EnhancedEditor.Editor
             return _symbol.IsVisible;
         }
 
-        private void SelectSymbol(int _index, bool _isSelected)
-        {
+        private void SelectSymbol(int _index, bool _isSelected) {
             ScriptingDefineSymbolInfo _symbol = customSymbols[_index];
             if (_isSelected && !_symbol.IsVisible)
                 return;
@@ -1739,39 +1543,32 @@ namespace EnhancedEditor.Editor
             _symbol.IsSelected = _isSelected;
 
             // Last selected index update.
-            if (_isSelected)
-            {
+            if (_isSelected) {
                 lastSelectedSymbol = _index;
                 doFocusSymbol = true;
 
                 GUIUtility.keyboardControl = customSymbolControlID;
-            }
-            else if (!Array.Exists(customSymbols, (s) => s.IsSelected))
-            {
+            } else if (!Array.Exists(customSymbols, (s) => s.IsSelected)) {
                 lastSelectedSymbol = -1;
             }
         }
 
         // -----------------------
 
-        private void InitializeConfiguration()
-        {
+        private void InitializeConfiguration() {
             RefreshSymbols();
         }
 
-        private void OnConfigurationUndoRedo()
-        {
+        private void OnConfigurationUndoRedo() {
             UpdateNeedToApplySymbols();
         }
 
-        private void RefreshSymbols()
-        {
+        private void RefreshSymbols() {
             // Get all custom define symbols.
             var _symbols = new List<ScriptingDefineSymbolAttribute>();
 
-            #if UNITY_2019_2_OR_NEWER
-            foreach (var _symbol in TypeCache.GetTypesWithAttribute<ScriptingDefineSymbolAttribute>())
-            {
+            #if !ASSEMBLY_REFLECTION
+            foreach (var _symbol in TypeCache.GetTypesWithAttribute<ScriptingDefineSymbolAttribute>()) {
                 _symbols.AddRange(_symbol.GetCustomAttributes(typeof(ScriptingDefineSymbolAttribute), true) as ScriptingDefineSymbolAttribute[]);
             }
             #else
@@ -1795,22 +1592,17 @@ namespace EnhancedEditor.Editor
             activeSymbols = PlayerSettings.GetScriptingDefineSymbolsForGroup(BuildPipeline.GetBuildTargetGroup(EditorUserBuildSettings.activeBuildTarget)).Split(ScriptingDefineSymbolSeparator);
 
             // When no symbol is enabled, an empty string will be returned; ignore it.
-            if ((activeSymbols.Length == 1) && string.IsNullOrEmpty(activeSymbols[0]))
-            {
+            if ((activeSymbols.Length == 1) && string.IsNullOrEmpty(activeSymbols[0])) {
                 activeSymbols = new string[] { };
                 otherSymbols = new string[] { };
-            }
-            else
-            {
+            } else {
                 // Get "other" symbols, that is non custom active symbols.
                 Array.Sort(activeSymbols);
                 otherSymbols = activeSymbols;
 
-                for (int _i = otherSymbols.Length; _i-- > 0;)
-                {
+                for (int _i = otherSymbols.Length; _i-- > 0;) {
                     int _index = Array.FindIndex(customSymbols, (s) => s.DefineSymbol.Symbol == otherSymbols[_i]);
-                    if (_index > -1)
-                    {
+                    if (_index > -1) {
                         customSymbols[_index].IsEnabled = true;
                         ArrayUtility.RemoveAt(ref otherSymbols, _i);
                     }
@@ -1820,28 +1612,22 @@ namespace EnhancedEditor.Editor
             FilterCustomSymbols();
         }
 
-        private void FilterCustomSymbols()
-        {
+        private void FilterCustomSymbols() {
             string _searchFilter = customSymbolsSearchFilter.ToLower();
-            foreach (ScriptingDefineSymbolInfo _symbol in customSymbols)
-            {
+            foreach (ScriptingDefineSymbolInfo _symbol in customSymbols) {
                 bool _isVisible = _symbol.DefineSymbol.Symbol.ToLower().Contains(_searchFilter) || _symbol.DefineSymbol.Description.ToLower().Contains(_searchFilter);
                 _symbol.IsVisible = _isVisible;
             }
         }
 
-        private void EnableSymbol(ScriptingDefineSymbolInfo _symbol, bool _isEnabled)
-        {
+        private void EnableSymbol(ScriptingDefineSymbolInfo _symbol, bool _isEnabled) {
             if (_symbol.IsEnabled == _isEnabled)
                 return;
 
-            if (_isEnabled)
-            {
+            if (_isEnabled) {
                 ArrayUtility.Add(ref activeSymbols, _symbol.DefineSymbol.Symbol);
                 Array.Sort(activeSymbols);
-            }
-            else
-            {
+            } else {
                 ArrayUtility.Remove(ref activeSymbols, _symbol.DefineSymbol.Symbol);
             }
 
@@ -1849,33 +1635,25 @@ namespace EnhancedEditor.Editor
             UpdateNeedToApplySymbols();
         }
 
-        private void UpdateNeedToApplySymbols()
-        {
+        private void UpdateNeedToApplySymbols() {
             string _symbols = PlayerSettings.GetScriptingDefineSymbolsForGroup(BuildPipeline.GetBuildTargetGroup(EditorUserBuildSettings.activeBuildTarget));
             doNeedToApplySymbols = _symbols != string.Join(ScriptingDefineSymbolSeparator.ToString(), activeSymbols);
         }
 
-        private void UseSelectedSymbolsOnPreset()
-        {
+        private void UseSelectedSymbolsOnPreset() {
             BuildPreset _preset = buildPresets[selectedPreset];
             List<string> _symbols = new List<string>(_preset.ScriptingDefineSymbols.Split(ScriptingDefineSymbolSeparator));
-            if ((_symbols.Count == 1) && string.IsNullOrEmpty(_symbols[0]))
-            {
+            if ((_symbols.Count == 1) && string.IsNullOrEmpty(_symbols[0])) {
                 _symbols.Clear();
             }
 
-            foreach (var _symbol in customSymbols)
-            {
+            foreach (var _symbol in customSymbols) {
                 string _scriptingSymbol = _symbol.DefineSymbol.Symbol;
-                if (_symbol.IsSelected)
-                {
-                    if (!_symbols.Contains(_scriptingSymbol))
-                    {
+                if (_symbol.IsSelected) {
+                    if (!_symbols.Contains(_scriptingSymbol)) {
                         _symbols.Add(_scriptingSymbol);
                     }
-                }
-                else if (_symbols.Contains(_scriptingSymbol))
-                {
+                } else if (_symbols.Contains(_scriptingSymbol)) {
                     _symbols.Remove(_scriptingSymbol);
                 }
             }
@@ -1883,14 +1661,12 @@ namespace EnhancedEditor.Editor
             _preset.ScriptingDefineSymbols = string.Join(ScriptingDefineSymbolSeparator.ToString(), _symbols);
         }
 
-        private void SetScriptingDefineSymbol()
-        {
+        private void SetScriptingDefineSymbol() {
             string _symbols = string.Join(ScriptingDefineSymbolSeparator.ToString(), activeSymbols);
             SetScriptingDefineSymbols(BuildPipeline.GetBuildTargetGroup(EditorUserBuildSettings.activeBuildTarget), _symbols);
         }
 
-        private void SetScriptingDefineSymbols(BuildTargetGroup _targetGroup, string _symbols)
-        {
+        private void SetScriptingDefineSymbols(BuildTargetGroup _targetGroup, string _symbols) {
             EditorUtility.DisplayProgressBar("Reloading Assemblies", "Reloading assemblies... This can take up to a few minutes.", 1f);
             PlayerSettings.SetScriptingDefineSymbolsForGroup(_targetGroup, _symbols);
 
@@ -1916,8 +1692,7 @@ namespace EnhancedEditor.Editor
 
         // -----------------------
 
-        private void DrawBuildPresets(bool _canEdit)
-        {
+        private void DrawBuildPresets(bool _canEdit) {
             // Preset selection.
             GUIStyle _style = EnhancedEditorStyles.Button;
             float _width = 25f;
@@ -1926,12 +1701,9 @@ namespace EnhancedEditor.Editor
                 _width += _style.CalcSize(_content).x;
 
             // Use a toolbar or a popup depending on the available space on screen.
-            if (_width < position.width)
-            {
+            if (_width < position.width) {
                 selectedPreset = EnhancedEditorGUILayout.CenteredToolbar(selectedPreset, buildPresetsGUI, GUILayout.Height(LargeButtonHeight));
-            }
-            else
-            {
+            } else {
                 GUIContent _label = buildPresetsGUI[selectedPreset];
                 _width = _style.CalcSize(_label).x + 20f;
 
@@ -1944,13 +1716,10 @@ namespace EnhancedEditor.Editor
             DrawBuildPreset(_preset, false, _canEdit);
         }
 
-        private void DrawBuildPreset(BuildPreset _preset, bool _isFromBuild, bool _canEdit = false)
-        {
-            using (var _scope = new GUILayout.HorizontalScope())
-            {
+        private void DrawBuildPreset(BuildPreset _preset, bool _isFromBuild, bool _canEdit = false) {
+            using (var _scope = new GUILayout.HorizontalScope()) {
                 using (var _verticalScope = new GUILayout.VerticalScope(GUILayout.Width(position.width * SectionWidthCoef)))
-                using (var _changeCheck = new EditorGUI.ChangeCheckScope())
-                {
+                using (var _changeCheck = new EditorGUI.ChangeCheckScope()) {
                     Undo.IncrementCurrentGroup();
                     Undo.RecordObject(_preset, "Build Preset Change");
 
@@ -1958,27 +1727,22 @@ namespace EnhancedEditor.Editor
                     bool _isCustom = !_isFromBuild && (selectedPreset == 0);
                     _canEdit |= _isCustom;
 
-                    if (_canEdit)
-                    {
+                    if (_canEdit) {
                         _preset.Description = EditorGUILayout.TextArea(_preset.Description, EnhancedEditorStyles.TextArea, GUILayout.MaxWidth(position.width * SectionWidthCoef));
 
                         GUILayout.Space(5f);
 
                         string _scriptingDefineSymbols = EditorGUILayout.DelayedTextField(scriptingSymbolsGUI, _preset.scriptingDefineSymbols, EnhancedEditorStyles.TextArea);
-                        if (_scriptingDefineSymbols != _preset.scriptingDefineSymbols)
-                        {
+                        if (_scriptingDefineSymbols != _preset.scriptingDefineSymbols) {
                             _preset.ScriptingDefineSymbols = _scriptingDefineSymbols;
                         }
-                    }
-                    else
-                    {
+                    } else {
                         EditorGUILayout.LabelField(_preset.Description, EnhancedEditorStyles.WordWrappedRichText, GUILayout.MaxWidth(position.width * SectionWidthCoef));
                         GUILayout.Space(5f);
                     }
 
                     // Build target and options.
-                    using (EnhancedGUI.GUIEnabled.Scope(_canEdit))
-                    {
+                    using (EnhancedGUI.GUIEnabled.Scope(_canEdit)) {
                         _preset.BuildTarget = (BuildTarget)EditorGUILayout.EnumPopup(buildTargetGUI, _preset.BuildTarget);
 
                         // Options.
@@ -1992,12 +1756,9 @@ namespace EnhancedEditor.Editor
 
                         // Draw each build option as a toggle.
                         areBuildOptionsUnfolded = EditorGUI.Foldout(_position, areBuildOptionsUnfolded, GUIContent.none);
-                        if (areBuildOptionsUnfolded)
-                        {
-                            using (var _indent = new EditorGUI.IndentLevelScope())
-                            {
-                                for (int _i = 0; _i < buildOptionsValues.Length; _i++)
-                                {
+                        if (areBuildOptionsUnfolded) {
+                            using (var _indent = new EditorGUI.IndentLevelScope()) {
+                                for (int _i = 0; _i < buildOptionsValues.Length; _i++) {
                                     int _value = buildOptionsValues[_i];
                                     if (_value == 0)
                                         continue;
@@ -2006,14 +1767,10 @@ namespace EnhancedEditor.Editor
                                     bool _wasEnabled = (_preset.BuildOptions & _option) == _option;
                                     bool _isEnabled = EditorGUILayout.ToggleLeft(buildOptionsNames[_i], _wasEnabled);
 
-                                    if (_isEnabled != _wasEnabled)
-                                    {
-                                        if (_isEnabled)
-                                        {
+                                    if (_isEnabled != _wasEnabled) {
+                                        if (_isEnabled) {
                                             _preset.BuildOptions |= _option;
-                                        }
-                                        else
-                                        {
+                                        } else {
                                             _preset.BuildOptions &= ~_option;
                                         }
                                     }
@@ -2029,26 +1786,19 @@ namespace EnhancedEditor.Editor
                     GUILayout.Space(15f);
 
                     // Save / delete preset buttons.
-                    if (_isCustom)
-                    {
-                        using (EnhancedGUI.GUIColor.Scope(validColor))
-                        {
-                            if (GUILayout.Button(savePresetGUI, GUILayout.Width(75f), GUILayout.Height(ButtonHeight)))
-                            {
+                    if (_isCustom) {
+                        using (EnhancedGUI.GUIColor.Scope(validColor)) {
+                            if (GUILayout.Button(savePresetGUI, GUILayout.Width(75f), GUILayout.Height(ButtonHeight))) {
                                 string[] _presets = Array.ConvertAll(buildPresetsGUI, (b) => b.text);
                                 CreateBuildPresetWindow.GetWindow();
                             }
                         }
-                    }
-                    else if (!_isFromBuild)
-                    {
-                        using (EnhancedGUI.GUIColor.Scope(warningColor))
-                        {
+                    } else if (!_isFromBuild) {
+                        using (EnhancedGUI.GUIColor.Scope(warningColor)) {
                             if (GUILayout.Button(deletePresetGUI, GUILayout.Width(75f), GUILayout.Height(ButtonHeight))
                             && EditorUtility.DisplayDialog($"Delete \"{buildPresetsGUI[selectedPreset].text}\" preset",
                                                             "Are you sure you want to delete this build preset?\n" +
-                                                            "This action cannot be undone.", "Yes", "Cancel"))
-                            {
+                                                            "This action cannot be undone.", "Yes", "Cancel")) {
                                 DeleteBuildPreset(_preset);
                             }
                         }
@@ -2058,8 +1808,7 @@ namespace EnhancedEditor.Editor
                 GUILayout.Space(5f);
 
                 // Preset symbols.
-                using (var _verticalScope = new GUILayout.VerticalScope())
-                {
+                using (var _verticalScope = new GUILayout.VerticalScope()) {
                     EditorGUILayout.GetControlRect(false, -EditorGUIUtility.standardVerticalSpacing * 4f);
                     EnhancedEditorGUILayout.UnderlinedLabel(buildPresetSymbolsGUI, EditorStyles.boldLabel);
 
@@ -2071,10 +1820,8 @@ namespace EnhancedEditor.Editor
 
         // -----------------------
 
-        private void InitializeBuildPresets()
-        {
-            buildOptionsNames = Array.ConvertAll(buildOptionsValues, (v) =>
-            {
+        private void InitializeBuildPresets() {
+            buildOptionsNames = Array.ConvertAll(buildOptionsValues, (v) => {
                 string _name = Enum.GetName(typeof(BuildOptions), v);
                 return ObjectNames.NicifyVariableName(_name);
             });
@@ -2082,8 +1829,7 @@ namespace EnhancedEditor.Editor
             RefreshBuildPresets(true);
         }
 
-        private void RefreshBuildPresets(bool _initializeCustomPreset = false)
-        {
+        private void RefreshBuildPresets(bool _initializeCustomPreset = false) {
             buildPresets = PresetResources.Reload();
             Array.Sort(buildPresets);
 
@@ -2096,24 +1842,19 @@ namespace EnhancedEditor.Editor
             _custom.text = $"- {_custom.text} -";
         }
 
-        private void RefreshCustomPreset(bool _initialize)
-        {
+        private void RefreshCustomPreset(bool _initialize) {
             string _customPresetName = $"{PresetResources.Prefix}{PresetResources.DefaultAssetName}{PresetResources.Suffix}";
             BuildPreset _customPreset = Array.Find(buildPresets, (p) => p.name == _customPresetName);
 
             // Create the default preset if not found, and initialize it.
-            if (_customPreset == null)
-            {
+            if (_customPreset == null) {
                 _customPreset = PresetResources.CreateResource(PresetResources.DefaultAssetName);
                 AddPreset(_customPreset, 0);
-            }
-            else
-            {
+            } else {
                 int _index = Array.IndexOf(buildPresets, _customPreset);
                 int _newIndex = 0;
 
-                if (_index != _newIndex)
-                {
+                if (_index != _newIndex) {
                     buildPresets[_index] = buildPresets[_newIndex];
                     buildPresets[_newIndex] = _customPreset;
 
@@ -2134,8 +1875,7 @@ namespace EnhancedEditor.Editor
             _customPreset.ScriptingDefineSymbols = PlayerSettings.GetScriptingDefineSymbolsForGroup(BuildPipeline.GetBuildTargetGroup(_customPreset.BuildTarget));
         }
 
-        private void CreateBuildPreset(string _name)
-        {
+        private void CreateBuildPreset(string _name) {
             // Create the preset.
             BuildPreset _template = buildPresets[0];
             BuildPreset _preset = CreateInstance<BuildPreset>();
@@ -2150,22 +1890,18 @@ namespace EnhancedEditor.Editor
             selectedPreset = Array.IndexOf(buildPresets, _preset);
         }
 
-        private void AddPreset(BuildPreset _preset, int _index = 1)
-        {
+        private void AddPreset(BuildPreset _preset, int _index = 1) {
             ArrayUtility.Insert(ref buildPresets, _index, _preset);
             ArrayUtility.Insert(ref buildPresetsGUI, _index, new GUIContent(_preset.name.Replace(PresetResources.Prefix, string.Empty)));
         }
 
-        private void SaveBuildPreset(BuildPreset _preset)
-        {
+        private void SaveBuildPreset(BuildPreset _preset) {
             EditorUtility.SetDirty(_preset);
         }
 
-        private void DeleteBuildPreset(BuildPreset _preset)
-        {
+        private void DeleteBuildPreset(BuildPreset _preset) {
             string _path = AssetDatabase.GetAssetPath(_preset);
-            if (!string.IsNullOrEmpty(_path))
-            {
+            if (!string.IsNullOrEmpty(_path)) {
                 AssetDatabase.DeleteAsset(_path);
                 AssetDatabase.Refresh();
 
@@ -2183,22 +1919,18 @@ namespace EnhancedEditor.Editor
         // -----------------------
 
         private void DrawTab(Action _onDrawHeader, Action _onDrawSectionToolbar, Action _onDrawSection, Action<Rect> _onSectionEvent,
-                             Action _onDrawRightSide, Action _onDrawBottom, ref Vector2 _sectionScroll)
-        {
+                             Action _onDrawRightSide, Action _onDrawBottom, ref Vector2 _sectionScroll) {
             // Button.
             _onDrawHeader();
 
-            using (var _globalScope = new GUILayout.HorizontalScope())
-            {
-                using (var _sectionScope = new EditorGUILayout.VerticalScope(GUILayout.Width(position.width * SectionWidthCoef), GUILayout.Height(SectionHeight)))
-                {
+            using (var _globalScope = new GUILayout.HorizontalScope()) {
+                using (var _sectionScope = new EditorGUILayout.VerticalScope(GUILayout.Width(position.width * SectionWidthCoef), GUILayout.Height(SectionHeight))) {
                     // Section background.
                     Rect _position = _sectionScope.rect;
                     DrawSectionBackground(_position);
 
                     // Section toolbar.
-                    using (var _scope = new EditorGUILayout.HorizontalScope(EditorStyles.toolbar))
-                    {
+                    using (var _scope = new EditorGUILayout.HorizontalScope(EditorStyles.toolbar)) {
                         // Draw an empty button all over the toolbar to draw its bounds.
                         {
                             Rect _toolbarPosition = _scope.rect;
@@ -2211,8 +1943,7 @@ namespace EnhancedEditor.Editor
                     }
 
                     // Section content.
-                    using (var _scroll = new GUILayout.ScrollViewScope(_sectionScroll))
-                    {
+                    using (var _scroll = new GUILayout.ScrollViewScope(_sectionScroll)) {
                         _sectionScroll = _scroll.scrollPosition;
                         _onDrawSection();
                     }
@@ -2224,8 +1955,7 @@ namespace EnhancedEditor.Editor
                 GUILayout.Space(10f);
 
                 // Right side.
-                using (var _scope = new GUILayout.VerticalScope(GUILayout.Height(SectionHeight)))
-                {
+                using (var _scope = new GUILayout.VerticalScope(GUILayout.Height(SectionHeight))) {
                     _onDrawRightSide();
                 }
 
@@ -2238,8 +1968,7 @@ namespace EnhancedEditor.Editor
             _onDrawBottom();
         }
 
-        private void DrawSectionBackground(Rect _position)
-        {
+        private void DrawSectionBackground(Rect _position) {
             EditorGUI.DrawRect(_position, sectionColor);
 
             _position.y -= 1f;
@@ -2248,23 +1977,20 @@ namespace EnhancedEditor.Editor
             GUI.Label(_position, GUIContent.none, EditorStyles.helpBox);
         }
 
-        private void DrawBuildDirectory(GUIContent _header)
-        {
+        private void DrawBuildDirectory(GUIContent _header) {
             EnhancedEditorGUILayout.UnderlinedLabel(_header, EditorStyles.boldLabel);
             GUILayout.Space(3f);
 
             FolderEnhancedSettings _setting = BuildDirectorySettings;
             string _directory = EnhancedEditorGUILayout.FolderField(GUIContent.none, _setting.Folder, true, BuildDirectoryPanelTitle);
 
-            if (_directory != _setting.Folder)
-            {
+            if (_directory != _setting.Folder) {
                 _setting.Folder = _directory;
                 RefreshBuilds();
             }
         }
 
-        private Rect GetSectionElementPosition()
-        {
+        private Rect GetSectionElementPosition() {
             Rect _position = EditorGUILayout.GetControlRect();
             _position.xMin -= 2f;
             _position.xMax += 2f;
@@ -2275,17 +2001,14 @@ namespace EnhancedEditor.Editor
 
         // -----------------------
 
-        private void DrawSymbols(string _symbols)
-        {
+        private void DrawSymbols(string _symbols) {
             string[] _splitSymbols = _symbols.Split(ScriptingDefineSymbolSeparator);
             DrawSymbols(_splitSymbols);
         }
 
-        private void DrawSymbols(string[] _symbols)
-        {
+        private void DrawSymbols(string[] _symbols) {
             string _allSymbols = string.Empty;
-            foreach (string _symbol in _symbols)
-            {
+            foreach (string _symbol in _symbols) {
                 if (string.IsNullOrEmpty(_symbol))
                     continue;
 
@@ -2296,31 +2019,24 @@ namespace EnhancedEditor.Editor
                 _allSymbols += $"<b><color={_color}>{_symbol}</color></b> ; ";
             }
 
-            if (!string.IsNullOrEmpty(_allSymbols))
-            {
+            if (!string.IsNullOrEmpty(_allSymbols)) {
                 EditorGUILayout.LabelField(_allSymbols, EnhancedEditorStyles.WordWrappedRichText);
             }
         }
         #endregion
 
         #region Build Utility
-        public static void LaunchBuild(string _path, int _amount = 1)
-        {
-            if (File.Exists(_path))
-            {
+        public static void LaunchBuild(string _path, int _amount = 1) {
+            if (File.Exists(_path)) {
                 for (int _i = 0; _i < _amount; _i++)
                     Process.Start(_path);
-            }
-            else
-            {
+            } else {
                 Debug.LogError($"Specified build does not exist at path: \"{_path}\"");
             }
         }
 
-        public static string[] GetBuilds()
-        {
-            if (!Directory.Exists(BuildDirectory))
-            {
+        public static string[] GetBuilds() {
+            if (!Directory.Exists(BuildDirectory)) {
                 Directory.CreateDirectory(BuildDirectory);
                 return new string[] { };
             }
@@ -2328,8 +2044,7 @@ namespace EnhancedEditor.Editor
             List<string> _builds = new List<string>();
             string[] _executables = Directory.GetFiles(BuildDirectory, "*.exe", SearchOption.AllDirectories);
 
-            foreach (string _file in _executables)
-            {
+            foreach (string _file in _executables) {
                 if (Path.GetFileNameWithoutExtension(_file) == Application.productName)
                     _builds.Add(_file);
             }
@@ -2337,10 +2052,8 @@ namespace EnhancedEditor.Editor
             return _builds.ToArray();
         }
 
-        public static string GetBuildIcon(string _buildName, GUIContent _content)
-        {
-            switch (_buildName)
-            {
+        public static string GetBuildIcon(string _buildName, GUIContent _content) {
+            switch (_buildName) {
                 case string _ when _buildName.Contains("Android"):
                     _content.image = EditorGUIUtility.FindTexture("BuildSettings.Android.Small");
                     return "Android";
@@ -2416,15 +2129,13 @@ namespace EnhancedEditor.Editor
         /// <summary>
         /// Utility window used to create a new build preset.
         /// </summary>
-        public class CreateBuildPresetWindow : EditorWindow
-        {
+        public class CreateBuildPresetWindow : EditorWindow {
             /// <summary>
             /// Creates and shows a new <see cref="CreateBuildPresetWindow"/> instance,
             /// used to create a new build preset in the project.
             /// </summary>
             /// <returns><see cref="CreateBuildPresetWindow"/> instance on screen.</returns>
-            public static CreateBuildPresetWindow GetWindow()
-            {
+            public static CreateBuildPresetWindow GetWindow() {
                 CreateBuildPresetWindow _window = GetWindow<CreateBuildPresetWindow>(true, "Create Build Preset", true);
 
                 _window.minSize = _window.maxSize
@@ -2450,8 +2161,7 @@ namespace EnhancedEditor.Editor
 
             // -----------------------
 
-            private void OnGUI()
-            {
+            private void OnGUI() {
                 Undo.RecordObject(this, UndoRecordTitle);
 
                 // Preset name.
@@ -2467,21 +2177,18 @@ namespace EnhancedEditor.Editor
                 GUILayout.Space(3f);
 
                 // Invalid name message.
-                if (string.IsNullOrEmpty(_value))
-                {
+                if (string.IsNullOrEmpty(_value)) {
                     DrawHelpBox(EmptyNameMessage, UnityEditor.MessageType.Error, position.width - 10f);
                     return;
                 }
 
                 // A preset with the same name already exist.
                 // This is no problem, as the new preset will be renamed to not override the existing one.
-                if (PresetResources.GetResource(presetName, out _))
-                {
+                if (PresetResources.GetResource(presetName, out _)) {
                     DrawHelpBox(ExistingPresetMessage, UnityEditor.MessageType.Info, position.width - 65f);
                 }
 
-                _position = new Rect()
-                {
+                _position = new Rect() {
                     x = position.width - 55f,
                     y = _position.y + _position.height + 10f,
                     width = 50f,
@@ -2489,16 +2196,14 @@ namespace EnhancedEditor.Editor
                 };
 
                 // Create preset button.
-                if (GUI.Button(_position, createPresetGUI))
-                {
+                if (GUI.Button(_position, createPresetGUI)) {
                     BuildPipelineWindow.GetWindow().CreateBuildPreset(presetName);
                     Close();
                 }
 
                 // ----- Local Method ----- \\
 
-                void DrawHelpBox(string _message, UnityEditor.MessageType _messageType, float _width)
-                {
+                void DrawHelpBox(string _message, UnityEditor.MessageType _messageType, float _width) {
                     Rect _temp = new Rect()
                     {
                         x = 5f,

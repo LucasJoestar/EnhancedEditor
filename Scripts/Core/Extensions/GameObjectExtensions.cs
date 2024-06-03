@@ -5,6 +5,7 @@
 // ============================================================================ //
 
 using System;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 #if UNITY_EDITOR
@@ -16,102 +17,36 @@ namespace EnhancedEditor {
     /// Contains multiple <see cref="GameObject"/>-related extension methods.
     /// </summary>
 	public static class GameObjectExtensions {
-        #region Content
-        /// <summary>
-        /// Sets the layer of this <see cref="GameObject"/> and all its children.
-        /// </summary>
-        /// <param name="_gameObject"><see cref="GameObject"/> instance to set layer.</param>
-        /// <param name="_layer">Layer to assign.</param>
-        public static void SetLayer(this GameObject _gameObject, int _layer) {
-
-            _gameObject.layer = _layer;
-
-            foreach (Transform _child in _gameObject.transform) {
-                SetLayer(_child.gameObject, _layer);
-            }
-        }
-
-        /// <summary>
-        /// Adds a specific component to a <see cref="GameObject"/>
-        /// if none of that type is already attached to it, and return it.
-        /// </summary>
-        /// <typeparam name="T">Component type to add.</typeparam>
-        /// <param name="_gameObject"><see cref="GameObject"/> to add the component to.</param>
-        /// <returns>Newly added or already attached component to the <see cref="GameObject"/>.</returns>
-        public static T AddComponentIfNone<T>(this GameObject _gameObject) where T : Component {
-            if (_gameObject.TryGetComponent(out T _component))
-                return _component;
-
-            #if UNITY_EDITOR
-            if (!Application.isPlaying) {
-                return Undo.AddComponent<T>(_gameObject);
-            }
-            #endif
-
-            return _gameObject.AddComponent<T>();
-        }
-
-        /// <param name="_componentType">The type of component to add.</param>
-        /// <inheritdoc cref="AddComponentIfNone{T}(GameObject)"/>
-        public static Component AddComponentIfNone(this GameObject _gameObject, Type _componentType) {
-            if (_gameObject.TryGetComponent(_componentType, out Component _component))
-                return _component;
-
-            #if UNITY_EDITOR
-            if (!Application.isPlaying) {
-                return Undo.AddComponent(_gameObject, _componentType);
-            }
-            #endif
-
-            return _gameObject.AddComponent(_componentType);
-        }
-
-        #if !UNITY_2019_2_OR_NEWER
-        /// <summary>
-        /// Gets the component of the specified type, if it exists.<br/>
-        /// TryGetComponent will attempt to retrieve the component of the given type.The notable difference compared to
-        /// GameObject.GetComponent is that this method does not allocate in the Editor when the requested component does not exist.
-        /// </summary>
-        /// <param name="_component">The output argument that will contain the component or null.</param>
-        /// <returns>Returns true if the component is found, false otherwise.</returns>
-        public static bool TryGetComponent<T>(this GameObject _gameObject, out T _component) where T : Component
-        {
-            _component = _gameObject.GetComponent<T>();
-            return _component != null;
-        }
-
-        /// <inheritdoc cref="TryGetComponent{T}(GameObject, out T)"/>
-        /// <param name="type">The type of the component to retrieve.</param>
-        public static bool TryGetComponent(this GameObject _gameObject, Type type, out Component _component)
-        {
-            _component = _gameObject.GetComponent(type);
-            return _component != null;
-        }
-        #endif
-        #endregion
-
         #region Extended Behaviour
         /// <summary>
         /// Get the <see cref="ExtendedBehaviour"/> attached to this <see cref="GameObject"/>.
         /// </summary>
         /// <param name="_gameObject">This <see cref="GameObject"/> to get the <see cref="ExtendedBehaviour"/> from.</param>
         /// <returns>The <see cref="ExtendedBehaviour"/> attached to this <see cref="GameObject"/>.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ExtendedBehaviour GetExtendedBehaviour(this GameObject _gameObject) {
             return _gameObject.GetComponent<ExtendedBehaviour>();
         }
+
+        // -------------------------------------------
+        // Tag
+        // -------------------------------------------
 
         /// <summary>
         /// Get all <see cref="Tag"/> assigned to this <see cref="GameObject"/>.
         /// </summary>
         /// <param name="_gameObject">This <see cref="GameObject"/> to get the tags from.</param>
         /// <returns>The <see cref="TagGroup"/> containing all tag assigned to this <see cref="GameObject"/>.</returns>
-        public static TagGroup GetTags(this GameObject _gameObject) {
+        public static bool GetTags(this GameObject _gameObject, out TagGroup _tags) {
             if (_gameObject.TryGetComponent(out ExtendedBehaviour _behaviour)) {
-                return _behaviour.Tags;
+                _tags = _behaviour.Tags;
+                return true;
             }
 
             _gameObject.LogWarning($"No {typeof(ExtendedBehaviour).Name} could be found on the object \'{_gameObject.name}\'.");
-            return new TagGroup();
+
+            _tags = TagGroup.Empty;
+            return false;
         }
 
         /// <summary>
@@ -164,12 +99,112 @@ namespace EnhancedEditor {
         /// <param name="_gameObject"><see cref="GameObject"/> to check.</param>
         /// <param name="_tags"><see cref="TagGroup"/> to check.</param>
         /// <returns>True if the <see cref="GameObject"/> has any tag in the given <see cref="TagGroup"/>, false otherwise.</returns>
-        public static bool HasAnyTag(this GameObject _gameObject, TagGroup _tags) {
+        public static bool HasAnyTag(this GameObject _gameObject, TagGroup _tags, bool validIfEmpty = false) {
             if (_gameObject.TryGetComponent(out ExtendedBehaviour _behaviour)) {
-                return _behaviour.Tags.ContainsAny(_tags);
+                return _behaviour.Tags.ContainsAny(_tags, validIfEmpty);
             }
 
             return false;
+        }
+        #endregion
+
+        #region Component
+        /// <summary>
+        /// Adds a specific component to a <see cref="GameObject"/>
+        /// if none of that type is already attached to it, and return it.
+        /// </summary>
+        /// <typeparam name="T">Component type to add.</typeparam>
+        /// <param name="_gameObject"><see cref="GameObject"/> to add the component to.</param>
+        /// <returns>Newly added or already attached component to the <see cref="GameObject"/>.</returns>
+        public static T AddComponentIfNone<T>(this GameObject _gameObject) where T : Component {
+            if (_gameObject.TryGetComponent(out T _component))
+                return _component;
+
+            #if UNITY_EDITOR
+            if (!Application.isPlaying) {
+                return Undo.AddComponent<T>(_gameObject);
+            }
+            #endif
+
+            return _gameObject.AddComponent<T>();
+        }
+
+        /// <param name="_componentType">The type of component to add.</param>
+        /// <inheritdoc cref="AddComponentIfNone{T}(GameObject)"/>
+        public static Component AddComponentIfNone(this GameObject _gameObject, Type _componentType) {
+            if (_gameObject.TryGetComponent(_componentType, out Component _component))
+                return _component;
+
+            #if UNITY_EDITOR
+            if (!Application.isPlaying) {
+                return Undo.AddComponent(_gameObject, _componentType);
+            }
+            #endif
+
+            return _gameObject.AddComponent(_componentType);
+        }
+
+        /// <summary>
+        /// Tries to get a specific <see cref="Component"/> in this object or any of its parents.
+        /// </summary>
+        /// <typeparam name="T">Component type to find.</typeparam>
+        /// <param name="_gameObject">This <see cref="GameObject"/> instance.</param>
+        /// <param name="_searchComponent">Found matching component (null if none).</param>
+        /// <returns>True if the component could successfully be found, false otherwise.</returns>
+        public static bool TryGetComponentInParent<T>(this GameObject _gameObject, out T _searchComponent) {
+            _searchComponent = _gameObject.GetComponentInParent<T>();
+            return _searchComponent is not null;
+        }
+
+        /// <summary>
+        /// Tries to get a specific <see cref="Component"/> in this object or any of its children.
+        /// </summary>
+        /// <typeparam name="T">Component type to find.</typeparam>
+        /// <param name="_gameObject">This <see cref="GameObject"/> instance.</param>
+        /// <param name="_searchComponent">Found matching component (null if none).</param>
+        /// <returns>True if the component could successfully be found, false otherwise.</returns>
+        public static bool TryGetComponentInChildren<T>(this GameObject _gameObject, out T _searchComponent) {
+            _searchComponent = _gameObject.GetComponentInChildren<T>();
+            return _searchComponent is not null;
+        }
+
+        #if !UNITY_2019_2_OR_NEWER
+        /// <summary>
+        /// Gets the component of the specified type, if it exists.<br/>
+        /// TryGetComponent will attempt to retrieve the component of the given type.The notable difference compared to
+        /// GameObject.GetComponent is that this method does not allocate in the Editor when the requested component does not exist.
+        /// </summary>
+        /// <param name="_component">The output argument that will contain the component or null.</param>
+        /// <returns>Returns true if the component is found, false otherwise.</returns>
+        public static bool TryGetComponent<T>(this GameObject _gameObject, out T _component) where T : Component
+        {
+            _component = _gameObject.GetComponent<T>();
+            return _component != null;
+        }
+
+        /// <inheritdoc cref="TryGetComponent{T}(GameObject, out T)"/>
+        /// <param name="type">The type of the component to retrieve.</param>
+        public static bool TryGetComponent(this GameObject _gameObject, Type type, out Component _component)
+        {
+            _component = _gameObject.GetComponent(type);
+            return _component != null;
+        }
+        #endif
+        #endregion
+
+        #region Layer
+        /// <summary>
+        /// Sets the layer of this <see cref="GameObject"/> and all its children.
+        /// </summary>
+        /// <param name="_gameObject"><see cref="GameObject"/> instance to set layer.</param>
+        /// <param name="_layer">Layer to assign.</param>
+        public static void SetLayer(this GameObject _gameObject, int _layer) {
+
+            _gameObject.layer = _layer;
+
+            foreach (Transform _child in _gameObject.transform) {
+                SetLayer(_child.gameObject, _layer);
+            }
         }
         #endregion
     }

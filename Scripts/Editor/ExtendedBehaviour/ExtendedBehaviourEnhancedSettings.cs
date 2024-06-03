@@ -4,8 +4,8 @@
 //
 // ============================================================================ //
 
-using UnityEngine;
 using UnityEditor;
+using UnityEngine;
 
 namespace EnhancedEditor.Editor {
     /// <summary>
@@ -16,10 +16,12 @@ namespace EnhancedEditor.Editor {
         private const string InfoMessage = "When enabled, a new ExtendedBehaviour component is automatically added to each GameObject in the scene.";
 
         private static readonly GUIContent headerGUI = new GUIContent("Extended Behaviour", "Extended Behaviour component related settings.");
-        private static readonly GUIContent labelGUI = new GUIContent("Automatic Setup", "Toggles the extended behaviour automatic setup.");
+        private static readonly GUIContent labelGUI  = new GUIContent("Automatic Setup", "Toggles the extended behaviour automatic setup.");
 
-        private static readonly int settingsGUID = "ExtendedBehaviour".GetHashCode();
+        private static readonly int settingsGUID = "ExtendedBehaviour".GetStableHashCode();
         private static BooleanEnhancedSettings settings = null;
+
+        // -----------------------
 
         /// <inheritdoc cref="ExtendedBehaviourEnhancedSettings"/>
         public static BooleanEnhancedSettings Settings {
@@ -39,7 +41,9 @@ namespace EnhancedEditor.Editor {
             get { return Settings.Value; }
         }
 
-        // -----------------------
+        // -------------------------------------------
+        // Drawer
+        // -------------------------------------------
 
         [EnhancedEditorProjectSettings(Order = 15)]
         private static void DrawSetting() {

@@ -13,24 +13,24 @@ namespace EnhancedEditor.Editor {
     /// <see cref="EnhancedProjectBrowser"/>-related user settings.
     /// </summary>
     [Serializable]
-    public class EnhancedProjectBrowserEnhancedSettings : EnhancedSettings {
+    public sealed class EnhancedProjectBrowserEnhancedSettings : EnhancedSettings {
         #region Global Members
         [SerializeField, Tooltip("Icon used to draw each default folders")]
-        [Enhanced, ValidationMember("FolderColor")] private Texture defaultFolderIcon = null;
+        [Enhanced, ValidationMember(nameof(FolderColor))] private Texture defaultFolderIcon = null;
 
         [SerializeField, Tooltip("Icon used to draw all default open folders")]
-        [Enhanced, ValidationMember("FolderColor")] private Texture defaultOpenFolderIcon = null;
+        [Enhanced, ValidationMember(nameof(FolderColor))] private Texture defaultOpenFolderIcon = null;
 
         [SerializeField, Tooltip("Icon used to draw all default empty folders")]
-        [Enhanced, ValidationMember("FolderColor")] private Texture defaultEmptyFolderIcon = null;
+        [Enhanced, ValidationMember(nameof(FolderColor))] private Texture defaultEmptyFolderIcon = null;
 
         [Space(5f)]
 
         [SerializeField, Tooltip("Color used to draw all default folder icons")]
-        [Enhanced, ValidationMember("FolderColor")] private SuperColor folderColor = SuperColor.Aquamarine;
+        [Enhanced, ValidationMember(nameof(FolderColor))] private SuperColor folderColor = SuperColor.Aquamarine;
 
         [SerializeField, Tooltip("Toggles the Enhanced Project Browser activation")]
-        [Enhanced, ValidationMember("Enabled")] private bool enabled = false;
+        [Enhanced, ValidationMember(nameof(Enabled))] private bool enabled = false;
 
         // -----------------------
 
@@ -121,6 +121,8 @@ namespace EnhancedEditor.Editor {
         private static EnhancedProjectBrowserEnhancedSettings settings = null;
         private static SerializedProperty settingsProperty = null;
 
+        // -----------------------
+
         /// <inheritdoc cref="EnhancedProjectBrowserEnhancedSettings"/>
         public static EnhancedProjectBrowserEnhancedSettings Settings {
             get {
@@ -137,7 +139,9 @@ namespace EnhancedEditor.Editor {
             }
         }
 
-        // -----------------------
+        // -------------------------------------------
+        // Drawer
+        // -------------------------------------------
 
         [EnhancedEditorUserSettings(Order = 60)]
         private static void DrawSettings() {

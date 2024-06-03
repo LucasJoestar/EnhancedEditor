@@ -9,25 +9,31 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
-namespace EnhancedEditor.Editor
-{
+namespace EnhancedEditor.Editor {
     /// <summary>
     /// <see cref="ScriptableObject"/> database containing all <see cref="ColorPalette"/> in the project.
     /// </summary>
-	public class ColorPaletteDatabase : ScriptableObject
-    {
+	public sealed class ColorPaletteDatabase : ScriptableObject {
         #region Global Members
         internal const string UndoRecordTitle = "Color Palette Changes";
 
         /// <summary>
         /// All <see cref="ColorPalette"/> defined in the project.
         /// </summary>
-        public ColorPalette[] Palettes = new ColorPalette[] { };
+        public ColorPalette[] Palettes = new ColorPalette[0];
 
         /// <summary>
         /// Total amount of color palettes in the project.
         /// </summary>
-        public int Count => Palettes.Length;
+        public int Count {
+            get { return Palettes.Length; }
+        }
+        #endregion
+
+        #region Initialization
+        private void OnEnable() {
+            ResetControlsData();
+        }
         #endregion
 
         #region Management
@@ -37,22 +43,20 @@ namespace EnhancedEditor.Editor
         /// <param name="_palette"><see cref="ColorPalette"/> to save.</param>
         /// <param name="_name">Name of this color palette.</param>
         /// <returns>Saved palette (a new palette is created to replace the original).</returns>
-        public ColorPalette SavePalette(ColorPalette _palette, string _name)
-        {
+        public ColorPalette SavePalette(ColorPalette _palette, string _name) {
             Undo.RecordObject(this, UndoRecordTitle);
             ColorPalette _newPalette = new ColorPalette(_palette)
             {
                 Name = _name,
                 guid = GUID.Generate().ToString(),
                 isPersistent = true
-            };           
+            };
 
             ArrayUtility.Add(ref Palettes, _newPalette);
             Array.Sort(Palettes, (a, b) => a.Name.CompareTo(b.Name));
 
             // Update required controls palette.
-            for (int _i = 0; _i < controlsPaletteGUID.Count; _i++)
-            {
+            for (int _i = 0; _i < controlsPaletteGUID.Count; _i++) {
                 if (controlsPaletteGUID[_i] == _palette.guid)
                     controlsPaletteGUID[_i] = _newPalette.guid;
             }
@@ -66,14 +70,12 @@ namespace EnhancedEditor.Editor
         /// Deletes a <see cref="ColorPalette"/> from the project.
         /// </summary>
         /// <param name="_palette"><see cref="ColorPalette"/> to delete.</param>
-        public void DeletePalette(ColorPalette _palette)
-        {
+        public void DeletePalette(ColorPalette _palette) {
             Undo.RecordObject(this, UndoRecordTitle);
             ArrayUtility.Remove(ref Palettes, _palette);
 
             // Update required controls palette.
-            for (int _i = 0; _i < controlsPaletteGUID.Count; _i++)
-            {
+            for (int _i = 0; _i < controlsPaletteGUID.Count; _i++) {
                 if (controlsPaletteGUID[_i] == _palette.guid)
                     controlsPaletteGUID[_i] = CreatePalette().guid;
             }
@@ -87,8 +89,7 @@ namespace EnhancedEditor.Editor
         /// Creates and registers a new <see cref="ColorPalette"/> with a generated guid.
         /// </summary>
         /// <returns>Created <see cref="ColorPalette"/>.</returns>
-        internal ColorPalette CreatePalette()
-        {
+        internal ColorPalette CreatePalette() {
             ColorPalette _palette = new ColorPalette()
             {
                 guid = GUID.Generate().ToString()
@@ -101,8 +102,7 @@ namespace EnhancedEditor.Editor
         /// <summary>
         /// Saves any changes made in the database.
         /// </summary>
-        internal void SaveChanges()
-        {
+        internal void SaveChanges() {
             EditorUtility.SetDirty(this);
         }
         #endregion
@@ -123,27 +123,21 @@ namespace EnhancedEditor.Editor
         /// <param name="_color">Current color value of this control.
         /// <br/> Used to determine its associated palette when none is already attached.</param>
         /// <returns><see cref="ColorPalette"/> associated with this control.</returns>
-        public ColorPalette GetControlPalette(int _controlID, Color _color)
-        {
+        public ColorPalette GetControlPalette(int _controlID, Color _color) {
             ColorPalette _palette;
             int _index = controlsID.IndexOf(_controlID);
 
-            if (_index > -1)
-            {
+            if (_index > -1) {
                 string _guid = controlsPaletteGUID[_index];
                 _palette = unsavedPalettes.Find(p => p.guid == _guid);
 
-                if (_palette == null)
-                {
+                if (_palette == null) {
                     _palette = Array.Find(Palettes, p => p.guid == _guid);
                 }
-            }
-            else
-            {
+            } else {
                 // Set this control palette to the first one that could be found containing its current color.
                 string _hex = ColorUtility.ToHtmlStringRGBA(_color);
-                _palette = Array.Find(Palettes, (p) =>
-                {
+                _palette = Array.Find(Palettes, (p) => {
                     return Array.Exists(p.Colors, c => ColorUtility.ToHtmlStringRGBA(c).Equals(_hex));
                 });
 
@@ -154,7 +148,7 @@ namespace EnhancedEditor.Editor
                 controlsID.Add(_controlID);
                 controlsPaletteGUID.Add(_palette.guid);
             }
-            
+
             return _palette;
         }
 
@@ -163,18 +157,14 @@ namespace EnhancedEditor.Editor
         /// </summary>
         /// <param name="_controlID">Control id to set associated palette.</param>
         /// <param name="_palette">New <see cref="ColorPalette"/> associated with this control.</param>
-        public void SetControlPalette(int _controlID, ColorPalette _palette)
-        {
+        public void SetControlPalette(int _controlID, ColorPalette _palette) {
             Undo.RecordObject(this, UndoRecordTitle);
             int _index = controlsID.IndexOf(_controlID);
 
-            if (_index > -1)
-            {
+            if (_index > -1) {
                 Undo.RecordObject(this, UndoRecordTitle);
                 controlsPaletteGUID[_index] = _palette.guid;
-            }
-            else
-            {
+            } else {
                 controlsID.Add(_controlID);
                 controlsPaletteGUID.Add(_palette.guid);
             }
@@ -182,21 +172,13 @@ namespace EnhancedEditor.Editor
 
         // -----------------------
 
-        private void ResetControlsData()
-        {
+        private void ResetControlsData() {
             // Reset all color palette controls data.
             // The only reason a control associated palette is serialized is to allow undo operations on unsaved palettes.
             unsavedPalettes = new List<ColorPalette>();
 
             controlsID = new List<int>();
             controlsPaletteGUID = new List<string>();
-        }
-        #endregion
-
-        #region Initialization
-        private void OnEnable()
-        {
-            ResetControlsData();
         }
         #endregion
     }

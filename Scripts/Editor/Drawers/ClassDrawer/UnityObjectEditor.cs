@@ -7,9 +7,9 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using UnityEngine;
 using UnityEditor;
 using UnityEditorInternal;
+using UnityEngine;
 
 using Object = UnityEngine.Object;
 
@@ -21,8 +21,8 @@ namespace EnhancedEditor.Editor {
     [CustomEditor(typeof(Object), true), CanEditMultipleObjects]
     public class UnityObjectEditor : UnityEditor.Editor {
         #region Method Drawer Group
-        private class MethodDrawerGroup {
-            public MethodDrawer[] MethodDrawers = new MethodDrawer[] { };
+        private sealed class MethodDrawerGroup {
+            public MethodDrawer[] MethodDrawers = new MethodDrawer[0];
 
             // -----------------------
 
@@ -65,7 +65,7 @@ namespace EnhancedEditor.Editor {
         #region Editor Content
         private const string ScriptPropertyName     = "m_Script";
         private const string ChronosPropertyName    = "chronos";
-        protected const float SaveValueButtonWidth = 100f;
+        protected const float SaveValueButtonWidth  = 100f;
 
         private const BindingFlags MethodInfoFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.FlattenHierarchy;
 
@@ -132,7 +132,7 @@ namespace EnhancedEditor.Editor {
 
                     _properties.Insert(_index, new Pair<SerializedProperty, int>(_property.Copy(), _order));
                 };
-                
+
                 // Register ordered properties.
                 properties.AddRange(_properties.ConvertAll(p => p.First));
             }
@@ -283,7 +283,7 @@ namespace EnhancedEditor.Editor {
         protected virtual bool DrawInspectorGUI() {
             return true;
         }
-        
+
         /// <summary>
         /// Called after this object inspector GUI was drawn.
         /// </summary>

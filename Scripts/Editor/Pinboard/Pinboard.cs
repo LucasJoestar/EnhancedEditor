@@ -26,22 +26,19 @@ using UnityEngine;
 
 using Object = UnityEngine.Object;
 
-namespace EnhancedEditor.Editor
-{
+namespace EnhancedEditor.Editor {
     /// <summary>
     /// The pinboard stores your favorite assets and folders in the project. You can access them from the <see cref="PinboardWindow"/>.
     /// </summary>
     [NonEditable("Please use the Pinboard window if you want to edit pinned assets.")]
-	public class Pinboard : ScriptableObject
-    {
+    public sealed class Pinboard : ScriptableObject {
         #region Pin Object
         /// <summary>
         /// Data stored in the <see cref="Pinboard"/> used to whether reference an existing asset in the database,
         /// or acting as a folder to store other objects.
         /// </summary>
         [Serializable]
-        public class PinObject
-        {
+        public sealed class PinObject {
             public const string FolderTypeName = "UnityEditor.DefaultAsset";
 
             // Folder.
@@ -64,8 +61,7 @@ namespace EnhancedEditor.Editor
             /// <summary>
             /// Folder constructor.
             /// </summary>
-            public PinObject()
-            {
+            public PinObject() {
                 IsFolder = true;
                 FolderName = "New Folder";
             }
@@ -75,14 +71,12 @@ namespace EnhancedEditor.Editor
             /// </summary>
             /// <param name="_asset"><see cref="Object"/> to be pinned.
             /// <br/> Must be an asset in the database, not a scene instance.</param>
-            public PinObject(Object _asset, int _indent)
-            {
+            public PinObject(Object _asset, int _indent) {
                 Asset = _asset;
                 Type = _asset.GetType().ToString();
 
                 // Modify the folder type name so that they are always displayed on top.
-                if (Type == FolderTypeName)
-                {
+                if (Type == FolderTypeName) {
                     Type = $"*{Type}";
                 }
 
@@ -101,9 +95,7 @@ namespace EnhancedEditor.Editor
 
         #region Utility
         [Button(SuperColor.Green, IsDrawnOnTop = false)]
-        #pragma warning disable IDE0051
-        private static void OpenPinboardWindow()
-        {
+        private static void OpenPinboardWindow() {
             PinboardWindow.GetWindow();
         }
         #endregion

@@ -19,7 +19,7 @@ namespace EnhancedEditor.Editor {
     /// <summary>
     /// <see cref="GameObject"/> and <see cref="Component"/> picker window, allowing to only select objects with some specific components and / or interfaces.
     /// </summary>
-    public class ObjectPickerWindow : EditorWindow {
+    public sealed class ObjectPickerWindow : EditorWindow {
         #region Styles
         private static class Styles {
             public static readonly GUIStyle PickerTabStyle = new GUIStyle("ObjectPickerTab");

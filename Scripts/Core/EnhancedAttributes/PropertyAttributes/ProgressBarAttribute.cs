@@ -6,13 +6,11 @@
 
 using UnityEngine;
 
-namespace EnhancedEditor
-{
+namespace EnhancedEditor {
     /// <summary>
     /// Displays this value as a progress bar.
     /// </summary>
-    public class ProgressBarAttribute : EnhancedPropertyAttribute
-    {
+    public sealed class ProgressBarAttribute : EnhancedPropertyAttribute {
         #region Global Members
         public const SuperColor DefaultColor = SuperColor.Sapphire;
         public const float DefaultHeight = 25f;
@@ -44,16 +42,17 @@ namespace EnhancedEditor
         /// Is this progress bar value editable (draggable) by users?
         /// </summary>
         public readonly bool IsEditable = false;
-        #endregion
 
-        #region Constructors
+        // -------------------------------------------
+        // Constructor(s)
+        // -------------------------------------------
+
         /// <inheritdoc cref="ProgressBarAttribute(float, float, SuperColor, bool)"/>
         public ProgressBarAttribute(float _maxValue, SuperColor _color = DefaultColor, bool _isEditable = false) : this(_maxValue, DefaultHeight, _color, _isEditable) { }
 
         /// <param name="_maxValue"><inheritdoc cref="MaxValue" path="/summary"/></param>
         /// <inheritdoc cref="ProgressBarAttribute(SuperColor, float, bool)"/>
-        public ProgressBarAttribute(float _maxValue, float _height, SuperColor _color = DefaultColor, bool _isEditable = false) : this(_color, _height, _isEditable)
-        {
+        public ProgressBarAttribute(float _maxValue, float _height, SuperColor _color = DefaultColor, bool _isEditable = false) : this(_color, _height, _isEditable) {
             MaxValue = Mathf.Max(.0001f, _maxValue);
         }
 
@@ -62,8 +61,7 @@ namespace EnhancedEditor
 
         /// <param name="_maxMember"><inheritdoc cref="MaxMember" path="/summary"/></param>
         /// <inheritdoc cref="ProgressBarAttribute(SuperColor, float, bool)"/>
-        public ProgressBarAttribute(string _maxMember, float _height, SuperColor _color = DefaultColor, bool _isEditable = false) : this(_color, _height, _isEditable)
-        {
+        public ProgressBarAttribute(string _maxMember, float _height, SuperColor _color = DefaultColor, bool _isEditable = false) : this(_color, _height, _isEditable) {
             MaxMember = _maxMember;
         }
 
@@ -71,10 +69,9 @@ namespace EnhancedEditor
         /// <param name="_height"><inheritdoc cref="Height" path="/summary"/></param>
         /// <param name="_isEditable"><inheritdoc cref="IsEditable" path="/summary"/></param>
         /// <inheritdoc cref="ProgressBarAttribute"/>
-        private ProgressBarAttribute(SuperColor _color, float _height, bool _isEditable)
-        {
-            Height = Mathf.Max(1f, _height);
-            Color = _color.Get();
+        private ProgressBarAttribute(SuperColor _color, float _height, bool _isEditable) {
+            Height     = Mathf.Max(1f, _height);
+            Color      = _color.Get();
             IsEditable = _isEditable;
         }
         #endregion

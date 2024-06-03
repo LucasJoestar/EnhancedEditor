@@ -18,7 +18,7 @@ namespace EnhancedEditor.Editor {
     /// Please use <see cref="Reload"/> to force resources update.
     /// </summary>
     /// <typeparam name="T">Resource type (must inherit from <see cref="ScriptableObject"/>).</typeparam>
-	public class AutoManagedResource<T> where T : ScriptableObject {
+	public sealed class AutoManagedResource<T> where T : ScriptableObject {
         #region Global Members
         private const string EditorFolder = "Editor";
         private const string AssetsFolder = "Assets";
@@ -61,7 +61,7 @@ namespace EnhancedEditor.Editor {
             }
         }
 
-        private T[] resources = new T[] { };
+        private T[] resources = new T[0];
         #endregion
 
         #region Constructors
@@ -71,7 +71,7 @@ namespace EnhancedEditor.Editor {
         /// <inheritdoc cref="AutoManagedResource{T}(string, string, string, bool)"/>
         public AutoManagedResource(string _defaultAssetName, bool _isEditorOnly = true) {
             DefaultAssetName = _defaultAssetName;
-            IsEditorOnly = _isEditorOnly;
+            IsEditorOnly     = _isEditorOnly;
         }
 
         /// <inheritdoc cref="AutoManagedResource{T}(string, string, string, bool)"/>
@@ -172,8 +172,9 @@ namespace EnhancedEditor.Editor {
             _name = $"{Prefix}{_name}{Suffix}";
 
             string _directory = Path.Combine(Application.dataPath, Directory);
-            if (!System.IO.Directory.Exists(_directory))
+            if (!System.IO.Directory.Exists(_directory)) {
                 System.IO.Directory.CreateDirectory(_directory);
+            }
 
             string _path = Path.Combine(AssetsFolder, Directory, $"{_name}.asset");
             _path = AssetDatabase.GenerateUniqueAssetPath(_path);

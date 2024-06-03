@@ -275,7 +275,7 @@ namespace EnhancedEditor.Editor {
                 };
 
                 // Toolbar search field cancel.
-                toolbarSearchFieldCancel = new GUIStyle("ToolbarSeachCancelButton");
+                toolbarSearchFieldCancel = new GUIStyle("ToolbarSearchCancelButton");
 
                 // Drop shadow label.
                 dropShadowLabel = new GUIStyle("PreOverlayLabel");

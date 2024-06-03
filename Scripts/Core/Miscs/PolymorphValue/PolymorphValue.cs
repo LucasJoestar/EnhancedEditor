@@ -1,8 +1,8 @@
-// ===== Enhanced Framework - https://github.com/LucasJoestar/EnhancedFramework ===== //
-//
+// ===== Enhanced Editor - https://github.com/LucasJoestar/EnhancedEditor ===== //
+// 
 // Notes:
 //
-// ================================================================================== //
+// ============================================================================ //
 
 using System;
 using UnityEngine;
@@ -17,7 +17,8 @@ namespace EnhancedEditor {
     /// </summary>
     /// <typeparam name="T">Base type this value must be derived from.</typeparam>
     [Serializable]
-    public class PolymorphValue<T> where T : class {
+    #pragma warning disable
+    public sealed class PolymorphValue<T> where T : class {
         #region Global Members
         #if UNITY_EDITOR
         [SerializeField] private string name = "[NONE]"; // Editor object name.
@@ -26,7 +27,7 @@ namespace EnhancedEditor {
         /// <summary>
         /// This value type.
         /// </summary>
-        [SerializeField, Enhanced, ValidationMember("SetType")] private SerializedType<T> type = null;
+        [SerializeField, Enhanced, ValidationMember(nameof(SetType))] private SerializedType<T> type = null;
 
         [Space(5f)]
 
@@ -145,12 +146,12 @@ namespace EnhancedEditor {
         }
 
         public override string ToString() {
-            return (value != null) ? value.ToString() : "[Null]";
+            return (value is null) ? value.ToString() : "[Null]";
         }
 
         public override bool Equals(object _object) {
             if (_object is PolymorphValue<T> _value) {
-                return value == _value.value;
+                return EqualityUtility.Equals(value, _value.value);
             }
 
             return base.Equals(_object);

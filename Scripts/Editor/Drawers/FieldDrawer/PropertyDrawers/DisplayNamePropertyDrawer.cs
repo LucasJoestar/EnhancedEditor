@@ -12,7 +12,7 @@ namespace EnhancedEditor.Editor {
     /// Special drawer for fields with the attribute <see cref="DisplayNameAttribute"/> (inherit from <see cref="EnhancedPropertyDrawer"/>).
     /// </summary>
     [CustomDrawer(typeof(DisplayNameAttribute))]
-    public class DisplayNamePropertyDrawer : EnhancedPropertyDrawer {
+    public sealed class DisplayNamePropertyDrawer : EnhancedPropertyDrawer {
         #region Drawer Content
         public override bool OnBeforeGUI(Rect _position, SerializedProperty _property, GUIContent _label, out float _height) {
             DisplayNameAttribute _attribute = Attribute as DisplayNameAttribute;

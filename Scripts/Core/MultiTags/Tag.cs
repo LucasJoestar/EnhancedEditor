@@ -5,6 +5,7 @@
 // ============================================================================ //
 
 using System;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 namespace EnhancedEditor {
@@ -17,7 +18,7 @@ namespace EnhancedEditor {
     public struct Tag {
         #region Global Members
         [SerializeField] private long id;
-        [NonSerialized] private TagData data;
+        [NonSerialized]  private TagData data;
 
         /// <summary>
         /// ID of this tag, defining to which <see cref="TagData"/> it refers to.
@@ -25,9 +26,9 @@ namespace EnhancedEditor {
         /// You can use the <see cref="MultiTags"/> utility class to get informations about existing tags and their id.
         /// </summary>
         public long ID {
-            get => id;
+            readonly get { return id; }
             set {
-                id = value;
+                id   = value;
                 data = null;
             }
         }
@@ -37,8 +38,8 @@ namespace EnhancedEditor {
         /// </summary>
         public string Name {
             get {
-                string _name = GetData(out TagData _object)
-                             ? _object.name
+                string _name = GetData(out TagData _tag)
+                             ? _tag.name
                              : string.Empty;
 
                 return _name;
@@ -50,15 +51,17 @@ namespace EnhancedEditor {
         /// </summary>
         public Color Color {
             get {
-                Color _color = GetData(out TagData _object)
-                             ? _object.Color
+                Color _color = GetData(out TagData _tag)
+                             ? _tag.Color
                              : TagData.DefaultColor.Get();
 
                 return _color;
             }
         }
 
-        // -----------------------
+        // -------------------------------------------
+        // Constructor(s)
+        // -------------------------------------------
 
         /// <summary>
         /// Creates a new tag identifier. Its id defines to which <see cref="TagData"/> from the <see cref="TagDatabase"/> it refers to.
@@ -67,7 +70,7 @@ namespace EnhancedEditor {
         /// </summary>
         /// <param name="_id">Identifier defining to which <see cref="TagData"/> this object should refer to.</param>
         public Tag(long _id) {
-            id = _id;
+            id   = _id;
             data = null;
         }
         #endregion
@@ -81,26 +84,22 @@ namespace EnhancedEditor {
             return new Tag(_id);
         }
 
-        public static bool operator ==(Tag _a, Tag _b) {
-            if (!ReferenceEquals(_a, null)) {
-                return _a.Equals(_b);
-            }
-
-            return ReferenceEquals(_b, null);
+        public static bool operator ==(Tag a, Tag b) {
+            return a.Equals(b);
         }
 
-        public static bool operator !=(Tag _a, Tag _b) {
-            return !(_a == _b);
+        public static bool operator !=(Tag a, Tag b) {
+            return !(a == b);
         }
 
-        public override bool Equals(object obj) {
-            if (!(obj is Tag _object))
+        public override readonly bool Equals(object obj) {
+            if (obj is not Tag _tag)
                 return false;
 
-            return _object == this;
+            return _tag.Equals(this);
         }
 
-        public override int GetHashCode() {
+        public override readonly int GetHashCode() {
             return base.GetHashCode();
         }
         #endregion
@@ -138,9 +137,9 @@ namespace EnhancedEditor {
         /// Is this <see cref="ID"/> referencing a valid <see cref="TagData"/>?
         /// </summary>
         /// <returns>True if this tag id is referencing a valid <see cref="TagData"/>, false otherwise.</returns>
-        public bool IsValid() {
-            bool _isValid = MultiTags.DoesTagExist(id);
-            return _isValid;
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly bool IsValid() {
+            return MultiTags.DoesTagExist(id);
         }
 
         /// <summary>
@@ -148,8 +147,8 @@ namespace EnhancedEditor {
         /// </summary>
         /// <param name="_tag">The <see cref="Tag"/> to check.</param>
         /// <returns>True if this <see cref="Tag"/> matches the another given tag, false otherwise.</returns>
-        public bool Equals(Tag _tag) {
-            return !ReferenceEquals(_tag, null) && (id == _tag.id);
+        public readonly bool Equals(Tag _tag) {
+            return id == _tag.id;
         }
         #endregion
     }

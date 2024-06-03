@@ -12,7 +12,7 @@ namespace EnhancedEditor.Editor {
     /// Custom <see cref="PolymorphValue{T}"/> drawer.
     /// </summary>
     [CustomPropertyDrawer(typeof(PolymorphValue<>), true)]
-    public class PolymorphValuePropertyDrawer : EnhancedPropertyEditor {
+    public sealed class PolymorphValuePropertyDrawer : EnhancedPropertyEditor {
         #region Drawer Content
         protected override float OnEnhancedGUI(Rect _position, SerializedProperty _property, GUIContent _label) {
             // Type selection.

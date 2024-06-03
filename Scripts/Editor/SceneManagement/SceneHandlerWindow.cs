@@ -13,14 +13,13 @@ using UnityEngine.SceneManagement;
 
 using Object = UnityEngine.Object;
 
-namespace EnhancedEditor.Editor
-{
+namespace EnhancedEditor.Editor {
     /// <summary>
     /// Editor window used to manage all scenes and scene bundles in the project,
     /// with the ability to easily open and close them in the editor.
     /// </summary>
     [InitializeOnLoad]
-    public class SceneHandlerWindow : EditorWindow, IHasCustomMenu {
+    public sealed class SceneHandlerWindow : EditorWindow, IHasCustomMenu {
         #region Window GUI
         /// <summary>
         /// Returns the first <see cref="SceneHandlerWindow"/> currently on screen.
@@ -28,8 +27,7 @@ namespace EnhancedEditor.Editor
         /// </summary>
         /// <returns><see cref="SceneHandlerWindow"/> instance on screen.</returns>
         [MenuItem(InternalUtility.MenuItemPath + "Scene Handler", false, 110)]
-        public static SceneHandlerWindow GetWindow()
-        {
+        public static SceneHandlerWindow GetWindow() {
             SceneHandlerWindow _window = GetWindow<SceneHandlerWindow>("Scene Handler");
             _window.Show();
 
@@ -89,19 +87,19 @@ namespace EnhancedEditor.Editor
         [SerializeField] private string searchFilter = string.Empty;
 
         private Vector2 scroll = new Vector2();
+        [NonSerialized] private bool isInitialized = false;
 
         // -----------------------
 
-        static SceneHandlerWindow()
-        {
+        static SceneHandlerWindow() {
             EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
             EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
         }
 
-        private void OnEnable()
-        {
-            Database.Refresh();
-            FilterScenes();
+        private void OnEnable() {
+            if (isInitialized) {
+                RefreshDatabase();
+            }
 
             EditorSceneManager.sceneOpened -= OnSceneOpened;
             EditorSceneManager.sceneClosed -= OnSceneClosed;
@@ -121,18 +119,19 @@ namespace EnhancedEditor.Editor
             menuGUI.image = EditorGUIUtility.FindTexture("_Menu");
         }
 
-        private void OnGUI()
-        {
+        private void OnGUI() {
+            if (!isInitialized) {
+                RefreshDatabase();
+                isInitialized = true;
+            }
+
             Undo.RecordObject(this, UndoRecordTitle);
             Undo.RecordObject(Database, UndoRecordTitle);
 
             // Toolbar.
-            using (var _scope = new GUILayout.HorizontalScope(EditorStyles.toolbar))
-            {
-                if (GUILayout.Button(createGroupGUI, EditorStyles.toolbarButton, GUILayout.Width(CreateGroupButtonWidth)))
-                {
-                    switch (selectedTab)
-                    {
+            using (var _scope = new GUILayout.HorizontalScope(EditorStyles.toolbar)) {
+                if (GUILayout.Button(createGroupGUI, EditorStyles.toolbarButton, GUILayout.Width(CreateGroupButtonWidth))) {
+                    switch (selectedTab) {
                         case 0:
                             ArrayUtility.Add(ref Database.sceneGroups, new SceneHandler.SceneGroup("New Group"));
                             break;
@@ -147,21 +146,18 @@ namespace EnhancedEditor.Editor
                 }
 
                 string _searchFilter = EnhancedEditorGUILayout.ToolbarSearchField(searchFilter, GUILayout.MinWidth(50f));
-                if (_searchFilter != searchFilter)
-                {
+                if (_searchFilter != searchFilter) {
                     searchFilter = _searchFilter;
                     FilterScenes();
                 }
 
-                if (GUILayout.Button(refreshGUI, EditorStyles.toolbarButton, GUILayout.Width(RefreshButtonWidth)))
-                {
+                if (GUILayout.Button(refreshGUI, EditorStyles.toolbarButton, GUILayout.Width(RefreshButtonWidth))) {
                     Database.Refresh();
                     FilterScenes();
                 }
             }
 
-            using (var _scope = new GUILayout.ScrollViewScope(scroll))
-            {
+            using (var _scope = new GUILayout.ScrollViewScope(scroll)) {
                 scroll = _scope.scrollPosition;
                 GUILayout.Space(5f);
 
@@ -175,13 +171,11 @@ namespace EnhancedEditor.Editor
                     height = 25f
                 };
 
-                if (GUI.Button(_position, coreSceneGUI))
-                {
+                if (GUI.Button(_position, coreSceneGUI)) {
                     EnhancedEditorProjectSettings.OpenSettings();
                 }
 
-                switch (selectedTab)
-                {
+                switch (selectedTab) {
                     // Scenes.
                     case 0:
                         DrawScenes();
@@ -198,8 +192,7 @@ namespace EnhancedEditor.Editor
             }
 
             // Renaming group focus update.
-            if ((GUIUtility.keyboardControl != 0) && !EditorGUIUtility.editingTextField || (Event.current.type == EventType.MouseDown))
-            {
+            if ((GUIUtility.keyboardControl != 0) && !EditorGUIUtility.editingTextField || (Event.current.type == EventType.MouseDown)) {
                 GUIUtility.keyboardControl = 0;
                 Database.SaveChanges();
 
@@ -207,8 +200,7 @@ namespace EnhancedEditor.Editor
             }
         }
 
-        private void OnDisable()
-        {
+        private void OnDisable() {
             EditorSceneManager.sceneOpened -= OnSceneOpened;
             EditorSceneManager.sceneClosed -= OnSceneClosed;
             EditorSceneManager.sceneLoaded -= OnSceneLoaded;
@@ -220,6 +212,13 @@ namespace EnhancedEditor.Editor
             _menu.AddItem(resetGroupsGUI, false, () => {
                 Database.ResetGroups();
             });
+        }
+
+        // -----------------------
+
+        private void RefreshDatabase() {
+            Database.Refresh();
+            FilterScenes();
         }
         #endregion
 
@@ -238,19 +237,16 @@ namespace EnhancedEditor.Editor
 
         // -----------------------
 
-        private void DrawScenes()
-        {
+        private void DrawScenes() {
             openGUI.tooltip = string.Format(OpenFormat, SceneFormat);
             addGUI.tooltip = string.Format(AddFormat, SceneFormat);
             closeGUI.tooltip = string.Format(CloseFormat, SceneFormat);
             playGUI.tooltip = string.Format(PlayFormat, SceneFormat);
 
-            for (int _i = 1; _i < Database.sceneGroups.Length; _i++)
-            {
+            for (int _i = 1; _i < Database.sceneGroups.Length; _i++) {
                 var _group = Database.sceneGroups[_i];
                 if (_group.IsVisible && DrawGroup(Database.sceneGroups, _i, _group.Scenes.Length, IsElementVisible, IsElementLoaded, GetElementName,
-                                                  OnOpen, OnAdd, OnClose, OnPlay, OnOptionsMenu))
-                {
+                                                  OnOpen, OnAdd, OnClose, OnPlay, OnOptionsMenu)) {
                     ArrayUtility.AddRange(ref Database.sceneGroups[0].Scenes, _group.Scenes);
                     ArrayUtility.RemoveAt(ref Database.sceneGroups, _i);
 
@@ -263,60 +259,51 @@ namespace EnhancedEditor.Editor
 
             // Draw the first default group at last.
             var _defaultGroup = Database.sceneGroups[0];
-            if (_defaultGroup.IsVisible)
-            {
+            if (_defaultGroup.IsVisible) {
                 DrawGroup(Database.sceneGroups, 0, _defaultGroup.Scenes.Length, IsElementVisible, IsElementLoaded, GetElementName, OnOpen, OnAdd, OnClose, OnPlay, OnOptionsMenu);
             }
 
             // ----- Local Methods ----- \\
 
-            bool IsElementVisible(int _groupIndex, int _elementIndex)
-            {
+            bool IsElementVisible(int _groupIndex, int _elementIndex) {
                 var _element = Database.sceneGroups[_groupIndex].Scenes[_elementIndex];
                 return _element.IsVisible;
             }
 
-            bool IsElementLoaded(int _groupIndex, int _elementIndex)
-            {
+            bool IsElementLoaded(int _groupIndex, int _elementIndex) {
                 var _element = Database.sceneGroups[_groupIndex].Scenes[_elementIndex];
                 return _element.IsLoaded;
             }
 
-            GUIContent GetElementName(int _groupIndex, int _elementIndex)
-            {
+            GUIContent GetElementName(int _groupIndex, int _elementIndex) {
                 var _settings = EnhancedEditorProjectSettings.Instance;
                 var _element = Database.sceneGroups[_groupIndex].Scenes[_elementIndex];
 
-                GUIContent _label = EnhancedEditorGUIUtility.GetLabelGUI(_element.Name);
+                GUIContent _label = EnhancedEditorGUIUtility.GetLabelGUI(_element.Name.RemovePrefix());
 
-                if (CoreSceneEnhancedSettings.Settings.IsCoreSceneEnabled && (CoreSceneEnhancedSettings.Settings.CoreScene.GUID == _element.GUID))
-                {
+                if (CoreSceneEnhancedSettings.Settings.IsCoreSceneEnabled && (CoreSceneEnhancedSettings.Settings.CoreScene.GUID == _element.GUID)) {
                     _label.image = coreSceneGUI.image;
                 }
 
                 return _label;
             }
 
-            void OnOpen(int _groupIndex, int _elementIndex)
-            {
+            void OnOpen(int _groupIndex, int _elementIndex) {
                 var _element = Database.sceneGroups[_groupIndex].Scenes[_elementIndex];
                 OpenSceneFromGUID(_element.GUID, OpenSceneMode.Single);
             }
 
-            void OnAdd(int _groupIndex, int _elementIndex)
-            {
+            void OnAdd(int _groupIndex, int _elementIndex) {
                 var _element = Database.sceneGroups[_groupIndex].Scenes[_elementIndex];
                 OpenSceneFromGUID(_element.GUID, OpenSceneMode.Additive);
             }
 
-            void OnClose(int _groupIndex, int _elementIndex)
-            {
+            void OnClose(int _groupIndex, int _elementIndex) {
                 var _element = Database.sceneGroups[_groupIndex].Scenes[_elementIndex];
                 CloseSceneFromGUID(_element.GUID);
             }
 
-            void OnPlay(int _groupIndex, int _elementIndex)
-            {
+            void OnPlay(int _groupIndex, int _elementIndex) {
                 var _element = Database.sceneGroups[_groupIndex].Scenes[_elementIndex];
                 string _path = AssetDatabase.GUIDToAssetPath(_element.GUID);
 
@@ -324,12 +311,10 @@ namespace EnhancedEditor.Editor
                 EditorApplication.EnterPlaymode();
             }
 
-            void OnOptionsMenu(int _groupIndex, int _elementIndex, GenericMenu _menu)
-            {
+            void OnOptionsMenu(int _groupIndex, int _elementIndex, GenericMenu _menu) {
                 var _element = Database.sceneGroups[_groupIndex].Scenes[_elementIndex];
 
-                for (int _i = 0; _i < Database.sceneGroups.Length; _i++)
-                {
+                for (int _i = 0; _i < Database.sceneGroups.Length; _i++) {
                     if (_i == _groupIndex)
                         continue;
 
@@ -339,8 +324,7 @@ namespace EnhancedEditor.Editor
                         text = $"{moveInGroupGUI.text}{_group.Name}"
                     };
 
-                    _menu.AddItem(_gui, false, () =>
-                    {
+                    _menu.AddItem(_gui, false, () => {
                         ArrayUtility.Add(ref _group.Scenes, _element);
                         ArrayUtility.RemoveAt(ref Database.sceneGroups[_groupIndex].Scenes, _elementIndex);
 
@@ -349,27 +333,23 @@ namespace EnhancedEditor.Editor
                     });
                 }
 
-                _menu.AddItem(selectAssetGUI, false, () =>
-                {
+                _menu.AddItem(selectAssetGUI, false, () => {
                     string _path = AssetDatabase.GUIDToAssetPath(_element.GUID);
-                    if (!string.IsNullOrEmpty(_path))
-                    {
+                    if (!string.IsNullOrEmpty(_path)) {
                         Object _object = AssetDatabase.LoadMainAssetAtPath(_path);
 
                         EditorGUIUtility.PingObject(_object);
                         Selection.activeObject = _object;
                     }
                 });
-                _menu.AddItem(deleteGUI, false, () =>
-                {
+                _menu.AddItem(deleteGUI, false, () => {
                     string _path = AssetDatabase.GUIDToAssetPath(_element.GUID);
                     string _name = Path.GetFileNameWithoutExtension(_path);
 
                     if (!string.IsNullOrEmpty(_path) && EditorUtility.DisplayDialog("Confirm Action",
                                                                                     $"Are you sure you want to delete the scene {_name} from the project?\n\n" +
                                                                                     "This action cannot be undone.",
-                                                                                    "Yes", "Cancel"))
-                    {
+                                                                                    "Yes", "Cancel")) {
                         AssetDatabase.DeleteAsset(_path);
                         ArrayUtility.RemoveAt(ref Database.sceneGroups[_groupIndex].Scenes, _elementIndex);
 
@@ -379,19 +359,16 @@ namespace EnhancedEditor.Editor
             }
         }
 
-        private void DrawBundles()
-        {
+        private void DrawBundles() {
             openGUI.tooltip = string.Format(OpenFormat, BundleFormat);
             addGUI.tooltip = string.Format(AddFormat, BundleFormat);
             closeGUI.tooltip = string.Format(CloseFormat, BundleFormat);
             playGUI.tooltip = string.Format(PlayFormat, BundleFormat);
 
-            for (int _i = 1; _i < Database.bundleGroups.Length; _i++)
-            {
+            for (int _i = 1; _i < Database.bundleGroups.Length; _i++) {
                 var _group = Database.bundleGroups[_i];
                 if (_group.IsVisible && DrawGroup(Database.bundleGroups, _i, _group.Bundles.Length, IsElementVisible, IsElementLoaded, GetElementName,
-                                                  OnOpen, OnAdd, OnClose, OnPlay, OnOptionsMenu))
-                {
+                                                  OnOpen, OnAdd, OnClose, OnPlay, OnOptionsMenu)) {
                     ArrayUtility.AddRange(ref Database.bundleGroups[0].Bundles, _group.Bundles);
                     ArrayUtility.RemoveAt(ref Database.bundleGroups, _i);
 
@@ -404,39 +381,32 @@ namespace EnhancedEditor.Editor
 
             // Draw the first default group at last.
             var _defaultGroup = Database.bundleGroups[0];
-            if (_defaultGroup.IsVisible)
-            {
+            if (_defaultGroup.IsVisible) {
                 DrawGroup(Database.bundleGroups, 0, _defaultGroup.Bundles.Length, IsElementVisible, IsElementLoaded, GetElementName, OnOpen, OnAdd, OnClose, OnPlay, OnOptionsMenu);
             }
 
             // ----- Local Methods ----- \\
 
-            bool IsElementVisible(int _groupIndex, int _elementIndex)
-            {
+            bool IsElementVisible(int _groupIndex, int _elementIndex) {
                 var _element = Database.bundleGroups[_groupIndex].Bundles[_elementIndex];
                 return _element.IsVisible;
             }
 
-            bool IsElementLoaded(int _groupIndex, int _elementIndex)
-            {
+            bool IsElementLoaded(int _groupIndex, int _elementIndex) {
                 var _element = Database.bundleGroups[_groupIndex].Bundles[_elementIndex];
                 return _element.IsLoaded;
             }
 
-            GUIContent GetElementName(int _groupIndex, int _elementIndex)
-            {
+            GUIContent GetElementName(int _groupIndex, int _elementIndex) {
                 var _element = Database.bundleGroups[_groupIndex].Bundles[_elementIndex];
-                return EnhancedEditorGUIUtility.GetLabelGUI(_element.SceneBundle.name);
+                return EnhancedEditorGUIUtility.GetLabelGUI(_element.SceneBundle.name.RemovePrefix());
             }
 
-            void OnOpen(int _groupIndex, int _elementIndex)
-            {
+            void OnOpen(int _groupIndex, int _elementIndex) {
                 SceneBundle _bundle = Database.bundleGroups[_groupIndex].Bundles[_elementIndex].SceneBundle;
-                if (_bundle.Scenes.Length != 0)
-                {
+                if (_bundle.Scenes.Length != 0) {
                     OpenSceneFromGUID(_bundle.Scenes[0].GUID, OpenSceneMode.Single);
-                    for (int _i = 1; _i < _bundle.Scenes.Length; _i++)
-                    {
+                    for (int _i = 1; _i < _bundle.Scenes.Length; _i++) {
                         OpenSceneFromGUID(_bundle.Scenes[_i].GUID, OpenSceneMode.Additive);
                     }
 
@@ -448,11 +418,9 @@ namespace EnhancedEditor.Editor
                 }
             }
 
-            void OnAdd(int _groupIndex, int _elementIndex)
-            {
+            void OnAdd(int _groupIndex, int _elementIndex) {
                 SceneBundle _bundle = Database.bundleGroups[_groupIndex].Bundles[_elementIndex].SceneBundle;
-                for (int _i = 0; _i < _bundle.Scenes.Length; _i++)
-                {
+                for (int _i = 0; _i < _bundle.Scenes.Length; _i++) {
                     OpenSceneFromGUID(_bundle.Scenes[_i].GUID, OpenSceneMode.Additive);
                 }
 
@@ -463,22 +431,18 @@ namespace EnhancedEditor.Editor
                 }
             }
 
-            void OnClose(int _groupIndex, int _elementIndex)
-            {
+            void OnClose(int _groupIndex, int _elementIndex) {
                 SceneBundle _bundle = Database.bundleGroups[_groupIndex].Bundles[_elementIndex].SceneBundle;
-                for (int _i = 0; _i < _bundle.Scenes.Length; _i++)
-                {
+                for (int _i = 0; _i < _bundle.Scenes.Length; _i++) {
                     CloseSceneFromGUID(_bundle.Scenes[_i].GUID);
                 }
             }
 
-            void OnPlay(int _groupIndex, int _elementIndex)
-            {
+            void OnPlay(int _groupIndex, int _elementIndex) {
                 var _element = Database.bundleGroups[_groupIndex].Bundles[_elementIndex];
                 string _playScenes = string.Empty;
 
-                foreach (SceneAsset _scene in _element.SceneBundle.Scenes)
-                {
+                foreach (SceneAsset _scene in _element.SceneBundle.Scenes) {
                     string _path = AssetDatabase.GUIDToAssetPath(_scene.guid);
                     _playScenes += $"{_path}{PlaySceneSeparator}";
                 }
@@ -487,12 +451,10 @@ namespace EnhancedEditor.Editor
                 EditorApplication.EnterPlaymode();
             }
 
-            void OnOptionsMenu(int _groupIndex, int _elementIndex, GenericMenu _menu)
-            {
+            void OnOptionsMenu(int _groupIndex, int _elementIndex, GenericMenu _menu) {
                 var _element = Database.bundleGroups[_groupIndex].Bundles[_elementIndex];
 
-                for (int _i = 0; _i < Database.bundleGroups.Length; _i++)
-                {
+                for (int _i = 0; _i < Database.bundleGroups.Length; _i++) {
                     if (_i == _groupIndex)
                         continue;
 
@@ -502,8 +464,7 @@ namespace EnhancedEditor.Editor
                         text = $"{moveInGroupGUI.text}{_group.Name}"
                     };
 
-                    _menu.AddItem(_gui, false, () =>
-                    {
+                    _menu.AddItem(_gui, false, () => {
                         ArrayUtility.Add(ref _group.Bundles, _element);
                         ArrayUtility.RemoveAt(ref Database.bundleGroups[_groupIndex].Bundles, _elementIndex);
 
@@ -512,20 +473,17 @@ namespace EnhancedEditor.Editor
                     });
                 }
 
-                _menu.AddItem(selectAssetGUI, false, () =>
-                {
+                _menu.AddItem(selectAssetGUI, false, () => {
                     EditorGUIUtility.PingObject(_element.SceneBundle);
                     Selection.activeObject = _element.SceneBundle;
                 });
-                _menu.AddItem(deleteGUI, false, () =>
-                {
+                _menu.AddItem(deleteGUI, false, () => {
                     string _path = AssetDatabase.GetAssetPath(_element.SceneBundle);
 
                     if (!string.IsNullOrEmpty(_path) && EditorUtility.DisplayDialog("Confirm Action",
                                                                                     $"Are you sure you want to delete the scene bundle {_element.SceneBundle.name} from the project?\n\n" +
                                                                                     "This action cannot be undone.",
-                                                                                    "Yes", "Cancel"))
-                    {
+                                                                                    "Yes", "Cancel")) {
                         AssetDatabase.DeleteAsset(_path);
                         ArrayUtility.RemoveAt(ref Database.bundleGroups[_groupIndex].Bundles, _elementIndex);
 
@@ -539,8 +497,7 @@ namespace EnhancedEditor.Editor
 
         private bool DrawGroup(SceneHandler.Group[] _groups, int _index, int _length,
                                Func<int, int, bool> _isElementVisible, Func<int, int, bool> _isElementLoaded, Func<int, int, GUIContent> _getElementName,
-                               Action<int, int> _onOpen, Action<int, int> _onAdd, Action<int, int> _onClose, Action<int, int> _onPlay, Action<int, int, GenericMenu> _onOptionsMenu)
-        {
+                               Action<int, int> _onOpen, Action<int, int> _onAdd, Action<int, int> _onClose, Action<int, int> _onPlay, Action<int, int, GenericMenu> _onOptionsMenu) {
             bool _isDeleted = false;
             GUILayout.Space(5f);
 
@@ -554,12 +511,9 @@ namespace EnhancedEditor.Editor
                     height = EditorGUIUtility.singleLineHeight,
                 };
 
-                if (_index == 0)
-                {
+                if (_index == 0) {
                     EnhancedEditorGUI.UnderlinedLabel(_temp, _groups[_index].Name, EditorStyles.boldLabel);
-                }
-                else
-                {
+                } else {
                     string _id = EnhancedEditorGUIUtility.GetControlID(FocusType.Keyboard).ToString();
                     _temp.xMax = _groupPosition.xMax - (MoveUpButtonWidth + MoveDownButtonWidth + EnhancedEditorGUIUtility.IconWidth + 10f + 10f + 5f + 1f);
 
@@ -575,8 +529,7 @@ namespace EnhancedEditor.Editor
                     _temp.width = MoveUpButtonWidth;
 
                     // Move buttons.
-                    if (GUI.Button(_temp, moveUpGUI, EditorStyles.miniButtonLeft))
-                    {
+                    if (GUI.Button(_temp, moveUpGUI, EditorStyles.miniButtonLeft)) {
                         int _destinationIndex = Mathf.Max(1, _index - 1);
                         ArrayUtility.Move(_groups, _index, _destinationIndex);
 
@@ -587,8 +540,7 @@ namespace EnhancedEditor.Editor
                     _temp.x += _temp.width;
                     _temp.width = MoveDownButtonWidth;
 
-                    if (GUI.Button(_temp, moveDownGUI, EditorStyles.miniButtonRight))
-                    {
+                    if (GUI.Button(_temp, moveDownGUI, EditorStyles.miniButtonRight)) {
                         int _destinationIndex = Mathf.Min(_groups.Length - 1, _index + 1);
                         ArrayUtility.Move(_groups, _index, _destinationIndex);
 
@@ -600,8 +552,7 @@ namespace EnhancedEditor.Editor
                     _temp.width = EnhancedEditorGUIUtility.IconWidth;
 
                     // Delete button.
-                    if (EnhancedEditorGUI.IconButton(_temp, deleteGroupGUI))
-                    {
+                    if (EnhancedEditorGUI.IconButton(_temp, deleteGroupGUI)) {
                         _isDeleted = true;
                     }
                 }
@@ -613,19 +564,16 @@ namespace EnhancedEditor.Editor
             bool _twoColumns = position.width > 500f;
 
             // Draw each element in group.
-            for (int _i = 0; _i < _length; _i++)
-            {
+            for (int _i = 0; _i < _length; _i++) {
                 if (!_isElementVisible(_index, _i))
                     continue;
 
                 bool _isLoaded = _isElementLoaded(_index, _i);
                 _position = (_twoColumns && (_i % 2 == 1))
-                          ? new Rect(_position)
-                          {
+                          ? new Rect(_position) {
                               x = _position.xMax + 10f
                           }
-                          : new Rect(EditorGUILayout.GetControlRect(true, EditorGUIUtility.singleLineHeight + 3f))
-                          {
+                          : new Rect(EditorGUILayout.GetControlRect(true, EditorGUIUtility.singleLineHeight + 3f)) {
                               height = EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing + 3f
                           };
 
@@ -648,8 +596,7 @@ namespace EnhancedEditor.Editor
                              : SuperColor.Green.Get(.9f);
 
                 // Open button.
-                using (var _scope = EnhancedGUI.GUIColor.Scope(SuperColor.Cyan.Get(.9f)))
-                {
+                using (var _scope = EnhancedGUI.GUIColor.Scope(SuperColor.Cyan.Get(.9f))) {
                     if (GUI.Button(_temp, openGUI))
                         _onOpen(_index, _i);
                 }
@@ -658,14 +605,11 @@ namespace EnhancedEditor.Editor
                 _temp.width = AddCloseButtonWidth;
 
                 // Add / Close button.
-                using (var _scope = EnhancedGUI.GUIColor.Scope(_color))
-                {
-                    if (_isLoaded)
-                    {
+                using (var _scope = EnhancedGUI.GUIColor.Scope(_color)) {
+                    if (_isLoaded) {
                         if (GUI.Button(_temp, closeGUI))
                             _onClose(_index, _i);
-                    }
-                    else if (GUI.Button(_temp, addGUI))
+                    } else if (GUI.Button(_temp, addGUI))
                         _onAdd(_index, _i);
                 }
 
@@ -688,8 +632,7 @@ namespace EnhancedEditor.Editor
                 _temp.width = EnhancedEditorGUIUtility.IconWidth;
 
                 // Menu button.
-                if (EditorGUI.DropdownButton(_temp, GUIContent.none, FocusType.Passive, EnhancedEditorStyles.PaneOptions))
-                {
+                if (EditorGUI.DropdownButton(_temp, GUIContent.none, FocusType.Passive, EnhancedEditorStyles.PaneOptions)) {
                     GenericMenu _menu = new GenericMenu();
                     _onOptionsMenu(_index, _i, _menu);
 
@@ -697,8 +640,7 @@ namespace EnhancedEditor.Editor
                 }
             }
 
-            using (var _scope = EnhancedGUI.GUIBackgroundColor.Scope(groupColor))
-            {
+            using (var _scope = EnhancedGUI.GUIBackgroundColor.Scope(groupColor)) {
                 Rect _endGroup = new Rect(EditorGUILayout.GetControlRect(false, 5f))
                 {
                     yMin = _groupPosition.y
@@ -712,18 +654,15 @@ namespace EnhancedEditor.Editor
         #endregion
 
         #region Utility
-        private void FilterScenes()
-        {
+        private void FilterScenes() {
             string _searchFilter = searchFilter.ToLower();
 
             // Scene visibility.
-            for (int _i = 0; _i < Database.sceneGroups.Length; _i++)
-            {
+            for (int _i = 0; _i < Database.sceneGroups.Length; _i++) {
                 var _group = Database.sceneGroups[_i];
                 bool _isGroupVisible = _i != 0;
 
-                foreach (var _scene in _group.Scenes)
-                {
+                foreach (var _scene in _group.Scenes) {
                     bool _isVisible = _scene.Name.ToLower().Contains(_searchFilter);
                     _scene.IsVisible = _isVisible;
 
@@ -735,13 +674,11 @@ namespace EnhancedEditor.Editor
             }
 
             // Bundle visibility.
-            for (int _i = 0; _i < Database.bundleGroups.Length; _i++)
-            {
+            for (int _i = 0; _i < Database.bundleGroups.Length; _i++) {
                 var _group = Database.bundleGroups[_i];
                 bool _isGroupVisible = _i != 0;
 
-                foreach (var _bundle in _group.Bundles)
-                {
+                foreach (var _bundle in _group.Bundles) {
                     bool _isVisible = _bundle.SceneBundle.name.ToLower().Contains(_searchFilter);
                     _bundle.IsVisible = _isVisible;
 
@@ -755,17 +692,13 @@ namespace EnhancedEditor.Editor
         #endregion
 
         #region Scene Management Delegates
-        private static void OnPlayModeStateChanged(PlayModeStateChange _state)
-        {
+        private static void OnPlayModeStateChanged(PlayModeStateChange _state) {
             Database.UpdateLoadedScenes();
 
-            switch (_state)
-            {
+            switch (_state) {
                 // Unload the core scene if not wanted when entering edit mode.
-                case PlayModeStateChange.EnteredEditMode:
-                {
-                    if (SessionState.GetBool(UnloadCoreSceneKey, false))
-                    {
+                case PlayModeStateChange.EnteredEditMode: {
+                    if (SessionState.GetBool(UnloadCoreSceneKey, false)) {
                         CloseSceneFromGUID(CoreSceneEnhancedSettings.Settings.CoreScene.guid);
                         SessionState.SetBool(UnloadCoreSceneKey, false);
                     }
@@ -775,10 +708,8 @@ namespace EnhancedEditor.Editor
                 break;
 
                 // Load the core scene if enabled when exiting edit mode.
-                case PlayModeStateChange.ExitingEditMode:
-                {
-                    if (CoreSceneEnhancedSettings.Settings.IsCoreSceneEnabled)
-                    {
+                case PlayModeStateChange.ExitingEditMode: {
+                    if (CoreSceneEnhancedSettings.Settings.IsCoreSceneEnabled) {
                         string _path = AssetDatabase.GUIDToAssetPath(CoreSceneEnhancedSettings.Settings.CoreScene.guid);
                         if (string.IsNullOrEmpty(_path))
                             return;
@@ -786,8 +717,7 @@ namespace EnhancedEditor.Editor
                         Scene _coreScene = SceneManager.GetSceneByPath(_path);
                         Scene _firstScene = SceneManager.GetSceneAt(0);
 
-                        if (!_coreScene.isLoaded && OpenScene(_path, OpenSceneMode.Additive))
-                        {
+                        if (!_coreScene.isLoaded && OpenScene(_path, OpenSceneMode.Additive)) {
                             SessionState.SetBool(UnloadCoreSceneKey, true);
                             _coreScene = SceneManager.GetSceneByPath(_path);
                         }
@@ -804,8 +734,7 @@ namespace EnhancedEditor.Editor
                 // Load all required scenes when entering play mode.
                 case PlayModeStateChange.EnteredPlayMode:
                     string _playScenes = SessionState.GetString(PlayScenesKey, string.Empty);
-                    if (!string.IsNullOrEmpty(_playScenes))
-                    {
+                    if (!string.IsNullOrEmpty(_playScenes)) {
                         string _coreScenePath = AssetDatabase.GUIDToAssetPath(CoreSceneEnhancedSettings.Settings.CoreScene.guid);
                         int _loadedCount;
 
@@ -816,15 +745,13 @@ namespace EnhancedEditor.Editor
                         #endif
 
                         string[] _allScenes = _playScenes.Split(PlaySceneSeparator);
-                        foreach (string _scenePath in _allScenes)
-                        {
+                        foreach (string _scenePath in _allScenes) {
                             Scene _scene = SceneManager.GetSceneByPath(_scenePath);
                             if (!_scene.isLoaded)
                                 OpenScene(_scenePath, OpenSceneMode.Additive);
                         }
 
-                        for (int _i = 0; _i < _loadedCount; _i++)
-                        {
+                        for (int _i = 0; _i < _loadedCount; _i++) {
                             Scene _scene = SceneManager.GetSceneAt(_i);
                             if ((_scene.path != _coreScenePath) && !_playScenes.Contains(_scene.path))
                                 CloseScene(_scene.path);
@@ -856,46 +783,39 @@ namespace EnhancedEditor.Editor
             }
         }
 
-        private void OnSceneOpened(Scene _scene, OpenSceneMode _mode)
-        {
+        private void OnSceneOpened(Scene _scene, OpenSceneMode _mode) {
             Database.UpdateLoadedScenes();
         }
 
-        private void OnSceneClosed(Scene _scene)
-        {
+        private void OnSceneClosed(Scene _scene) {
             Database.UpdateLoadedScenes();
         }
 
-        private void OnSceneLoaded(Scene _scene, LoadSceneMode _mode)
-        {
+        private void OnSceneLoaded(Scene _scene, LoadSceneMode _mode) {
             Database.UpdateLoadedScenes();
         }
 
-        private void OnSceneUnloaded(Scene _scene)
-        {
+        private void OnSceneUnloaded(Scene _scene) {
             Database.UpdateLoadedScenes(_scene.buildIndex);
         }
         #endregion
 
         #region Opening and Closing Scenes
         /// <inheritdoc cref="OpenSceneFromGUID(string, OpenSceneMode)"/>
-        public static bool OpenSceneFromGUID(string _sceneGUID)
-        {
+        public static bool OpenSceneFromGUID(string _sceneGUID) {
             string _path = AssetDatabase.GUIDToAssetPath(_sceneGUID);
             return OpenScene(_path);
         }
 
         /// <param name="_sceneGUID">GUID of the scene to open.</param>
         /// <inheritdoc cref="OpenScene(string, OpenSceneMode)"/>
-        public static bool OpenSceneFromGUID(string _sceneGUID, OpenSceneMode _mode)
-        {
+        public static bool OpenSceneFromGUID(string _sceneGUID, OpenSceneMode _mode) {
             string _path = AssetDatabase.GUIDToAssetPath(_sceneGUID);
             return OpenScene(_path, _mode);
         }
 
         /// <inheritdoc cref="OpenScene(string, OpenSceneMode)"/>
-        public static bool OpenScene(string _scenePath)
-        {
+        public static bool OpenScene(string _scenePath) {
             if (string.IsNullOrEmpty(_scenePath))
                 return false;
 
@@ -904,8 +824,7 @@ namespace EnhancedEditor.Editor
                                                              $"You are about to open the following scene:\n  {_scenePath}\n\nWhich mode do you want to use to open it?",
                                                              "Single", "Additive", "Cancel");
 
-            switch (_result)
-            {
+            switch (_result) {
                 case 0:
                     return OpenScene(_scenePath, OpenSceneMode.Single);
 
@@ -925,24 +844,19 @@ namespace EnhancedEditor.Editor
         /// <param name="_scenePath">Path of the scene to open.</param>
         /// <param name="_mode">Specifies how the scene should be opened.</param>
         /// <returns>True if the scene was found and could be opened, false otherwise.</returns>
-        public static bool OpenScene(string _scenePath, OpenSceneMode _mode)
-        {
+        public static bool OpenScene(string _scenePath, OpenSceneMode _mode) {
             if (string.IsNullOrEmpty(_scenePath))
                 return false;
 
-            try
-            {
-                if (Application.isPlaying)
-                {
+            try {
+                if (Application.isPlaying) {
                     string _name = Path.GetFileNameWithoutExtension(_scenePath);
                     LoadSceneMode _loadMode = (_mode == OpenSceneMode.Single)
                                             ? LoadSceneMode.Single
                                             : LoadSceneMode.Additive;
 
                     SceneManager.LoadScene(_name, _loadMode);
-                }
-                else
-                {
+                } else {
                     if ((_mode == OpenSceneMode.Single) && !EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
                         return false;
 
@@ -957,10 +871,14 @@ namespace EnhancedEditor.Editor
                             EditorSceneManager.MoveSceneBefore(_core, _first);
                         }
                     }
+
+                    Scene _scene = SceneManager.GetSceneByPath(_scenePath);
+
+                    if (_scene.IsValid()) {
+                        SceneManager.SetActiveScene(_scene);
+                    }
                 }
-            }
-            catch (ArgumentException)
-            {
+            } catch (ArgumentException) {
                 // If the specified scene cannot be found in the database, catch the exception and return false.
                 return false;
             }
@@ -973,8 +891,7 @@ namespace EnhancedEditor.Editor
 
         /// <param name="_sceneGUID">GUID of the scene to close.</param>
         /// <inheritdoc cref="CloseScene(string)"/>
-        public static bool CloseSceneFromGUID(string _sceneGUID)
-        {
+        public static bool CloseSceneFromGUID(string _sceneGUID) {
             string _path = AssetDatabase.GUIDToAssetPath(_sceneGUID);
             return CloseScene(_path);
         }
@@ -984,26 +901,19 @@ namespace EnhancedEditor.Editor
         /// </summary>
         /// <param name="_scenePath">Path of the scene to close.</param>
         /// <returns>True if the scene was found and could be closed, false otherwise.</returns>
-        public static bool CloseScene(string _scenePath)
-        {
+        public static bool CloseScene(string _scenePath) {
             if (string.IsNullOrEmpty(_scenePath))
                 return false;
 
-            try
-            {
-                if (Application.isPlaying)
-                {
+            try {
+                if (Application.isPlaying) {
                     Scene _scene = SceneManager.GetSceneByPath(_scenePath);
                     SceneManager.UnloadSceneAsync(_scene);
-                }
-                else if (EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
-                {
+                } else if (EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) {
                     Scene _scene = EditorSceneManager.GetSceneByPath(_scenePath);
                     EditorSceneManager.CloseScene(_scene, true);
                 }
-            }
-            catch (ArgumentException)
-            {
+            } catch (ArgumentException) {
                 // If the specified scene cannot be found in the database, catch the exception and return false.
                 return false;
             }

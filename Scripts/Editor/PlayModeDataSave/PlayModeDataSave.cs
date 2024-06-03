@@ -23,7 +23,7 @@ namespace EnhancedEditor.Editor {
         /// <see cref="PlayModeDataSave"/> global data wrapper.
         /// </summary>
         [Serializable]
-        private class PlayModeData {
+        private sealed class PlayModeData {
             #region Global Members
             /// <summary>
             /// All stored data.
@@ -45,13 +45,16 @@ namespace EnhancedEditor.Editor {
             public void Save(PlayModeObjectData _data) {
 
                 _data = new PlayModeObjectData(_data);
-                int _index = Data.FindIndex(d => d.objectID == _data.objectID);
 
-                if (_index != -1) {
-                    Data[_index] = _data;
-                } else {
-                    Data.Add(_data);
+                for (int i = 0; i < Data.Count; i++) {
+
+                    if (Data[i].objectID == _data.objectID) {
+                        Data[i] = _data;
+                        return;
+                    }
                 }
+
+                Data.Add(_data);
             }
 
             // -------------------------------------------

@@ -11,7 +11,7 @@ namespace EnhancedEditor {
     /// Use this <see cref="Attribute"/> on a <see cref="FlagsAttribute"/> enum field to specify whether to draw a mask or an int field.
     /// </summary>
     [AttributeUsage(AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
-    public class FlagFieldAttribute : Attribute {
+    public sealed class FlagFieldAttribute : Attribute {
         #region Global Members
         /// <summary>
         /// If true, draws a mask selection field for this enum.

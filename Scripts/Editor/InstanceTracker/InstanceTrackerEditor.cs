@@ -10,22 +10,19 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace EnhancedEditor.Editor
-{
+namespace EnhancedEditor.Editor {
     /// <summary>
     /// Custom <see cref="InstanceTracker"/> editor.
     /// </summary>
 	[CustomEditor(typeof(InstanceTracker)), CanEditMultipleObjects]
-	public class InstanceTrackerEditor : UnityObjectEditor
-    {
+    public sealed class InstanceTrackerEditor : UnityObjectEditor {
         #region Styles
-        private static class Styles
-        {
+        private static class Styles {
             public static readonly GUIStyle HeaderStyle = new GUIStyle(EditorStyles.label)
                                                                 {
-                                                                    fontSize = 16,
-                                                                    fixedHeight = 22f
-                                                                };
+                fontSize = 16,
+                fixedHeight = 22f
+            };
         }
         #endregion
 
@@ -41,13 +38,11 @@ namespace EnhancedEditor.Editor
 
         public override bool UseDefaultMargins() => false;
 
-        protected override void OnEnable()
-        {
+        protected override void OnEnable() {
             base.OnEnable();
 
             // Multi-editing.
-            if (targets.Length > 1)
-            {
+            if (targets.Length > 1) {
                 headerGUI.text = headerGUI.tooltip
                                = $"Multiple {typeof(InstanceTracker).Name} Preview";
 
@@ -76,22 +71,18 @@ namespace EnhancedEditor.Editor
             EditorSceneManager.sceneClosed += OnSceneClosed;
 
             // Get open scenes instances.
-            foreach (var _track in tracker.tracks)
-            {
+            foreach (var _track in tracker.tracks) {
                 _track.IsLoaded = false;
             }
 
-            for (int _i = 0; _i < SceneManager.sceneCount; _i++)
-            {
+            for (int _i = 0; _i < SceneManager.sceneCount; _i++) {
                 Scene _scene = SceneManager.GetSceneAt(_i);
                 OnSceneOpened(_scene);
             }
 
-            for (int _i = tracker.tracks.Length; _i-- > 0;)
-            {
+            for (int _i = tracker.tracks.Length; _i-- > 0;) {
                 var _track = tracker.tracks[_i];
-                if (!_track.OnEnabled())
-                {
+                if (!_track.OnEnabled()) {
                     tracker.RemoveTrack(_track);
                 }
             }
@@ -100,19 +91,16 @@ namespace EnhancedEditor.Editor
             Array.Sort(tracker.tracks, (a, b) => a.SceneName.CompareTo(b.SceneName));
         }
 
-        public override void OnInspectorGUI()
-        {
-            using (var _indentScope = new EditorGUI.IndentLevelScope())
-            {
+        public override void OnInspectorGUI() {
+            using (var _indentScope = new EditorGUI.IndentLevelScope()) {
                 GUILayout.Space(5f);
-                
+
                 // Button.
                 EditorGUILayout.LabelField(headerGUI, Styles.HeaderStyle);
                 GUILayout.Space(7f);
 
                 // Multi editing is not allowed.
-                if (targets.Length > 1)
-                {
+                if (targets.Length > 1) {
                     EditorGUILayout.HelpBox(multiObjectEditingMessage, UnityEditor.MessageType.Warning);
                     return;
                 }
@@ -123,8 +111,7 @@ namespace EnhancedEditor.Editor
             }
         }
 
-        protected override void OnDisable()
-        {
+        protected override void OnDisable() {
             base.OnDisable();
 
             if ((tracker != null) && (tracker.editor == this))
@@ -174,19 +161,16 @@ namespace EnhancedEditor.Editor
 
         // -----------------------
 
-        private void DrawUnloadedTracks()
-        {
+        private void DrawUnloadedTracks() {
             Rect _position;
             trackSelectionControlID = EnhancedEditorGUIUtility.GetControlID(173, FocusType.Keyboard);
 
             // As the horizontal toolbar scope doesn't accept any indent, use a zero indent scope.
             using (var _zeroIndentScope = EnhancedEditorGUI.ZeroIndentScope())
-            using (var _scope = new EditorGUILayout.HorizontalScope())
-            {
+            using (var _scope = new EditorGUILayout.HorizontalScope()) {
                 GUILayout.Space(EditorGUIUtility.singleLineHeight);
 
-                using (var _sectionScope = new EditorGUILayout.VerticalScope(GUILayout.Height(UnloadedAreaHeight)))
-                {
+                using (var _sectionScope = new EditorGUILayout.VerticalScope(GUILayout.Height(UnloadedAreaHeight))) {
                     // Background.
                     _position = _sectionScope.rect;
                     EditorGUI.DrawRect(_position, sectionColor);
@@ -197,8 +181,7 @@ namespace EnhancedEditor.Editor
                     GUI.Label(_position, GUIContent.none, EditorStyles.helpBox);
 
                     // Toolbar.
-                    using (var _toolbarScope = new EditorGUILayout.HorizontalScope(EditorStyles.toolbar))
-                    {
+                    using (var _toolbarScope = new EditorGUILayout.HorizontalScope(EditorStyles.toolbar)) {
                         // Draw an empty button all over the toolbar to draw its bounds.
                         {
                             Rect _toolbarPosition = _toolbarScope.rect;
@@ -209,26 +192,22 @@ namespace EnhancedEditor.Editor
 
                         // Search filter.
                         string _searchFilter = EnhancedEditorGUILayout.ToolbarSearchField(searchFilter);
-                        if (_searchFilter != searchFilter)
-                        {
+                        if (_searchFilter != searchFilter) {
                             searchFilter = _searchFilter;
                             _searchFilter = _searchFilter.ToLower();
 
-                            foreach (var _track in tracker.tracks)
-                            {
+                            foreach (var _track in tracker.tracks) {
                                 _track.UpdateVisibility(_searchFilter);
                             }
                         }
                     }
 
                     // Non-loaded scene tracks.
-                    using (var _scroll = new GUILayout.ScrollViewScope(unloadedTracksScroll))
-                    {
+                    using (var _scroll = new GUILayout.ScrollViewScope(unloadedTracksScroll)) {
                         unloadedTracksScroll = _scroll.scrollPosition;
 
                         int _index = 0;
-                        for (int _i = 0; _i < tracker.tracks.Length; _i++)
-                        {
+                        for (int _i = 0; _i < tracker.tracks.Length; _i++) {
                             var _track = tracker.tracks[_i];
                             if (!_track.IsVisible)
                                 continue;
@@ -255,8 +234,7 @@ namespace EnhancedEditor.Editor
                             EditorGUI.LabelField(_temp, _label);
 
                             // Scroll focus.
-                            if (_isSelected && doFocusUnloadedTrack && (Event.current.type == EventType.Repaint))
-                            {
+                            if (_isSelected && doFocusUnloadedTrack && (Event.current.type == EventType.Repaint)) {
                                 Vector2 _areaSize = new Vector2(_position.x, UnloadedAreaHeight - 20f);
                                 unloadedTracksScroll = EnhancedEditorGUIUtility.FocusScrollOnPosition(unloadedTracksScroll, _position, _areaSize);
 
@@ -265,8 +243,7 @@ namespace EnhancedEditor.Editor
                             }
 
                             // Track selection.
-                            if (_position.Event(out Event _event) == EventType.MouseDown)
-                            {
+                            if (_position.Event(out Event _event) == EventType.MouseDown) {
                                 SelectUnloadedTrack(_track);
                                 if (_event.clickCount == 2)
                                     OpenSelectedScene();
@@ -275,17 +252,13 @@ namespace EnhancedEditor.Editor
                             }
 
                             // Key selection.
-                            if (_isSelected && (GUIUtility.keyboardControl == trackSelectionControlID))
-                            {
+                            if (_isSelected && (GUIUtility.keyboardControl == trackSelectionControlID)) {
                                 int _switch = EnhancedEditorGUIUtility.VerticalKeys();
-                                switch (_switch)
-                                {
+                                switch (_switch) {
                                     case -1:
-                                        for (int _j = _i; _j-- > 0;)
-                                        {
+                                        for (int _j = _i; _j-- > 0;) {
                                             var _selectedTrack = tracker.tracks[_j];
-                                            if (_selectedTrack.IsVisible)
-                                            {
+                                            if (_selectedTrack.IsVisible) {
                                                 SelectUnloadedTrack(_selectedTrack);
                                                 break;
                                             }
@@ -293,11 +266,9 @@ namespace EnhancedEditor.Editor
                                         break;
 
                                     case 1:
-                                        for (int _j = _i + 1; _j < tracker.tracks.Length; _j++)
-                                        {
+                                        for (int _j = _i + 1; _j < tracker.tracks.Length; _j++) {
                                             var _selectedTrack = tracker.tracks[_j];
-                                            if (_selectedTrack.IsVisible)
-                                            {
+                                            if (_selectedTrack.IsVisible) {
                                                 SelectUnloadedTrack(_selectedTrack);
                                                 break;
                                             }
@@ -310,17 +281,14 @@ namespace EnhancedEditor.Editor
                             }
 
                             // Context click.
-                            if (EnhancedEditorGUIUtility.ContextClick(_position))
-                            {
+                            if (EnhancedEditorGUIUtility.ContextClick(_position)) {
                                 GenericMenu _menu = new GenericMenu();
-                                _menu.AddItem(openSceneSingleGUI, false, () =>
-                                {
+                                _menu.AddItem(openSceneSingleGUI, false, () => {
                                     if (!SceneHandlerWindow.OpenSceneFromGUID(selectedUnloadedTrack.SceneGUID, OpenSceneMode.Single))
                                         RemoveSelectedUnloadedTrack();
                                 });
 
-                                _menu.AddItem(openSceneAdditiveGUI, false, () =>
-                                {
+                                _menu.AddItem(openSceneAdditiveGUI, false, () => {
                                     if (!SceneHandlerWindow.OpenSceneFromGUID(selectedUnloadedTrack.SceneGUID, OpenSceneMode.Additive))
                                         RemoveSelectedUnloadedTrack();
                                 });
@@ -349,8 +317,7 @@ namespace EnhancedEditor.Editor
             _position = EditorGUI.IndentedRect(EditorGUILayout.GetControlRect(true, 20f));
             _position.xMax -= OpenSceneButtonWidth + 10f;
 
-            if (_enabled)
-            {
+            if (_enabled) {
                 isInstancePreview = EditorGUI.Foldout(_position, isInstancePreview, instancePreviewGUI, true);
             }
 
@@ -358,21 +325,16 @@ namespace EnhancedEditor.Editor
             _position.width = OpenSceneButtonWidth;
 
             using (var _enabledScope = EnhancedGUI.GUIEnabled.Scope(_enabled))
-            using (var _colorScope = EnhancedGUI.GUIColor.Scope(openButtonColor))
-            {
-                if (GUI.Button(_position, openSceneGUI))
-                {
+            using (var _colorScope = EnhancedGUI.GUIColor.Scope(openButtonColor)) {
+                if (GUI.Button(_position, openSceneGUI)) {
                     OpenSelectedScene();
                 }
             }
 
             // Selected track preview.
-            if (isInstancePreview && _enabled)
-            {
-                using (var _indentScope = new EditorGUI.IndentLevelScope())
-                {
-                    for (int _i = 0; _i < selectedUnloadedTrack.Instances.Length; _i++)
-                    {
+            if (isInstancePreview && _enabled) {
+                using (var _indentScope = new EditorGUI.IndentLevelScope()) {
+                    for (int _i = 0; _i < selectedUnloadedTrack.Instances.Length; _i++) {
                         string _instance = selectedUnloadedTrack.Instances[_i];
                         _position = EditorGUILayout.GetControlRect();
 
@@ -389,13 +351,11 @@ namespace EnhancedEditor.Editor
             }
         }
 
-        private void DrawLoadedTracker()
-        {
+        private void DrawLoadedTracker() {
             GUILayout.Space(10f);
 
             // No track to select instances.
-            if (selectedTrack == null)
-            {
+            if (selectedTrack == null) {
                 EditorGUILayout.HelpBox(string.Format(NoOpenedTrackMessage, tracker.targetType.Name), UnityEditor.MessageType.Warning);
                 return;
             }
@@ -404,13 +364,11 @@ namespace EnhancedEditor.Editor
             EditorGUILayout.HelpBox(string.Format(SelectTrackMessage, tracker.targetType.Name), UnityEditor.MessageType.Info);
             GUILayout.Space(5f);
 
-            using (var _scope = new GUILayout.ScrollViewScope(trackTabsScroll))
-            {
+            using (var _scope = new GUILayout.ScrollViewScope(trackTabsScroll)) {
                 trackTabsScroll = _scope.scrollPosition;
 
                 int _selectedTrackTab = EnhancedEditorGUILayout.CenteredToolbar(selectedTrackTab, trackTabsGUI, GUILayout.Height(ToolbarHeight));
-                if (_selectedTrackTab != selectedTrackTab)
-                {
+                if (_selectedTrackTab != selectedTrackTab) {
                     SelectTrack(_selectedTrackTab);
                 }
             }
@@ -422,8 +380,7 @@ namespace EnhancedEditor.Editor
             Event _event;
             int _index = 0;
 
-            for (int _i = 0; _i < selectedTrack.SceneInstances.Count; _i++)
-            {
+            for (int _i = 0; _i < selectedTrack.SceneInstances.Count; _i++) {
                 Component _instance = selectedTrack.SceneInstances[_i];
                 if (_instance == null)
                     continue;
@@ -445,18 +402,15 @@ namespace EnhancedEditor.Editor
                 _temp.y += 1f;
                 _temp.height -= 2f;
 
-                if (GUI.Button(_temp, selectObjectGUI))
-                {
+                if (GUI.Button(_temp, selectObjectGUI)) {
                     EditorGUIUtility.PingObject(_instance);
                     Selection.activeObject = _instance;
                 }
 
                 // Selection.
-                if (_position.Event(out _event) == EventType.MouseDown)
-                {
+                if (_position.Event(out _event) == EventType.MouseDown) {
                     SelectInstance(_instance);
-                    switch (_event.clickCount)
-                    {
+                    switch (_event.clickCount) {
                         case 1:
                             EditorGUIUtility.PingObject(_instance);
                             break;
@@ -470,16 +424,12 @@ namespace EnhancedEditor.Editor
                 }
 
                 // Keyboard focus.
-                if (_isSelected && (GUIUtility.keyboardControl == instanceSelectionControlID))
-                {
+                if (_isSelected && (GUIUtility.keyboardControl == instanceSelectionControlID)) {
                     int _switch = EnhancedEditorGUIUtility.VerticalKeys();
-                    if (_switch != 0)
-                    {
+                    if (_switch != 0) {
                         int _selectedIndex = Mathf.Clamp(_i + _switch, 0, selectedTrack.SceneInstances.Count - 1);
                         SelectInstance(selectedTrack.SceneInstances[_selectedIndex]);
-                    }
-                    else if ((_event.type == EventType.KeyDown) && (_event.keyCode == KeyCode.Return))
-                    {
+                    } else if ((_event.type == EventType.KeyDown) && (_event.keyCode == KeyCode.Return)) {
                         EditorGUIUtility.PingObject(_instance);
                         _event.Use();
                     }
@@ -488,8 +438,7 @@ namespace EnhancedEditor.Editor
 
             // Unselect instance on empty space click.
             _event = Event.current;
-            if (_event.type == EventType.MouseDown)
-            {
+            if (_event.type == EventType.MouseDown) {
                 selectedInstance = null;
                 _event.Use();
             }
@@ -497,34 +446,28 @@ namespace EnhancedEditor.Editor
         #endregion
 
         #region Scene Callback
-        private void OnSceneOpened(Scene _scene, OpenSceneMode _mode = OpenSceneMode.Single)
-        {
+        private void OnSceneOpened(Scene _scene, OpenSceneMode _mode = OpenSceneMode.Single) {
             if (!_scene.isLoaded || !_scene.IsValid() || string.IsNullOrEmpty(_scene.path))
                 return;
 
             // Load instances.
             string _guid = AssetDatabase.AssetPathToGUID(_scene.path);
-            foreach (var _track in tracker.tracks)
-            {
-                if (_track.Load(_scene, _guid, tracker.targetType))
-                {
+            foreach (var _track in tracker.tracks) {
+                if (_track.Load(_scene, _guid, tracker.targetType)) {
                     OnNewTrack(_track);
                     break;
                 }
             }
         }
 
-        private void OnSceneClosed(Scene _scene)
-        {
+        private void OnSceneClosed(Scene _scene) {
             if (!_scene.IsValid() || string.IsNullOrEmpty(_scene.path))
                 return;
 
             // Close scene.
             string _guid = AssetDatabase.AssetPathToGUID(_scene.path);
-            foreach (var _track in tracker.tracks)
-            {
-                if (_track.Close(_guid))
-                {
+            foreach (var _track in tracker.tracks) {
+                if (_track.Close(_guid)) {
                     OnRemoveTrack(_track);
                     _track.UpdateVisibility(searchFilter.ToLower());
 
@@ -535,19 +478,16 @@ namespace EnhancedEditor.Editor
         #endregion
 
         #region Tracker Callback
-        internal void OnNewTrack(InstanceTracker.SceneTrack _track)
-        {
+        internal void OnNewTrack(InstanceTracker.SceneTrack _track) {
             GUIContent _tabGUI = new GUIContent(_track.SceneName, _track.SceneName);
             ArrayUtility.Add(ref trackTabsGUI, _tabGUI);
 
             SelectTrack(Mathf.Max(0, selectedTrackTab));
         }
 
-        internal void OnRemoveTrack(InstanceTracker.SceneTrack _track)
-        {
+        internal void OnRemoveTrack(InstanceTracker.SceneTrack _track) {
             int _index = Array.FindIndex(trackTabsGUI, t => t.text == _track.SceneName);
-            if (_index > -1)
-            {
+            if (_index > -1) {
                 ArrayUtility.RemoveAt(ref trackTabsGUI, _index);
                 SelectTrack(Mathf.Min(trackTabsGUI.Length - 1, selectedTrackTab));
             }
@@ -555,39 +495,31 @@ namespace EnhancedEditor.Editor
         #endregion
 
         #region Utility
-        private void OpenSelectedScene()
-        {
-            if (!SceneHandlerWindow.OpenSceneFromGUID(selectedUnloadedTrack.SceneGUID))
-            {
+        private void OpenSelectedScene() {
+            if (!SceneHandlerWindow.OpenSceneFromGUID(selectedUnloadedTrack.SceneGUID)) {
                 RemoveSelectedUnloadedTrack();
             }
         }
 
-        private void RemoveSelectedUnloadedTrack()
-        {
+        private void RemoveSelectedUnloadedTrack() {
             tracker.RemoveTrack(selectedUnloadedTrack);
             selectedUnloadedTrack = null;
         }
 
-        private void SelectUnloadedTrack(InstanceTracker.SceneTrack _track)
-        {
+        private void SelectUnloadedTrack(InstanceTracker.SceneTrack _track) {
             selectedUnloadedTrack = _track;
             doFocusUnloadedTrack = true;
 
             GUIUtility.keyboardControl = trackSelectionControlID;
         }
 
-        private void SelectTrack(int _selectedTrackTab)
-        {
+        private void SelectTrack(int _selectedTrackTab) {
             int _index = _selectedTrackTab;
             selectedTrackTab = _selectedTrackTab;
 
-            foreach (var _track in tracker.tracks)
-            {
-                if (_track.IsLoaded)
-                {
-                    if (_index == 0)
-                    {
+            foreach (var _track in tracker.tracks) {
+                if (_track.IsLoaded) {
+                    if (_index == 0) {
                         selectedTrack = _track;
                         return;
                     }
@@ -599,8 +531,7 @@ namespace EnhancedEditor.Editor
             selectedTrack = null;
         }
 
-        private void SelectInstance(Component _component)
-        {
+        private void SelectInstance(Component _component) {
             selectedInstance = _component;
             GUIUtility.keyboardControl = instanceSelectionControlID;
         }

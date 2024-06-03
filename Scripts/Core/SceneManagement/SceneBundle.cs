@@ -5,6 +5,7 @@
 // ============================================================================ //
 
 using System;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -13,7 +14,7 @@ namespace EnhancedEditor {
     /// Default empty <see cref="SceneBundle"/> behaviour.
     /// </summary>
     [Serializable, DisplayName("<None>")]
-    public class DefaultSceneBundleBehaviour : SceneBundleBehaviour { }
+    public sealed class DefaultSceneBundleBehaviour : SceneBundleBehaviour { }
 
     /// <summary>
     /// <see cref="ScriptableObject"/> used to group multiple scenes in a single bundle,
@@ -21,7 +22,7 @@ namespace EnhancedEditor {
     /// </summary>
     #pragma warning disable IDE0052
     [CreateAssetMenu(fileName = Prefix + "SceneBundle", menuName = InternalUtility.MenuPath + "Scene Bundle", order = InternalUtility.MenuOrder)]
-    public class SceneBundle : ScriptableObject {
+    public sealed class SceneBundle : ScriptableObject {
         public const string Prefix = "SCB_";
 
         #region Global Members
@@ -33,7 +34,7 @@ namespace EnhancedEditor {
         public SceneAsset[] Scenes = new SceneAsset[] { };
 
         [Space(5f), HelpBox("Index of the scene to set active once loaded. Use -1 to leave it as it is.", MessageType.Info, false)]
-        [SerializeField, Enhanced, ValidationMember("ActiveSceneIndex")] private int activeSceneIndex = 0;
+        [SerializeField, Enhanced, ValidationMember(nameof(ActiveSceneIndex))] private int activeSceneIndex = 0;
 
         #if UNITY_EDITOR
         [SerializeField, Space(5f), Enhanced, EnhancedTextArea(true)] private string comment = string.Empty;
@@ -41,19 +42,27 @@ namespace EnhancedEditor {
 
         [Space(10f), HorizontalLine(SuperColor.Grey, 1f), Space(10f)]
 
+        [SerializeField, Enhanced, ReadOnly] private int guid = EnhancedUtility.GenerateGUID();
+
         [SerializeField] public PolymorphValue<SceneBundleBehaviour> Behaviour = new PolymorphValue<SceneBundleBehaviour>(SerializedTypeConstraint.None,
                                                                                                                           typeof(DefaultSceneBundleBehaviour));
+
+        // -----------------------
 
         /// <summary>
         /// An empty class only displays its name in the inspector.
         /// <br/> To avoid it, only draw the class content if non-default type.
         /// </summary>
-        #pragma warning disable IDE0051
         private bool ShowBehaviour {
             get { return Behaviour.GetType() != typeof(DefaultSceneBundleBehaviour); }
         }
 
-        // -----------------------
+        /// <summary>
+        /// Unique GUID of this <see cref="SceneBundle"/>.
+        /// </summary>
+        public int GUID {
+            get { return guid; }
+        }
 
         /// <summary>
         /// Index of the scene to set active once loaded.
@@ -72,8 +81,8 @@ namespace EnhancedEditor {
         /// </summary>
         public bool IsLoaded {
             get {
-                foreach (SceneAsset _scene in Scenes) {
-                    if (!_scene.IsLoaded) {
+                for (int i = 0; i < Scenes.Length; i++) {
+                    if (!Scenes[i].IsLoaded) {
                         return false;
                     }
                 }
@@ -195,8 +204,8 @@ namespace EnhancedEditor {
         /// <param name="_scenes">All scenes to check.</param>
         /// <returns>True if all the given scenes are in this bundle, false otherwise.</returns>
         public bool ContainScenes(Scene[] _scenes) {
-            foreach (Scene _scene in _scenes) {
-                if (!ContainScene(_scene)) {
+            for (int i = 0; i < _scenes.Length; i++) {
+                if (!ContainScene(_scenes[i])) {
                     return false;
                 }
             }
@@ -237,8 +246,8 @@ namespace EnhancedEditor {
         /// <param name="_scenes">All scenes to check.</param>
         /// <returns>True if all the given scenes are in this bundle, false otherwise.</returns>
         public bool ContainScenes(SceneAsset[] _scenes) {
-            foreach (SceneAsset _scene in _scenes) {
-                if (!ContainScene(_scene)) {
+            for (int i = 0; i < _scenes.Length; i++) {
+                if (!ContainScene(_scenes[i])) {
                     return false;
                 }
             }
@@ -266,26 +275,37 @@ namespace EnhancedEditor {
             return Behaviour.GetValue(out _behaviour);
         }
 
+        /// <summary>
+        /// Regenerates a new GUID for this bundle.
+        /// </summary>
+        public void RegenerateGUID() {
+            guid = EnhancedUtility.GenerateGUID();
+        }
+
         // -------------------------------------------
         // Getter
         // -------------------------------------------
 
         /// <inheritdoc cref="BuildSceneDatabase.GetSceneBundle(Scene, out SceneBundle)"/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool GetSceneBundle(Scene _scene, out SceneBundle _bundle) {
             return BuildSceneDatabase.Database.GetSceneBundle(_scene, out _bundle);
         }
 
         /// <inheritdoc cref="BuildSceneDatabase.GetSceneBundle(Scene[], out SceneBundle)"/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool GetSceneBundle(Scene[] _scenes, out SceneBundle _bundle) {
             return BuildSceneDatabase.Database.GetSceneBundle(_scenes, out _bundle);
         }
 
         /// <inheritdoc cref="BuildSceneDatabase.GetSceneBundle(SceneAsset, out SceneBundle)"/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool GetSceneBundle(SceneAsset _scene, out SceneBundle _bundle) {
             return BuildSceneDatabase.Database.GetSceneBundle(_scene, out _bundle);
         }
 
         /// <inheritdoc cref="BuildSceneDatabase.GetSceneBundle(SceneAsset[], out SceneBundle)"/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool GetSceneBundle(SceneAsset[] _scenes, out SceneBundle _bundle) {
             return BuildSceneDatabase.Database.GetSceneBundle(_scenes, out _bundle);
         }

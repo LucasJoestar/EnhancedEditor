@@ -298,7 +298,18 @@ namespace EnhancedEditor.Editor {
 
                 // Collection.
                 if (_field.FieldType.IsArray && ((i + 2) < _paths.Length)) {
-                    _value = (_field.GetValue(_value) as Array).GetValue(GetPathIndex(_paths[i + 2]));
+
+                    Array _array = _field.GetValue(_value) as Array;
+                    int _index = GetPathIndex(_paths[i + 2]);
+
+                    // Missing.
+                    if (_index >= _array.Length) {
+
+                        _field = null;
+                        return false;
+                    }
+
+                    _value = _array.GetValue(_index);
                     _type = (_value != null)
                           ? _value.GetType()
                           : _field.FieldType.GetElementType();
@@ -310,7 +321,17 @@ namespace EnhancedEditor.Editor {
                 // List.
                 if (_field.FieldType.IsGenericType && (_field.FieldType.GetGenericTypeDefinition() == typeof(List<>)) && ((i + 2) < _paths.Length)) {
 
-                    _value = (_field.GetValue(_value) as IList)[GetPathIndex(_paths[i + 2])];
+                    IList _list = _field.GetValue(_value) as IList;
+                    int _index = GetPathIndex(_paths[i + 2]);
+
+                    // Missing.
+                    if (_index >= _list.Count) {
+
+                        _field = null;
+                        return false;
+                    }
+
+                    _value = _list[_index];
                     _type = (_value != null)
                           ? _value.GetType()
                           : _field.FieldType.GetElementType();
@@ -603,23 +624,23 @@ namespace EnhancedEditor.Editor {
 
         // -----------------------
 
-        /// <inheritdoc cref="CreateObject(string, GameObject, Vector3, Type[])"/>
-        public static GameObject CreateObject(string _name, params Type[] _components) {
-            return CreateObject(_name, null, _components);
+        /// <inheritdoc cref="CreateObject(string, GameObject, Vector3, bool, Type[])"/>
+        public static GameObject CreateObject(string _name, bool _selectObject, params Type[] _components) {
+            return CreateObject(_name, null, _selectObject, _components);
         }
 
-        /// <inheritdoc cref="CreateObject(string, GameObject, Vector3, Type[])"/>
-        public static GameObject CreateObject(string _name, GameObject _context, params Type[] _components) {
+        /// <inheritdoc cref="CreateObject(string, GameObject, Vector3, bool, Type[])"/>
+        public static GameObject CreateObject(string _name, GameObject _context, bool _selectObject, params Type[] _components) {
             GameObject _object = new GameObject(_name);
-            return CreateObject(_object, _context, _components);
+            return CreateObject(_object, _context, _selectObject, _components);
         }
 
-        /// <inheritdoc cref="CreateObject(string, GameObject, Vector3, Type[])"/>
-        public static GameObject CreateObject(GameObject _prefab, string _name, GameObject _context, params Type[] _components) {
+        /// <inheritdoc cref="CreateObject(string, GameObject, Vector3, bool, Type[])"/>
+        public static GameObject CreateObject(GameObject _prefab, string _name, GameObject _context, bool _selectObject, params Type[] _components) {
             GameObject _object = PrefabUtility.InstantiatePrefab(_prefab) as GameObject;
             _object.name = _name;
 
-            return CreateObject(_object, _context, _components);
+            return CreateObject(_object, _context, _selectObject, _components);
         }
 
         /// <summary>
@@ -630,14 +651,14 @@ namespace EnhancedEditor.Editor {
         /// <param name="_position">World position of the object.</param>
         /// <param name="_components">Base component(s) of this object.</param>
         /// <returns>Newly created object instance.</returns>
-        public static GameObject CreateObject(string _name, GameObject _context, Vector3 _position, params Type[] _components) {
-            GameObject _object = CreateObject(_name, _context, _components);
+        public static GameObject CreateObject(string _name, GameObject _context, Vector3 _position, bool _selectObject, params Type[] _components) {
+            GameObject _object = CreateObject(_name, _context, _selectObject, _components);
             _object.transform.position = _position;
 
             return _object;
         }
 
-        private static GameObject CreateObject(GameObject _object, GameObject _context, params Type[] _components) {
+        private static GameObject CreateObject(GameObject _object, GameObject _context, bool _selectObject, params Type[] _components) {
 
             for (int i = 0; i < _components.Length; i++) {
                 CreateComponent(_object, _components[i]);
@@ -652,7 +673,10 @@ namespace EnhancedEditor.Editor {
             Undo.RegisterCreatedObjectUndo(_object, "Create " + _object.name);
 
             EditorGUIUtility.PingObject(_object);
-            Selection.activeObject = _object;
+
+            if (_selectObject) {
+                Selection.activeObject = _object;
+            }
 
             return _object;
         }

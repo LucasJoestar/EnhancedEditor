@@ -7,6 +7,7 @@
 using System;
 using System.IO;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
 using UnityEngine;
@@ -47,7 +48,7 @@ namespace EnhancedEditor {
         /// <param name="_target">The destination object to copy values into.</param>
         /// <param name="_doFullCopy">If true, even the members with the <see cref="PreventCopyAttribute"/> will be copied.</param>
         /// <returns>The modified destination object.</returns>
-        public static object CopyObjectContent(object _source, object _target, bool _doFullCopy = false) {
+        public static object CopyObjectContent(object _source, object _target, bool _doFullCopy = false, bool _serializedOnly = false) {
             // Copy all available field values.
             FieldInfo[] _sourceFields = _source.GetType().GetFields(CopyObjectFlags);
             FieldInfo[] _fields = _target.GetType().GetFields(CopyObjectFlags);
@@ -56,6 +57,10 @@ namespace EnhancedEditor {
                 FieldInfo _to = _fields[_i];
 
                 if (!_doFullCopy && _to.IsDefined(typeof(PreventCopyAttribute), true)) {
+                    continue;
+                }
+
+                if (_serializedOnly && !_to.IsDefined(typeof(SerializeField), true)) {
                     continue;
                 }
 
@@ -79,6 +84,10 @@ namespace EnhancedEditor {
                 PropertyInfo _to = _properties[_i];
 
                 if (!_to.CanWrite || !_to.CanRead || (!_doFullCopy && _to.IsDefined(typeof(PreventCopyAttribute), true))) {
+                    continue;
+                }
+
+                if (_serializedOnly && !_to.IsDefined(typeof(SerializeField), true)) {
                     continue;
                 }
 
@@ -123,6 +132,7 @@ namespace EnhancedEditor {
         /// Generates a new int GUID.
         /// </summary>
         /// <returns>The generated GUID.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int GenerateGUID() {
             return Guid.NewGuid().GetHashCode();
         }
@@ -171,9 +181,9 @@ namespace EnhancedEditor {
                 // hashCodeMedium = 8~23  8Byte
                 // hashCodeEnd = 24~31  8Byte
 
-                ulong hashCodeStart = BitConverter.ToUInt64(hashText, 0);
+                ulong hashCodeStart  = BitConverter.ToUInt64(hashText, 0);
                 ulong hashCodeMedium = BitConverter.ToUInt64(hashText, 8);
-                ulong hashCodeEnd = BitConverter.ToUInt64(hashText, 24);
+                ulong hashCodeEnd    = BitConverter.ToUInt64(hashText, 24);
 
                 hashCode = hashCodeStart ^ hashCodeMedium ^ hashCodeEnd;
             }
@@ -200,7 +210,7 @@ namespace EnhancedEditor {
             #if UNITY_STANDALONE_WIN
             _path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), MyGamesFolder, Application.productName);
             #else
-            savedGamesPath = Application.persistentDataPath + "/";
+            _path = Application.persistentDataPath + "/";
             #endif
 
             if (_autoCreate && !Directory.Exists(_path)) {

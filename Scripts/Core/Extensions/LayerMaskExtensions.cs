@@ -4,6 +4,7 @@
 //
 // ============================================================================ //
 
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 namespace EnhancedEditor {
@@ -18,6 +19,7 @@ namespace EnhancedEditor {
         /// <param name="_mask">The layer mask to check content.</param>
         /// <param name="_layer">The layer to be included in the mask.</param>
         /// <returns>True if this layer mask contains the given layer, false otherwise.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool Contains(this LayerMask _mask, int _layer) {
             return _mask == (_mask | (1 << _layer));
         }

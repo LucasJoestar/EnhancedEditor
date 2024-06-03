@@ -15,7 +15,7 @@ namespace EnhancedEditor.Editor {
     /// </summary>
     [InitializeOnLoad]
     #pragma warning disable
-    public class AssetModificationProcessor : UnityEditor.AssetModificationProcessor {
+    public sealed class AssetModificationProcessor : UnityEditor.AssetModificationProcessor {
         #region Global Members
         private const string ModifiedObjectKey = "ModifiedObjects";
 
@@ -119,7 +119,7 @@ namespace EnhancedEditor.Editor {
 
                     Object _object = EditorUtility.InstanceIDToObject(_id);
 
-                    if (!ReferenceEquals(_object, null)) {
+                    if ((_object is not null)) {
                         EditorUtility.SetDirty(_object);
                     }
                 }

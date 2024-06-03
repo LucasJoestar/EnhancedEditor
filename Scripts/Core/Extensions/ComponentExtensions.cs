@@ -4,6 +4,7 @@
 //
 // ============================================================================ //
 
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 namespace EnhancedEditor {
@@ -17,36 +18,55 @@ namespace EnhancedEditor {
         /// </summary>
         /// <param name="_component">This component to get the <see cref="ExtendedBehaviour"/> from.</param>
         /// <returns>The <see cref="ExtendedBehaviour"/> attached to this component <see cref="GameObject"/>.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ExtendedBehaviour GetExtendedBehaviour(this Component _component) {
             return _component.GetComponent<ExtendedBehaviour>();
         }
 
         /// <param name="_component"><see cref="Component"/> to check.</param>
-        /// <inheritdoc cref="GameObjectExtensions.GetTags(GameObject)"/>
-        public static TagGroup GetTags(this Component _component) {
-            return _component.gameObject.GetTags();
+        /// <inheritdoc cref="GameObjectExtensions.GetTags"/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool GetTags(this Component _component, out TagGroup _tags) {
+            return _component.gameObject.GetTags(out _tags);
         }
 
         /// <param name="_component"><see cref="Component"/> to check.</param>
         /// <inheritdoc cref="GameObjectExtensions.HasTag(GameObject, Tag)"/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool HasTag(this Component _component, Tag _tag) {
             return _component.gameObject.HasTag(_tag);
         }
 
         /// <param name="_component"><see cref="Component"/> to check.</param>
         /// <inheritdoc cref="GameObjectExtensions.HasTags(GameObject, TagGroup)"/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool HasTags(this Component _component, TagGroup _tags) {
             return _component.gameObject.HasTags(_tags);
         }
 
         /// <param name="_component"><see cref="Component"/> to check.</param>
         /// <inheritdoc cref="GameObjectExtensions.HasAnyTag(GameObject, TagGroup)"/>
-        public static bool HasAnyTag(this Component _component, TagGroup _tags) {
-            return _component.gameObject.HasAnyTag(_tags);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool HasAnyTag(this Component _component, TagGroup _tags, bool validIfEmpty = false) {
+            return _component.gameObject.HasAnyTag(_tags, validIfEmpty);
         }
         #endregion
 
-        #region Utility
+        #region Component
+        /// <param name="_component">This <see cref="Component"/> instance.</param>
+        /// <inheritdoc cref="GameObjectExtensions.TryGetComponentInParent"/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool TryGetComponentInParent<T>(this Component _component, out T _searchComponent) {
+            return _component.gameObject.TryGetComponentInParent(out _searchComponent);
+        }
+
+        /// <param name="_component">This <see cref="Component"/> instance.</param>
+        /// <inheritdoc cref="GameObjectExtensions.TryGetComponentInChildren"/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool TryGetComponentInChildren<T>(this Component _component, out T _searchComponent) {
+            return _component.gameObject.TryGetComponentInChildren(out _searchComponent);
+        }
+
         #if !UNITY_2019_2_OR_NEWER
         /// <summary>
         /// Gets the component of the specified type, if it exists.<br/>

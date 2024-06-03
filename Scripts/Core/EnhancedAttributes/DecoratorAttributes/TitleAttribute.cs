@@ -12,14 +12,16 @@ namespace EnhancedEditor {
     /// <para/>
     /// A title consists of a left-centered underlined label, like a header but more elegant.
     /// </summary>
-    public class TitleAttribute : EnhancedDecoratorAttribute {
+    public sealed class TitleAttribute : EnhancedDecoratorAttribute {
         #region Global Members
         /// <summary>
         /// Label displayed as a title.
         /// </summary>
         public readonly GUIContent Label = null;
 
-        // -----------------------
+        // -------------------------------------------
+        // Constructor(s)
+        // -------------------------------------------
 
         /// <param name="_title"><see cref="string"/> text of this title.</param>
         /// <param name="_tooltip">Tooltip displayed on this title.</param>

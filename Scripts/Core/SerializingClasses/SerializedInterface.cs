@@ -20,7 +20,7 @@ namespace EnhancedEditor {
     /// <typeparam name="T">Interface type to serialize.</typeparam>
     [Serializable]
     #pragma warning disable
-    public class SerializedInterface<T> : IComparer<SerializedInterface<T>> where T : class {
+    public sealed class SerializedInterface<T> : IComparer<SerializedInterface<T>> where T : class {
         #region Global Members
         [SerializeField] private Component component = null;
         private T interfaceInstance = default;
@@ -58,7 +58,9 @@ namespace EnhancedEditor {
             }
         }
 
-        // -----------------------
+        // -------------------------------------------
+        // Constructor(s)
+        // -------------------------------------------
 
         /// <inheritdoc cref="SerializedInterface{T}"/>
         public SerializedInterface(bool _required = true) {
@@ -77,11 +79,11 @@ namespace EnhancedEditor {
 
         #region Operator
         public static bool operator ==(SerializedInterface<T> a, SerializedInterface<T> b) {
-            if (!ReferenceEquals(a, null)) {
+            if (a is not null) {
                 return a.Equals(b);
             }
 
-            return ReferenceEquals(b, null);
+            return b is null;
         }
 
         public static bool operator !=(SerializedInterface<T> a, SerializedInterface<T> b) {
@@ -148,7 +150,7 @@ namespace EnhancedEditor {
         /// <param name="_interface">Interface to compare with this one.</param>
         /// <returns>True if both interfaces are equal, false otherwise.</returns>
         public bool Equals(SerializedInterface<T> _interface) {
-            return !ReferenceEquals(_interface, null) && _interface.Interface == Interface;
+            return (_interface is not null) && EqualityUtility.Equals(_interface.Interface, Interface);
         }
         #endregion
     }

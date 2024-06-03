@@ -145,7 +145,7 @@ namespace EnhancedEditor.Editor {
             }
         }
 
-        private class PackageItemInfos : ItemInfos {
+        private sealed class PackageItemInfos : ItemInfos {
             public override string Name {
                 get { return "Packages"; }
             }
@@ -324,7 +324,7 @@ namespace EnhancedEditor.Editor {
                         }
 
                         // Vertical line.
-                        if (!indentPositions.Last(out Rect _lastIndentPosition) || (_lastIndentPosition.y >= _position.y)) {
+                        if (!indentPositions.SafeLast(out Rect _lastIndentPosition) || (_lastIndentPosition.y >= _position.y)) {
                             _lastIndentPosition = new Rect(_position.x, 0f, 1f, 1f);
                         }
 

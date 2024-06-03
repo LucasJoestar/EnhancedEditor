@@ -6,15 +6,13 @@
 
 using System;
 
-namespace EnhancedEditor
-{
+namespace EnhancedEditor {
     /// <summary>
     /// Creates a custom scripting define symbol,
     /// whose activation can be managed from the BuildPipeline window.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = true)]
-    public class ScriptingDefineSymbolAttribute : EnhancedClassAttribute
-    {
+    public sealed class ScriptingDefineSymbolAttribute : EnhancedClassAttribute {
         #region Global Members
         /// <summary>
         /// Scripting define symbol to manage activation.
@@ -28,14 +26,15 @@ namespace EnhancedEditor
         /// </summary>
         public readonly string Description = string.Empty;
 
-        // -----------------------
+        // -------------------------------------------
+        // Constructor(s)
+        // -------------------------------------------
 
         /// <param name="_symbol"><inheritdoc cref="Symbol" path="/summary"/></param>
         /// <param name="_description"><inheritdoc cref="Description" path="/summary"/></param>
         /// <inheritdoc cref="ScriptingDefineSymbolAttribute"/>
-        public ScriptingDefineSymbolAttribute(string _symbol, string _description)
-        {
-            Symbol = _symbol.Replace(' ', '_');
+        public ScriptingDefineSymbolAttribute(string _symbol, string _description) {
+            Symbol      = _symbol.Replace(' ', '_');
             Description = _description;
         }
         #endregion

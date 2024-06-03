@@ -13,6 +13,6 @@ namespace EnhancedEditor {
     /// </summary>
     [Serializable]
     [ScriptingDefineSymbol("ENHANCED_LOGGER", "Enhanced Logger")]
-    [ScriptingDefineSymbol("ENHANCED_LOGS", "Development / Debug Logs")]
+    [ScriptingDefineSymbol("ENHANCED_LOGS"  , "Development / Debug Logs")]
     internal sealed class EnhancedLoggerScriptingSymbol { }
 }

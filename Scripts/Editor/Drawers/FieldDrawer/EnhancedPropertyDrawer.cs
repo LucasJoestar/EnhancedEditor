@@ -9,15 +9,13 @@ using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 
-namespace EnhancedEditor.Editor
-{
+namespace EnhancedEditor.Editor {
     /// <summary>
     /// Base class to derive any custom <see cref="EnhancedPropertyAttribute"/> drawer from (instead of <see cref="PropertyDrawer"/>).
     /// <para/>
     /// Use this to create custom drawers for field attributes inheriting from <see cref="EnhancedPropertyAttribute"/>.
     /// </summary>
-    public abstract class EnhancedPropertyDrawer
-    {
+    public abstract class EnhancedPropertyDrawer {
         #region Internal Behaviour
         /// <summary>
         /// Creates a new instance of a <see cref="EnhancedPropertyDrawer"/>,
@@ -28,8 +26,7 @@ namespace EnhancedEditor.Editor
         /// <param name="_attribute"><inheritdoc cref="Attribute" path="/summary"/></param>.
         /// <param name="_fieldInfo"><inheritdoc cref="FieldInfo" path="/summary"/>.</param>.
         /// <returns>Newly created <see cref="EnhancedPropertyDrawer"/> instance.</returns>
-        internal static EnhancedPropertyDrawer CreateInstance(Type _type, SerializedProperty _property, IEnhancedPropertyAttribute _attribute, FieldInfo _fieldInfo)
-        {
+        internal static EnhancedPropertyDrawer CreateInstance(Type _type, SerializedProperty _property, IEnhancedPropertyAttribute _attribute, FieldInfo _fieldInfo) {
             EnhancedPropertyDrawer _drawer = Activator.CreateInstance(_type) as EnhancedPropertyDrawer;
             _drawer.Attribute = _attribute;
             _drawer.SerializedProperty = _property;
@@ -45,12 +42,9 @@ namespace EnhancedEditor.Editor
 
         // -----------------------
 
-        private void DuringSceneGUI(SceneView _scene)
-        {
-            foreach (UnityEditor.Editor _editor in ActiveEditorTracker.sharedTracker.activeEditors)
-            {
-                if (_editor.serializedObject == SerializedProperty.serializedObject)
-                {
+        private void DuringSceneGUI(SceneView _scene) {
+            foreach (UnityEditor.Editor _editor in ActiveEditorTracker.sharedTracker.activeEditors) {
+                if (_editor.serializedObject == SerializedProperty.serializedObject) {
                     OnSceneGUI(_scene);
                     return;
                 }
@@ -98,8 +92,7 @@ namespace EnhancedEditor.Editor
         /// <param name="_label"><inheritdoc cref="DocumentationMethod(Rect, SerializedProperty, GUIContent, out float)" path="/param[@name='_label']"/></param>
         /// <param name="_height"><inheritdoc cref="DocumentationMethod(Rect, SerializedProperty, GUIContent, out float)" path="/param[@name='_height']"/></param>
         /// <returns>True to stop drawing this property and prevent its associated field from being drawn, false otherwise.</returns>
-        public virtual bool OnBeforeGUI(Rect _position, SerializedProperty _property, GUIContent _label, out float _height)
-        {
+        public virtual bool OnBeforeGUI(Rect _position, SerializedProperty _property, GUIContent _label, out float _height) {
             _height = 0f;
             return false;
         }
@@ -112,8 +105,7 @@ namespace EnhancedEditor.Editor
         /// <param name="_label"><inheritdoc cref="DocumentationMethod(Rect, SerializedProperty, GUIContent, out float)" path="/param[@name='_label']"/></param>
         /// <param name="_height"><inheritdoc cref="DocumentationMethod(Rect, SerializedProperty, GUIContent, out float)" path="/param[@name='_height']"/></param>
         /// <returns>True to prevent any other property field of this property from being drawn, false otherwise.</returns>
-        public virtual bool OnGUI(Rect _position, SerializedProperty _property, GUIContent _label, out float _height)
-        {
+        public virtual bool OnGUI(Rect _position, SerializedProperty _property, GUIContent _label, out float _height) {
             _height = 0f;
             return false;
         }
@@ -126,8 +118,7 @@ namespace EnhancedEditor.Editor
         /// <param name="_property"><inheritdoc cref="DocumentationMethod(Rect, SerializedProperty, GUIContent, out float)" path="/param[@name='_property']"/></param>
         /// <param name="_label"><inheritdoc cref="DocumentationMethod(Rect, SerializedProperty, GUIContent, out float)" path="/param[@name='_label']"/></param>
         /// <param name="_height"><inheritdoc cref="DocumentationMethod(Rect, SerializedProperty, GUIContent, out float)" path="/param[@name='_height']"/></param>
-        public virtual void OnAfterGUI(Rect _position, SerializedProperty _property, GUIContent _label, out float _height)
-        {
+        public virtual void OnAfterGUI(Rect _position, SerializedProperty _property, GUIContent _label, out float _height) {
             _height = 0f;
         }
 

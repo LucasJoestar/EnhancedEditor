@@ -13,7 +13,7 @@ namespace EnhancedEditor.Editor {
     /// <see cref="EnhancedEditor"/>-related user settings.
     /// </summary>
     [Serializable]
-    public class EnhancedEditorUserSettings : EnhancedEditorSettings {
+    public sealed class EnhancedEditorUserSettings : EnhancedEditorSettings {
         #region Global Members
         private static string EditorPrefsKey => $"{PlayerSettings.productGUID}-{null}_EnhancedEditorUserSettings";
         private static EnhancedEditorUserSettings instance = null;

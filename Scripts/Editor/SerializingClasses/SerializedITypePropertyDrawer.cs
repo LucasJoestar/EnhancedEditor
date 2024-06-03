@@ -15,7 +15,7 @@ namespace EnhancedEditor.Editor {
     /// Custom <see cref="SerializedType{T}"/> drawer.
     /// </summary>
     [CustomPropertyDrawer(typeof(SerializedType<>), true)]
-    public class SerializedTypePropertyDrawer : EnhancedPropertyEditor {
+    public sealed class SerializedTypePropertyDrawer : EnhancedPropertyEditor {
         #region Drawer Content
         private const int CacheLimit = 100;
         private static readonly Dictionary<string, GUIContent[]> interfaceInfos = new Dictionary<string, GUIContent[]>();
@@ -63,7 +63,7 @@ namespace EnhancedEditor.Editor {
                     } catch { }
                 }
 
-                if (_constraints.HasFlag(SerializedTypeConstraint.BaseType)) {
+                if (_constraints.HasFlagUnsafe(SerializedTypeConstraint.BaseType)) {
                     AddType(_temp, _baseType, _constraints);
                 }
 
@@ -75,7 +75,7 @@ namespace EnhancedEditor.Editor {
                     return _aSpecial == _bSpecial ? a.text.CompareTo(b.text) : _aSpecial ? 1 : -1;
                 });
 
-                if (_constraints.HasFlag(SerializedTypeConstraint.Null)) {
+                if (_constraints.HasFlagUnsafe(SerializedTypeConstraint.Null)) {
                     _temp.Add(nullGUI);
                 }
 
@@ -125,7 +125,8 @@ namespace EnhancedEditor.Editor {
             // ----- Local Method ----- \\
 
             void AddType(List<GUIContent> _temp, Type _type, SerializedTypeConstraint _constraints) {
-                if (_type.IsAbstract && !_constraints.HasFlag(SerializedTypeConstraint.Abstract)) {
+
+                if (_type.IsAbstract && !_constraints.HasFlagUnsafe(SerializedTypeConstraint.Abstract)) {
                     return;
                 }
 

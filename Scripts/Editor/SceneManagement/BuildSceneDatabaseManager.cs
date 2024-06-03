@@ -16,7 +16,7 @@ namespace EnhancedEditor.Editor {
     /// Editor class manipulating and updating the data contained in the <see cref="BuildSceneDatabase"/>.
     /// </summary>
     [InitializeOnLoad]
-    public class BuildSceneDatabaseManager : IPreprocessBuildWithReport {
+    public sealed class BuildSceneDatabaseManager : IPreprocessBuildWithReport {
         #region Global Members
         private static readonly AutoManagedResource<BuildSceneDatabase> resource = new AutoManagedResource<BuildSceneDatabase>("BuildSceneDatabase", false);
 
@@ -97,14 +97,11 @@ namespace EnhancedEditor.Editor {
             }
 
             // Register informations in the database.
-            Database.sceneBundles = _sceneBundles.ToArray();
-            Database.buildSceneGUIDs = _sceneGUIDs;
-            Database.nonBuildScenes = _nonBuildScenes;
+            int coreSceneIndex = CoreSceneEnhancedSettings.Settings.IsCoreSceneEnabled
+                               ? CoreSceneEnhancedSettings.Settings.CoreScene.BuildIndex
+                               : -1;
 
-            Database.coreSceneIndex = CoreSceneEnhancedSettings.Settings.IsCoreSceneEnabled
-                                    ? CoreSceneEnhancedSettings.Settings.CoreScene.BuildIndex
-                                    : -1;
-
+            Database.Setup(_sceneBundles.ToArray(), _sceneGUIDs, _nonBuildScenes, coreSceneIndex);
             EditorUtility.SetDirty(Database);
 
             // ----- Local Method ----- \\

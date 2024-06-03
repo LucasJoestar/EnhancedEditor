@@ -12,7 +12,7 @@ namespace EnhancedEditor.Editor {
     /// Special drawer for fields with the attribute <see cref="DuoAttribute"/> (inherit from <see cref="EnhancedPropertyDrawer"/>).
     /// </summary>
     [CustomDrawer(typeof(DuoAttribute))]
-    public class DuoPropertyDrawer : EnhancedPropertyDrawer {
+    public sealed class DuoPropertyDrawer : EnhancedPropertyDrawer {
         #region Drawer Content
         public override bool OnGUI(Rect _position, SerializedProperty _property, GUIContent _label, out float _height) {
             DuoAttribute _attribute = Attribute as DuoAttribute;

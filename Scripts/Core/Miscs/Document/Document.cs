@@ -7,22 +7,19 @@
 using System;
 using UnityEngine;
 
-namespace EnhancedEditor
-{
+namespace EnhancedEditor {
     /// <summary>
     /// <see cref="ScriptableObject"/> used for editor purposes, allowing to write and share
     /// nicely displayed documents across the project.
     /// </summary>
     [CreateAssetMenu(fileName = "DOC_Document", menuName = InternalUtility.MenuPath + "Document", order = InternalUtility.MenuOrder)]
-	public class Document : ScriptableObject
-    {
+    public sealed class Document : ScriptableObject {
         #region Section
         [Serializable]
-        public class Section
-        {
+        public sealed class Section {
             public string Name = string.Empty;
             public float Spacing = 0f;
-            
+
             [Space(10f)]
 
             public string Header = string.Empty;
@@ -41,14 +38,14 @@ namespace EnhancedEditor
         [Section("Document Title")]
 
         public string Title = "Document";
-        public bool _useBuiltInIcon = false;
+        public bool UseBuiltInIcon = false;
 
-        [Enhanced, ShowIf("_useBuiltInIcon", ConditionType.True)] public string IconContent = "UnityLogo";
-        [Enhanced, ShowIf("_useBuiltInIcon", ConditionType.False), Required] public Texture2D Icon = null;
+        [Enhanced, ShowIf(nameof(UseBuiltInIcon), ConditionType.True)] public string IconContent = "UnityLogo";
+        [Enhanced, ShowIf(nameof(UseBuiltInIcon), ConditionType.False), Required] public Texture2D Icon = null;
 
         [Section("Sections")]
 
-        public Section[] Sections = new Section[] { };
+        public Section[] Sections = new Section[0];
         #endregion
     }
 }

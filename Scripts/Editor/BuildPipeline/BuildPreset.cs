@@ -8,13 +8,11 @@ using System;
 using UnityEditor;
 using UnityEngine;
 
-namespace EnhancedEditor.Editor
-{
+namespace EnhancedEditor.Editor {
     /// <summary>
     /// Preset used in the <see cref="BuildPipelineWindow"/> to build the game.
     /// </summary>
-    public class BuildPreset : ScriptableObject, IComparable
-    {
+    public sealed class BuildPreset : ScriptableObject, IComparable {
         #region Global Members
         /// <summary>
         /// A short description of this preset function.
@@ -37,11 +35,9 @@ namespace EnhancedEditor.Editor
         /// <summary>
         /// All active scripting define symbols when building with this preset.
         /// </summary>
-        public string ScriptingDefineSymbols
-        {
+        public string ScriptingDefineSymbols {
             get => scriptingDefineSymbols;
-            set
-            {
+            set {
                 string[] _symbols = value.Split(BuildPipelineWindow.ScriptingDefineSymbolSeparator);
                 Array.Sort(_symbols);
 
@@ -55,19 +51,17 @@ namespace EnhancedEditor.Editor
         /// Initializes this preset with another preset values.
         /// </summary>
         /// <param name="_template">Preset to initialize this object with.</param>
-        public void Initialize(BuildPreset _template)
-        {
-            Description = _template.Description;
-            BuildTarget = _template.BuildTarget;
+        public void Initialize(BuildPreset _template) {
+            Description  = _template.Description;
+            BuildTarget  = _template.BuildTarget;
             BuildOptions = _template.BuildOptions;
             scriptingDefineSymbols = _template.scriptingDefineSymbols;
         }
         #endregion
 
         #region Comparable
-        int IComparable.CompareTo(object _other)
-        {
-            if ((_other == null) || !(_other is BuildPreset _preset))
+        int IComparable.CompareTo(object _other) {
+            if ((_other == null) || (_other is not BuildPreset _preset))
                 return 1;
 
             return name.CompareTo(_preset.name);

@@ -12,7 +12,7 @@ namespace EnhancedEditor.Editor {
     /// Special drawer for fields with the attribute <see cref="DrawMemberAttribute"/> (inherit from <see cref="EnhancedPropertyDrawer"/>).
     /// </summary>
     [CustomDrawer(typeof(DrawMemberAttribute))]
-    public class DrawMemberPropertyDrawer : EnhancedPropertyDrawer {
+    public sealed class DrawMemberPropertyDrawer : EnhancedPropertyDrawer {
         #region Drawer Content
         public override bool OnGUI(Rect _position, SerializedProperty _property, GUIContent _label, out float _height) {
             DrawMemberAttribute _attribute = Attribute as DrawMemberAttribute;

@@ -78,9 +78,9 @@ namespace EnhancedEditor {
             data = EditorJsonUtility.ToJson(_data);
             type = _data.type;
 
-            objectID = _data.objectID;
-            objectName = _data.objectName;
-            objectType = _data.objectType;
+            objectID        = _data.objectID;
+            objectName      = _data.objectName;
+            objectType      = _data.objectType;
             objectScenePath = _data.objectScenePath;
             #endif
         }

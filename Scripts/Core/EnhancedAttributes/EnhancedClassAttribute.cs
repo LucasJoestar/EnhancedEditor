@@ -7,8 +7,7 @@
 using System;
 using System.Diagnostics;
 
-namespace EnhancedEditor
-{
+namespace EnhancedEditor {
     /// <summary>
     /// Base class to derive all custom class attributes from.
     /// Use this to create custom attributes for your <see cref="UnityEngine.Object"/> script classes.
@@ -18,5 +17,5 @@ namespace EnhancedEditor
     /// </summary>
     [Conditional("UNITY_EDITOR")]
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
-	public abstract class EnhancedClassAttribute : Attribute { }
+    public abstract class EnhancedClassAttribute : Attribute { }
 }

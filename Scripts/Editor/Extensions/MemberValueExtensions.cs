@@ -5,6 +5,7 @@
 // ============================================================================ //
 
 using System;
+using System.Runtime.CompilerServices;
 using UnityEditor;
 
 using Object = UnityEngine.Object;
@@ -72,8 +73,11 @@ namespace EnhancedEditor.Editor {
             return _success;
         }
 
-        // -----------------------
+        // -------------------------------------------
+        // Utility
+        // -------------------------------------------
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool GetNestedField(SerializedProperty _property, ref Type _type, ref object _object) {
             return EnhancedEditorUtility.FindSerializedPropertyField(_property, 1, out _, out _type, out _object);
         }

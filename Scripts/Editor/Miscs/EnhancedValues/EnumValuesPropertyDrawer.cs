@@ -16,7 +16,7 @@ namespace EnhancedEditor.Editor {
     /// Custom <see cref="EnumValues{Enum, T}"/> drawer.
     /// </summary>
     [CustomPropertyDrawer(typeof(EnumValues<,>), true)]
-    public class EnumValuesPropertyDrawer : EnhancedPropertyEditor {
+    public sealed class EnumValuesPropertyDrawer : EnhancedPropertyEditor {
         #region Drawer Content
         private const UMessageType EmptyEnumMessageType = UMessageType.Info;
         private const string EmptyEnumMessage           = "This Enum does not contain any value";
@@ -43,6 +43,7 @@ namespace EnhancedEditor.Editor {
             float _height = 0f;
 
             // Button.
+            _position.height = EditorGUIUtility.singleLineHeight;
             _property.isExpanded = EditorGUI.Foldout(_position, _property.isExpanded, _label, true);
 
             IncrementPosition();

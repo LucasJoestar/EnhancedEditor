@@ -10,8 +10,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
-namespace EnhancedEditor.Editor
-{
+namespace EnhancedEditor.Editor {
     /// <summary>
     /// Base class to inherit all custom property drawers from instead of <see cref="PropertyDrawer"/>.
     /// <para/>
@@ -22,11 +21,9 @@ namespace EnhancedEditor.Editor
     [CustomPropertyDrawer(typeof(EnhancedPropertyAttribute), true)]
     #endif
     [CustomPropertyDrawer(typeof(EnhancedAttribute), false)]
-    public class EnhancedPropertyEditor : PropertyDrawer
-    {
+    public class EnhancedPropertyEditor : PropertyDrawer {
         #region Property Infos
-        internal class PropertyInfos
-        {
+        internal class PropertyInfos {
             public readonly bool RequireConstantRepaint = false;
 
             public EnhancedPropertyDrawer[] PropertyDrawers = null;
@@ -34,18 +31,14 @@ namespace EnhancedEditor.Editor
 
             // -----------------------
 
-            public PropertyInfos(SerializedProperty _property, FieldInfo _fieldInfo)
-            {
+            public PropertyInfos(SerializedProperty _property, FieldInfo _fieldInfo) {
                 // Get all enhanced attributes from the target field, and create their respective drawer.
                 var _attributes = _fieldInfo.GetCustomAttributes(typeof(IEnhancedPropertyAttribute), true) as IEnhancedPropertyAttribute[];
                 PropertyDrawers = new EnhancedPropertyDrawer[] { };
 
-                foreach (IEnhancedPropertyAttribute _attribute in _attributes)
-                {
-                    foreach (KeyValuePair<Type, Type> _pair in EnhancedDrawerUtility.GetPropertyDrawers())
-                    {
-                        if (_pair.Value == _attribute.GetType())
-                        {
+                foreach (IEnhancedPropertyAttribute _attribute in _attributes) {
+                    foreach (KeyValuePair<Type, Type> _pair in EnhancedDrawerUtility.GetPropertyDrawers()) {
+                        if (_pair.Value == _attribute.GetType()) {
                             EnhancedPropertyDrawer _customDrawer = EnhancedPropertyDrawer.CreateInstance(_pair.Key, _property, _attribute, _fieldInfo);
                             ArrayUtility.Add(ref PropertyDrawers, _customDrawer);
 
@@ -63,8 +56,7 @@ namespace EnhancedEditor.Editor
 
             // -----------------------
 
-            public void OnContextMenu(GenericMenu _menu, SerializedProperty _property)
-            {
+            public void OnContextMenu(GenericMenu _menu, SerializedProperty _property) {
                 foreach (EnhancedPropertyDrawer _drawer in PropertyDrawers)
                     _drawer.OnContextMenu(_menu, _property);
             }
@@ -77,13 +69,11 @@ namespace EnhancedEditor.Editor
 
         // -----------------------
 
-        public override sealed float GetPropertyHeight(SerializedProperty _property, GUIContent _label)
-        {
+        public override sealed float GetPropertyHeight(SerializedProperty _property, GUIContent _label) {
             string _id = EnhancedEditorUtility.GetSerializedPropertyID(_property);
 
             // Repaint on next frame if not yet initialized.
-            if (!propertyInfos.TryGetValue(_id, out PropertyInfos _infos))
-            {
+            if (!propertyInfos.TryGetValue(_id, out PropertyInfos _infos)) {
                 float _height = GetDefaultHeight(_property, _label);
                 return _height;
             }
@@ -91,16 +81,13 @@ namespace EnhancedEditor.Editor
             return _infos.Height;
         }
 
-        public override sealed void OnGUI(Rect _position, SerializedProperty _property, GUIContent _label)
-        {
+        public override sealed void OnGUI(Rect _position, SerializedProperty _property, GUIContent _label) {
             string _id = EnhancedEditorUtility.GetSerializedPropertyID(_property);
 
             // Property initialization.
-            if (!propertyInfos.TryGetValue(_id, out PropertyInfos _infos))
-            {
+            if (!propertyInfos.TryGetValue(_id, out PropertyInfos _infos)) {
                 // Data clear.
-                if (propertyInfos.Count > CacheLimit)
-                {
+                if (propertyInfos.Count > CacheLimit) {
                     propertyInfos.Clear();
                     GC.Collect();
                 }
@@ -120,13 +107,10 @@ namespace EnhancedEditor.Editor
             if (_infos.RequireConstantRepaint)
                 EnhancedEditorGUIUtility.Repaint(_property.serializedObject);
 
-            using (var _changeCheck = new EditorGUI.ChangeCheckScope())
-            {
+            using (var _changeCheck = new EditorGUI.ChangeCheckScope()) {
                 // Pre GUI callback.
-                foreach (EnhancedPropertyDrawer _drawer in _infos.PropertyDrawers)
-                {
-                    if (_drawer.OnBeforeGUI(_position, _property, _label, out float _height))
-                    {
+                foreach (EnhancedPropertyDrawer _drawer in _infos.PropertyDrawers) {
+                    if (_drawer.OnBeforeGUI(_position, _property, _label, out float _height)) {
                         IncreasePosition(_height);
                         CalculateFullHeight();
 
@@ -138,10 +122,8 @@ namespace EnhancedEditor.Editor
 
                 // Property GUI.
                 bool _isDrawn = false;
-                foreach (EnhancedPropertyDrawer _drawer in _infos.PropertyDrawers)
-                {
-                    if (_drawer.OnGUI(_position, _property, _label, out float _height))
-                    {
+                foreach (EnhancedPropertyDrawer _drawer in _infos.PropertyDrawers) {
+                    if (_drawer.OnGUI(_position, _property, _label, out float _height)) {
                         IncreasePosition(_height);
                         _isDrawn = true;
 
@@ -152,8 +134,7 @@ namespace EnhancedEditor.Editor
                 }
 
                 // If no specific property field has been drawn, draw default one.
-                if (!_isDrawn)
-                {
+                if (!_isDrawn) {
                     float _height = DrawEnhancedProperty(_position, _property, _label);
                     IncreasePosition(_height);
 
@@ -161,20 +142,17 @@ namespace EnhancedEditor.Editor
                 }
 
                 // Post GUI callback.
-                foreach (EnhancedPropertyDrawer _drawer in _infos.PropertyDrawers)
-                {
+                foreach (EnhancedPropertyDrawer _drawer in _infos.PropertyDrawers) {
                     _drawer.OnAfterGUI(_position, _property, _label, out float _height);
                     IncreasePosition(_height);
                 }
 
                 // On property value changed callback.
-                if (_changeCheck.changed)
-                {
+                if (_changeCheck.changed) {
                     _property.serializedObject.ApplyModifiedProperties();
                     _property.serializedObject.Update();
 
-                    foreach (EnhancedPropertyDrawer _drawer in _infos.PropertyDrawers)
-                    {
+                    foreach (EnhancedPropertyDrawer _drawer in _infos.PropertyDrawers) {
                         _drawer.OnValueChanged(_property);
                     }
                 }
@@ -186,8 +164,7 @@ namespace EnhancedEditor.Editor
             _position.y = _yOrigin;
             _position.height = _infos.Height;
 
-            if (EnhancedEditorGUIUtility.ContextClick(_position))
-            {
+            if (EnhancedEditorGUIUtility.ContextClick(_position)) {
                 GenericMenu _menu = new GenericMenu();
                 _infos.OnContextMenu(_menu, _property);
 
@@ -197,14 +174,12 @@ namespace EnhancedEditor.Editor
 
             // ----- Local Methods ----- \\
 
-            void IncreasePosition(float _height)
-            {
+            void IncreasePosition(float _height) {
                 if (_height != 0f)
                     _position.y += _height + EditorGUIUtility.standardVerticalSpacing;
             }
 
-            void CalculateFullHeight()
-            {
+            void CalculateFullHeight() {
                 float _height = _position.y - _yOrigin;
                 _height -= EditorGUIUtility.standardVerticalSpacing;
 
@@ -224,8 +199,7 @@ namespace EnhancedEditor.Editor
         /// <param name="_property"><see cref="SerializedProperty"/> to specify the height for.</param>
         /// <param name="_label">Label displayed in front of the property.</param>
         /// <returns>Total height to be used to draw this property field.</returns>
-        internal protected virtual float GetDefaultHeight(SerializedProperty _property, GUIContent _label)
-        {
+        internal protected virtual float GetDefaultHeight(SerializedProperty _property, GUIContent _label) {
             if (defaultPropertyHeight.TryGetValue(EnhancedEditorUtility.GetSerializedPropertyID(_property), out float _height)) {
                 return _height;
             }
@@ -263,10 +237,9 @@ namespace EnhancedEditor.Editor
         /// <br/> Height has to be specified as returned value.
         /// </summary>
         /// <inheritdoc cref="DrawEnhancedProperty(Rect, SerializedProperty, GUIContent)"/>
-        protected virtual float OnEnhancedGUI(Rect _position, SerializedProperty _property, GUIContent _label)
-        {
+        protected virtual float OnEnhancedGUI(Rect _position, SerializedProperty _property, GUIContent _label) {
             _position.height = EditorGUI.GetPropertyHeight(_property, _label);
-            return EnhancedEditorGUI.EnhancedPropertyField(_position,  _property, _label);
+            return EnhancedEditorGUI.EnhancedPropertyField(_position, _property, _label);
         }
         #endregion
 

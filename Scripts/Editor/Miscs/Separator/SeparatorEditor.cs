@@ -12,7 +12,7 @@ namespace EnhancedEditor.Editor {
     /// Custom <see cref="Separator"/> editor.
     /// </summary>
     [CustomEditor(typeof(Separator), true), CanEditMultipleObjects]
-    public class SeparatorEditor : UnityObjectEditor {
+    public sealed class SeparatorEditor : UnityObjectEditor {
         #region GUI Draw
         public override void OnInspectorGUI() {
             Rect _rect = EditorGUILayout.GetControlRect(false, -14f + Settings.Value); {
@@ -35,6 +35,8 @@ namespace EnhancedEditor.Editor {
 
         private static FloatEnhancedSettings settings = null;
 
+        // -----------------------
+
         /// <summary>
         /// Separator-related user settings.
         /// </summary>
@@ -51,10 +53,11 @@ namespace EnhancedEditor.Editor {
             }
         }
 
-
-        // -----------------------
-
+        // -------------------------------------------
+        // Drawer
+        // -------------------------------------------
         [EnhancedEditorUserSettings(Order = 20)]
+
         private static void DrawSettings() {
             var _settings = Settings;
             float _height = EditorGUILayout.Slider(separatorHeightGUI, _settings.Value, 0f, 100f);

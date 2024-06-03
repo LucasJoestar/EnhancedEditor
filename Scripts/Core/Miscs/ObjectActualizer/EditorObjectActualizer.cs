@@ -4,8 +4,11 @@
 //
 // ============================================================================ //
 
-using UnityEditor;
 using UnityEngine;
+
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace EnhancedEditor {
     /// <summary>
@@ -13,7 +16,7 @@ namespace EnhancedEditor {
     /// </summary>
     [ScriptGizmos(false, true), ExecuteInEditMode]
     [AddComponentMenu(InternalUtility.MenuPath + "Editor Object Actualizer"), DisallowMultipleComponent]
-    public class EditorObjectActualizer : MonoBehaviour {
+    public sealed class EditorObjectActualizer : MonoBehaviour {
         #region Mono Behaviour
         #if UNITY_EDITOR
         private void Start() {

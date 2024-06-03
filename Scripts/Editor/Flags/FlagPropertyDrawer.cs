@@ -12,7 +12,7 @@ namespace EnhancedEditor.Editor {
     /// Custom <see cref="Flag"/> drawer.
     /// </summary>
     [CustomPropertyDrawer(typeof(Flag), true)]
-    public class FlagPropertyDrawer : EnhancedPropertyEditor {
+    public sealed class FlagPropertyDrawer : EnhancedPropertyEditor {
         #region Drawer Content
         protected override float OnEnhancedGUI(Rect _position, SerializedProperty _property, GUIContent _label) {
             EnhancedEditorGUI.FlagField(_position, _property, GUIContent.none);

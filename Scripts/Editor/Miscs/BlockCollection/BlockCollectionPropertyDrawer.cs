@@ -15,7 +15,7 @@ namespace EnhancedEditor.Editor {
     /// Custom <see cref="BlockCollection{T}"/> drawer.
     /// </summary>
     [CustomPropertyDrawer(typeof(BlockCollection<>), true)]
-    public class BlockCollectionPropertyDrawer : EnhancedPropertyEditor {
+    public sealed class BlockCollectionPropertyDrawer : EnhancedPropertyEditor {
         #region Drawer Content
         private const float LineSpacing         = 5f;
         private const float ContentOffset       = 2f;

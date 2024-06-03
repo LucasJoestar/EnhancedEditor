@@ -15,7 +15,7 @@ namespace EnhancedEditor.Editor {
     /// Note that these settings should not be called from a <see cref="ScriptableObject"/> constructor, due to Unity preferences limitations.
     /// </summary>
     [NonEditable("Please use the Preferences/Project Settings windows to edit these settings.")]
-    public class EnhancedEditorProjectSettings : EnhancedEditorSettings {
+    public sealed class EnhancedEditorProjectSettings : EnhancedEditorSettings {
         #region Global Members
         private const string DefaultSettingsDirectory = "EnhancedEditor/Editor/Settings/";
         private static EnhancedEditorProjectSettings instance = null;

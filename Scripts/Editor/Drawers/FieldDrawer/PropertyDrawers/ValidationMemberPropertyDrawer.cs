@@ -11,10 +11,10 @@ namespace EnhancedEditor.Editor {
     /// Special drawer for fields with the attribute <see cref="ValidationMemberAttribute"/> (inherit from <see cref="EnhancedPropertyDrawer"/>).
     /// </summary>
     [CustomDrawer(typeof(ValidationMemberAttribute))]
-    public class ValidationMemberPropertyDrawer : EnhancedPropertyDrawer {
+    public sealed class ValidationMemberPropertyDrawer : EnhancedPropertyDrawer {
         #region Drawer Content
         public override void OnValueChanged(SerializedProperty _property) {
-            ValidationMemberAttribute _attribute = Attribute as ValidationMemberAttribute;
+            var _attribute = Attribute as ValidationMemberAttribute;
             if (!_attribute.Mode.IsActive())
                 return;
 

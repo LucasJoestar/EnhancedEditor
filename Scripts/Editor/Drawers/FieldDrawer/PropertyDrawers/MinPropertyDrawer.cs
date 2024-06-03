@@ -6,26 +6,21 @@
 
 using UnityEditor;
 
-namespace EnhancedEditor.Editor
-{
+namespace EnhancedEditor.Editor {
     /// <summary>
     /// Special drawer for fields with the attribute <see cref="MinAttribute"/> (inherit from <see cref="EnhancedPropertyDrawer"/>).
     /// </summary>
     [CustomDrawer(typeof(MinAttribute))]
-    public class MinPropertyDrawer : EnhancedPropertyDrawer
-    {
+    public sealed class MinPropertyDrawer : EnhancedPropertyDrawer {
         #region Drawer Content
-        public override void OnValueChanged(SerializedProperty _property)
-        {
-            MinAttribute _attribute = Attribute as MinAttribute;
+        public override void OnValueChanged(SerializedProperty _property) {
+            var _attribute = Attribute as MinAttribute;
             float _minValue;
 
             // Get minimum allowed value and floor property value.
-            if (_attribute.MinMember == null)
-            {
+            if (_attribute.MinMember == null) {
                 _minValue = _attribute.MinValue;
-            }
-            else if (!_attribute.MinMember.Value.GetValue(_property, out _minValue))
+            } else if (!_attribute.MinMember.Value.GetValue(_property, out _minValue))
                 return;
 
             EnhancedEditorUtility.FloorSerializedPropertyValue(_property, _minValue);

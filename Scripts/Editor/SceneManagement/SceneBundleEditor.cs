@@ -12,7 +12,7 @@ namespace EnhancedEditor.Editor {
     /// Custom <see cref="SceneBundle"/> editor, used to add the embedded scenes into the build settings.
     /// </summary>
     [CustomEditor(typeof(SceneBundle), true)]
-    public class SceneBundleEditor : UnityObjectEditor {
+    public sealed class SceneBundleEditor : UnityObjectEditor {
         #region Editor GUI
         private const float ButtonHeight = 25f;
 

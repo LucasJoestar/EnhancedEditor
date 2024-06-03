@@ -27,7 +27,9 @@ namespace EnhancedEditor {
         /// </summary>
         [SerializeField] public U Second;
 
-        // -----------------------
+        // -------------------------------------------
+        // Constructor(s)
+        // -------------------------------------------
 
         /// <summary>
         /// <inheritdoc cref="Pair{T, U}"/>
@@ -35,7 +37,7 @@ namespace EnhancedEditor {
         /// <param name="_first"><inheritdoc cref="First" path="/summary"/></param>
         /// <param name="_second"><inheritdoc cref="Second" path="/summary"/></param>
         public Pair(T _first, U _second) {
-            First = _first;
+            First  = _first;
             Second = _second;
         }
         #endregion
@@ -47,7 +49,7 @@ namespace EnhancedEditor {
         #endregion
 
         #region Comparison
-        int IComparable<Pair<T, U>>.CompareTo(Pair<T, U> _other) {
+        readonly int IComparable<Pair<T, U>>.CompareTo(Pair<T, U> _other) {
             if (First is IComparable<T> _comparerT) {
                 return _comparerT.CompareTo(_other.First);
             }

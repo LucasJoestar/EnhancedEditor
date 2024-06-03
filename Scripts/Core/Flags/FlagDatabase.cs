@@ -14,7 +14,7 @@ namespace EnhancedEditor {
     /// <see cref="ScriptableObject"/> database containing all <see cref="TagData"/> in the project.
     /// </summary>
     [NonEditable("This data is sensitive and should not be manipulated manually.")]
-    public class FlagDatabase : ScriptableObject {
+    public sealed class FlagDatabase : ScriptableSettings {
         #region Global Members
         private static FlagDatabase database = null;
 
@@ -49,8 +49,6 @@ namespace EnhancedEditor {
                 if (database == null) {
                     Debug.LogError($"Unassigned {typeof(FlagDatabase).Name} reference!\nYou must manually set this database " +
                                    $"reference on game start to be able to properly use it.");
-
-                    database = CreateInstance<FlagDatabase>();
                 }
                 #endif
 
@@ -78,7 +76,14 @@ namespace EnhancedEditor {
         /// Total amount of <see cref="FlagHolder"/> in the project.
         /// </summary>
         public int Count {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get { return holders.Length; }
+        }
+        #endregion
+
+        #region Initialization
+        internal protected override void Init() {
+            Database = this;
         }
         #endregion
 
@@ -86,10 +91,11 @@ namespace EnhancedEditor {
         /// <summary>
         /// Resets all in-game flags to a FALSE value.
         /// </summary>
-        public void ResetFlags() {
+        /// <param name="_resetPersistent">If true, also resets game flags marked as 'persistent'.</param>
+        public void ResetFlags(bool _resetPersistent = false) {
 
-            foreach (FlagHolder _holder in holders) {
-                _holder.ResetFlags();
+            for (int i = holders.Length; i-- > 0;) {
+                holders[i].ResetFlags(_resetPersistent);
             }
         }
         #endregion
@@ -125,9 +131,11 @@ namespace EnhancedEditor {
         /// <param name="_name"><inheritdoc cref="FindFlag(string, string, out Flag, out FlagHolder" path="/param[@name='_flagName']"/></param>
         /// <inheritdoc cref="FindFlag(string, string, out Flag)"/>
         public bool FindFlag(string _name, out Flag _flag) {
-            foreach (FlagHolder _holder in holders) {
 
-                if (_holder.FindFlag(_name, out _flag)) {
+            int _length = holders.Length;
+
+            for (int i = 0; i < _length; i++) {
+                if (holders[i].FindFlag(_name, out _flag)) {
                     return true;
                 }
             }
@@ -160,9 +168,13 @@ namespace EnhancedEditor {
         /// <param name="_holder"><see cref="FlagHolder"/> with the given name (null if none).</param>
         /// <returns>True if a <see cref="FlagHolder"/> with the given name could be successfully found, false otherwise.</returns>
         public bool FindHolder(string _name, out FlagHolder _holder) {
-            foreach (FlagHolder _temp in holders) {
 
-                if (_temp.name == _name) {
+            int _length = holders.Length;
+
+            for (int i = 0; i < _length; i++) {
+                FlagHolder _temp = holders[i];
+
+                if (_temp.name.Equals(_name, StringComparison.Ordinal)) {
                     _holder = _temp;
                     return true;
                 }

@@ -13,7 +13,7 @@ namespace EnhancedEditor.Editor {
     /// Editor class manipulating and updating the data contained in the <see cref="FlagDatabase"/>.
     /// </summary>
     [InitializeOnLoad]
-    public class FlagDatabaseManager : IPreprocessBuildWithReport {
+    public sealed class FlagDatabaseManager : IPreprocessBuildWithReport {
         #region Global Members
         private static readonly AutoManagedResource<FlagDatabase> resource = new AutoManagedResource<FlagDatabase>("FlagDatabase", false);
 

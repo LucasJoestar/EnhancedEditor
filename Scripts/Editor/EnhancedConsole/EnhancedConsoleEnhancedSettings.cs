@@ -10,23 +10,23 @@ using UnityEditor;
 using UnityEngine;
 
 using LogColumnType = EnhancedEditor.Editor.EnhancedConsoleWindow.LogColumnType;
-using LogType = EnhancedEditor.Editor.DefaultConsoleLogFilter.Type;
-using LogEntry = EnhancedEditor.Editor.EnhancedConsoleWindow.OriginalLogEntry;
+using LogType       = EnhancedEditor.Editor.DefaultConsoleLogFilter.Type;
+using LogEntry      = EnhancedEditor.Editor.EnhancedConsoleWindow.OriginalLogEntry;
 
 namespace EnhancedEditor.Editor {
     /// <summary>
     /// Wrapper used to ignore specific stack calls from a console log.
     /// </summary>
     [Serializable]
-    public class ConsoleLogIgnoredStackCall {
+    public sealed class ConsoleLogIgnoredStackCall {
         #region Global Members
-        [Enhanced, Duo("UseNamespace", 20f)] public string Namespace = "Namespace";
+        [Enhanced, Duo(nameof(UseNamespace), 20f)] public string Namespace = "Namespace";
         [SerializeField, HideInInspector, DisplayName("Enabled")] public bool UseNamespace = true;
 
-        [Enhanced, Duo("UseClass", 20f)] public string Class = "Class";
+        [Enhanced, Duo(nameof(UseClass), 20f)] public string Class = "Class";
         [SerializeField, HideInInspector, DisplayName("Enabled")] public bool UseClass = true;
 
-        [Enhanced, Duo("UseMethod", 20f)] public string Method = "Method";
+        [Enhanced, Duo(nameof(UseMethod), 20f)] public string Method = "Method";
         [SerializeField, HideInInspector, DisplayName("Enabled")] public bool UseMethod = true;
 
         // -----------------------
@@ -50,10 +50,13 @@ namespace EnhancedEditor.Editor {
     /// <br/> Used to create a <see cref="SerializedObject"/> from it and draw its settings using a <see cref="SerializedProperty"/>.
     /// </summary>
     [Serializable]
-    public class EnhancedConsoleEnhancedSettings : EnhancedSettings {
+    public sealed class EnhancedConsoleEnhancedSettings : EnhancedSettings {
         #region Global Members
         [SerializeField, HideInInspector] internal int selectedTabIndex = 0;
         [SerializeField, HideInInspector] internal bool enabled = true;
+
+        [Tooltip("Maximum count of simultaneously logs allowed in the console. When this amount is exceeded, previous logs will progressively be erased")]
+        [SerializeField, HideInInspector] internal int maxLogCount = -1;
 
         public BlockArray<LogColumnType> Columns = new BlockArray<LogColumnType>(false, true, true) {
             LogColumnType.Type,
@@ -135,6 +138,8 @@ namespace EnhancedEditor.Editor {
                 Color = new Color(.8f, .5f, .2f, .7f),
                 UseColor = true,
                 FilterIcon = ConsoleLogFilterIcon.Peach,
+
+                DoPinFilter = false,
             };
 
             DefaultFilters[4] = new DefaultConsoleLogFilter(LogType.Exception) {
@@ -149,6 +154,9 @@ namespace EnhancedEditor.Editor {
                 Color = new Color(.25f, .5f, .7f, .7f),
                 UseColor = true,
                 FilterIcon = ConsoleLogFilterIcon.Blueberry,
+
+                Enabled = false,
+                DoPinFilter = false,
             };
 
             DefaultFilters[6] = new DefaultConsoleLogFilter(LogType.Compilation) {
@@ -156,6 +164,17 @@ namespace EnhancedEditor.Editor {
                 Color = new Color(.7f, .25f, .4f, .7f),
                 UseColor = true,
                 FilterIcon = ConsoleLogFilterIcon.Radish,
+
+                DoPinFilter = false,
+            };
+
+            CustomFilters[0] = new CustomConsoleLogFilter() {
+                Name = "Test",
+                UseColor = true,
+                FilterIcon = ConsoleLogFilterIcon.Watermelon,
+
+                Enabled = false,
+                DoPinFilter = false,
             };
 
             return true;
@@ -275,7 +294,7 @@ namespace EnhancedEditor.Editor {
             new GUIContent("Ignored Calls", "Configure the calls to ignore from the console logs stack"),
         };
 
-        private static readonly int settingsGUID = "EnhancedEditorConsoleSetting".GetHashCode();
+        private static readonly int settingsGUID = "EnhancedEditorConsoleSetting".GetStableHashCode();
         private static EnhancedConsoleEnhancedSettings settings = null;
         private static SerializedProperty settingsProperty = null;
 
@@ -310,6 +329,17 @@ namespace EnhancedEditor.Editor {
             }
         }
 
+        /// <summary>
+        /// Count of simultaneously maximum allowed log count.
+        /// </summary>
+        public static int MaxLogCount {
+            get { return Settings.maxLogCount; }
+            set {
+                Settings.maxLogCount = value;
+                EnhancedEditorUserSettings.Instance.Save();
+            }
+        }
+
         // -----------------------
 
         public static EditorWindow OpenUserSettings() {
@@ -340,7 +370,8 @@ namespace EnhancedEditor.Editor {
                             string _json = File.ReadAllText(_path);
 
                             // To check if the json could be successfully loaded, resize the preferences columns to 0.
-                            EnhancedConsoleEnhancedSettings _temp = new EnhancedConsoleEnhancedSettings(settingsGUID); { _temp.Columns.Array = new LogColumnType[0]; }
+                            EnhancedConsoleEnhancedSettings _temp = new EnhancedConsoleEnhancedSettings(settingsGUID);
+                            { _temp.Columns.Array = new LogColumnType[0]; }
                             EditorJsonUtility.FromJsonOverwrite(_json, _temp);
 
                             // Then, if it was not resized, it means that the json was in an incorrect format.
@@ -364,10 +395,10 @@ namespace EnhancedEditor.Editor {
                 }
             }
 
-            GUILayout.Space(10f);
-
             EnhancedConsoleEnhancedSettings _setting = Settings;
             settingsProperty.serializedObject.Update();
+
+            GUILayout.Space(10f);
 
             using (var _scope = new GUILayout.HorizontalScope()) {
                 GUILayout.Space(15f);
@@ -405,6 +436,10 @@ namespace EnhancedEditor.Editor {
                         default:
                             break;
                     }
+
+                    GUILayout.Space(10f);
+
+                    EditorGUILayout.DelayedIntField(settingsProperty.FindPropertyRelative("maxLogCount"));
 
                     settingsProperty.serializedObject.ApplyModifiedProperties();
 

@@ -45,7 +45,9 @@ namespace EnhancedEditor {
             }
         }
 
-        // -----------------------
+        // -------------------------------------------
+        // Constructor(s)
+        // -------------------------------------------
 
         /// <param name="_guid">The guid of the flag to reference.</param>
         /// <inheritdoc cref="FlagReference(Flag, FlagHolder)"/>
@@ -90,7 +92,7 @@ namespace EnhancedEditor {
         /// </summary>
         /// <param name="_flag"><inheritdoc cref="Flag" path="/summary"/></param>
         public void SetFlag(Flag _flag) {
-            flag = _flag;
+            flag   = _flag;
             holder = _flag.holder;
 
             guid = _flag.guid;
@@ -119,14 +121,16 @@ namespace EnhancedEditor {
     /// associated with a required value to be considered as valid.
     /// </summary>
     [Serializable]
-    public class FlagValue : FlagReference {
+    public sealed class FlagValue : FlagReference {
         #region Global Members
         /// <summary>
         /// The value to be used to validate or set this flag.
         /// </summary>
         public bool Value = true;
 
-        // -----------------------
+        // -------------------------------------------
+        // Constructor(s)
+        // -------------------------------------------
 
         /// <param name="_guid">The guid of the flag to reference.</param>
         /// <param name="_holder"><inheritdoc cref="FlagReference(Flag, FlagHolder)" path="/param[@name='_holder']"/></param>
@@ -181,7 +185,7 @@ namespace EnhancedEditor {
     /// it can be referenced using a <see cref="FlagReference"/> instance.
     /// </summary>
     [Serializable]
-    public class Flag {
+    public sealed class Flag {
         #region Global Members
         [SerializeField] internal string name   = "\'New Flag\'";
         [SerializeField] internal int guid      = EnhancedUtility.GenerateGUID();
@@ -242,7 +246,7 @@ namespace EnhancedEditor {
         /// <summary>
         /// Prevents from creating new flags in other assemblies.
         /// </summary>
-        internal protected Flag() { }
+        internal Flag() { }
         #endregion
 
         #region Operator

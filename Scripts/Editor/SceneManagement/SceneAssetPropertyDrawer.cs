@@ -7,17 +7,14 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace EnhancedEditor.Editor
-{
+namespace EnhancedEditor.Editor {
     /// <summary>
     /// Custom <see cref="SceneAsset"/> drawer.
     /// </summary>
     [CustomPropertyDrawer(typeof(SceneAsset), true)]
-    public class SceneAssetPropertyDrawer : EnhancedPropertyEditor
-    {
+    public sealed class SceneAssetPropertyDrawer : EnhancedPropertyEditor {
         #region Drawer Content
-        protected override float OnEnhancedGUI(Rect _position, SerializedProperty _property, GUIContent _label)
-        {
+        protected override float OnEnhancedGUI(Rect _position, SerializedProperty _property, GUIContent _label) {
             float _height = _position.height
                           = EditorGUIUtility.singleLineHeight;
 

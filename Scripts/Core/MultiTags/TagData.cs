@@ -7,8 +7,7 @@
 using System;
 using UnityEngine;
 
-namespace EnhancedEditor
-{
+namespace EnhancedEditor {
     /// <summary>
     /// Multi-Tags system class used to define a tag in the project.
     /// <para/>
@@ -17,8 +16,7 @@ namespace EnhancedEditor
     /// </summary>
     [Serializable]
     #pragma warning disable IDE0044
-    public class TagData
-    {
+    public sealed class TagData {
         /// <summary>
         /// Default color assigned to new tags.
         /// </summary>
@@ -34,24 +32,32 @@ namespace EnhancedEditor
         [SerializeField, Enhanced, ReadOnly] private long id = 0;
 
         /// <summary>
+        /// Color of this tag (mostly used in editor).
+        /// </summary>
+        public Color Color = DefaultColor.Get();
+
+        // -----------------------
+
+        /// <summary>
         /// ID of this tag. This is the only identifier of the object,
         /// and as so cannot be changed.
         /// </summary>
-        public long ID => id;
+        public long ID {
+            get { return id; }
+        }
 
         /// <summary>
         /// Name of this tag.
         /// <br/> Always prefer using utility methods from the <see cref="MultiTags"/> class
         /// for any modification or comparison.
         /// </summary>
-        public string Name => name;
+        public string Name {
+            get { return name; }
+        }
 
-        /// <summary>
-        /// Color of this tag (mostly used in editor).
-        /// </summary>
-        public Color Color = DefaultColor.Get();
-
-        // -----------------------
+        // -------------------------------------------
+        // Constructor(s)
+        // -------------------------------------------
 
         /// <summary>
         /// Creates a new <see cref="TagData"/>, and with it a new tag in the project.
@@ -62,10 +68,9 @@ namespace EnhancedEditor
         /// <param name="_id">ID of the tag to create (related to <see cref="TagDatabase.counter"/>).</param>
         /// <param name="_name">Name of this tag.</param>
         /// <param name="_color">Color of this tag (mostly used in editor).</param>
-        internal TagData(long _id, string _name, Color _color)
-        {
-            id = _id;
-            name = _name;
+        internal TagData(long _id, string _name, Color _color) {
+            id    = _id;
+            name  = _name;
             Color = _color;
         }
         #endregion
@@ -76,8 +81,7 @@ namespace EnhancedEditor
         /// </summary>
         /// <param name="_tag">Tag to compare to this one.</param>
         /// <returns>Comparison value between the two names.</returns>
-        public int CompareNameTo(TagData _tag)
-        {
+        public int CompareNameTo(TagData _tag) {
             return name.CompareTo(_tag.name);
         }
         #endregion

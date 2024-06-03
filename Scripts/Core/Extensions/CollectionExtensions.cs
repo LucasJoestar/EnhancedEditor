@@ -1,11 +1,13 @@
-// ===== Enhanced Framework - https://github.com/LucasJoestar/EnhancedFramework ===== //
-//
+// ===== Enhanced Editor - https://github.com/LucasJoestar/EnhancedEditor ===== //
+// 
 // Notes:
 //
-// ================================================================================== //
+// ============================================================================ //
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using System.Security.Cryptography;
 
 namespace EnhancedEditor {
     /// <summary>
@@ -14,6 +16,9 @@ namespace EnhancedEditor {
     public static class CollectionExtensions {
         #region Random
         private const int RandomMaxIteration = 5;
+
+        private static readonly RNGCryptoServiceProvider rngProvider = new RNGCryptoServiceProvider();
+        private static readonly byte[] boxBuffer = new byte[1];
 
         // -----------------------
 
@@ -85,9 +90,54 @@ namespace EnhancedEditor {
             _lastRandomIndex = _index;
             return _collection[_index];
         }
+
+        /// <summary>
+        /// Shuffles this collection content.
+        /// </summary>
+        public static IList<T> Shuffle<T>(this IList<T> _collection) {
+            int _count = _collection.Count;
+
+            while (_count != 1) {
+                do {
+                    rngProvider.GetBytes(boxBuffer);
+                }
+                while (!(boxBuffer[0] < _count * (byte.MaxValue / _count)));
+
+                int index = boxBuffer[0] % _count;
+                _count--;
+
+                (_collection[_count], _collection[index]) = (_collection[index], _collection[_count]);
+            }
+
+            return _collection;
+        }
         #endregion
 
         #region Reference
+        /// <summary>
+        /// Get the index of a specific element from this collection.
+        /// <br/> Performs an equality comparison.
+        /// <para/>
+        /// Always use this to get the index of an interface instance, as the default comparer may return true for a different instance.
+        /// </summary>
+        /// <typeparam name="T">This collection content type.</typeparam>
+        /// <param name="_list">List to get the instance index from.</param>
+        /// <param name="_element">Instance to get index.</param>
+        /// <returns>True if the instance could be successfully retrieved along with its index, false otherwise.</returns>
+        public static int IndexOfInstance<T>(this List<T> _list, T _element) where T : class {
+
+            int _count = _list.Count;
+            if (_count != 0) {
+
+                for (int i = 0; i < _count; i++) {
+                    if (EqualityUtility.Equals(_list[i], _element))
+                        return i;
+                }
+            }
+
+            return -1;
+        }
+
         /// <summary>
         /// Removes a specific reference instance from a list.
         /// <br/>Performs an equality comparison.
@@ -110,20 +160,6 @@ namespace EnhancedEditor {
         }
 
         /// <summary>
-        /// Get the index of a specific element from this collection.
-        /// <br/> Performs an equality comparison.
-        /// <para/>
-        /// Always use this to get the index of an interface instance, as the default comparer may return true for a different instance.
-        /// </summary>
-        /// <typeparam name="T">This collection content type.</typeparam>
-        /// <param name="_list">List to get the instance index from.</param>
-        /// <param name="_element">Instance to get index.</param>
-        /// <returns>True if the instance could be successfully retrieved along with its index, false otherwise.</returns>
-        public static int IndexOfInstance<T>(this List<T> _list, T _element) where T : class {
-            return _list.FindIndex(e => e == _element);
-        }
-
-        /// <summary>
         /// Get if a specific instance is contained within this collection.
         /// <br/> Performs an equality comparison.
         /// <para/>
@@ -133,18 +169,24 @@ namespace EnhancedEditor {
         /// <param name="_list">List to check content.</param>
         /// <param name="_element">Instance to check.</param>
         /// <returns>True if the instance is contained within the collection, false otherwise.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool ContainsInstance<T>(this List<T> _list, T _element) where T : class {
-            return _list.Exists(e => e == _element);
+            return IndexOfInstance(_list, _element) != -1;
         }
         #endregion
 
         #region Enumeration
+        // -------------------------------------------
+        // Array
+        // -------------------------------------------
+
         /// <summary>
         /// Get the first element from this array.
         /// </summary>
         /// <typeparam name="T">Array content type.</typeparam>
         /// <param name="_array">Array to get first element from.</param>
         /// <returns>First element from this array.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T First<T>(this T[] _array) {
             return _array[0];
         }
@@ -173,6 +215,7 @@ namespace EnhancedEditor {
         /// <typeparam name="T">Array content type.</typeparam>
         /// <param name="_array">Array to get last element from.</param>
         /// <returns>Last element from this array.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T Last<T>(this T[] _array) {
             return _array[_array.Length - 1];
         }
@@ -195,7 +238,9 @@ namespace EnhancedEditor {
             return true;
         }
 
-        // -----------------------
+        // -------------------------------------------
+        // List
+        // -------------------------------------------
 
         /// <summary>
         /// Get the first element from this list.
@@ -203,6 +248,7 @@ namespace EnhancedEditor {
         /// <typeparam name="T">List content type.</typeparam>
         /// <param name="_array">List to get first element from.</param>
         /// <returns>First element from this list.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T First<T>(this List<T> _list) {
             return _list[0];
         }
@@ -231,8 +277,9 @@ namespace EnhancedEditor {
         /// <typeparam name="T">List content type.</typeparam>
         /// <param name="_list">List to get last element from.</param>
         /// <returns>Last element from the given list.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T Last<T>(this List<T> _list) {
-            return (_list.Count == 0) ? default : _list[_list.Count - 1];
+            return _list[_list.Count - 1];
         }
 
         /// <summary>
@@ -250,44 +297,6 @@ namespace EnhancedEditor {
             }
 
             _element = _list.Last();
-            return true;
-        }
-
-        // -----------------------
-
-        /// <summary>
-        /// Get the first element of this list.
-        /// </summary>
-        /// <typeparam name="T">List element type from.</typeparam>
-        /// <param name="_list">List to get first element.</param>
-        /// <param name="_element">First element of the list (null if none).</param>
-        /// <returns>True if this list is not empty, false otherwise.</returns>
-        public static bool First<T>(this List<T> _list, out T _element) {
-            if (_list.Count == 0) {
-                _element = default;
-                return false;
-            }
-
-            _element = _list[0];
-            return true;
-        }
-
-        /// <summary>
-        /// Get the last element of this list.
-        /// </summary>
-        /// <typeparam name="T">List element type.</typeparam>
-        /// <param name="_list">List to get last element from.</param>
-        /// <param name="_element">Last element of the list (null if none).</param>
-        /// <returns>True if this list is not empty, false otherwise.</returns>
-        public static bool Last<T>(this List<T> _list, out T _element) {
-            if (_list.Count == 0) {
-                _element = default;
-                return false;
-            }
-
-            int _index = _list.Count - 1;
-            _element = _list[_index];
-
             return true;
         }
         #endregion
@@ -314,13 +323,26 @@ namespace EnhancedEditor {
         /// <param name="_list">List to remove last element from.</param>
         /// <returns>True if this list is not empty, false otherwise.</returns>
         public static bool RemoveLast<T>(this List<T> _list) {
-            if (_list.Count == 0)
+            int _count = _list.Count;
+
+            if (_count == 0)
                 return false;
 
-            int _index = _list.Count - 1;
+            int _index = _count - 1;
             _list.RemoveAt(_index);
 
             return true;
+        }
+
+        /// <summary>
+        /// Clears all null reference(s) of this list.
+        /// </summary>
+        public static void RemoveNulls<T>(this List<T> _list) {
+            for (int i = _list.Count; i-- > 0;) {
+                if ((_list[i] == null) || _list[i].Equals(null)) {
+                    _list.RemoveAt(i);
+                }
+            }
         }
 
         /// <summary>
@@ -335,17 +357,19 @@ namespace EnhancedEditor {
             }
             
             int _count = _newIndex - _oldIndex;
-            Action _delegate;
 
             if (_count > 0) {
-                _delegate = ShiftRight;
-            } else {
-                _delegate = ShiftLeft;
-            }
 
-            for (int i = 0; i < _count; i++) {
-                _delegate();
-            };
+                for (int i = 0; i < _count; i++) {
+                    ShiftRight();
+                };
+
+            } else {
+
+                for (int i = 0; i < _count; i++) {
+                    ShiftLeft();
+                };
+            }
 
             // ----- Local Methods ----- \\
 
@@ -366,6 +390,44 @@ namespace EnhancedEditor {
 
                 _list[0] = _tmp;
             }
+        }
+        #endregion
+
+        #region Maths
+        /// <summary>
+        /// Calculates the average value of a given array.
+        /// </summary>
+        /// <returns>Average value of this array.</returns>
+        public static float Average(this float[] _array) {
+            float _value = 0f;
+            int _length  = _array.Length;
+
+            if (_length == 0)
+                return _value;
+
+            for (int i = 0; i < _length; i++) {
+                _value += _array[i];
+            }
+
+            return _value / _length;
+        }
+
+        /// <summary>
+        /// Calculates the average value of a given list.
+        /// </summary>
+        /// <returns>Average value of this list.</returns>
+        public static float Average(this List<float> _list) {
+            float _value = 0f;
+            int _count   = _list.Count;
+
+            if (_count == 0)
+                return _value;
+
+            for (int i = 0; i < _count; i++) {
+                _value += _list[i];
+            }
+
+            return _value / _count;
         }
         #endregion
 

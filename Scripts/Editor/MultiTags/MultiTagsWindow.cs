@@ -14,7 +14,7 @@ namespace EnhancedEditor.Editor
     /// Multi-Tags system editor window, used to manage all tags in the project.
     /// </summary>
     [InitializeOnLoad]
-    public class MultiTagsWindow : EditorWindow
+    public sealed class MultiTagsWindow : EditorWindow
     {
         #region Editor Database
         /// <summary>
@@ -209,7 +209,7 @@ namespace EnhancedEditor.Editor
         /// <summary>
         /// Utility window used to create a new tag in the project.
         /// </summary>
-        public class CreateTagWindow : TagWindow
+        public sealed class CreateTagWindow : TagWindow
         {
             /// <summary>
             /// Creates and shows a new <see cref="CreateTagWindow"/> instance,
@@ -264,7 +264,7 @@ namespace EnhancedEditor.Editor
         /// <summary>
         /// Utility window used to rename an existing tag.
         /// </summary>
-        public class RenameTagWindow : TagWindow
+        public sealed class RenameTagWindow : TagWindow
         {
             /// <summary>
             /// Creates and shows a new <see cref="CreateTagWindow"/> instance,

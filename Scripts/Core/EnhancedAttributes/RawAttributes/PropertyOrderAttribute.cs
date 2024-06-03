@@ -4,8 +4,8 @@
 //
 // ============================================================================ //
 
-using System.Diagnostics;
 using System;
+using System.Diagnostics;
 
 namespace EnhancedEditor {
     /// <summary>
@@ -13,7 +13,7 @@ namespace EnhancedEditor {
     /// </summary>
     [Conditional("UNITY_EDITOR")]
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
-    public class PropertyOrderAttribute : Attribute {
+    public sealed class PropertyOrderAttribute : Attribute {
         #region Global Members
         /// <summary>
         /// Draw order of this property field.
@@ -21,7 +21,9 @@ namespace EnhancedEditor {
         /// </summary>
         public readonly int PropertyOrder = 0;
 
-        // -----------------------
+        // -------------------------------------------
+        // Constructor(s)
+        // -------------------------------------------
 
         /// <param name="_order"><inheritdoc cref="PropertyOrder" path="/summary"/></param>
         /// <inheritdoc cref="PropertyOrderAttribute"/>

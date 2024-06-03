@@ -7,8 +7,7 @@
 using System;
 using System.Diagnostics;
 
-namespace EnhancedEditor
-{
+namespace EnhancedEditor {
     /// <summary>
     /// Base class to derive all custom method attributes from.
     /// <para/>
@@ -17,8 +16,7 @@ namespace EnhancedEditor
     /// </summary>
     [Conditional("UNITY_EDITOR")]
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
-    public abstract class EnhancedMethodAttribute : Attribute
-    {
+    public abstract class EnhancedMethodAttribute : Attribute {
         #region Global Members
         /// <summary>
         /// Optional field to specify the order that multiple <see cref="EnhancedMethodAttribute"/> should be drawn in.
@@ -29,9 +27,9 @@ namespace EnhancedEditor
         /// Determines if the associated drawer should be called before or after
         /// drawing the target editor script inspector.
         /// <para/>
-        /// True by default.
+        /// False by default.
         /// </summary>
-        public bool IsDrawnOnTop { get; set; } = true;
+        public bool IsDrawnOnTop { get; set; } = false;
 
         /// <summary>
         /// Tooltip displayed on mouse hover.

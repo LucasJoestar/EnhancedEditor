@@ -12,7 +12,7 @@ namespace EnhancedEditor.Editor {
     /// Custom <see cref="ConsoleLogFilter"/> drawer.
     /// </summary>
     [CustomPropertyDrawer(typeof(ConsoleLogFilter), true)]
-    public class ConsoleLogFilterPropertyDrawer : EnhancedPropertyEditor {
+    public sealed class ConsoleLogFilterPropertyDrawer : EnhancedPropertyEditor {
         #region Drawer Content
         private static readonly GUIContent enabledGUI = new GUIContent(EditorGUIUtility.FindTexture("scenevis_visible_hover"), "Toggles this filter activation (currently enabled)");
         private static readonly GUIContent disabledGUI = new GUIContent(EditorGUIUtility.FindTexture("SceneViewVisibility"), "Toggles this filter activation (currently disabled)");

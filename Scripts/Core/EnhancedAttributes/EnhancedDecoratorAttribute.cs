@@ -8,8 +8,7 @@ using System;
 using System.Diagnostics;
 using UnityEngine;
 
-namespace EnhancedEditor
-{
+namespace EnhancedEditor {
     /// <summary>
     /// Base class to derive all custom decorator attributes from.
     /// <para/>

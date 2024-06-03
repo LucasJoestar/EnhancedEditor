@@ -11,7 +11,7 @@ namespace EnhancedEditor {
     /// Use this attribute on any <see cref="UnityEngine.Object"/> class to toggle its gizmos visibility.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
-    public class ScriptGizmosAttribute : EnhancedClassAttribute {
+    public sealed class ScriptGizmosAttribute : EnhancedClassAttribute {
         #region Global Members
         /// <summary>
         /// Whether to display this script gizmos or not.
@@ -31,7 +31,7 @@ namespace EnhancedEditor {
         /// <param name="_showGizmos"><inheritdoc cref="ShowGizmos" path="/summary"/></param>
         /// <inheritdoc cref="ScriptGizmosAttribute"/>
         public ScriptGizmosAttribute(bool _showIcon, bool _showGizmos = true) {
-            ShowIcon = _showIcon;
+            ShowIcon   = _showIcon;
             ShowGizmos = _showGizmos;
         }
         #endregion

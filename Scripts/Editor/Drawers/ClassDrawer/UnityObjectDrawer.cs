@@ -7,15 +7,13 @@
 using System;
 using UnityEditor;
 
-namespace EnhancedEditor.Editor
-{
+namespace EnhancedEditor.Editor {
     /// <summary>
     /// Base class to derive any custom <see cref="EnhancedClassAttribute"/> drawer from.
     /// <para/>
     /// Use this to create custom drawers for class attributes inheriting from <see cref="EnhancedClassAttribute"/>.
     /// </summary>
-    public abstract class UnityObjectDrawer
-    {
+    public abstract class UnityObjectDrawer {
         #region Internal Behaviour
         /// <summary>
         /// Creates a new instance of a <see cref="UnityObjectDrawer"/>,
@@ -25,11 +23,11 @@ namespace EnhancedEditor.Editor
         /// <param name="_serializedObject"><inheritdoc cref="SerializedObject" path="/summary"/></param>
         /// <param name="_attribute"><inheritdoc cref="Attribute" path="/summary"/></param>
         /// <returns>Newly created <see cref="UnityObjectDrawer"/> instance.</returns>
-        internal static UnityObjectDrawer CreateInstance(Type _type, SerializedObject _serializedObject, EnhancedClassAttribute _attribute)
-        {
+        internal static UnityObjectDrawer CreateInstance(Type _type, SerializedObject _serializedObject, EnhancedClassAttribute _attribute) {
             UnityObjectDrawer _drawer = Activator.CreateInstance(_type) as UnityObjectDrawer;
+
             _drawer.SerializedObject = _serializedObject;
-            _drawer.Attribute = _attribute;
+            _drawer.Attribute        = _attribute;
 
             _drawer.OnEnable();
 
@@ -60,8 +58,7 @@ namespace EnhancedEditor.Editor
         /// <br/>The return value determines whether the rest of the inspector should continue being drawn or not.
         /// </summary>
         /// <returns>True to stop drawing this object inspector, false otherwise.</returns>
-        public virtual bool OnInspectorGUI()
-        {
+        public virtual bool OnInspectorGUI() {
             return false;
         }
 

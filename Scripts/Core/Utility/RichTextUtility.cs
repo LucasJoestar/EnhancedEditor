@@ -4,6 +4,7 @@
 //
 // ============================================================================ //
 
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 namespace EnhancedEditor {
@@ -13,6 +14,7 @@ namespace EnhancedEditor {
 	public static class RichTextUtility {
         #region Encapsulation
         /// <inheritdoc cref="Encapsulate(string, string, string)"/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string Encapsulate(string _text, string _richTextTag) {
             return $"<{_richTextTag}>{_text}</{_richTextTag}>";
         }
@@ -24,6 +26,7 @@ namespace EnhancedEditor {
         /// <param name="_richTextTag">The rich text tag to encapsulate this text within.</param>
         /// <param name="_tagValue">The value of this tag.</param>
         /// <param name="_text"><inheritdoc cref="Doc(string)" path="/param[@name='_text']"/></param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string Encapsulate(string _text, string _richTextTag, string _tagValue) {
             return $"<{_richTextTag}={_tagValue}>{_text}</{_richTextTag}>";
         }
@@ -38,6 +41,7 @@ namespace EnhancedEditor {
         // --- Color --- \\
 
         /// <inheritdoc cref="Color(string, UnityEngine.Color)"/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string Color(string _text, SuperColor _color) {
             return Color(_text, _color.Get());
         }
@@ -48,6 +52,7 @@ namespace EnhancedEditor {
         /// <param name="_text"><inheritdoc cref="Doc(string)" path="/param[@name='_text']"/></param>
         /// <param name="_color">The new color of the text.</param>
         /// <returns><inheritdoc cref="Doc(string)" path="/returns"/></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string Color(string _text, Color _color) {
             return Encapsulate(_text, ColorTag, $"#{ColorUtility.ToHtmlStringRGBA(_color)}");
         }
@@ -59,6 +64,7 @@ namespace EnhancedEditor {
         /// </summary>
         /// <param name="_text"><inheritdoc cref="Doc(string)" path="/param[@name='_text']"/></param>
         /// <returns><inheritdoc cref="Doc(string)" path="/returns"/></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string Bold(string _text) {
             return Encapsulate(_text, BoldTag);
         }
@@ -68,6 +74,7 @@ namespace EnhancedEditor {
         /// </summary>
         /// <param name="_text"><inheritdoc cref="Doc(string)" path="/param[@name='_text']"/></param>
         /// <returns><inheritdoc cref="Doc(string)" path="/returns"/></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string Italic(string _text) {
             return Encapsulate(_text, ItalicTag);
         }
@@ -78,6 +85,7 @@ namespace EnhancedEditor {
         /// <param name="_text"><inheritdoc cref="Doc(string)" path="/param[@name='_text']"/></param>
         /// <param name="_size">The new size of the text.</param>
         /// <returns><inheritdoc cref="Doc(string)" path="/returns"/></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string Size(string _text, int _size) {
             return Encapsulate(_text, SizeTag, _size.ToString());
         }
@@ -89,6 +97,7 @@ namespace EnhancedEditor {
         /// </summary>
         /// <param name="_text">The <see cref="string"/> text value to modify.</param>
         /// <returns>The modified value of the text.</returns>
+        #pragma warning disable
         private static string Doc(string _text) => _text;
         #endregion
     }
@@ -99,26 +108,31 @@ namespace EnhancedEditor {
     public static class RichTextStringExtensions {
         #region Content
         /// <inheritdoc cref="RichTextUtility.Color(string, SuperColor)"/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string Color(this string _text, SuperColor _color) {
             return RichTextUtility.Color(_text, _color);
         }
 
         /// <inheritdoc cref="RichTextUtility.Color(string, Color)"/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string Color(this string _text, Color _color) {
             return RichTextUtility.Color(_text, _color);
         }
 
         /// <inheritdoc cref="RichTextUtility.Bold(string)"/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string Bold(this string _text) {
             return RichTextUtility.Bold(_text);
         }
 
         /// <inheritdoc cref="RichTextUtility.Italic(string)"/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string Italic(this string _text) {
             return RichTextUtility.Italic(_text);
         }
 
         /// <inheritdoc cref="RichTextUtility.Size(string, int)"/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string Size(this string _text, int _size) {
             return RichTextUtility.Size(_text, _size);
         }
@@ -126,11 +140,13 @@ namespace EnhancedEditor {
         // -----------------------
 
         /// <inheritdoc cref="RichTextUtility.Encapsulate(string, string)"/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string Encapsulate(this string _text, string _richTextTag) {
             return RichTextUtility.Encapsulate(_text, _richTextTag);
         }
 
         /// <inheritdoc cref="RichTextUtility.Encapsulate(string, string, string)"/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string Encapsulate(this string _text, string _richTextTag, string _tagValue) {
             return RichTextUtility.Encapsulate(_text, _richTextTag, _tagValue);
         }

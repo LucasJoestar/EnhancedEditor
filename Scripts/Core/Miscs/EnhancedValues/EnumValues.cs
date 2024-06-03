@@ -7,7 +7,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 namespace EnhancedEditor {
@@ -33,6 +33,7 @@ namespace EnhancedEditor {
         /// Total amount of values in this object.
         /// </summary>
         public int Count {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get { return Values.Length; }
         }
 
@@ -61,11 +62,10 @@ namespace EnhancedEditor {
         }
 
         public T this[int _index] {
-            get {
-                return Values[_index].Second;
-            } set {
-                Values[_index].Second = value;
-            }
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get { return Values[_index].Second; }
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            set { Values[_index].Second = value; }
         }
 
         public override string ToString() {
@@ -89,7 +89,9 @@ namespace EnhancedEditor {
         void ISerializationCallbackReceiver.OnBeforeSerialize() { }
 
         void ISerializationCallbackReceiver.OnAfterDeserialize() {
+            #if UNITY_EDITOR
             Fill();
+            #endif
         }
         #endregion
 
@@ -165,9 +167,18 @@ namespace EnhancedEditor {
             return -1;
         }
 
+        /// <summary>
+        /// Get this object full pair value at a given index.
+        /// <br/> Use <see cref="Count"/> to get the total amount of element in this collection.
+        /// </summary>
+        /// <param name="_index">Index to get the pair value at.</param>
+        /// <returns><see cref="Enum"/> as <see cref="int"/>, and its associated value.</returns>
+        public Pair<int, T> GetFullValue(int _index) {
+            return Values[_index];
+        }
+
         // -----------------------
 
-        [Conditional("UNITY_EDITOR")]
         private void Fill() {
             Type _type = typeof(Enum);
             Enum[] _values = (Enum[])System.Enum.GetValues(typeof(Enum));
@@ -190,7 +201,16 @@ namespace EnhancedEditor {
             }
 
             foreach (int _value in _integers) {
-                if (Array.FindIndex(Values, (v) => v.First == _value) == -1) {
+
+                bool _add = true;
+                for (int i = 0; i < Values.Length; i++) {
+                    if (Values[i].First == _value) {
+                        _add = false;
+                        break;
+                    }
+                }
+
+                if (_add) {
                     AddValue(_value);
                 }
             }

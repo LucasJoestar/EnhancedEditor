@@ -15,13 +15,13 @@ namespace EnhancedEditor.Editor {
     /// Custom <see cref="CapsuleCollider"/> editor, adding save and load utilities.
     /// </summary>
     [CustomEditor(typeof(CapsuleCollider), true), CanEditMultipleObjects]
-    public class CapsuleColliderEditor : UnityObjectEditor {
+    public sealed class CapsuleColliderEditor : UnityObjectEditor {
         #region Data
         /// <summary>
         /// Serializable <see cref="CapsuleCollider"/> data.
         /// </summary>
         [Serializable]
-        private class Data : PlayModeObjectData {
+        private sealed class Data : PlayModeObjectData {
             public Vector3 Center;
             public float Height;
             public int Direction;

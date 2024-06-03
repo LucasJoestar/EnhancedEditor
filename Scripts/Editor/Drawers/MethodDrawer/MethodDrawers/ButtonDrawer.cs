@@ -12,56 +12,48 @@ using UnityEngine;
 
 using Object = UnityEngine.Object;
 
-namespace EnhancedEditor.Editor
-{
+namespace EnhancedEditor.Editor {
     /// <summary>
     /// Special drawer for methods with the attribute <see cref="ButtonAttribute"/> (inherit from <see cref="MethodDrawer"/>).
     /// </summary>
     [CustomDrawer(typeof(ButtonAttribute))]
-	public class ButtonDrawer : MethodDrawer
-    {
+    public sealed class ButtonDrawer : MethodDrawer {
         #region Drawer Content
         private const float LabelWidthCoef = .33f;
-        private const float ButtonHeight = 25f;
+        private const float ButtonHeight   = 25f;
 
         private ParameterInfo[] parameters = null;
         private GUIContent[] parametersGUI = null;
-        private object[] parameterValues = null;
+        private object[] parameterValues   = null;
 
         private bool useCondition = false;
 
         // -----------------------
 
-        public override void OnEnable()
-        {
+        public override void OnEnable() {
             // Parameter informations.
             parameters = MethodInfo.GetParameters();
             parameterValues = new object[parameters.Length];
             parametersGUI = new GUIContent[parameters.Length];
 
-            for (int _i = 0; _i < parameters.Length; _i++)
-            {
+            for (int _i = 0; _i < parameters.Length; _i++) {
                 ParameterInfo _parameter = parameters[_i];
                 parametersGUI[_i] = new GUIContent(ObjectNames.NicifyVariableName(_parameter.Name));
 
                 Type _type = _parameter.ParameterType;
-                if (_parameter.HasDefaultValue)
-                {
+                if (_parameter.HasDefaultValue) {
                     parameterValues[_i] = _parameter.DefaultValue;
-                }
-                else if (_type.IsValueType)
-                {
+                } else if (_type.IsValueType) {
                     parameterValues[_i] = Activator.CreateInstance(_type);
                 }
             }
-                
+
             // Condition member.
             ButtonAttribute _attribute = Attribute as ButtonAttribute;
             useCondition = !string.IsNullOrEmpty(_attribute.ConditionMember.Name) && _attribute.ConditionMember.GetValue(SerializedObject, out _);
         }
 
-        public override bool OnGUI()
-        {
+        public override bool OnGUI() {
             ButtonAttribute _attribute = Attribute as ButtonAttribute;
 
 
@@ -70,28 +62,22 @@ namespace EnhancedEditor.Editor
                 return false;
             }
 
-            using (var _scope = new GUILayout.HorizontalScope())
-            {
+            using (var _scope = new GUILayout.HorizontalScope()) {
                 GUILayout.FlexibleSpace();
 
                 // Pack all button GUI controls within a nice box group.
                 float _size = Mathf.Max(EditorStyles.label.CalcSize(Label).x + 20f, EnhancedEditorGUIUtility.ScreenWidth - 250f);
-                using (var _verticalScope = new GUILayout.VerticalScope(EditorStyles.helpBox, GUILayout.Width(_size)))
-                {
-                    using (EnhancedGUI.GUIColor.Scope(_attribute.Color))
-                    {
-                        if (GUILayout.Button(Label, GUILayout.Height(ButtonHeight)))
-                        {
-                            foreach (Object _target in SerializedObject.targetObjects)
-                            {
+                using (var _verticalScope = new GUILayout.VerticalScope(EditorStyles.helpBox, GUILayout.Width(_size))) {
+                    using (EnhancedGUI.GUIColor.Scope(_attribute.Color)) {
+                        if (GUILayout.Button(Label, GUILayout.Height(ButtonHeight))) {
+                            foreach (Object _target in SerializedObject.targetObjects) {
                                 MethodInfo.Invoke(_target, parameterValues);
                             }
                         }
                     }
 
                     // Adjust the label width according to the size of the button.
-                    using (var _labelScope = EnhancedEditorGUI.GUILabelWidth.Scope(_size * LabelWidthCoef))
-                    {
+                    using (var _labelScope = EnhancedEditorGUI.GUILabelWidth.Scope(_size * LabelWidthCoef)) {
                         for (int _i = 0; _i < parameters.Length; _i++)
                             DrawParameterField(_i);
                     }
@@ -106,40 +92,36 @@ namespace EnhancedEditor.Editor
         #endregion
 
         #region Parameter Utility
-        private static readonly Dictionary<Type, int> parameterTypes = new Dictionary<Type, int>
-        {
-            { typeof(bool), 0 },
-            { typeof(int), 1 },
-            { typeof(float), 2 },
-            { typeof(string), 3 },
-            { typeof(char), 4 },
-            { typeof(Color), 5 },
-            { typeof(LayerMask), 6 },
-            { typeof(Vector2), 7 },
-            { typeof(Vector3), 8 },
-            { typeof(Vector4), 9 },
-            { typeof(Rect), 10 },
-            { typeof(Vector2Int), 11 },
-            { typeof(Vector3Int), 12 },
-            { typeof(RectInt), 13 },
-            { typeof(Quaternion), 14 },
-            { typeof(Bounds), 15 },
-            { typeof(BoundsInt), 16 },
-            { typeof(AnimationCurve), 17 },
-            { typeof(Gradient), 18 }
+        private static readonly Dictionary<Type, int> parameterTypes = new Dictionary<Type, int> {
+            { typeof(bool),             0 },
+            { typeof(int),              1 },
+            { typeof(float),            2 },
+            { typeof(string),           3 },
+            { typeof(char),             4 },
+            { typeof(Color),            5 },
+            { typeof(LayerMask),        6 },
+            { typeof(Vector2),          7 },
+            { typeof(Vector3),          8 },
+            { typeof(Vector4),          9 },
+            { typeof(Rect),             10 },
+            { typeof(Vector2Int),       11 },
+            { typeof(Vector3Int),       12 },
+            { typeof(RectInt),          13 },
+            { typeof(Quaternion),       14 },
+            { typeof(Bounds),           15 },
+            { typeof(BoundsInt),        16 },
+            { typeof(AnimationCurve),   17 },
+            { typeof(Gradient),         18 }
         };
 
-        private void DrawParameterField(int _index)
-        {
+        private void DrawParameterField(int _index) {
             ParameterInfo _parameter = parameters[_index];
             GUIContent _name = parametersGUI[_index];
             ref object _value = ref parameterValues[_index];
 
             Type _type = _parameter.ParameterType;
-            if (parameterTypes.ContainsKey(_parameter.ParameterType))
-            {
-                switch (parameterTypes[_type])
-                {
+            if (parameterTypes.ContainsKey(_parameter.ParameterType)) {
+                switch (parameterTypes[_type]) {
                     // Boolean.
                     case 0:
                         _value = EditorGUILayout.Toggle(_name, (bool)_value);
@@ -234,17 +216,11 @@ namespace EnhancedEditor.Editor
                         _value = EditorGUILayout.GradientField(_name, (Gradient)_value);
                         break;
                 }
-            }
-            else if (_type.IsSubclassOf(typeof(Object)))
-            {
+            } else if (_type.IsSubclassOf(typeof(Object))) {
                 _value = EditorGUILayout.ObjectField(_name, _value as Object, _parameter.ParameterType, true);
-            }
-            else if (_type.IsSubclassOf(typeof(Enum)))
-            {
+            } else if (_type.IsSubclassOf(typeof(Enum))) {
                 _value = EditorGUILayout.Popup(_name, (int)_value, Enum.GetNames(_parameter.ParameterType));
-            }
-            else
-            {
+            } else {
                 //EditorGUILayout.HelpBox($"Cannot draw parameter of type \"{_type}\"!", UnityEditor.MessageType.Error);
             }
         }

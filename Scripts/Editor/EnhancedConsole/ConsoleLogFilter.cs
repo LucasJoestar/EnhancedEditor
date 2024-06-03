@@ -8,7 +8,7 @@ using System;
 using UnityEngine;
 
 using LogColumnType = EnhancedEditor.Editor.EnhancedConsoleWindow.LogColumnType;
-using LogEntry = EnhancedEditor.Editor.EnhancedConsoleWindow.OriginalLogEntry;
+using LogEntry      = EnhancedEditor.Editor.EnhancedConsoleWindow.OriginalLogEntry;
 
 namespace EnhancedEditor.Editor {
     /// <summary>
@@ -46,11 +46,11 @@ namespace EnhancedEditor.Editor {
         [Space(5f)]
 
         [Tooltip("Color used for this filter logs background")]
-        [Enhanced, Duo("UseColor", EnhancedEditorGUIUtility.IconWidth)]
+        [Enhanced, Duo(nameof(UseColor), EnhancedEditorGUIUtility.IconWidth)]
         public Color Color = new Color(.15f, .6f, .15f, .7f);
 
         [Tooltip("Color used for this filter logs text")]
-        [Enhanced, Duo("UseTextColor", EnhancedEditorGUIUtility.IconWidth)]
+        [Enhanced, Duo(nameof(UseTextColor), EnhancedEditorGUIUtility.IconWidth)]
         public Color TextColor = Color.white;
 
         [SerializeField, HideInInspector, DisplayName("Enabled")] public bool UseColor = false;
@@ -61,7 +61,7 @@ namespace EnhancedEditor.Editor {
         [Tooltip("This filter displayed icon")]
         public Texture Icon = null;
 
-        [SerializeField, Enhanced, DisplayName("Quick Loader"), ValidationMember("FilterIcon")]
+        [SerializeField, Enhanced, DisplayName("Quick Loader"), ValidationMember(nameof(FilterIcon))]
         protected ConsoleLogFilterIcon filterIcon = ConsoleLogFilterIcon.None;
 
         [Space(10f)]
@@ -98,7 +98,7 @@ namespace EnhancedEditor.Editor {
     /// <see cref="EnhancedConsoleWindow"/>-related default log filter class.
     /// </summary>
     [Serializable]
-    public class DefaultConsoleLogFilter : ConsoleLogFilter {
+    public sealed class DefaultConsoleLogFilter : ConsoleLogFilter {
         /// <summary>
         /// Defines all default filter types.
         /// </summary>
@@ -166,7 +166,7 @@ namespace EnhancedEditor.Editor {
     /// <see cref="EnhancedConsoleWindow"/>-related custom log filter class,
     /// </summary>
     [Serializable]
-    public class CustomConsoleLogFilter : ConsoleLogFilter {
+    public sealed class CustomConsoleLogFilter : ConsoleLogFilter {
         /// <summary>
         /// <see cref="CustomConsoleLogFilter"/> keyword wrapper class.
         /// </summary>
@@ -218,7 +218,7 @@ namespace EnhancedEditor.Editor {
             }
 
             foreach (Keyword _keyword in Keywords) {
-                if (!_keyword.Logs.HasFlag(_entry.Type)) {
+                if (!_keyword.Logs.HasFlagUnsafe(_entry.Type)) {
                     continue;
                 }
 
@@ -235,7 +235,8 @@ namespace EnhancedEditor.Editor {
             // ----- Local Method ----- \\
 
             bool Match(Keyword _keyword, string _value, LogColumnType _column) {
-                if (!_keyword.Columns.HasFlag(_column)) {
+
+                if (!_keyword.Columns.HasFlagUnsafe(_column)) {
                     return false;
                 }
 

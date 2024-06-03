@@ -6,6 +6,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace EnhancedEditor {
     /// <summary>
@@ -74,6 +75,7 @@ namespace EnhancedEditor {
         /// </summary>
         /// <param name="_type"><see cref="Type"/> to get the reflection name.</param>
         /// <returns>Full reflection name from this type..</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string GetReflectionName(this Type _type) {
             return $"{_type.FullName}, {_type.Assembly.GetName().Name}";
         }
@@ -84,6 +86,7 @@ namespace EnhancedEditor {
         /// <param name="_derived">The potential derived type.</param>
         /// <param name="_base">The potential base type.</param>
         /// <returns>True if the derived type is the same or a subclass of the base, false otherwise.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsSameOrSubclass(this Type _derived, Type _base) {
             return (_derived == _base) || _derived.IsSubclassOf(_base);
         }

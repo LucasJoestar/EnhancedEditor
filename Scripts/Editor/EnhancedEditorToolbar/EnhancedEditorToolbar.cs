@@ -27,10 +27,12 @@ using System.Collections.Generic;
 using System.Reflection;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.UIElements;
 
-namespace EnhancedEditor.Editor
-{
+#if EDITOR_TOOLBAR
+using UnityEngine.UIElements;
+#endif
+
+namespace EnhancedEditor.Editor {
     /// <summary>
     /// Extends the main editor toolbar to add custom controls in it.
     /// <para/>
@@ -38,8 +40,7 @@ namespace EnhancedEditor.Editor
     /// and <see cref="EditorToolbarRightExtension"/> attributes on your methods.
     /// </summary>
     [InitializeOnLoad]
-    public static class EnhancedEditorToolbar
-    {
+    public static class EnhancedEditorToolbar {
         #region Global Members
         #if SCENEVIEW_TOOLBAR
         private const string FoldoutKey = "EnhancedToolbarFoldout";
@@ -71,8 +72,7 @@ namespace EnhancedEditor.Editor
 
         // -----------------------
 
-        static EnhancedEditorToolbar()
-        {
+        static EnhancedEditorToolbar() {
             #if UNITY_2020_1_OR_NEWER
             // Get all toolbar extensions.
             toolbarLeftExtensions = GetExtensions<EditorToolbarLeftExtension>(false);
@@ -97,22 +97,19 @@ namespace EnhancedEditor.Editor
             #endif
 
             // ----- Local Method ----- \\
-            
-            Action[] GetExtensions<T>(bool _sortAscending) where T : EditorToolbarExtension
-            {
+
+            Action[] GetExtensions<T>(bool _sortAscending) where T : EditorToolbarExtension {
                 // Get matching extension methods.
                 var _methods = TypeCache.GetMethodsWithAttribute<T>();
                 List<MethodInfo> _extensions = new List<MethodInfo>();
 
-                foreach (var _method in _methods)
-                {
+                foreach (var _method in _methods) {
                     if (_method.IsStatic && (_method.GetParameters().Length == 0))
                         _extensions.Add(_method);
                 }
 
                 // Sort all extensions by their order.
-                _extensions.Sort((a, b) =>
-                {
+                _extensions.Sort((a, b) => {
                     var _aAttribute = a.GetCustomAttribute<T>();
                     var _bAttribute = b.GetCustomAttribute<T>();
 
@@ -124,8 +121,7 @@ namespace EnhancedEditor.Editor
                 });
 
                 // Then store their delegate.
-                return Array.ConvertAll(_extensions.ToArray(), a =>
-                {
+                return Array.ConvertAll(_extensions.ToArray(), a => {
                     return a.CreateDelegate(typeof(Action)) as Action;
                 });
             }
@@ -134,8 +130,7 @@ namespace EnhancedEditor.Editor
         #endregion
 
         #region Update
-        private static void Update()
-        {
+        private static void Update() {
             #if SCENEVIEW_TOOLBAR
             // Nothing to see here...
             #elif EDITOR_TOOLBAR
@@ -254,11 +249,9 @@ namespace EnhancedEditor.Editor
 
         // -----------------------
 
-        private static void OnSceneGUI(SceneView _view)
-        {
+        private static void OnSceneGUI(SceneView _view) {
             // Icons loading.
-            if (foldGUI.image == null)
-            {
+            if (foldGUI.image == null) {
                 foldGUI.image = EditorGUIUtility.IconContent("Animation.FirstKey@2x").image;
                 unfolddGUI.image = EditorGUIUtility.IconContent("Animation.LastKey@2x").image;
             }
@@ -268,8 +261,7 @@ namespace EnhancedEditor.Editor
                                ? ToolbarFoldoutWidth
                                : EnhancedEditorGUIUtility.ScreenWidth;
 
-            if (toolbarWidth != _targetWidth)
-            {
+            if (toolbarWidth != _targetWidth) {
                 double _time = EditorApplication.timeSinceStartup;
                 float _difference = (float)(_time - lastUpdateTime);
 
@@ -283,31 +275,27 @@ namespace EnhancedEditor.Editor
             Handles.BeginGUI();
 
             using (var _area = new GUILayout.AreaScope(new Rect(-1f, 0f, toolbarWidth, ToolbarHeight)))
-            using (var _scope = new GUILayout.HorizontalScope(EditorStyles.toolbar))
-            {
+            using (var _scope = new GUILayout.HorizontalScope(EditorStyles.toolbar)) {
                 // Foldout button.
                 GUIContent _buttonGUI = foldout
                                       ? unfolddGUI
                                       : foldGUI;
 
-                if (Button(_buttonGUI, GUILayout.Width(ToolbarFoldoutWidth - 1f)))
-                {
+                if (Button(_buttonGUI, GUILayout.Width(ToolbarFoldoutWidth - 1f))) {
                     SetFoldout(!foldout);
                 }
 
                 GUILayout.Label(headerGUI, EditorStyles.miniLabel, GUILayout.Width(ToolbarHeaderWidth));
 
                 // Left side extensions.
-                foreach (var _extension in toolbarLeftExtensions)
-                {
+                foreach (var _extension in toolbarLeftExtensions) {
                     _extension();
                 }
 
                 GUILayout.FlexibleSpace();
 
                 // Right side extensions.
-                foreach (var _extension in toolbarRightExtensions)
-                {
+                foreach (var _extension in toolbarRightExtensions) {
                     _extension();
                 }
 
@@ -317,8 +305,7 @@ namespace EnhancedEditor.Editor
             Handles.EndGUI();
         }
 
-        private static void SetFoldout(bool _foldout, bool _instant = false)
-        {
+        private static void SetFoldout(bool _foldout, bool _instant = false) {
             // Set foldout value.
             foldout = _foldout;
             EditorPrefs.SetBool(FoldoutKey, _foldout);
@@ -345,8 +332,7 @@ namespace EnhancedEditor.Editor
         /// <param name="_label">Text, image and tooltip to be displayed.</param>
         /// <param name="_options">An optional list of layout options that specify extra layout properties.</param>
         /// <returns>True when the users clicks the button, false otherwise.</returns>
-        public static bool Button(GUIContent _label, params GUILayoutOption[] _options)
-        {
+        public static bool Button(GUIContent _label, params GUILayoutOption[] _options) {
             #if SCENEVIEW_TOOLBAR
             return GUILayout.Button(_label, EditorStyles.toolbarButton, _options);
             #else
@@ -370,15 +356,12 @@ namespace EnhancedEditor.Editor
         /// </summary>
         /// <param name="_labels">Texts, images and tooltips to be displayed</param>
         /// <returns>Index of the button the users clicked on if any, -1 otherwise.</returns>
-        public static int ButtonGroup(GUIContent[] _labels)
-        {
+        public static int ButtonGroup(GUIContent[] _labels) {
             int _result = -1;
 
             #if SCENEVIEW_TOOLBAR
-            using (var _scope = EnhancedGUI.GUIStyleAlignment.Scope(EditorStyles.toolbarButton, TextAnchor.MiddleCenter))
-            {
-                for (int _i = 0; _i < _labels.Length; _i++)
-                {
+            using (var _scope = EnhancedGUI.GUIStyleAlignment.Scope(EditorStyles.toolbarButton, TextAnchor.MiddleCenter)) {
+                for (int _i = 0; _i < _labels.Length; _i++) {
                     // Select the appropriate background style depending on the button position.
                     GUIContent _label = _labels[_i];
                     if (GUILayout.Button(_label, EditorStyles.toolbarButton))
@@ -423,8 +406,7 @@ namespace EnhancedEditor.Editor
         /// <param name="_label">Text, image and tooltip to be displayed on the toggle button.</param>
         /// <param name="_options"><inheritdoc cref="Button(GUIContent, GUILayoutOption[])" path="/param[@name='_options']"/></param>
         /// <returns>0 if the toggle value has changed, 1 if the user clicked on the dropdown, and -1 otherwise.</returns>
-        public static int DropdownToggle(bool toggle, GUIContent _label, params GUILayoutOption[] _options)
-        {
+        public static int DropdownToggle(bool toggle, GUIContent _label, params GUILayoutOption[] _options) {
             int _result = -1;
 
             if (dropdownGUI.image == null)
@@ -438,8 +420,7 @@ namespace EnhancedEditor.Editor
                     _result = 0;
             }
 
-            if (EditorGUILayout.DropdownButton(GUIContent.none, FocusType.Passive, EditorStyles.toolbarDropDown, GUILayout.Width(16f)))
-            {
+            if (EditorGUILayout.DropdownButton(GUIContent.none, FocusType.Passive, EditorStyles.toolbarDropDown, GUILayout.Width(16f))) {
                 _result = 1;
             }
             #else
@@ -478,8 +459,7 @@ namespace EnhancedEditor.Editor
         /// <summary>
         /// Repaints the main editor toolbar.
         /// </summary>
-        public static void Repaint()
-        {
+        public static void Repaint() {
             #if EDITOR_TOOLBAR
             repaintDelegate?.Invoke();
             #endif

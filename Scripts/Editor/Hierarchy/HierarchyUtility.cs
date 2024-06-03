@@ -16,7 +16,7 @@ namespace EnhancedEditor.Editor {
     /// <summary>
     /// Contains multiple Hierarchy utility tools.
     /// </summary>
-    internal static class HierarchyUtility  {
+    internal static class HierarchyUtility {
         #region Utility
         /// <summary>
         /// Opens an utility window to rename all selected objects.
@@ -25,28 +25,54 @@ namespace EnhancedEditor.Editor {
         public static void RenameMultiple() {
 
             Object[] _objects = Selection.objects;
-            if (_objects.Length == 0) {
+            if (_objects.Length == 0)
                 return;
+
+            Object _first = _objects[0];
+            bool _isAsset = AssetDatabase.Contains(_first);
+
+            Action<string, string, int> _delegate = _isAsset ? RenameAsset : Rename;
+            RenameObjectWindow.GetWindow(_first.name, _delegate);
+
+            if (_isAsset) {
+                AssetDatabase.Refresh();
             }
 
-            RenameObjectWindow.GetWindow(_objects[0].name, Rename);
+            // ----- Local Methods ----- \\
 
-            // ----- Local Method ----- \\
-
-            void Rename(string _name, string _numberFormat) {
-
+            void Rename(string _name, string _numberFormat, int _decimalCount) {
                 Undo.RecordObjects(_objects, "Rename object(s)");
-
-                // Single rename.
-                if (_objects.Length == 1) {
-                    _objects[0].name = _name;
-                    return;
-                }
 
                 // Multiple rename.
                 for (int i = 0; i < _objects.Length; i++) {
-                    _objects[i].name = $"{_name}{string.Format(_numberFormat, i + 1)}";
+                    _objects[i].name = GetName(i, _name, _numberFormat, _decimalCount);
                 }
+            }
+
+            void RenameAsset(string _name, string _numberFormat, int _decimalCount) {
+                Undo.RecordObjects(_objects, "Rename object(s)");
+
+                // Multiple rename.
+                for (int i = 0; i < _objects.Length; i++) {
+                    Object _object = _objects[i];
+                    string _path = AssetDatabase.GetAssetPath(_object);
+
+                    if (string.IsNullOrEmpty(_path))
+                        continue;
+
+                    string _message = AssetDatabase.RenameAsset(_path, GetName(i, _name, _numberFormat, _decimalCount));
+                    if (!string.IsNullOrEmpty(_message)) {
+                        Debug.LogError(_message);
+                    }
+                }
+            }
+
+            string GetName(int _index, string _name, string _numberFormat, int _decimalCount) {
+                if (_objects.Length == 1) {
+                    return _name;
+                }
+
+                return _objects[_index].name = $"{_name}{string.Format(_numberFormat, (_index + 1).ToStringX(_decimalCount))}";
             }
         }
 
@@ -99,13 +125,13 @@ namespace EnhancedEditor.Editor {
         /// <summary>
         /// Utility window used to rename an object.
         /// </summary>
-        public class RenameObjectWindow : EditorWindow {
+        public sealed class RenameObjectWindow : EditorWindow {
             /// <summary>
             /// Creates and shows a new <see cref="RenameObjectWindow"/> instance,
             /// used to rename an existing tag in the project.
             /// </summary>
             /// <returns><see cref="RenameObjectWindow"/> instance on screen.</returns>
-            public static RenameObjectWindow GetWindow(string _name, Action<string, string> _callback) {
+            public static RenameObjectWindow GetWindow(string _name, Action<string, string, int> _callback) {
                 RenameObjectWindow _window = GetWindow<RenameObjectWindow>(true, "Rename Object(s)", true);
 
                 _window.minSize = _window.maxSize
@@ -122,6 +148,8 @@ namespace EnhancedEditor.Editor {
             // Window GUI
             // -------------------------------------------
 
+            private const char SpecialChar  = '#';
+
             private const float PrefixWidth = 40f;
             private const float NameWidth   = 150f;
             private const float FormatWidth = 130f;
@@ -130,13 +158,13 @@ namespace EnhancedEditor.Editor {
             private const string EmptyTagMessage    = "Name cannot be null or empty";
             private const string TooltipMessage     = "Customize the count format where \"#\" is the object identifier";
 
-            private static readonly GUIContent nameGUI = new GUIContent("Name:");
+            private static readonly GUIContent nameGUI   = new GUIContent("Name:");
             private static readonly GUIContent renameGUI = new GUIContent("OK", "Rename selected object(s).");
 
-            private string objectName = "NameMe";
-            private string separatorFormat = " (#)";
+            private string objectName      = "NameMe";
+            private string separatorFormat = $" ({SpecialChar})";
 
-            private Action<string, string> callback = null;
+            private Action<string, string, int> callback = null;
 
             // -----------------------
 
@@ -148,9 +176,9 @@ namespace EnhancedEditor.Editor {
                 EditorGUI.LabelField(_position, nameGUI);
 
                 // Name.
-                _position.x += 50f;
+                _position.x    += 50f;
                 _position.width = NameWidth;
-                objectName = EditorGUI.TextField(_position, objectName);
+                objectName      = EditorGUI.TextField(_position, objectName);
 
                 // Color.
                 _position.xMin += _position.width + 10f;
@@ -192,7 +220,21 @@ namespace EnhancedEditor.Editor {
                 };
 
                 if (GUI.Button(_position, renameGUI)) {
-                    callback?.Invoke(objectName, separatorFormat.Replace("#", "{0}"));
+                    int _decimalCount = 1;
+                    int _index = separatorFormat.IndexOf(SpecialChar);
+
+                    for (int i = _index + 1; i < separatorFormat.Length; i++) {
+                        if (separatorFormat[i] != SpecialChar)
+                            break;
+
+                        _decimalCount++;
+                    }
+
+                    if (_decimalCount != 1) {
+                        separatorFormat = separatorFormat.Remove(_index, _decimalCount - 1);
+                    }
+
+                    callback?.Invoke(objectName, separatorFormat.Replace(SpecialChar.ToString(), "{0}"), _decimalCount);
                     Close();
                 }
             }

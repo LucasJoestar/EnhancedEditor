@@ -12,7 +12,7 @@ namespace EnhancedEditor.Editor {
     /// Special drawer for fields with the attribute <see cref="RequiredAttribute"/> (inherit from <see cref="EnhancedPropertyDrawer"/>).
     /// </summary>
     [CustomDrawer(typeof(RequiredAttribute))]
-    public class RequiredPropertyDrawer : EnhancedPropertyDrawer {
+    public sealed class RequiredPropertyDrawer : EnhancedPropertyDrawer {
         #region Drawer Content
         private int id = -1;
 

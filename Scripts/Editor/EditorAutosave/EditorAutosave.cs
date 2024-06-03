@@ -25,10 +25,10 @@ namespace EnhancedEditor.Editor {
         #region Global Members
         private const float DefaultSaveInterval = 300f;
 
-        private const float ButtonEnabledWidth = 60f;
+        private const float ButtonEnabledWidth  = 60f;
         private const float ButtonDisabledWidth = 32f;
-        private const float MinSaveInterval = 5f;
-        private const float UpdateMaxInterval = .5f;
+        private const float MinSaveInterval     = 5f;
+        private const float UpdateMaxInterval   = .5f;
 
         private const string EnabledKey = "AutosaveEnabled";
         private const string RemainingTimeKey = "AutosaveRemainingTime";
@@ -38,7 +38,7 @@ namespace EnhancedEditor.Editor {
         private static readonly GUIContent enableGUI = new GUIContent(string.Empty, EnableTooltip);
         private static readonly GUIContent disableGUI = new GUIContent(string.Empty, "Toggle Assets & Open Scene(s) Autosave\n\nCurrently disabled.");
 
-        private static readonly int settingsGUID = "EnhancedEditorAutosaveSetting".GetHashCode();
+        private static readonly int settingsGUID = "EnhancedEditorAutosaveSetting".GetStableHashCode();
         private static FloatEnhancedSettings settings = null;
 
         private static float saveInterval = 0f;
@@ -125,7 +125,6 @@ namespace EnhancedEditor.Editor {
 
         #region Toolbar Extension
         [EditorToolbarLeftExtension(Order = -25)]
-        #pragma warning disable IDE0051
         private static void OnGUI() {
             #if SCENEVIEW_TOOLBAR
             GUILayout.Space(10f);

@@ -6,26 +6,25 @@
 
 using UnityEngine;
 
-namespace EnhancedEditor
-{
+namespace EnhancedEditor {
     /// <summary>
     /// Dynamic-height word-wrapped <see cref="TextAreaAttribute"/>,
     /// automatically adjusting its size according to its content.
     /// </summary>
-	public class EnhancedTextAreaAttribute : EnhancedPropertyAttribute
-    {
+	public sealed class EnhancedTextAreaAttribute : EnhancedPropertyAttribute {
         #region Global Members
         /// <summary>
         /// If true, the text area will take the full width available on screen.
         /// </summary>
         public readonly bool IsWide = false;
 
-        // -----------------------
+        // -------------------------------------------
+        // Constructor(s)
+        // -------------------------------------------
 
         /// <param name="_isWide"><inheritdoc cref="IsWide" path="/summary"/></param>
         /// <inheritdoc cref="EnhancedTextAreaAttribute"/>
-        public EnhancedTextAreaAttribute(bool _isWide = false)
-        {
+        public EnhancedTextAreaAttribute(bool _isWide = false) {
             IsWide = _isWide;
         }
         #endregion

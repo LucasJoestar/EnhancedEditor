@@ -1549,6 +1549,55 @@ namespace EnhancedEditor.Editor {
         }
         #endregion
 
+        // --- Multi-Curve --- \\
+
+        #region Multi Curve
+        // ===== Serialized Property ===== \\
+
+        /// <inheritdoc cref="MultiCurveField(SerializedProperty, GUIContent, GUILayoutOption[])"/>
+        public static void MultiCurveField(SerializedProperty _property, params GUILayoutOption[] _options) {
+            GUIContent _label = EnhancedEditorGUIUtility.GetPropertyLabel(_property);
+            MultiCurveField(_property, _label, _options);
+        }
+
+        /// <inheritdoc cref="MultiCurveField(SerializedProperty, GUIContent, GUILayoutOption[]"/>
+        public static void MultiCurveField(SerializedProperty _property, string _label, params GUILayoutOption[] _options) {
+            GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
+            MultiCurveField(_property, _labelGUI, _options);
+        }
+
+        /// <param name="_property"><see cref="SerializedProperty"/> to draw a multi-curve field for (must by of type <see cref="MultiCurve"/>).</param>
+        /// <inheritdoc cref="MultiCurveField(MultiCurve, GUIContent, GUILayoutOption[])"/>
+        public static void MultiCurveField(SerializedProperty _property, GUIContent _label, params GUILayoutOption[] _options) {
+            Rect _position = GetPosition(_options);
+            EnhancedEditorGUI.MultiCurveField(_position, _property, _label, out float _extraHeight);
+
+            ManageDynamicGUIControlHeight(_label, _extraHeight);
+        }
+
+        // ===== Multi-Curve ===== \\
+
+        /// <inheritdoc cref="MultiCurveField(MultiCurve, GUIContent, GUILayoutOption[])"/>
+        public static void MultiCurveField(MultiCurve _multiCurve, params GUILayoutOption[] _options) {
+            GUIContent _label = GUIContent.none;
+            MultiCurveField(_multiCurve, _label, _options);
+        }
+
+        /// <inheritdoc cref="MultiCurveField(MultiCurve, GUIContent, GUILayoutOption[])"/>
+        public static void MultiCurveField(MultiCurve _multiCurve, string _label, params GUILayoutOption[] _options) {
+            GUIContent _labelGUI = EnhancedEditorGUIUtility.GetLabelGUI(_label);
+            MultiCurveField(_multiCurve, _labelGUI, _options);
+        }
+
+        /// <inheritdoc cref="EnhancedEditorGUI.MultiCurveField(Rect, MultiCurve, GUIContent, out float)"/>
+        public static void MultiCurveField(MultiCurve _multiCurve, GUIContent _label, params GUILayoutOption[] _options) {
+            Rect _position = GetPosition(_options);
+            EnhancedEditorGUI.MultiCurveField(_position, _multiCurve, _label, out float _extraHeight);
+
+            ManageDynamicGUIControlHeight(_label, _extraHeight);
+        }
+        #endregion
+
         // --- Multi-Tags --- \\
 
         #region Tag

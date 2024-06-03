@@ -20,9 +20,10 @@ namespace EnhancedEditor {
     [Flags]
 	public enum SerializedTypeConstraint {
 		None = 0,
+
 		BaseType = 1 << 1,
 		Abstract = 1 << 2,
-		Null = 1 << 3
+		Null	 = 1 << 3,
     }
 
 	/// <summary>
@@ -30,12 +31,12 @@ namespace EnhancedEditor {
 	/// </summary>
 	/// <typeparam name="T">Base type this type value should be derived from.</typeparam>
 	[Serializable]
-	public class SerializedType<T> : ISerializationCallbackReceiver, IComparer<SerializedType<T>> where T : class {
+	public sealed class SerializedType<T> : ISerializationCallbackReceiver, IComparer<SerializedType<T>> where T : class {
 		#region Global Members
-		[SerializeField] protected string typeName = string.Empty;
+		[SerializeField] private string typeName = string.Empty;
 
-        [SerializeField] protected SerializedTypeConstraint constraints = SerializedTypeConstraint.None;
-		[SerializeField, HideInInspector] protected string[] interfaces = null;
+        [SerializeField] private SerializedTypeConstraint constraints = SerializedTypeConstraint.None;
+		[SerializeField, HideInInspector] private string[] interfaces = null;
 
 		private Type type = null;
 
@@ -92,8 +93,10 @@ namespace EnhancedEditor {
 			var _types = TypeCache.GetTypesDerivedFrom(typeof(T));
 
 			foreach (var _type in _types) {
-				if ((!_type.IsAbstract || _constraints.HasFlag(SerializedTypeConstraint.Abstract)) && !_type.IsDefined(typeof(EtherealAttribute), false)
+
+				if ((!_type.IsAbstract || _constraints.HasFlagUnsafe(SerializedTypeConstraint.Abstract)) && !_type.IsDefined(typeof(EtherealAttribute), false)
 				 && (_type != _defaultType) && (_ignored != null) && !ArrayUtility.Contains(_ignored, _type)) {
+
 					Type = _type;
 					return;
 				}
@@ -148,7 +151,8 @@ namespace EnhancedEditor {
 
 			// Null value.
 			if (_type == null) {
-				if (!constraints.HasFlag(SerializedTypeConstraint.Null)) {
+
+				if (!constraints.HasFlagUnsafe(SerializedTypeConstraint.Null)) {
 					Debug.LogError("SerializedType - Cannot assign a null value to this type");
 					return;
 				}
@@ -160,11 +164,14 @@ namespace EnhancedEditor {
 
 			// Base type & subclass.
 			if (_type == _base){
-				if (!constraints.HasFlag(SerializedTypeConstraint.BaseType)) {
+
+				if (!constraints.HasFlagUnsafe(SerializedTypeConstraint.BaseType)) {
 					Debug.LogError($"SerializedType - This type value cannot be the same as the base type \'{_base.Name}\'");
 					return;
 				}
+
 			} else if (!_base.IsAssignableFrom(_type)) {
+
 				Debug.LogError($"SerializedType - The type \'{_type.Name}\' does not inherit from \'{_base.Name}\'");
 				return;
 			}
@@ -176,7 +183,7 @@ namespace EnhancedEditor {
 			}
 
 			// Abstract.
-			if (_type.IsAbstract && !constraints.HasFlag(SerializedTypeConstraint.Abstract)) {
+			if (_type.IsAbstract && !constraints.HasFlagUnsafe(SerializedTypeConstraint.Abstract)) {
 				Debug.LogError($"SerializedType - The type \'{_type.Name}\' is abstract and cannot be assigned");
 				return;
 			}
@@ -215,7 +222,16 @@ namespace EnhancedEditor {
 		/// <param name="_interfaces">All potential assignable interfaces.</param>
 		/// <returns>True if this type can be assigned to one or more of the given interfaces, false otherwise.</returns>
 		public static bool IsAssignableFrom(Type _type, Type[] _interfaces) {
-			return Array.TrueForAll(_interfaces, (i) => i == null) || Array.Exists(_interfaces, (i) => (i != null) && i.IsAssignableFrom(_type));
+
+			for (int i = 0; i < _interfaces.Length; i++) {
+				Type _temp = _interfaces[i];
+
+				if (_temp != null) {
+					return _temp.IsAssignableFrom(_type);
+                }
+			}
+
+			return true;
         }
 		#endregion
 	}

@@ -9,11 +9,11 @@ using UnityEngine;
 
 namespace EnhancedEditor {
     /// <summary>
-    /// <see cref="EnhancedHierarchy"/> special override settings,
+    /// EnhancedHierarchy-related special override settings,
     /// for any <see cref="GameObject"/> on a specific layer.
     /// </summary>
     [Serializable]
-    public class HierarchyStyle {
+    public sealed class HierarchyStyle {
         #region Gloabal Members
         // --- Icon --- \\
 
@@ -23,7 +23,7 @@ namespace EnhancedEditor {
         public Texture Icon = null;
 
         [Tooltip("Color of the object displayed icon")]
-        [Enhanced, DisplayName("Color"), Duo("UseIconColor", 20f)]
+        [Enhanced, DisplayName("Color"), Duo(nameof(UseIconColor), 20f)]
         
         public Color IconColor                  = Color.white;
 
@@ -37,7 +37,7 @@ namespace EnhancedEditor {
         // --- Label --- \\
 
         [Tooltip("Color of the object displayed label")]
-        [Enhanced, DisplayName("Color"), Duo("UseLabelColor", 20f)]
+        [Enhanced, DisplayName("Color"), Duo(nameof(UseLabelColor), 20f)]
         
         public Color LabelColor                 = Color.white;
 
@@ -47,7 +47,7 @@ namespace EnhancedEditor {
         public bool UseLabelColor               = false;
 
         [Tooltip("Background gradient displayed behind the object label")]
-        [Enhanced, DisplayName("Background"), Duo("UseBackground", 20f)]
+        [Enhanced, DisplayName("Background"), Duo(nameof(UseBackground), 20f)]
         
         public Gradient Background              = new Gradient();
 
@@ -61,7 +61,7 @@ namespace EnhancedEditor {
         // --- Header --- \\
 
         [Tooltip("Color of the object displayed label, if it's a header")]
-        [Enhanced, DisplayName("Color"), Duo("UseHeaderColor", 20f)]
+        [Enhanced, DisplayName("Color"), Duo(nameof(UseHeaderColor), 20f)]
 
         public Color HeaderColor                = Color.white;
 
@@ -71,7 +71,7 @@ namespace EnhancedEditor {
         public bool UseHeaderColor              = false;
 
         [Tooltip("Background gradient displayed behind the object label, if it's a header")]
-        [Enhanced, DisplayName("Background"), Duo("OverrideHeaderBackground", 20f)]
+        [Enhanced, DisplayName("Background"), Duo(nameof(OverrideHeaderBackground), 20f)]
         
         public Gradient HeaderBackground        = new Gradient();
 

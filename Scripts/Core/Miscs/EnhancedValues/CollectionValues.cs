@@ -6,6 +6,7 @@
 
 using System;
 using System.Collections;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 namespace EnhancedEditor {
@@ -14,9 +15,8 @@ namespace EnhancedEditor {
     /// </summary>
     /// <typeparam name="T">The type of values to be associated with the collection.</typeparam>
     [Serializable]
-    public class CollectionValues<T> {
+    public sealed class CollectionValues<T> {
         #region Global Members
-        #if UNITY_EDITOR
         /// <summary>
         /// This collection associated default value.
         /// </summary>
@@ -26,36 +26,40 @@ namespace EnhancedEditor {
         /// Can either be a field or a property, but must be convertible to an <see cref="IList"/>.
         /// </summary>
         [SerializeField] private string collectionMember = string.Empty;
-        #endif
 
         /// <summary>
         /// All values associated with this collection.
         /// </summary>
         public T[] Values = new T[0];
 
+        // -----------------------
+
         /// <summary>
         /// The total count of values in this collection.
         /// </summary>
         public int Count {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get { return Values.Length; }
         }
 
-        // -----------------------
+        // -------------------------------------------
+        // Constructor(s)
+        // -------------------------------------------
 
         /// <param name="_collectionMember"><inheritdoc cref="collectionMember" path="/summary"/></param>
         /// <param name="_defaultValue"><inheritdoc cref="defaultValue" path="/summary"/></param>
         /// <inheritdoc cref="CollectionValues{T}"/>
         public CollectionValues(string _collectionMember, T _defaultValue = default) {
-            #if UNITY_EDITOR
             collectionMember = _collectionMember;
-            defaultValue = _defaultValue;
-            #endif
+            defaultValue     = _defaultValue;
         }
         #endregion
 
         #region Operator
         public T this[int _index] {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get { return Values[_index]; }
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set { Values[_index] = value; }
         }
 
@@ -70,8 +74,7 @@ namespace EnhancedEditor {
         /// </summary>
         /// <param name="_collectionMemberSource">The source object containing this object associated collection.</param>
         public void Fill(object _collectionMemberSource) {
-            #if UNITY_EDITOR
-            if (!new MemberValue<IList>(collectionMember).GetValue(_collectionMemberSource, _collectionMemberSource.GetType(), out IList _list)) {
+            if (!new MemberValue<ICollection>(collectionMember).GetValue(_collectionMemberSource, _collectionMemberSource.GetType(), out ICollection _list)) {
                 return;
             }
 
@@ -82,7 +85,6 @@ namespace EnhancedEditor {
                     Values[i] = defaultValue;
                 }
             }
-            #endif
         }
         #endregion
     }

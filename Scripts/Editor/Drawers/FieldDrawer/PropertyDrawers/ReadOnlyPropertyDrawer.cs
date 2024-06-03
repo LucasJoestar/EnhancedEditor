@@ -7,18 +7,15 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace EnhancedEditor.Editor
-{
+namespace EnhancedEditor.Editor {
     /// <summary>
     /// Special drawer for fields with the attribute <see cref="ReadOnlyAttribute"/> (inherit from <see cref="EnhancedPropertyDrawer"/>).
     /// </summary>
     [CustomDrawer(typeof(ReadOnlyAttribute))]
-    public class ReadOnlyPropertyDrawer : EnhancedPropertyDrawer
-    {
+    public sealed class ReadOnlyPropertyDrawer : EnhancedPropertyDrawer {
         #region Drawer Content
-        public override bool OnBeforeGUI(Rect _position, SerializedProperty _property, GUIContent _label, out float _height)
-        {
-            ReadOnlyAttribute _attribute = Attribute as ReadOnlyAttribute;
+        public override bool OnBeforeGUI(Rect _position, SerializedProperty _property, GUIContent _label, out float _height) {
+            var _attribute = Attribute as ReadOnlyAttribute;
             bool _enabled = false;
 
             if ((_attribute.ConditionMember != null) && _attribute.ConditionMember.Value.GetValue(_property, out bool _guiEnabled)) {
@@ -31,11 +28,10 @@ namespace EnhancedEditor.Editor
             return false;
         }
 
-        public override bool OnGUI(Rect _position, SerializedProperty _property, GUIContent _label, out float _height)
-        {
-            ReadOnlyAttribute _attribute = Attribute as ReadOnlyAttribute;
-            if (_attribute.UseRadioToggle && (_property.propertyType == SerializedPropertyType.Boolean))
-            {
+        public override bool OnGUI(Rect _position, SerializedProperty _property, GUIContent _label, out float _height) {
+            var _attribute = Attribute as ReadOnlyAttribute;
+
+            if (_attribute.UseRadioToggle && (_property.propertyType == SerializedPropertyType.Boolean)) {
                 EditorGUI.Toggle(_position, _label, _property.boolValue, EditorStyles.radioButton);
                 _height = _position.height;
 
@@ -46,8 +42,7 @@ namespace EnhancedEditor.Editor
             return false;
         }
 
-        public override void OnAfterGUI(Rect _position, SerializedProperty _property, GUIContent _label, out float _height)
-        {
+        public override void OnAfterGUI(Rect _position, SerializedProperty _property, GUIContent _label, out float _height) {
             EnhancedGUI.GUIEnabled.Pop();
             _height = 0f;
         }

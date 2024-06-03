@@ -4,28 +4,32 @@
 //
 // ============================================================================ //
 
+#if !UNITY_2019_2_OR_NEWER
+#define ASSEMBLY_REFLECTION
+#endif
+
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace EnhancedEditor.Editor
-{
+#if ASSEMBLY_REFLECTION
+using System.Reflection;
+#endif
+
+namespace EnhancedEditor.Editor {
     /// <summary>
     /// <see cref="ScriptableObject"/> registering all instances of a specific <see cref="Component"/> in each scenes of the project.
     /// <br/> Usefull to keep track of important objects.
     /// </summary>
     [InitializeOnLoad]
-    public class InstanceTracker : ScriptableObject
-    {
+    public sealed class InstanceTracker : ScriptableObject {
         #region Scene Track
         [Serializable]
-        internal class SceneTrack
-        {
+        internal sealed class SceneTrack {
             public string SceneGUID = string.Empty;
             public string[] Instances = new string[] { };
 
@@ -36,8 +40,7 @@ namespace EnhancedEditor.Editor
 
             // -----------------------
 
-            public void Load(List<Component> _sceneInstances, string _sceneName)
-            {
+            public void Load(List<Component> _sceneInstances, string _sceneName) {
                 SceneInstances = _sceneInstances;
                 SceneName = _sceneName;
 
@@ -47,8 +50,7 @@ namespace EnhancedEditor.Editor
                 IsVisible = false;
             }
 
-            public bool Load(Scene _scene, string _sceneGUID, Type _targetType)
-            {
+            public bool Load(Scene _scene, string _sceneGUID, Type _targetType) {
                 if (_sceneGUID != SceneGUID)
                     return false;
 
@@ -58,8 +60,7 @@ namespace EnhancedEditor.Editor
 
                 _scene.GetRootGameObjects(rootGameObjects);
 
-                foreach (var _object in rootGameObjects)
-                {
+                foreach (var _object in rootGameObjects) {
                     SceneInstances.AddRange(_object.GetComponentsInChildren(_targetType, true));
                 }
 
@@ -71,8 +72,7 @@ namespace EnhancedEditor.Editor
                 return true;
             }
 
-            public bool Close(string _sceneGUID)
-            {
+            public bool Close(string _sceneGUID) {
                 if (_sceneGUID != SceneGUID)
                     return false;
 
@@ -82,10 +82,8 @@ namespace EnhancedEditor.Editor
                 return true;
             }
 
-            public bool OnEnabled()
-            {
-                if (!IsLoaded)
-                {
+            public bool OnEnabled() {
+                if (!IsLoaded) {
                     string _path = AssetDatabase.GUIDToAssetPath(SceneGUID);
                     if (string.IsNullOrEmpty(_path))
                         return false;
@@ -98,8 +96,7 @@ namespace EnhancedEditor.Editor
                 return true;
             }
 
-            public void UpdateVisibility(string _searchFilter)
-            {
+            public void UpdateVisibility(string _searchFilter) {
                 IsVisible = !IsLoaded && SceneName.ToLower().Contains(_searchFilter);
             }
         }
@@ -114,8 +111,7 @@ namespace EnhancedEditor.Editor
 
         // -----------------------
 
-        static InstanceTracker()
-        {
+        static InstanceTracker() {
             EditorSceneManager.sceneSaved -= OnSceneSaved;
             EditorSceneManager.sceneSaved += OnSceneSaved;
         }
@@ -127,8 +123,7 @@ namespace EnhancedEditor.Editor
 
         // -----------------------
 
-        private static void OnSceneSaved(Scene _scene)
-        {
+        private static void OnSceneSaved(Scene _scene) {
             // Ignore invalid scenes.
             if (!_scene.IsValid() || string.IsNullOrEmpty(_scene.path))
                 return;
@@ -139,28 +134,28 @@ namespace EnhancedEditor.Editor
 
             dynamic _types = null;
 
-            #if UNITY_2019_2_OR_NEWER
+            #if !ASSEMBLY_REFLECTION
             _types = TypeCache.GetTypesWithAttribute<InstanceTrackerAttribute>();
             #else
-            _types = new Type[] { };
+            Type[] _typesArray = new Type[] { };
             foreach (Assembly _assembly in AppDomain.CurrentDomain.GetAssemblies())
             {
                 foreach (Type _type in _assembly.GetTypes())
                 {
                     if (_type.GetCustomAttribute<InstanceTrackerAttribute>() != null)
                     {
-                        ArrayUtility.Add(ref _types, _type);
+                        ArrayUtility.Add(ref _typesArray, _type);
                     }
                 }
             }
+
+            _types = _typesArray;
             #endif
 
-            foreach (var _type in _types)
-            {
+            foreach (var _type in _types) {
                 string _target = _type.AssemblyQualifiedName;
 
-                if (!Array.Exists(trackers, t => t.targetTypeName == _target))
-                {
+                if (!Array.Exists(trackers, t => t.targetTypeName == _target)) {
                     // Tracker directory creation.
                     string _folder = Settings.Folder;
                     string _path = Path.Combine(Application.dataPath, _folder);
@@ -182,8 +177,7 @@ namespace EnhancedEditor.Editor
             string _guid = AssetDatabase.AssetPathToGUID(_scene.path);
             _scene.GetRootGameObjects(rootGameObjects);
 
-            for (int _i = trackers.Length; _i-- > 0;)
-            {
+            for (int _i = trackers.Length; _i-- > 0;) {
                 InstanceTracker _tracker = trackers[_i];
 
                 if (_tracker.Initialize())
@@ -191,19 +185,16 @@ namespace EnhancedEditor.Editor
             }
         }
 
-        private void TrackScene(Scene _scene, string _sceneGUID)
-        {
+        private void TrackScene(Scene _scene, string _sceneGUID) {
             bool _hasEditor = editor != null;
 
             // Track all target instances.
             List<Component> _sceneInstances = new List<Component>();
             List<string> _instances = new List<string>();
 
-            foreach (var _object in rootGameObjects)
-            {
+            foreach (var _object in rootGameObjects) {
                 Component[] _components = _object.GetComponentsInChildren(targetType, true);
-                foreach (var _component in _components)
-                {
+                foreach (var _component in _components) {
                     _instances.Add(_component.name);
                 }
 
@@ -212,10 +203,8 @@ namespace EnhancedEditor.Editor
             }
 
             SceneTrack _track = Array.Find(tracks, t => t.SceneGUID == _sceneGUID);
-            if (_instances.Count == 0)
-            {
-                if (_track != null)
-                {
+            if (_instances.Count == 0) {
+                if (_track != null) {
                     if (_hasEditor)
                         editor.OnRemoveTrack(_track);
 
@@ -229,10 +218,8 @@ namespace EnhancedEditor.Editor
 
             // Register this scene instances.
             bool _isNewTrack = false;
-            if (_track == null)
-            {
-                _track = new SceneTrack()
-                {
+            if (_track == null) {
+                _track = new SceneTrack() {
                     SceneGUID = _sceneGUID
                 };
 
@@ -241,8 +228,7 @@ namespace EnhancedEditor.Editor
             }
 
             _track.Instances = _instances.ToArray();
-            if (_hasEditor)
-            {
+            if (_hasEditor) {
                 _track.Load(_sceneInstances, _scene.name);
                 if (_isNewTrack)
                     editor.OnNewTrack(_track);
@@ -254,13 +240,10 @@ namespace EnhancedEditor.Editor
         #endregion
 
         #region Utility
-        internal bool Initialize()
-        {
-            if (targetType == null)
-            {
+        internal bool Initialize() {
+            if (targetType == null) {
                 targetType = Type.GetType(targetTypeName);
-                if (targetType == null)
-                {
+                if (targetType == null) {
                     ArrayUtility.Remove(ref trackers, this);
                     AssetDatabase.DeleteAsset(AssetDatabase.GetAssetPath(this));
 
@@ -271,8 +254,7 @@ namespace EnhancedEditor.Editor
             return true;
         }
 
-        internal void RemoveTrack(SceneTrack _track)
-        {
+        internal void RemoveTrack(SceneTrack _track) {
             ArrayUtility.Remove(ref tracks, _track);
         }
         #endregion

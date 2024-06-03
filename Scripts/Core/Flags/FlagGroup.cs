@@ -5,22 +5,23 @@
 // ============================================================================ //
 
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Text;
 using System.Runtime.CompilerServices;
+using System.Text;
 
 [assembly: InternalsVisibleTo("EnhancedEditor.Editor")]
 namespace EnhancedEditor {
     /// <summary>
     /// Base class to inherit managing <see cref="Flag"/> classes.
     /// </summary>
-    public abstract class FlagGroup : IEnumerable<Flag> {
+    public abstract class FlagGroup {
         #region Global Members
         /// <summary>
         /// The total amount of flags in this group.
         /// </summary>
-        public int Count => Array.Length;
+        public int Count {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get { return Array.Length; }
+        }
 
         /// <summary>
         /// All elements contained in this group.
@@ -30,18 +31,6 @@ namespace EnhancedEditor {
 
         #region Operator
         public abstract Flag this[int _index] { get; }
-        #endregion
-
-        #region IEnumerable
-        public IEnumerator<Flag> GetEnumerator() {
-            for (int i = 0; i < Count; i++) {
-                yield return this[i];
-            }
-        }
-
-        IEnumerator IEnumerable.GetEnumerator() {
-            return GetEnumerator();
-        }
         #endregion
 
         #region Management
@@ -77,16 +66,20 @@ namespace EnhancedEditor {
     /// Group holder for multiple <see cref="FlagReference"/>.
     /// </summary>
     [Serializable]
-    public class FlagReferenceGroup : FlagGroup {
+    public sealed class FlagReferenceGroup : FlagGroup {
         #region Global Members
         /// <summary>
         /// All <see cref="FlagReference"/> in this group.
         /// </summary>
-        public FlagReference[] Flags = new FlagReference[] { };
+        public FlagReference[] Flags = new FlagReference[0];
 
-        public override Array Array { get { return Flags; } }
+        public override Array Array {
+            get { return Flags; }
+        }
 
-        // -----------------------
+        // -------------------------------------------
+        // Constructor(s)
+        // -------------------------------------------
 
         /// <inheritdoc cref="FlagReferenceGroup"/>
         public FlagReferenceGroup() { }
@@ -99,12 +92,16 @@ namespace EnhancedEditor {
         #endregion
 
         #region Operator
-        public override Flag this[int _index] { get { return Flags[_index].Flag; } }
+        public override Flag this[int _index] {
+            get { return Flags[_index].Flag; }
+        }
 
         public override string ToString() {
             StringBuilder _builder = new StringBuilder(string.Empty);
-            foreach (FlagReference _flag in Flags) {
-                _builder.Append($"{_flag.Flag.Name}; ");
+            int _length = Flags.Length;
+
+            for (int i = 0; i < _length; i++) {
+                _builder.Append($"{Flags[i].Flag.Name}; ");
             }
 
             return _builder.ToString();
@@ -127,7 +124,9 @@ namespace EnhancedEditor {
         }
 
         public override bool ContainFlag(Flag _flag, out int _index) {
-            for (int i = 0; i < Flags.Length; i++) {
+            int _length = Flags.Length;
+
+            for (int i = 0; i < _length; i++) {
                 if (Flags[i].Flag.guid == _flag.guid) {
                     _index = i;
                     return true;
@@ -144,14 +143,16 @@ namespace EnhancedEditor {
     /// Group holder for multiple <see cref="FlagValue"/>.
     /// </summary>
     [Serializable]
-    public class FlagValueGroup : FlagGroup {
+    public sealed class FlagValueGroup : FlagGroup {
         #region Global Members
         /// <summary>
         /// All <see cref="FlagValue"/> in this group.
         /// </summary>
-        public FlagValue[] Flags = new FlagValue[] { };
+        public FlagValue[] Flags = new FlagValue[0];
 
-        public override Array Array { get { return Flags; } }
+        public override Array Array {
+            get { return Flags; }
+        }
 
         /// <summary>
         /// Are all the flags in this group valid?
@@ -159,8 +160,8 @@ namespace EnhancedEditor {
         /// <returns>True if all flags are valid, false otherwise.</returns>
         public bool Valid {
             get {
-                foreach (FlagValue _flag in Flags) {
-                    if (!_flag) {
+                for (int i = Flags.Length; i-- > 0;) {
+                    if (!Flags[i]) {
                         return false;
                     }
                 }
@@ -169,7 +170,9 @@ namespace EnhancedEditor {
             }
         }
 
-        // -----------------------
+        // -------------------------------------------
+        // Constructor(s)
+        // -------------------------------------------
 
         /// <inheritdoc cref="FlagValueGroup"/>
         public FlagValueGroup() { }
@@ -182,7 +185,9 @@ namespace EnhancedEditor {
         #endregion
 
         #region Operator
-        public override Flag this[int _index] { get { return Flags[_index].Flag; } }
+        public override Flag this[int _index] {
+            get { return Flags[_index].Flag; }
+        }
 
         public static implicit operator bool(FlagValueGroup _group) {
             return _group.Valid;
@@ -190,8 +195,10 @@ namespace EnhancedEditor {
 
         public override string ToString() {
             StringBuilder _builder = new StringBuilder(string.Empty);
-            foreach (FlagValue _flag in Flags) {
-                _builder.Append($"{_flag}; ");
+            int _length = Flags.Length;
+
+            for (int i = 0; i < _length; i++) {
+                _builder.Append($"{Flags[i]}; ");
             }
 
             return _builder.ToString();
@@ -218,7 +225,9 @@ namespace EnhancedEditor {
         }
 
         public override bool ContainFlag(Flag _flag, out int _index) {
-            for (int i = 0; i < Flags.Length; i++) {
+            int _length = Flags.Length;
+
+            for (int i = 0; i < _length; i++) {
                 if (Flags[i].Flag == _flag) {
                     _index = i;
                     return true;
@@ -235,8 +244,8 @@ namespace EnhancedEditor {
         /// Set the value of all flags in this group.
         /// </summary>
         public void SetValues() {
-            foreach (FlagValue _flag in Flags) {
-                _flag.SetFlag();
+            for (int i = Flags.Length; i-- > 0;) {
+                Flags[i].SetFlag();
             }
         }
 
@@ -245,7 +254,8 @@ namespace EnhancedEditor {
         /// </summary>
         /// <param name="_valid">Whether to set or unset these flags.</param>
         public void SetValues(bool _valid) {
-            foreach (FlagValue _flag in Flags) {
+            for (int i = Flags.Length; i-- > 0;) {
+                FlagValue _flag = Flags[i];
 
                 bool _value = _flag.Value;
                 if (!_valid) {

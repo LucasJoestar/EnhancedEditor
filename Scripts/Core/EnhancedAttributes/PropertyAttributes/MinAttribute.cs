@@ -4,13 +4,11 @@
 //
 // ============================================================================ //
 
-namespace EnhancedEditor
-{
+namespace EnhancedEditor {
     /// <summary>
     /// Restrains a <see cref="float"/> or an <see cref="int"/> value so that it does not go under a specific minimum.
     /// </summary>
-	public class MinAttribute : EnhancedPropertyAttribute
-    {
+	public sealed class MinAttribute : EnhancedPropertyAttribute {
         #region Global Members
         /// <summary>
         /// Minimum allowed value.
@@ -25,19 +23,19 @@ namespace EnhancedEditor
         /// </summary>
         public readonly MemberValue<float>? MinMember = null;
 
-        // -----------------------
+        // -------------------------------------------
+        // Constructor(s)
+        // -------------------------------------------
 
         /// <param name="_minValue"><inheritdoc cref="MinValue" path="/summary"/></param>
         /// <inheritdoc cref="MinAttribute"/>
-        public MinAttribute(float _minValue)
-        {
+        public MinAttribute(float _minValue) {
             MinValue = _minValue;
         }
 
         /// <param name="_minMember"><inheritdoc cref="MinMember" path="/summary"/></param>
         /// <inheritdoc cref="MinAttribute"/>
-        public MinAttribute(string _minMember)
-        {
+        public MinAttribute(string _minMember) {
             MinMember = _minMember;
         }
         #endregion

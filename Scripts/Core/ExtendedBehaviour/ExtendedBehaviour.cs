@@ -8,6 +8,7 @@ using System;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 [assembly: InternalsVisibleTo("EnhancedEditor.Editor")]
 namespace EnhancedEditor {
@@ -17,7 +18,7 @@ namespace EnhancedEditor {
     [ScriptGizmos(false, true)]
     [AddComponentMenu(InternalUtility.MenuPath + "Extended Behaviour"), DisallowMultipleComponent]
     #pragma warning disable IDE0052
-    public class ExtendedBehaviour : MonoBehaviour {
+    public sealed class ExtendedBehaviour : MonoBehaviour {
         #region Global Members
         #if UNITY_EDITOR
         [SerializeField, Enhanced, EnhancedTextArea(true)] private string comment = string.Empty;
@@ -33,13 +34,14 @@ namespace EnhancedEditor {
         #if UNITY_EDITOR
         [Space(10f)]
 
-        [SerializeField, Enhanced, ReadOnly] private string lastModifiedBy = string.Empty;
+        [SerializeField, Enhanced, ReadOnly] private string lastModifiedBy   = string.Empty;
         [SerializeField, Enhanced, ReadOnly] private string lastModifiedDate = string.Empty;
 
         [Space(10f)]
 
+        [FormerlySerializedAs("IsEditorPreview")]
         [HelpBox("Editor preview objects are meant to be only used in editor mode, outside of play", MessageType.Info, true)]
-        [SerializeField, Enhanced, ShowIf("IsPersistent", ConditionType.False)] private bool IsEditorPreview = false;
+        [SerializeField] private bool isEditorPreview = false;
 
         [Tooltip("If true, displays this object as a hierarchy header when the Enhanced Hierarchy is enabled")]
         [SerializeField] internal bool isHeader = false;
@@ -50,14 +52,14 @@ namespace EnhancedEditor {
         [Space(10f)]
 
         [Tooltip("Enhanced Hierarchy related style, used to customize the way this object is displayed in the hierarchy")]
-        [SerializeField, Enhanced, ShowIf("overrideHierarchyStyle")] internal HierarchyStyle hierarchyStyle = new HierarchyStyle();
+        [SerializeField, Enhanced, ShowIf(nameof(overrideHierarchyStyle))] internal HierarchyStyle hierarchyStyle = new HierarchyStyle();
         #endif
         #endregion
 
         #region Editor Utility
         #if UNITY_EDITOR
         private const string EditorOnlyTag = "EditorOnly";
-        private const string UntaggedTag = "Untagged";
+        private const string UntaggedTag   = "Untagged";
 
         // -----------------------
 
@@ -67,19 +69,19 @@ namespace EnhancedEditor {
             }
 
             // Update modified state on object creation.
-            if (lastModifiedDate == string.Empty) {
+            if (string.IsNullOrEmpty(lastModifiedDate)) {
                 UpdateLastModifiedState();
             }
 
-            // Markes this object as editor only, so it won't be included in any build.
-            if (IsEditorPreview != gameObject.CompareTag(EditorOnlyTag)) {
-                gameObject.tag = IsEditorPreview ? EditorOnlyTag : UntaggedTag;
+            // Marks this object as editor only, so it won't be included in any build.
+            if (isEditorPreview != gameObject.CompareTag(EditorOnlyTag)) {
+                gameObject.tag = isEditorPreview ? EditorOnlyTag : UntaggedTag;
             }
         }
 
         private void Awake() {
             // Destroy preview objects.
-            if (IsEditorPreview) {
+            if (isEditorPreview) {
                 Destroy(gameObject);
             }
         }
@@ -91,7 +93,7 @@ namespace EnhancedEditor {
         /// </summary>
         internal void UpdateLastModifiedState() {
             #if UNITY_EDITOR
-            lastModifiedBy = Environment.UserName;
+            lastModifiedBy   = Environment.UserName;
             lastModifiedDate = DateTime.Now.ToString(CultureInfo.CurrentCulture);
             #endif
         }

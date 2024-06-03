@@ -4,6 +4,7 @@
 //
 // ============================================================================ //
 
+using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 
 namespace EnhancedEditor {
@@ -13,6 +14,10 @@ namespace EnhancedEditor {
 	public static class StringExtensions {
         #region Content
         private static readonly Regex whitespaceRegex = new Regex(@"\s+");
+
+        private static readonly char[] splitTextDefaultChars = new char[] {
+            '\n', '\t', ' ', '.', ','
+        };
 
         // -----------------------
 
@@ -30,8 +35,8 @@ namespace EnhancedEditor {
         /// </summary>
         /// <param name="_value">The <see cref="string"/> to remove all special character(s) from.</param>
         /// <returns>The new formatted input <see cref="string"/> value.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string RemoveSpecialCharacter(this string _value) {
-
             // Replaces everything that is not (^) a word character (\w), a digit (\d) or whitespace (\s) with an empty string.
             return Regex.Replace(_value, @"[^\w\d\s]", "");
         }
@@ -41,6 +46,7 @@ namespace EnhancedEditor {
         /// </summary>
         /// <param name="_value">String value to parse.</param>
         /// <returns>Escaped <see cref="string"/> value.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string Escape(this string _value) {
             return Regex.Escape(_value);
         }
@@ -50,11 +56,73 @@ namespace EnhancedEditor {
         /// </summary>
         /// <param name="_value">String value to parse.</param>
         /// <returns>Unescaped <see cref="string"/> value.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string Unescape(this string _value) {
             return Regex.Unescape(_value);
         }
 
+        // -------------------------------------------
+        // Split
+        // -------------------------------------------
+
+        /// <inheritdoc cref="GetTextSplitIndex(string, int, int, char[], bool)"/>
+        public static int GetTextSplitIndex(this string _text, bool _onlyWhiteSpaceForLastIndex = true) {
+            return GetTextSplitIndex(_text, 0, _text.Length, splitTextDefaultChars, _onlyWhiteSpaceForLastIndex);
+        }
+
+        /// <inheritdoc cref="GetTextSplitIndex(string, int, int, char[], bool)"/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int GetTextSplitIndex(this string _text, char[] _splitChars, bool _onlyWhiteSpaceForLastIndex = true) {
+            return GetTextSplitIndex(_text, 0, _text.Length, _splitChars, _onlyWhiteSpaceForLastIndex);
+        }
+
+        /// <inheritdoc cref="GetTextSplitIndex(string, int, int, char[], bool)"/>
+        public static int GetTextSplitIndex(this string _text, int _startIndex, int _count, bool _onlyWhiteSpaceForLastIndex = true) {
+            return GetTextSplitIndex(_text, _startIndex, _count, splitTextDefaultChars, _onlyWhiteSpaceForLastIndex);
+        }
+
+        /// <summary>
+        /// Get the index of the last character for splitting this text in a user-friendly way.
+        /// </summary>
+        /// <param name="_text">Text content.</param>
+        /// <param name="_startIndex">Text start index.</param>
+        /// <param name="_count">Amount of characters to check.</param>
+        /// <param name="_splitChars">All characters used to detect a split.</param>
+        /// <param name="_onlyWhiteSpaceForLastIndex">If true, only check for white spaces for the last character.</param>
+        /// <returns>Index of this text to use for split (-1 if none).</returns>
+        public static int GetTextSplitIndex(this string _text, int _startIndex, int _count, char[] _splitChars, bool _onlyWhiteSpaceForLastIndex = true) {
+
+            int _index = _startIndex + _count;
+
+            // Last index special.
+            if (_onlyWhiteSpaceForLastIndex) {
+
+                _index--;
+
+                if (char.IsWhiteSpace(_text, _index)) {
+                    return _index;
+                }
+            }
+
+            // Reverse order for last element.
+            for (int i = _index; i-- > _startIndex;) {
+
+                char _char = _text[i];
+
+                if (char.IsWhiteSpace(_char) || ArrayUtility.Contains(_splitChars, _char)) {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
+        // -------------------------------------------
+        // Prefix - Suffix
+        // -------------------------------------------
+
         /// <inheritdoc cref="GetPrefix(string, string)"/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string GetPrefix(this string _string) {
             return GetPrefix(_string, "_");
         }
@@ -75,6 +143,7 @@ namespace EnhancedEditor {
         }
 
         /// <inheritdoc cref="RemovePrefix(string, string)"/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string RemovePrefix(this string _string) {
             return RemovePrefix(_string, "_");
         }
@@ -94,12 +163,18 @@ namespace EnhancedEditor {
                  : _string;
         }
 
+        // -------------------------------------------
+        // Hash
+        // -------------------------------------------
+
         /// <inheritdoc cref="EnhancedUtility.GetStableHashCode(string)"/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int GetStableHashCode(this string _string) {
             return EnhancedUtility.GetStableHashCode(_string);
         }
 
         /// <inheritdoc cref="EnhancedUtility.GetLongStableHashCode(string)"/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ulong GetLongStableHashCode(this string _string) {
             return EnhancedUtility.GetLongStableHashCode(_string);
         }

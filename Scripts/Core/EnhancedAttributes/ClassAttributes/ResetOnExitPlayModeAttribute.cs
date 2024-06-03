@@ -11,5 +11,5 @@ namespace EnhancedEditor {
     /// <see cref="ScriptableObject"/>-realted attribute
     /// used to reset all content values after exiting play mode.
     /// </summary>
-	public class ResetOnExitPlayModeAttribute : EnhancedClassAttribute { }
+	public sealed class ResetOnExitPlayModeAttribute : EnhancedClassAttribute { }
 }

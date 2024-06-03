@@ -1,8 +1,8 @@
-// ===== Enhanced Framework - https://github.com/LucasJoestar/EnhancedFramework ===== //
-//
+// ===== Enhanced Editor - https://github.com/LucasJoestar/EnhancedEditor ===== //
+// 
 // Notes:
 //
-// ================================================================================== //
+// ============================================================================ //
 
 #if UNITY_EDITOR
 #define EDITOR_CHRONOS
@@ -75,7 +75,7 @@ namespace EnhancedEditor {
             if (!Application.isPlaying) {
 
                 editorDeltaTime = (float)(EditorApplication.timeSinceStartup - lastUpdateTime);
-                lastUpdateTime = EditorApplication.timeSinceStartup;
+                lastUpdateTime  = EditorApplication.timeSinceStartup;
             }
         }
         #endif

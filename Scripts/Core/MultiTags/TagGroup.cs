@@ -5,8 +5,8 @@
 // ============================================================================ //
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace EnhancedEditor {
     /// <summary>
@@ -15,8 +15,13 @@ namespace EnhancedEditor {
     /// Contains multiple utility methods to dynamically and safely manipulate its content.
     /// </summary>
     [Serializable]
-    public class TagGroup : IEnumerable<Tag> {
+    public sealed class TagGroup {
         #region Global Members
+        /// <summary>
+        /// Static empty instance shared across the project.
+        /// </summary>
+        public static readonly TagGroup Empty = new TagGroup();
+
         /// <summary>
         /// All <see cref="Tag"/> defined in this group.
         /// </summary>
@@ -26,10 +31,13 @@ namespace EnhancedEditor {
         /// Total amount of <see cref="Tag"/> defined in this group.
         /// </summary>
         public int Count {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get { return Tags.Length; }
         }
 
-        // -----------------------
+        // -------------------------------------------
+        // Constructor(s)
+        // -------------------------------------------
 
         /// <inheritdoc cref="TagGroup"/>
         public TagGroup() { }
@@ -43,20 +51,10 @@ namespace EnhancedEditor {
 
         #region Operator
         public Tag this[int _index] {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => Tags[_index];
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set => Tags[_index] = value;
-        }
-        #endregion
-
-        #region IEnumerable
-        public IEnumerator<Tag> GetEnumerator() {
-            for (int i = 0; i < Count; i++) {
-                yield return this[i];
-            }
-        }
-
-        IEnumerator IEnumerable.GetEnumerator() {
-            return GetEnumerator();
         }
         #endregion
 
@@ -96,8 +94,9 @@ namespace EnhancedEditor {
         // -----------------------
 
         /// <inheritdoc cref="Contains(Tag, out int)"/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Contains(Tag _tag) {
-            return ArrayUtility.Contains(Tags, _tag);
+            return Contains(_tag, out _);
         }
 
         /// <summary>
@@ -107,7 +106,9 @@ namespace EnhancedEditor {
         /// <param name="_index">Index of the matching tag in group.</param>
         /// <returns>True if the group contains the specified tag, false otherwise.</returns>
         public bool Contains(Tag _tag, out int _index) {
-            for (int _i = 0; _i < Tags.Length; _i++) {
+            int _length = Tags.Length;
+
+            for (int _i = 0; _i < _length; _i++) {
                 if (Tags[_i] == _tag) {
                     _index = _i;
                     return true;
@@ -124,8 +125,10 @@ namespace EnhancedEditor {
         /// <param name="_tags">All tags to check.</param>
         /// <returns>True if this group contains all given tags, false otherwise.</returns>
         public bool ContainsAll(Tag[] _tags) {
-            foreach (Tag _tag in _tags) {
-                if (!Contains(_tag)) {
+            int _length = _tags.Length;
+
+            for (int _i = 0; _i < _length; _i++) {
+                if (!Contains(_tags[_i])) {
                     return false;
                 }
             }
@@ -138,7 +141,10 @@ namespace EnhancedEditor {
         /// </summary>
         /// <param name="_group">Group to check content.</param>
         /// <returns>True if this group contain any of the other group tag, false otherwise.</returns>
-        public bool ContainsAny(TagGroup _group) {
+        public bool ContainsAny(TagGroup _group, bool validIfEmpty = false) {
+            if (validIfEmpty && ((Count == 0) || _group.Count == 0))
+                return true;
+
             foreach (Tag _tag in _group.Tags) {
                 if (Contains(_tag)) {
                     return true;
@@ -173,9 +179,8 @@ namespace EnhancedEditor {
             data.Resize(Tags.Length);
 
             // Update data with all tag cached values.
-            for (int _i = 0; _i < Count; _i++) {
-                TagData _data = Tags[_i].GetData();
-                data[_i] = _data;
+            for (int i = Tags.Length; i-- > 0;) {
+                data[i] = Tags[i].GetData();
             }
 
             return data;

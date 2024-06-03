@@ -15,12 +15,12 @@ namespace EnhancedEditor.Editor {
     /// Flag picker editor window, used to manage <see cref="FlagReference"/>, <see cref="FlagValue"/>,
     /// <see cref="FlagReferenceGroup"/> and <see cref="FlagValueGroup"/> referenced <see cref="Flag"/> objects.
     /// </summary>
-    public class FlagPickerWindow : EditorWindow {
+    public sealed class FlagPickerWindow : EditorWindow {
         #region Picker Mode
         public enum Mode {
-            Single,
-            ReferenceGroup,
-            ValueGroup
+            Single          = 0,
+            ReferenceGroup  = 1,
+            ValueGroup      = 2,
         }
         #endregion
 

@@ -7,6 +7,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace EnhancedEditor {
     /// <summary>
@@ -47,9 +48,9 @@ namespace EnhancedEditor {
         /// <param name="_isReadonly"><inheritdoc cref="IsReadonly" path="/summary"/></param>
         /// <inheritdoc cref="BlockCollection{T}"/>
         public BlockCollection(bool _isEditable, bool _isReorderable = true, bool _isReadonly = false) {
-            IsEditable = _isEditable;
+            IsEditable    = _isEditable;
             IsReorderable = _isReorderable;
-            IsReadonly = _isReadonly;
+            IsReadonly    = _isReadonly;
         }
         #endregion
 
@@ -88,18 +89,21 @@ namespace EnhancedEditor {
     /// </summary>
     /// <typeparam name="T">Array content type.</typeparam>
     [Serializable]
-    public class BlockArray<T> : BlockCollection<T> {
+    public sealed class BlockArray<T> : BlockCollection<T> {
         #region Global Members
         /// <summary>
         /// This wrapper array.
         /// </summary>
-        [Block(false)] public T[] Array = new T[] { };
+        [Block(false)] public T[] Array = new T[0];
 
         public override int Count {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get { return Array.Length; }
         }
 
-        // -----------------------
+        // -------------------------------------------
+        // Constructor(s)
+        // -------------------------------------------
 
         /// <inheritdoc cref="BlockCollection{T}.BlockCollection()"/>
         public BlockArray() : base() { }
@@ -110,7 +114,9 @@ namespace EnhancedEditor {
 
         #region Operator
         public override T this[int _index] {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get { return Array[_index]; }
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set { Array[_index] = value; }
         }
 
@@ -135,7 +141,7 @@ namespace EnhancedEditor {
     /// </summary>
     /// <typeparam name="T">List content type.</typeparam>
     [Serializable]
-    public class BlockList<T> : BlockCollection<T> {
+    public sealed class BlockList<T> : BlockCollection<T> {
         #region Global Members
         /// <summary>
         /// This wrapper list.
@@ -143,10 +149,13 @@ namespace EnhancedEditor {
         [Block(false)] public List<T> List = new List<T>();
 
         public override int Count {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get { return List.Count; }
         }
 
-        // -----------------------
+        // -------------------------------------------
+        // Constructor(s)
+        // -------------------------------------------
 
         /// <inheritdoc cref="BlockCollection{T}.BlockCollection()"/>
         public BlockList() : base() { }
@@ -157,7 +166,9 @@ namespace EnhancedEditor {
 
         #region Operator
         public override T this[int _index] {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get { return List[_index]; }
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set { List[_index] = value; }
         }
 

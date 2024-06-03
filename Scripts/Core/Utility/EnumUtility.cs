@@ -2,11 +2,15 @@
 // 
 // Notes:
 //
+//  All code for flag enums with no allocation come from here:
+//  https://forum.unity.com/threads/c-hasaflag-method-extension-how-to-not-create-garbage-allocation.616924/
+//
 // ============================================================================ //
 
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 using EnumCollection = System.Collections.Generic.List<EnhancedEditor.EnumValueInfo>;
@@ -38,8 +42,8 @@ namespace EnhancedEditor {
 
         /// <inheritdoc cref="EnumValueInfo"/>
         public EnumValueInfo(int _value, string _name, string _tooltip) {
-            Value = _value;
-            Name = _name;
+            Value   = _value;
+            Name    = _name;
             Tooltip = _tooltip;
         }
         #endregion
@@ -49,6 +53,190 @@ namespace EnhancedEditor {
     /// <see cref="Enum"/>-related utility class.
     /// </summary>
     public static class EnumUtility {
+        #region Flag
+        /// <summary>
+        /// Get if a specific flag is contained within an enum value.
+        /// </summary>
+        /// <typeparam name="TEnum">This <see cref="Enum"/> type.</typeparam>
+        /// <param name="_enum">Enum value to check.</param>
+        /// <param name="_flag">Flag to check.</param>
+        /// <returns>True of this flag is contained within this enum, false otherwise.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool HasFlag<TEnum>(TEnum _enum, TEnum _flag) where TEnum : unmanaged, Enum {
+
+            unsafe {
+                switch (sizeof(TEnum)) {
+
+                    case 1: {
+                        var _value = (*(byte*)(&_enum) & *(byte*)(&_flag));
+                        return _value > 0;
+                    }
+                    case 2: {
+                        var _value = (*(ushort*)(&_enum) & *(ushort*)(&_flag));
+                        return _value > 0;
+                    }
+                    case 4: {
+                        var _value = (*(uint*)(&_enum) & *(uint*)(&_flag));
+                        return _value > 0;
+                    }
+                    case 8: {
+                        var _value = (*(ulong*)(&_enum) & *(ulong*)(&_flag));
+                        return _value > 0;
+                    }
+
+                    default:
+                        throw new Exception("Size does not match a known Enum backing type.");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Adds a flag to a specific enum value.
+        /// </summary>
+        /// <param name="_enum">Enum to add a flag to.</param>
+        /// <param name="_flag">Flag to add.</param>
+        /// <returns>This new enum value.</returns>
+        /// <inheritdoc cref="HasFlag{TEnum}(TEnum, TEnum)"/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static TEnum AddFlag<TEnum>(TEnum _enum, TEnum _flag) where TEnum : unmanaged, Enum {
+
+            unsafe {
+                switch (sizeof(TEnum)) {
+
+                    case 1: {
+                        var r = *(byte*)(&_enum) | *(byte*)(&_flag);
+                        return *(TEnum*)&r;
+                    }
+                    case 2: {
+                        var r = *(ushort*)(&_enum) | *(ushort*)(&_flag);
+                        return *(TEnum*)&r;
+                    }
+                    case 4: {
+                        var r = *(uint*)(&_enum) | *(uint*)(&_flag);
+                        return *(TEnum*)&r;
+                    }
+                    case 8: {
+                        var r = *(ulong*)(&_enum) | *(ulong*)(&_flag);
+                        return *(TEnum*)&r;
+                    }
+
+                    default:
+                        throw new Exception("Size does not match a known Enum backing type.");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Removes a flag from this enum value.
+        /// </summary>
+        /// <param name="_enum">Enum to remove the flag from.</param>
+        /// <param name="_flag">Flag to remove.</param>
+        /// <inheritdoc cref="AddFlag{TEnum}(TEnum, TEnum)"/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static TEnum RemoveFlag<TEnum>(TEnum _enum, TEnum _flag) where TEnum : unmanaged, Enum {
+
+            unsafe {
+                switch (sizeof(TEnum)) {
+
+                    case 1: {
+                        var r = *(byte*)(&_enum) & ~*(byte*)(&_flag);
+                        return *(TEnum*)&r;
+                    }
+                    case 2: {
+                        var r = *(ushort*)(&_enum) & ~*(ushort*)(&_flag);
+                        return *(TEnum*)&r;
+                    }
+                    case 4: {
+                        var r = *(uint*)(&_enum) & ~*(uint*)(&_flag);
+                        return *(TEnum*)&r;
+                    }
+                    case 8: {
+                        var r = *(ulong*)(&_enum) & ~*(ulong*)(&_flag);
+                        return *(TEnum*)&r;
+                    }
+
+                    default:
+                        throw new Exception("Size does not match a known Enum backing type.");
+                }
+            }
+
+        }
+
+        /// <returns></returns>
+        /// <inheritdoc cref="AddFlag{TEnum}(TEnum, TEnum)"/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void AddFlagRef<TEnum>(ref TEnum _enum, TEnum _flag) where TEnum : unmanaged, Enum {
+
+            unsafe {
+                fixed (TEnum* _value = &_enum) {
+                    switch (sizeof(TEnum)) {
+
+                        case 1: {
+                            var r = *(byte*)(_value) | *(byte*)(&_flag);
+                            *_value = *(TEnum*)&r;
+                            return;
+                        }
+                        case 2: {
+                            var r = *(ushort*)(_value) | *(ushort*)(&_flag);
+                            *_value = *(TEnum*)&r;
+                            return;
+                        }
+                        case 4: {
+                            var r = *(uint*)(_value) | *(uint*)(&_flag);
+                            *_value = *(TEnum*)&r;
+                            return;
+                        }
+                        case 8: {
+                            var r = *(ulong*)(_value) | *(ulong*)(&_flag);
+                            *_value = *(TEnum*)&r;
+                            return;
+                        }
+
+                        default:
+                            throw new Exception("Size does not match a known Enum backing type.");
+                    }
+                }
+            }
+        }
+
+        /// <returns></returns>
+        /// <inheritdoc cref="RemoveFlag{TEnum}(TEnum, TEnum)"/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void RemoveFlagRef<TEnum>(ref TEnum _enum, TEnum _flag) where TEnum : unmanaged, Enum {
+
+            unsafe {
+                fixed (TEnum* _value = &_enum) {
+                    switch (sizeof(TEnum)) {
+
+                        case 1: {
+                            var r = *(byte*)(_value) & ~*(byte*)(&_flag);
+                            *_value = *(TEnum*)&r;
+                            return;
+                        }
+                        case 2: {
+                            var r = *(ushort*)(_value) & ~*(ushort*)(&_flag);
+                            *_value = *(TEnum*)&r;
+                            return;
+                        }
+                        case 4: {
+                            var r = *(uint*)(_value) & ~*(uint*)(&_flag);
+                            *_value = *(TEnum*)&r;
+                            return;
+                        }
+                        case 8: {
+                            var r = *(ulong*)(_value) & ~*(ulong*)(&_flag);
+                            *_value = *(TEnum*)&r;
+                            return;
+                        }
+
+                        default:
+                            throw new Exception("Size does not match a known Enum backing type.");
+                    }
+                }
+            }
+        }
+        #endregion
+
         #region Name
         // Use a list as it behaves as a reference, to avoid allocation using the out parameter.
         private static readonly Dictionary<Type, EnumCollection> enumNames = new Dictionary<Type, EnumCollection>();
@@ -57,6 +245,7 @@ namespace EnhancedEditor {
 
         /// <param name="_value">Enum value to get the associated name.</param>
         /// <inheritdoc cref="GetName(Type, int)"/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string GetName(Enum _value) {
             return GetName(_value.GetType(), _value.ToInt());
         }
@@ -143,7 +332,7 @@ namespace EnhancedEditor {
 
                     void AddSeparator(SeparatorPosition _position) {
 
-                        if (_separator.HasFlag(_position)) {
+                        if (_separator.HasFlagUnsafe(_position)) {
                             _enumNames.Add(new EnumValueInfo(-1, string.Empty, string.Empty));
                         }
                     }

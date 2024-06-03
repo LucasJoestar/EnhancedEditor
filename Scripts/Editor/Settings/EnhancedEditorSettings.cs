@@ -47,7 +47,7 @@ namespace EnhancedEditor.Editor {
     /// <see cref="EnhancedSettings"/> for a simple <see cref="bool"/>.
     /// </summary>
     [Serializable]
-    public class BooleanEnhancedSettings : EnhancedSettings {
+    public sealed class BooleanEnhancedSettings : EnhancedSettings {
         #region Global Members
         /// <summary>
         /// This setting value.
@@ -67,7 +67,7 @@ namespace EnhancedEditor.Editor {
     /// <see cref="EnhancedSettings"/> for a simple <see cref="float"/>.
     /// </summary>
     [Serializable]
-    public class FloatEnhancedSettings : EnhancedSettings {
+    public sealed class FloatEnhancedSettings : EnhancedSettings {
         #region Global Members
         /// <summary>
         /// This setting value.
@@ -87,7 +87,7 @@ namespace EnhancedEditor.Editor {
     /// <see cref="EnhancedSettings"/> for a folder path.
     /// </summary>
     [Serializable]
-    public class FolderEnhancedSettings : EnhancedSettings {
+    public sealed class FolderEnhancedSettings : EnhancedSettings {
         #region Global Members
         /// <summary>
         /// Default folder value.

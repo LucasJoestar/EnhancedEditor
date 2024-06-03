@@ -7,13 +7,11 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace EnhancedEditor
-{
+namespace EnhancedEditor {
     /// <summary>
     /// Utility class used to compare multiple <see cref="Color"/>, which can be used to sort arrays or lists.
     /// </summary>
-    public class ColorComparer : Comparer<Color>
-    {
+    public sealed class ColorComparer : Comparer<Color> {
         #region Global Members
         /// <summary>
         /// Static instance comparer class, used to compare multiple <see cref="Color"/>.
@@ -25,29 +23,27 @@ namespace EnhancedEditor
         /// <summary>
         /// Compares two <see cref="Color"/> by their HSV values.
         /// </summary>
-        /// <param name="_a">First of the two <see cref="Color"/> to compare.</param>
-        /// <param name="_b">Second <see cref="Color"/> to compare.</param>
+        /// <param name="a">First of the two <see cref="Color"/> to compare.</param>
+        /// <param name="b">Second <see cref="Color"/> to compare.</param>
         /// <returns>Comparison value between the two colors.</returns>
-        public override int Compare(Color _a, Color _b)
-        {
-            _a = ConvertToHSV(_a);
-            _b = ConvertToHSV(_b);
+        public override int Compare(Color a, Color b) {
+            a = ConvertToHSV(a);
+            b = ConvertToHSV(b);
 
-            if (_a.r != _b.r)
-                return _a.r.CompareTo(_b.r);
+            if (a.r != b.r)
+                return a.r.CompareTo(b.r);
 
-            if (_a.g != _b.g)
-                return _a.g.CompareTo(_b.g);
+            if (a.g != b.g)
+                return a.g.CompareTo(b.g);
 
-            if (_a.b != _b.b)
-                return _a.b.CompareTo(_b.b);
+            if (a.b != b.b)
+                return a.b.CompareTo(b.b);
 
-            return _a.a.CompareTo(_b.a);
+            return a.a.CompareTo(b.a);
 
             // ----- Local Method ----- \\
 
-            Color ConvertToHSV(Color _color)
-            {
+            static Color ConvertToHSV(Color _color) {
                 Color.RGBToHSV(_color, out float _h, out float _s, out float _v);
                 return new Color(_h, _s, _v, _color.a);
             }
