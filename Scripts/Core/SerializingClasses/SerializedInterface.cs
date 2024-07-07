@@ -150,7 +150,12 @@ namespace EnhancedEditor {
         /// <param name="_interface">Interface to compare with this one.</param>
         /// <returns>True if both interfaces are equal, false otherwise.</returns>
         public bool Equals(SerializedInterface<T> _interface) {
-            return (_interface is not null) && EqualityUtility.Equals(_interface.Interface, Interface);
+            return (_interface is not null) && Equals(_interface.Interface);
+        }
+
+        /// <inheritdoc cref="Equals(SerializedInterface{T})"/>
+        public bool Equals(T _interface) {
+            return EqualityUtility.Equals(_interface, Interface);
         }
         #endregion
     }

@@ -71,18 +71,22 @@ namespace EnhancedEditor {
         /// <typeparam name="T">Array element type.</typeparam>
         /// <param name="_array">Array to remove element from.</param>
         /// <param name="_element">Element to remove.</param>
-        public static void Remove<T>(ref T[] _array, T _element) {
+        /// <returns>True if the given element could be successfully removed, false otherwise.</returns>
+        public static bool Remove<T>(ref T[] _array, T _element) {
             int _index = Array.IndexOf(_array, _element);
-            if (_index > -1) {
+            if (_index != -1) {
                 RemoveAt(ref _array, _index);
+                return true;
             }
+
+            return false;
         }
 
         /// <summary>
         /// Clears all the null reference in the input array reference
         /// </summary>
-        /// <param name="_array"></param>
-        /// <typeparam name="T"></typeparam>
+        /// <typeparam name="T">Array element type.</typeparam>
+        /// <param name="_array">Array to remove null elements from.</param>
         public static void RemoveNulls<T>(ref T[] _array) {
             for (int i = _array.Length; i-- > 0;) {
 

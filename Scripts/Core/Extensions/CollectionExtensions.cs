@@ -7,7 +7,6 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using System.Security.Cryptography;
 
 namespace EnhancedEditor {
     /// <summary>
@@ -16,9 +15,6 @@ namespace EnhancedEditor {
     public static class CollectionExtensions {
         #region Random
         private const int RandomMaxIteration = 5;
-
-        private static readonly RNGCryptoServiceProvider rngProvider = new RNGCryptoServiceProvider();
-        private static readonly byte[] boxBuffer = new byte[1];
 
         // -----------------------
 
@@ -97,16 +93,12 @@ namespace EnhancedEditor {
         public static IList<T> Shuffle<T>(this IList<T> _collection) {
             int _count = _collection.Count;
 
-            while (_count != 1) {
-                do {
-                    rngProvider.GetBytes(boxBuffer);
+            for (int i = 0; i < _count - 1; i++) {
+                int _index = UnityEngine.Random.Range(i, _count);
+
+                if (_index != i) {
+                    (_collection[i], _collection[_index]) = (_collection[_index], _collection[i]);
                 }
-                while (!(boxBuffer[0] < _count * (byte.MaxValue / _count)));
-
-                int index = boxBuffer[0] % _count;
-                _count--;
-
-                (_collection[_count], _collection[index]) = (_collection[index], _collection[_count]);
             }
 
             return _collection;
@@ -390,6 +382,21 @@ namespace EnhancedEditor {
 
                 _list[0] = _tmp;
             }
+        }
+
+        /// <summary>
+        /// Adds a given element to a list only if it does not already contain it.
+        /// </summary>
+        /// <param name="_list">The list to add an element into.</param>
+        /// <param name="_element">The element to try to add.</param>
+        /// <returns>True if the element could be added, false otherwise.</returns>
+        public static bool AddIfNotExists<T>(this List<T> _list, T _element) {
+            if (_list.Contains(_element)) {
+                return false;
+            }
+
+            _list.Add(_element);
+            return true;
         }
         #endregion
 

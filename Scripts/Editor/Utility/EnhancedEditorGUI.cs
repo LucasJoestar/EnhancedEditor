@@ -3846,7 +3846,7 @@ namespace EnhancedEditor.Editor {
             _position = EditorGUI.PrefixLabel(_position, _label);
 
             int _id = EnhancedEditorGUIUtility.GetControlID(_label, FocusType.Keyboard);
-            MultiTags.GetTag(_tag, out TagData _data);
+            TagDatabase.Database.GetTag(_tag, out TagData _data);
 
             // Selected tag.
             _label = EnhancedEditorGUIUtility.GetLabelGUI(_data.Name);
@@ -4001,7 +4001,7 @@ namespace EnhancedEditor.Editor {
 
                 // Only display the tag selection menu after all the group content has been registered.
                 if (_changedTagControlID != -1) {
-                    GenericMenu _menu = GetTagSelectionMenu(_changedTagControlID, MultiTags.GetTag(_changedTagID), tagGroupContent);
+                    GenericMenu _menu = GetTagSelectionMenu(_changedTagControlID, TagDatabase.Database.GetTag(_changedTagID), tagGroupContent);
                     _menu.DropDown(_changedTagPos);
 
                     _changedTagID = -2;
@@ -4097,12 +4097,19 @@ namespace EnhancedEditor.Editor {
         private static bool DrawTagGroupElement(Rect _totalPosition, ref Rect _temp, ref Tag _tag) {
             // Tag.
             TagData _data = _tag.GetData();
+
             if (DrawTagGroupElement(_totalPosition, ref _temp, _data)) {
-                _tag.ID = -1;
+                _tag.ID  = -1;
+                return false;
             }
 
             // Opens the menu to select a new tag on tag click.
-            return EnhancedEditorGUIUtility.MainMouseUp(_temp);
+            Rect _tagPosition = new Rect(_temp); {
+                _tagPosition.x     -= _temp.width + 5f;
+                _tagPosition.width -= 15f;
+            }
+
+            return EnhancedEditorGUIUtility.MainMouseUp(_tagPosition);
         }
 
         internal static bool DrawTagGroupElement(Rect _totalPosition, ref Rect _temp, TagData _tag) {
@@ -4236,13 +4243,14 @@ namespace EnhancedEditor.Editor {
         #endregion
 
         #region Tag Utility
-        private static readonly GUIContent renameTagGUI = new GUIContent("Rename");
-        private static readonly GUIContent setTagColorGUI = new GUIContent("Edit Color");
-        private static readonly GUIContent createTagGUI = new GUIContent("Create a New Tag");
         private static readonly GUIContent openMultiTagsWindowGUI = new GUIContent("Open the Multi-Tags Window");
+        private static readonly GUIContent setTagColorGUI         = new GUIContent("Edit Color");
+        private static readonly GUIContent renameTagGUI           = new GUIContent("Rename");
+        private static readonly GUIContent createTagGUI           = new GUIContent("Create a New Tag");
+        private static readonly GUIContent moveTagToGUI           = new GUIContent("Move to.../");
 
         private static int selectedTagControlID = -1;
-        private static TagData selectedTag = null;
+        private static TagData selectedTag      = null;
 
         // -----------------------
 
@@ -4264,8 +4272,49 @@ namespace EnhancedEditor.Editor {
             GenericMenu _menu = new GenericMenu();
             selectedTagControlID = _id;
 
-            foreach (TagData _tag in MultiTags.Database.tags) {
-                GUIContent _label = new GUIContent(_tag.Name.Replace('_', '/'));
+            TagDatabase _database = TagDatabase.Database;
+            string _defaultPrefix = string.Empty;
+
+            // Tags.
+            if (_database.HolderCount != 0) {
+
+                // Holders.
+                for (int i = 1; i < _database.HolderCount; i++) {
+                    RegisterTagHolder(i);
+                }
+
+                // Default.
+                _menu.AddSeparator(string.Empty);
+                RegisterTagHolder(0);
+            }
+
+
+
+            // Additional menu utilities.
+            _menu.AddSeparator(string.Empty);
+            _menu.AddItem(createTagGUI, false, () => {
+                MultiTagsWindow.CreateTagWindow.GetWindow();
+            });
+
+            _menu.AddItem(openMultiTagsWindowGUI, false, () => {
+                MultiTagsWindow.GetWindow();
+            });
+
+            return _menu;
+
+            // ----- Local Methods ----- \\
+
+            void RegisterTagHolder(int _index) {
+
+                TagHolder _holder = _database.GetHolderAt(_index);
+                foreach (TagData _holderTag in _holder.Tags) {
+                    RegisterTag(_holderTag, _holder.Name + "/");
+                }
+            }
+
+            void RegisterTag(TagData _tag, string _prefix) {
+                GUIContent _label = new GUIContent(_prefix + _tag.Name.Replace('_', '/'));
+
                 if (_tag == _selectedTag) {
                     // Selected tag.
                     _menu.AddItem(_label, true, () => { });
@@ -4279,18 +4328,6 @@ namespace EnhancedEditor.Editor {
                     });
                 }
             }
-
-            // Additional menu utilities.
-            _menu.AddSeparator(string.Empty);
-            _menu.AddItem(createTagGUI, false, () => {
-                MultiTagsWindow.CreateTagWindow.GetWindow();
-            });
-
-            _menu.AddItem(openMultiTagsWindowGUI, false, () => {
-                MultiTagsWindow.GetWindow();
-            });
-
-            return _menu;
         }
 
         /// <summary>
@@ -4299,6 +4336,8 @@ namespace EnhancedEditor.Editor {
         /// <param name="_tag">Selected tag.</param>
         /// <returns><see cref="GenericMenu"/> to be displayed.</returns>
         public static GenericMenu GetTagContextMenu(TagData _tag) {
+
+            // Edit.
             GenericMenu _menu = new GenericMenu();
             _menu.AddItem(renameTagGUI, false, () => {
                 MultiTagsWindow.RenameTagWindow.GetWindow(_tag);
@@ -4306,12 +4345,39 @@ namespace EnhancedEditor.Editor {
 
             _menu.AddItem(setTagColorGUI, false, () => {
                 EnhancedEditorUtility.ColorPicker(_tag.Color, (Color _color) => {
-                    MultiTags.SetTagColor(_tag.ID, _color);
+                    TagDatabase.Database.SetTagColor(_tag.ID, _color);
                     InternalEditorUtility.RepaintAllViews();
                 });
             });
 
+            // Move.
+            TagDatabase _database = TagDatabase.Database;
+            int _holderCount      = _database.HolderCount;
+
+            if (_holderCount != 0) {
+                _menu.AddSeparator(string.Empty);
+
+                for (int i = 1; i < _holderCount; i++) {
+                    RegisterTagHolder(i);
+                }
+
+                _menu.AddSeparator(moveTagToGUI.text);
+                RegisterTagHolder(0);
+            }
+
             return _menu;
+
+            // ----- Local Method ----- \\
+
+            void RegisterTagHolder(int _index) {
+
+                TagHolder _holder = _database.GetHolderAt(_index);
+
+                _menu.AddItem(new GUIContent(moveTagToGUI.text + _holder.Name), false, () => {
+                    TagDatabase.Database.DeleteTag(_tag);
+                    TagDatabase.Database.AddTag(_tag, _holder);
+                });
+            }
         }
 
         // -----------------------

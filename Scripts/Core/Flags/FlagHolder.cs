@@ -35,7 +35,7 @@ namespace EnhancedEditor {
         // -----------------------
 
         /// <summary>
-        /// Total amount of <see cref="Flag"/> in this holder.
+        /// Total amount of <see cref="Flag"/> in this object.
         /// </summary>
         public int Count {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]

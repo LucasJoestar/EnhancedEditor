@@ -4,7 +4,11 @@
 //
 // ============================================================================ //
 
+using System;
+using System.Collections.Generic;
 using UnityEditor;
+using UnityEditor.Build;
+using UnityEditor.Build.Reporting;
 using UnityEditorInternal;
 using UnityEngine;
 
@@ -14,8 +18,7 @@ namespace EnhancedEditor.Editor
     /// Multi-Tags system editor window, used to manage all tags in the project.
     /// </summary>
     [InitializeOnLoad]
-    public sealed class MultiTagsWindow : EditorWindow
-    {
+    public sealed class MultiTagsWindow : EditorWindow, IPreprocessBuildWithReport {
         #region Editor Database
         /// <summary>
         /// Auto-managed <see cref="ScriptableObject"/> resource for this project Multi-Tags database.
@@ -27,12 +30,40 @@ namespace EnhancedEditor.Editor
         /// </summary>
         public static TagDatabase Database => resource.GetResource();
 
+        int IOrderedCallback.callbackOrder => 999;
+
         // -----------------------
 
         static MultiTagsWindow()
         {
-            MultiTags.EditorTagDatabaseGetter = () => Database;
-            TagDatabase.OnOpenMultiTagsWindow = () => GetWindow();
+            TagDatabase.EditorTagDatabaseGetter = () => Database;
+            TagDatabase.OnOpenMultiTagsWindow   = () => GetWindow();
+
+            EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
+            EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
+        }
+
+        // -----------------------
+
+        void IPreprocessBuildWithReport.OnPreprocessBuild(BuildReport _report) {
+            // Called just before a build is started.
+            UpdateDatabase();
+            AssetDatabase.SaveAssets();
+        }
+
+        private static void OnPlayModeStateChanged(PlayModeStateChange _state) {
+            if (_state == PlayModeStateChange.EnteredPlayMode) {
+                UpdateDatabase();
+            }
+        }
+
+        internal static void UpdateDatabase() {
+            // Register all holders in the database.
+            TagHolder[] _holders = EnhancedEditorUtility.LoadAssets<TagHolder>();
+            Array.Sort(_holders, (a, b) => a.Name.CompareTo(b.Name));
+
+            Database.holders = _holders;
+            EditorUtility.SetDirty(Database);
         }
         #endregion
 
@@ -56,17 +87,16 @@ namespace EnhancedEditor.Editor
         // -------------------------------------------
 
         private const string UndoRecordTitle = "Multi-Tags Window Change";
-        private const string TooltipMessage = "You can edit any tag name and color using the context menu.";
-        private const string NoTagMessage = "No tag could be found in the project! Create a new one using the plus button on the toolbar.";
+        private const string TooltipMessage  = "You can edit any tag name and color using the context menu.";
+        private const string NoTagMessage    = "No tag could be found in the project! Create a new one using the plus button on the toolbar.";
 
         private readonly GUIContent createTagGUI = new GUIContent(" Create Tag", "Creates a new tag in the project.");
-        private readonly GUIContent refreshGUI = new GUIContent("Refresh", "Refresh all project tags.");
-        private readonly GUIContent headerGUI = new GUIContent("Project Tags:", "All created tags in the project.");
+        private readonly GUIContent refreshGUI   = new GUIContent("Refresh", "Refresh all project tags.");
 
-        [SerializeField] private string searchFilter = string.Empty;
-        [SerializeField] private bool[] tagsVisibility = new bool[] { };
+        [SerializeField] private List<bool> tagsVisibility = new List<bool>();
+        [SerializeField] private string searchFilter       = string.Empty;
 
-        private TagData[] tags = new TagData[] { };
+        private readonly List<TagData> tags = new List<TagData>();
         private Vector2 scroll = new Vector2();
 
         // -----------------------
@@ -80,6 +110,7 @@ namespace EnhancedEditor.Editor
             titleContent.image = EditorGUIUtility.FindTexture("FilterByLabel");
             createTagGUI.image = EditorGUIUtility.FindTexture("CreateAddNew");
 
+            UpdateDatabase();
             RefreshTags();
         }
 
@@ -93,7 +124,7 @@ namespace EnhancedEditor.Editor
                 // Create tag.
                 if (GUILayout.Button(createTagGUI, EditorStyles.toolbarButton, GUILayout.Width(95f)))
                 {
-                    CreateTagWindow.GetWindow();
+                    CreateTagWindow.GetWindow(null);
                 }
 
                 // Search filter.
@@ -105,7 +136,7 @@ namespace EnhancedEditor.Editor
                 }
 
                 // Refresh.
-                if (GUILayout.Button(refreshGUI, EditorStyles.toolbarButton, GUILayout.Width(55f)) || (Database.Count != tags.Length))
+                if (GUILayout.Button(refreshGUI, EditorStyles.toolbarButton, GUILayout.Width(55f)) || (Database.TotalTagCount != tags.Count))
                 {
                     RefreshTags();
                 }
@@ -123,51 +154,60 @@ namespace EnhancedEditor.Editor
 
                     using (var verticalScope = new GUILayout.VerticalScope(GUILayout.Width(position.width - 10f)))
                     {
-                        // Button.
-                        EnhancedEditorGUILayout.UnderlinedLabel(headerGUI, EditorStyles.boldLabel);
-                        GUILayout.Space(7f);
-
-                        if (tags.Length == 0)
+                        if (tags.Count == 0)
                         {
                             // No tag.
                             EditorGUILayout.HelpBox(NoTagMessage, UnityEditor.MessageType.Warning, true);
                         }
                         else
                         {
-                            // Displayed tags.
-                            Rect _position = EditorGUILayout.GetControlRect();
-                            _position.width = position.width - 10f;
+                            int _index = 0;
 
-                            Rect _temp = new Rect(_position);
-                            for (int _i = 0; _i < tags.Length; _i++)
-                            {
-                                if (!tagsVisibility[_i])
-                                    continue;
+                            // Holders.
+                            for (int i = 0; i < Database.HolderCount; i++) {
+                                TagHolder _holder = Database.GetHolderAt(i);
+                                string _label;
 
-                                TagData _tag = tags[_i];
-
-                                // Draw this tag and remove it from the project on associated button click.
-                                if (EnhancedEditorGUI.DrawTagGroupElement(_position, ref _temp, _tag)
-                                 && EditorUtility.DisplayDialog("Delete this Tag?",
-                                                                "You are about to completely erase this tag from your project.\n\n" +
-                                                                "Are you sure you want to do this? All uses of this tag will become obsolete and will be ignored.", "Yes", "Cancel"))
-                                {
-                                    MultiTags.DeleteTag(_tag);
-                                    InternalEditorUtility.RepaintAllViews();
+                                if (i == 0) {
+                                    _label = "Default Tags";
+                                } else {
+                                    _label = _holder.Name;
+                                    EditorGUILayout.Space(15f);
                                 }
 
-                                _temp.x += _temp.width + 5f;
+                                EnhancedEditorGUILayout.UnderlinedLabel(_label + ":", EditorStyles.boldLabel);
+                                GUILayout.Space(7f);
+
+                                Rect _position = EditorGUILayout.GetControlRect();
+                                _position.width = position.width - 10f;
+
+                                Rect _temp = new Rect(_position);
+
+                                for (int j = 0; j < _holder.Count; j++) {
+
+                                    if (!tagsVisibility[_index++])
+                                        continue;
+
+                                    TagData _tag = _holder.Tags[j];
+
+                                    // Draw this tag and remove it from the project on associated button click.
+                                    if (EnhancedEditorGUI.DrawTagGroupElement(_position, ref _temp, _tag)
+                                        && EditorUtility.DisplayDialog("Delete this Tag?",
+                                                                       "You are about to completely erase this tag from your project.\n\n" +
+                                                                       "Are you sure you want to do this? All uses of this tag will become obsolete and will be ignored.", "Yes", "Cancel")) {
+                                        Database.DeleteTag(_tag);
+                                        InternalEditorUtility.RepaintAllViews();
+                                    }
+                                }
+
+                                // Layout update.
+                                float _extraHeight = _temp.yMax - _position.yMax;
+                                EnhancedEditorGUILayout.ManageDynamicGUIControlHeight(GUIContent.none, _extraHeight);
                             }
 
-                            // Layout update.
-                            float _extraHeight = _temp.yMax - _position.yMax;
-                            EnhancedEditorGUILayout.ManageDynamicGUIControlHeight(GUIContent.none, _extraHeight);
-
-                            if (_temp.position != _position.position)
-                            {
-                                GUILayout.Space(5f);
-                                EditorGUILayout.HelpBox(TooltipMessage, UnityEditor.MessageType.Info, true);
-                            }
+                            // Tooltips.
+                            GUILayout.Space(20f);
+                            EditorGUILayout.HelpBox(TooltipMessage, UnityEditor.MessageType.Info, true);
                         }
                     }
 
@@ -176,31 +216,35 @@ namespace EnhancedEditor.Editor
             }
         }
 
-        private void OnDisable()
-        {
+        private void OnDisable() {
             Undo.undoRedoPerformed -= Repaint;
         }
         #endregion
 
         #region Utility
-        private void RefreshTags()
-        {
+        private void RefreshTags() {
             TagDatabase _settings = resource.Reload()[0];
-            tags = _settings.Tags;
+            UpdateDatabase();
 
-            tagsVisibility = new bool[tags.Length];
-            ArrayUtility.Fill(tagsVisibility, true);
+            tags.Clear();
+            for (int i = 0; i < _settings.HolderCount; i++) {
+                tags.AddRange(_settings.GetHolderAt(i).Tags);
+            }
+
+            tagsVisibility.Clear();
+            for (int i = 0; i < tags.Count; i++) {
+                tagsVisibility.Add(true);
+            }
 
             FilterTags();
         }
 
-        private void FilterTags()
-        {
+        private void FilterTags() {
             string _searchFilter = searchFilter.ToLower();
-            for (int _i = 0; _i < tags.Length; _i++)
-            {
-                bool _isVisible = tags[_i].Name.ToLower().Contains(_searchFilter);
-                tagsVisibility[_i] = _isVisible;
+            for (int i = 0; i < tags.Count; i++) {
+
+                bool _isVisible = tags[i].Name.ToLower().Contains(_searchFilter);
+                tagsVisibility[i] = _isVisible;
             }
         }
         #endregion
@@ -216,10 +260,11 @@ namespace EnhancedEditor.Editor
             /// used to create a new tag in the project.
             /// </summary>
             /// <returns><see cref="CreateTagWindow"/> instance on screen.</returns>
-            public static CreateTagWindow GetWindow()
+            public static CreateTagWindow GetWindow(TagHolder _holder = null)
             {
                 CreateTagWindow _window = GetWindow<CreateTagWindow>("Create a new Tag", new Vector2(350f, 70f));
                 _window.tagName = "NewTag";
+                _window.holder  = _holder;
 
                 return _window;
             }
@@ -233,7 +278,8 @@ namespace EnhancedEditor.Editor
 
             private static readonly GUIContent createGUI = new GUIContent("OK", "Create this tag.");
 
-            [SerializeField] private Color tagColor = TagData.DefaultColor.Get();
+            [SerializeField] private Color tagColor   = TagData.DefaultColor.Get();
+            [SerializeField] private TagHolder holder = null;
 
             protected override GUIContent ValidateGUI => createGUI;
 
@@ -254,7 +300,7 @@ namespace EnhancedEditor.Editor
 
             protected override void Validate()
             {
-                MultiTags.CreateTag(tagName, tagColor);
+                Database.CreateTag(tagName, tagColor, holder);
                 InternalEditorUtility.RepaintAllViews();
             }
         }
@@ -287,7 +333,7 @@ namespace EnhancedEditor.Editor
 
             private readonly GUIContent renameGUI = new GUIContent("OK", "Rename this tag.");
 
-            [SerializeField] private TagData tag = null;
+            [SerializeField] private TagData tag  = null;
 
             protected override GUIContent ValidateGUI => renameGUI;
 
@@ -303,7 +349,7 @@ namespace EnhancedEditor.Editor
 
             protected override void Validate()
             {
-                MultiTags.SetTagName(tag, tagName);
+                Database.SetTagName(tag, tagName);
                 InternalEditorUtility.RepaintAllViews();
             }
         }
@@ -361,7 +407,7 @@ namespace EnhancedEditor.Editor
                 {
                     DrawHelpBox(EmptyTagMessage);
                 }
-                else if (MultiTags.DoesTagExist(_value))
+                else if (Database.DoesTagExist(_value))
                 {
                     DrawHelpBox(ExistingTagMessage);
                 }

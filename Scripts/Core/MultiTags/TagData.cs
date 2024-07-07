@@ -48,7 +48,7 @@ namespace EnhancedEditor {
 
         /// <summary>
         /// Name of this tag.
-        /// <br/> Always prefer using utility methods from the <see cref="MultiTags"/> class
+        /// <br/> Always prefer using utility methods from the <see cref="TagDatabase"/> class
         /// for any modification or comparison.
         /// </summary>
         public string Name {

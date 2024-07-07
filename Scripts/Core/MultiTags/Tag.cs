@@ -23,7 +23,7 @@ namespace EnhancedEditor {
         /// <summary>
         /// ID of this tag, defining to which <see cref="TagData"/> it refers to.
         /// <para/>
-        /// You can use the <see cref="MultiTags"/> utility class to get informations about existing tags and their id.
+        /// You can use the <see cref="TagDatabase"/> to get informations about existing tags and their id.
         /// </summary>
         public long ID {
             readonly get { return id; }
@@ -66,7 +66,7 @@ namespace EnhancedEditor {
         /// <summary>
         /// Creates a new tag identifier. Its id defines to which <see cref="TagData"/> from the <see cref="TagDatabase"/> it refers to.
         /// <para/>
-        /// You can have access to many informations about existing tags and their id from the <see cref="MultiTags"/> utility class.
+        /// You can have access to many informations about existing tags and their id from the <see cref="TagDatabase"/>.
         /// </summary>
         /// <param name="_id">Identifier defining to which <see cref="TagData"/> this object should refer to.</param>
         public Tag(long _id) {
@@ -113,7 +113,7 @@ namespace EnhancedEditor {
         public bool GetData(out TagData _data) {
             if ((data != null) && (data.ID != 0)) {
                 _data = data;
-            } else if (MultiTags.GetTag(id, out _data)) {
+            } else if (TagDatabase.Database.GetTag(id, out _data)) {
                 data = _data;
             } else {
                 _data = null;
@@ -126,7 +126,7 @@ namespace EnhancedEditor {
         /// <returns><see cref="TagData"/> referenced by this object id (null if no matching tag could be found).</returns>
         /// <inheritdoc cref="GetData(out TagData)"/>
         public TagData GetData() {
-            if (((data == null) || (data.ID == 0)) && MultiTags.GetTag(id, out TagData _data)) {
+            if (((data == null) || (data.ID == 0)) && TagDatabase.Database.GetTag(id, out TagData _data)) {
                 data = _data;
             }
 
@@ -139,7 +139,7 @@ namespace EnhancedEditor {
         /// <returns>True if this tag id is referencing a valid <see cref="TagData"/>, false otherwise.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly bool IsValid() {
-            return MultiTags.DoesTagExist(id);
+            return TagDatabase.Database.DoesTagExist(id);
         }
 
         /// <summary>
