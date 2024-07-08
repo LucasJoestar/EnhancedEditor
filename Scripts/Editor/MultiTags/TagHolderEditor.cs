@@ -15,9 +15,9 @@ namespace EnhancedEditor.Editor {
     [CustomEditor(typeof(TagHolder), true)]
     public class TagHolderEditor : UnityObjectEditor {
         #region Editor GUI
-        private const string UndoRecordTitle = "Multi-Tags Window Change";
+        private const string UndoRecordTitle = "Tag Holder Change";
         private const string TooltipMessage  = "You can edit any tag name and color using the context menu.";
-        private const string NoTagMessage    = "No tag could be found in the project! Create a new one using the button below.";
+        private const string NoTagMessage    = "No tag could be found in this holder! Create a new one using the button below.";
 
         private TagHolder tagHolder = null;
         private Vector2 scroll      = new Vector2();

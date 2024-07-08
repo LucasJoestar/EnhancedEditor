@@ -4211,7 +4211,6 @@ namespace EnhancedEditor.Editor {
         // -----------------------
 
         [SerializedPropertyMenu]
-        #pragma warning disable IDE0051
         private static void OnTagGroupContextMenu(GenericMenu _menu, SerializedProperty _property) {
 
             if ((_property.type == TagGroupTypeName) && !_property.hasMultipleDifferentValues) {

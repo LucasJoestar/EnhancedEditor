@@ -36,6 +36,11 @@ namespace EnhancedEditor {
         #endregion
 
         #region Scriptable Object
+        #if UNITY_EDITOR
+        // -------------------------------------------
+        // Editor
+        // -------------------------------------------
+
         private void Awake() {
             // Clear content if duplicate.
             foreach (TagHolder _holder in TagDatabase.Database.holders) {
@@ -48,6 +53,7 @@ namespace EnhancedEditor {
                 }
             }
         }
+        #endif
         #endregion
 
         #region Operator
