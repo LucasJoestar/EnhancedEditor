@@ -34,8 +34,7 @@ namespace EnhancedEditor.Editor
 
         // -----------------------
 
-        static MultiTagsWindow()
-        {
+        static MultiTagsWindow() {
             TagDatabase.EditorTagDatabaseGetter = () => Database;
             TagDatabase.OnOpenMultiTagsWindow   = () => GetWindow();
 
@@ -110,7 +109,6 @@ namespace EnhancedEditor.Editor
             titleContent.image = EditorGUIUtility.FindTexture("FilterByLabel");
             createTagGUI.image = EditorGUIUtility.FindTexture("CreateAddNew");
 
-            UpdateDatabase();
             RefreshTags();
         }
 
@@ -265,6 +263,10 @@ namespace EnhancedEditor.Editor
                 CreateTagWindow _window = GetWindow<CreateTagWindow>("Create a new Tag", new Vector2(350f, 70f));
                 _window.tagName = "NewTag";
                 _window.holder  = _holder;
+
+                if (_holder != null) {
+                    _window.tagColor = _holder.DefaultColor;
+                }
 
                 return _window;
             }

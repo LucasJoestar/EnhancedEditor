@@ -4286,9 +4286,7 @@ namespace EnhancedEditor.Editor {
                 _menu.AddSeparator(string.Empty);
                 RegisterTagHolder(0);
             }
-
-
-
+            
             // Additional menu utilities.
             _menu.AddSeparator(string.Empty);
             _menu.AddItem(createTagGUI, false, () => {

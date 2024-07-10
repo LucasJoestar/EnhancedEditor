@@ -18,12 +18,16 @@ namespace EnhancedEditor {
     [CreateAssetMenu(fileName = "TAG_TagHolder", menuName = InternalUtility.MenuPath + "Tag Holder", order = InternalUtility.MenuOrder)]
     public sealed class TagHolder : ScriptableObject {
         #region Global Members
-        [SerializeField, Enhanced, ReadOnly] private int id = 157496;
+        private const int DefaultId = 157496;
+        
+        [SerializeField, Enhanced, ReadOnly] private int id = DefaultId;
 
         [Section("Tag Holder")]
 
-        [SerializeField] public string Name    = "Tag Holder";
-        [SerializeField] public TagData[] Tags = new TagData[0];
+        [SerializeField] public string Name         = "Tag Holder";
+        [SerializeField] public Color DefaultColor  = TagData.DefaultColor.Get();
+
+        [SerializeField] public TagData[] Tags      = new TagData[0];
 
         // -----------------------
 
@@ -41,7 +45,10 @@ namespace EnhancedEditor {
         // Editor
         // -------------------------------------------
 
-        private void Awake() {
+        private void OnValidate() {
+            if (Application.isPlaying)
+                return;
+
             // Clear content if duplicate.
             foreach (TagHolder _holder in TagDatabase.Database.holders) {
                 if ((_holder != this) && (_holder.id == id)) {

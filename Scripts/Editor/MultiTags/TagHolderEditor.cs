@@ -45,7 +45,11 @@ namespace EnhancedEditor.Editor {
                 // Standard properties.
                 serializedObject.Update();
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("id"));
+
+                EditorGUILayout.Space(10f);
+
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("Name"));
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("DefaultColor"));
                 serializedObject.ApplyModifiedProperties();
 
                 GUILayout.Space(10f);
