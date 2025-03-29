@@ -3949,18 +3949,9 @@ namespace EnhancedEditor.Editor {
             using (var _scope = new EditorGUI.PropertyScope(Rect.zero, _label, _property)) {
                 Rect _fieldPosition = EditorGUI.PrefixLabel(_position, _label);
                 Rect _temp = new Rect(_fieldPosition);
+                Rect _addPosition = _temp;
 
-                // Add tag button.
-                if (DrawTagGroupAddButton(_fieldPosition, ref _temp, tagGroupContent, out long _tagID)) {
-                    int _index = _tagGroup.arraySize;
-                    _tagGroup.InsertArrayElementAtIndex(_index);
-
-                    SerializedProperty _tagProperty = _tagGroup.GetArrayElementAtIndex(_index);
-                    _tagProperty.Next(true);
-
-                    _tagProperty.longValue = _tagID;
-                    UpdateArraySize();
-                }
+                GetTagGroupAddButtonPosition(_fieldPosition, ref _temp);
 
                 // Draw each tag in the group.
                 for (int _i = 0; _i < _tagGroup.arraySize; _i++) {
@@ -3997,6 +3988,18 @@ namespace EnhancedEditor.Editor {
                 // Remove undesired content.
                 for (int _i = _tagGroup.arraySize; _i < tagGroupContent.Count; _i++) {
                     tagGroupContent[_i] = null;
+                }
+
+                // Add button.
+                if (DrawTagGroupAddButton(_fieldPosition, ref _addPosition, tagGroupContent, out long _tagID)) {
+                    int _index = _tagGroup.arraySize;
+                    _tagGroup.InsertArrayElementAtIndex(_index);
+
+                    SerializedProperty _tagProperty = _tagGroup.GetArrayElementAtIndex(_index);
+                    _tagProperty.Next(true);
+
+                    _tagProperty.longValue = _tagID;
+                    UpdateArraySize();
                 }
 
                 // Only display the tag selection menu after all the group content has been registered.
@@ -4151,20 +4154,14 @@ namespace EnhancedEditor.Editor {
         }
 
         private static bool DrawTagGroupAddButton(Rect _totalPosition, ref Rect _temp, List<TagData> _groupContent, out long _tagID) {
-            _temp.y -= 1f;
-            _temp.width = EnhancedEditorGUIUtility.OlStyleSize;
-            _temp = GetGUIPosition(_totalPosition, _temp);
-
-            int _id = EnhancedEditorGUIUtility.GetControlID(FocusType.Keyboard, _temp);
+            Rect _buttonPosition = GetTagGroupAddButtonPosition(_totalPosition, ref _temp);
+            int _id = EnhancedEditorGUIUtility.GetControlID(FocusType.Keyboard, _buttonPosition);
 
             // Add button.
-            if (GUI.Button(_temp, GUIContent.none, EnhancedEditorStyles.OlPlus)) {
+            if (GUI.Button(_buttonPosition, GUIContent.none, EnhancedEditorStyles.OlPlus)) {
                 GenericMenu _menu = GetTagSelectionMenu(_id, null, _groupContent);
-                _menu.DropDown(_temp);
+                _menu.DropDown(_buttonPosition);
             }
-
-            _temp.y += 1f;
-            _temp.x += _temp.width + 5f;
 
             // Get selected tag from menu.
             if (GetSelectedTag(_id, out Tag _tag)) {
@@ -4174,6 +4171,19 @@ namespace EnhancedEditor.Editor {
 
             _tagID = -1;
             return false;
+        }
+
+        private static Rect GetTagGroupAddButtonPosition(Rect _totalPosition, ref Rect _temp) {
+            _temp.y -= 1f;
+            _temp.width = EnhancedEditorGUIUtility.OlStyleSize;
+            _temp = GetGUIPosition(_totalPosition, _temp);
+
+            Rect _buttonPosition = new Rect(_temp);
+
+            _temp.y += 1f;
+            _temp.x += _temp.width + 5f;
+
+            return _buttonPosition;
         }
 
         internal static float GetTagGroupExtraHeight(Rect _position, SerializedProperty _property, GUIContent _label) {
@@ -4286,8 +4296,12 @@ namespace EnhancedEditor.Editor {
                 _menu.AddSeparator(string.Empty);
                 RegisterTagHolder(0);
             }
-            
+
             // Additional menu utilities.
+            _menu.AddSeparator(string.Empty);
+
+            RegisterTag(TagData.UnknownTag, string.Empty);
+
             _menu.AddSeparator(string.Empty);
             _menu.AddItem(createTagGUI, false, () => {
                 MultiTagsWindow.CreateTagWindow.GetWindow();
@@ -5255,7 +5269,14 @@ namespace EnhancedEditor.Editor {
         private static readonly FieldInfo drawerFieldInfo =      typeof(PropertyDrawer).GetField("m_FieldInfo", FieldFlags);
 
         private static readonly Dictionary<string, DrawerInfos> drawers = new Dictionary<string, DrawerInfos>();
-        private static readonly object[] getDrawerTypeParameters = new object[1];
+        private static readonly object[] getDrawerTypeParameters =
+            #if UNITY_2023_3_OR_NEWER
+            new object[3] { null, null, false };
+            #elif UNITY_2022_3_23_OR_NEWER
+            new object[2] { null, false };
+            #else
+            new object[1];
+            #endif
 
         // -----------------------
 

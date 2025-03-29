@@ -46,7 +46,7 @@ namespace EnhancedEditor {
         // -------------------------------------------
 
         private void OnValidate() {
-            if (Application.isPlaying)
+            if (Application.isPlaying || (this == TagDatabase.Database.GetHolderAt(0)))
                 return;
 
             // Clear content if duplicate.
@@ -56,6 +56,8 @@ namespace EnhancedEditor {
                     id   = EnhancedUtility.GenerateGUID();
                     Tags = new TagData[0];
                     Name = "Tag Holder";
+
+                    this.LogErrorMessage("Duplicate - reset values");
                     break;
                 }
             }
@@ -182,7 +184,11 @@ namespace EnhancedEditor {
         /// </summary>
         internal void RecordChanges() {
             #if UNITY_EDITOR
-            Undo.RegisterCompleteObjectUndo(this, "Tag Holder changes");
+            try
+            {
+                Undo.RegisterCompleteObjectUndo(this, "Tag Holder changes");
+            }
+            catch (ArgumentNullException) { }
             #endif
         }
 

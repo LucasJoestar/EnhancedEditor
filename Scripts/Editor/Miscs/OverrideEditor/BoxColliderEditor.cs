@@ -62,6 +62,7 @@ namespace EnhancedEditor.Editor {
         #endregion
 
         #region Editor Content
+        private static readonly GUIContent resetCenterGUI = new GUIContent(" Adjust Center", "Adjust this collider position and reset its center.");
         private static readonly Type editorType = typeof(UnityEditor.Editor).Assembly.GetType("UnityEditor.BoxColliderEditor");
         private static Data data = new Data();
 
@@ -83,6 +84,22 @@ namespace EnhancedEditor.Editor {
 
             // Save load properties.
             SaveLoadButtonGUILayout();
+
+            // Adjust center button.
+            if ((target is BoxCollider _collider) && (_collider.center != Vector3.zero)) {
+                Rect position = EditorGUILayout.GetControlRect(true, 20f);
+                position.xMin = position.xMax - SaveValueButtonWidth;
+
+                if (EnhancedEditorGUI.IconDropShadowButton(position, resetCenterGUI)) {
+
+                    foreach (Object _target in targets) {
+                        if (_target is BoxCollider _box) {
+                            SceneDesignerUtility.AdjustBoxCenter(_box);
+                        }
+                    }
+                }
+            }
+
             colliderEditor.OnInspectorGUI();
         }
 

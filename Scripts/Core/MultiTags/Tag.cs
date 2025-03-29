@@ -26,6 +26,7 @@ namespace EnhancedEditor {
         /// You can use the <see cref="TagDatabase"/> to get informations about existing tags and their id.
         /// </summary>
         public long ID {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             readonly get { return id; }
             set {
                 id   = value;
@@ -147,6 +148,7 @@ namespace EnhancedEditor {
         /// </summary>
         /// <param name="_tag">The <see cref="Tag"/> to check.</param>
         /// <returns>True if this <see cref="Tag"/> matches the another given tag, false otherwise.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly bool Equals(Tag _tag) {
             return id == _tag.id;
         }

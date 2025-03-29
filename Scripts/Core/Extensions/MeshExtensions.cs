@@ -26,6 +26,9 @@ namespace EnhancedEditor {
                 return -1;
             }
 
+            if (_triangleIndex == -1)
+                return -1;
+
             int _count = 0;
             for (int i = 0; i < _mesh.subMeshCount; i++) {
 

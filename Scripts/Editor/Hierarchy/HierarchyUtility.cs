@@ -31,7 +31,7 @@ namespace EnhancedEditor.Editor {
             Object _first = _objects[0];
             bool _isAsset = AssetDatabase.Contains(_first);
 
-            Action<string, string, int> _delegate = _isAsset ? RenameAsset : Rename;
+            Action<string, string, string, string, int> _delegate = _isAsset ? RenameAsset : Rename;
             RenameObjectWindow.GetWindow(_first.name, _delegate);
 
             if (_isAsset) {
@@ -40,16 +40,16 @@ namespace EnhancedEditor.Editor {
 
             // ----- Local Methods ----- \\
 
-            void Rename(string _name, string _numberFormat, int _decimalCount) {
+            void Rename(string _name, string _toReplace, string _replaceBy, string _numberFormat, int _decimalCount) {
                 Undo.RecordObjects(_objects, "Rename object(s)");
 
                 // Multiple rename.
                 for (int i = 0; i < _objects.Length; i++) {
-                    _objects[i].name = GetName(i, _name, _numberFormat, _decimalCount);
+                    _objects[i].name = GetName(i, _name, _toReplace, _replaceBy, _numberFormat, _decimalCount);
                 }
             }
 
-            void RenameAsset(string _name, string _numberFormat, int _decimalCount) {
+            void RenameAsset(string _name, string _toReplace, string _replaceBy, string _numberFormat, int _decimalCount) {
                 Undo.RecordObjects(_objects, "Rename object(s)");
 
                 // Multiple rename.
@@ -60,19 +60,24 @@ namespace EnhancedEditor.Editor {
                     if (string.IsNullOrEmpty(_path))
                         continue;
 
-                    string _message = AssetDatabase.RenameAsset(_path, GetName(i, _name, _numberFormat, _decimalCount));
+                    string _message = AssetDatabase.RenameAsset(_path, GetName(i, _name, _toReplace, _replaceBy, _numberFormat, _decimalCount));
                     if (!string.IsNullOrEmpty(_message)) {
                         Debug.LogError(_message);
                     }
                 }
             }
 
-            string GetName(int _index, string _name, string _numberFormat, int _decimalCount) {
+            string GetName(int _index, string _name, string _toReplace, string _replaceBy, string _numberFormat, int _decimalCount) {
                 if (_objects.Length == 1) {
                     return _name;
                 }
 
-                return _objects[_index].name = $"{_name}{string.Format(_numberFormat, (_index + 1).ToStringX(_decimalCount))}";
+                Object _object = _objects[_index];
+                if (!string.IsNullOrEmpty(_toReplace) && !string.IsNullOrEmpty(_replaceBy)) {
+                    _name = _object.name.Replace(_toReplace, _replaceBy);
+                }
+
+                return _object.name = $"{_name}{string.Format(_numberFormat, (_index + 1).ToStringX(_decimalCount))}";
             }
         }
 
@@ -131,11 +136,11 @@ namespace EnhancedEditor.Editor {
             /// used to rename an existing tag in the project.
             /// </summary>
             /// <returns><see cref="RenameObjectWindow"/> instance on screen.</returns>
-            public static RenameObjectWindow GetWindow(string _name, Action<string, string, int> _callback) {
+            public static RenameObjectWindow GetWindow(string _name, Action<string, string, string, string, int> _callback) {
                 RenameObjectWindow _window = GetWindow<RenameObjectWindow>(true, "Rename Object(s)", true);
 
                 _window.minSize = _window.maxSize
-                                = new Vector2(325f, 70f);
+                                = new Vector2(325f, 95f);
 
                 _window.objectName = _name;
                 _window.callback = _callback;
@@ -148,23 +153,27 @@ namespace EnhancedEditor.Editor {
             // Window GUI
             // -------------------------------------------
 
-            private const char SpecialChar  = '#';
+            private const char SpecialChar   = '#';
 
-            private const float PrefixWidth = 40f;
-            private const float NameWidth   = 150f;
-            private const float FormatWidth = 130f;
+            private const float PrefixWidth  = 40f;
+            private const float NameWidth    = 150f;
+            private const float FormatWidth  = 100f;
+            private const float ReplaceWidth = 125f;
 
             private const string UndoRecordTitle    = "Name change(s)";
             private const string EmptyTagMessage    = "Name cannot be null or empty";
             private const string TooltipMessage     = "Customize the count format where \"#\" is the object identifier";
 
-            private static readonly GUIContent nameGUI   = new GUIContent("Name:");
-            private static readonly GUIContent renameGUI = new GUIContent("OK", "Rename selected object(s).");
+            private static readonly GUIContent nameGUI    = new GUIContent("Name:");
+            private static readonly GUIContent replaceGUI = new GUIContent("Replace:");
+            private static readonly GUIContent renameGUI  = new GUIContent("OK", "Rename selected object(s).");
 
-            private string objectName      = "NameMe";
-            private string separatorFormat = $" ({SpecialChar})";
+            private string objectName       = "NameMe";
+            private string toReplace        = string.Empty;
+            private string replaceBy        = string.Empty;
+            private string separatorFormat  = $" ({SpecialChar})";
 
-            private Action<string, string, int> callback = null;
+            private Action<string, string, string, string, int> callback = null;
 
             // -----------------------
 
@@ -176,18 +185,35 @@ namespace EnhancedEditor.Editor {
                 EditorGUI.LabelField(_position, nameGUI);
 
                 // Name.
-                _position.x    += 50f;
+                _position.x    += 60f;
                 _position.width = NameWidth;
                 objectName      = EditorGUI.TextField(_position, objectName);
 
-                // Color.
-                _position.xMin += _position.width + 10f;
+                // Format.
+                _position.xMin += _position.width + 5f;
                 _position.width = FormatWidth;
                 separatorFormat = EditorGUI.TextField(_position, separatorFormat);
 
+                // Replace.
+                _position = new Rect() {
+                    x = 5f,
+                    y = _position.y + _position.height + EditorGUIUtility.standardVerticalSpacing,
+                    width = position.width - 10f,
+                    height = EditorGUIUtility.singleLineHeight
+                };
+
+                EditorGUI.LabelField(_position, replaceGUI);
+
+                _position.x += 60f;
+                _position.width = ReplaceWidth;
+                toReplace = EditorGUI.TextField(_position, toReplace);
+
+                // Format.
+                _position.x += _position.width + 5f;
+                replaceBy = EditorGUI.TextField(_position, replaceBy);
+
                 // Empty management.
-                string _value = objectName.Trim();
-                if (string.IsNullOrEmpty(_value)) {
+                if (string.IsNullOrEmpty(objectName.Trim()) && (string.IsNullOrEmpty(toReplace.Trim()) || string.IsNullOrEmpty(replaceBy.Trim()))) {
 
                     _position = new Rect() {
                         x = 5f,
@@ -234,7 +260,7 @@ namespace EnhancedEditor.Editor {
                         separatorFormat = separatorFormat.Remove(_index, _decimalCount - 1);
                     }
 
-                    callback?.Invoke(objectName, separatorFormat.Replace(SpecialChar.ToString(), "{0}"), _decimalCount);
+                    callback?.Invoke(objectName, toReplace, replaceBy, separatorFormat.Replace(SpecialChar.ToString(), "{0}"), _decimalCount);
                     Close();
                 }
             }

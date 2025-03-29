@@ -25,14 +25,14 @@ namespace EnhancedEditor {
         /// <summary>
         /// All <see cref="Tag"/> defined in this group.
         /// </summary>
-        public Tag[] Tags = new Tag[] { };
+        public List<Tag> Tags = new List<Tag>();
 
         /// <summary>
         /// Total amount of <see cref="Tag"/> defined in this group.
         /// </summary>
         public int Count {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get { return Tags.Length; }
+            get { return Tags.Count; }
         }
 
         // -------------------------------------------
@@ -44,8 +44,8 @@ namespace EnhancedEditor {
 
         /// <param name="_tags">All <see cref="Tag"/> to encapsulate in this group.</param>
         /// <inheritdoc cref="TagGroup()"/>
-        public TagGroup(Tag[] _tags) {
-            Tags = _tags;
+        public TagGroup(ICollection<Tag> _tags) {
+            Tags.AddRange(_tags);
         }
         #endregion
 
@@ -65,7 +65,17 @@ namespace EnhancedEditor {
         /// <param name="_tag">Tag to add.</param>
         public void AddTag(Tag _tag) {
             if (!Contains(_tag)) {
-                ArrayUtility.Add(ref Tags, _tag);
+                Tags.Add(_tag);
+            }
+        }
+
+        /// <summary>
+        /// Adds multiple <see cref="Tag"/> into this group.
+        /// </summary>
+        /// <param name="_tags">Tags to add.</param>
+        public void AddTags(TagGroup _tags) {
+            for (int i = _tags.Count; i-- > 0;) {
+                AddTag(_tags[i]);
             }
         }
 
@@ -73,10 +83,13 @@ namespace EnhancedEditor {
         /// Removes a <see cref="Tag"/> from this group.
         /// </summary>
         /// <param name="_tag">Tag to remove.</param>
-        public void RemoveTag(Tag _tag) {
+        public bool RemoveTag(Tag _tag) {
             if (Contains(_tag, out int _index)) {
-                ArrayUtility.RemoveAt(ref Tags, _index);
+                Tags.RemoveAt(_index);
+                return true;
             }
+
+            return false;
         }
 
         /// <summary>
@@ -84,7 +97,8 @@ namespace EnhancedEditor {
         /// </summary>
         /// <param name="_group">Group to copy the tags from.</param>
         public void SetTags(TagGroup _group) {
-            Tags = _group.Tags;
+            Tags.Clear();
+            Tags.AddRange(_group.Tags);
         }
         #endregion
 
@@ -106,10 +120,10 @@ namespace EnhancedEditor {
         /// <param name="_index">Index of the matching tag in group.</param>
         /// <returns>True if the group contains the specified tag, false otherwise.</returns>
         public bool Contains(Tag _tag, out int _index) {
-            int _length = Tags.Length;
+            ref List<Tag> _span = ref Tags;
+            for (int _i = _span.Count; _i-- > 0;) {
 
-            for (int _i = 0; _i < _length; _i++) {
-                if (Tags[_i] == _tag) {
+                if (_span[_i].Equals(_tag)) {
                     _index = _i;
                     return true;
                 }
@@ -125,10 +139,11 @@ namespace EnhancedEditor {
         /// <param name="_tags">All tags to check.</param>
         /// <returns>True if this group contains all given tags, false otherwise.</returns>
         public bool ContainsAll(Tag[] _tags) {
-            int _length = _tags.Length;
+            if (Tags.Count == 0)
+                return false;
 
-            for (int _i = 0; _i < _length; _i++) {
-                if (!Contains(_tags[_i])) {
+            for (int i = _tags.Length; i-- > 0;) {
+                if (!Contains(_tags[i])) {
                     return false;
                 }
             }
@@ -142,15 +157,20 @@ namespace EnhancedEditor {
         /// <param name="_group">Group to check content.</param>
         /// <returns>True if this group contain any of the other group tag, false otherwise.</returns>
         public bool ContainsAny(TagGroup _group, bool validIfEmpty = false) {
-            if (validIfEmpty && ((Count == 0) || _group.Count == 0))
+            ref List<Tag> _span = ref _group.Tags;
+            int count = _span.Count;
+
+            if (validIfEmpty && (count == 0) || (_group.Count == 0))
                 return true;
 
-            foreach (Tag _tag in _group.Tags) {
-                if (Contains(_tag)) {
-                    return true;
+            if (Tags.Count != 0) {
+                for (int i = count; i-- > 0;) {
+                    if (Contains(_span[i])) {
+                        return true;
+                    }
                 }
             }
-
+                
             return false;
         }
 
@@ -160,13 +180,49 @@ namespace EnhancedEditor {
         /// <param name="_group">Group to check the tags.</param>
         /// <returns>True if this group contains all tags of the other given group, false otherwise.</returns>
         public bool ContainsAll(TagGroup _group) {
-            foreach (Tag _tag in _group.Tags) {
-                if (!Contains(_tag)) {
+            if (Tags.Count == 0)
+                return false;
+
+            ref List<Tag> _span = ref _group.Tags;
+            for (int i = _span.Count; i-- > 0;) {
+                if (!Contains(_span[i])) {
                     return false;
                 }
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Get the total amount of tags containted in both this <see cref="TagGroup"/> and another <see cref="TagGroup"/>.
+        /// </summary>
+        /// <param name="_other">Other <see cref="TagGroup"/> to compare to this one.</param>
+        /// <returns>Total count of tags contained in both groups.</returns>
+        public int GetSimilarTagCount(TagGroup _other) {
+            ref List<Tag> _span = ref Tags;
+            int _count = 0;
+
+            for (int i = _span.Count; i-- > 0;) {
+                if (_other.Contains(_span[i])) {
+                    _count++;
+                }
+            }
+
+            return _count;
+        }
+
+        /// <inheritdoc cref="GetSimilarTagCount(TagGroup)"/>
+        public int GetSimilarTagCount(List<Tag> _other) {
+            ref List<Tag> _span = ref Tags;
+            int _count = 0;
+
+            for (int i = _span.Count; i-- > 0;) {
+                if (_other.Contains(_span[i])) {
+                    _count++;
+                }
+            }
+
+            return _count;
         }
 
         /// <summary>
@@ -176,21 +232,25 @@ namespace EnhancedEditor {
         /// <br/> Using a <see cref="List{T}"/> allows to return a direct reference of the cached value instead of allocating a new array.
         /// Please copy its content to a new collection if you intend to modify it.</returns>
         public List<TagData> GetData() {
-            data.Resize(Tags.Length);
+            ref List<Tag> _span = ref Tags;
+            int _count = _span.Count;
+
+            List<TagData> _dataSpan = data;
+            _dataSpan.Resize(_count);
 
             // Update data with all tag cached values.
-            for (int i = Tags.Length; i-- > 0;) {
-                data[i] = Tags[i].GetData();
+            for (int i = _count; i-- > 0;) {
+                _dataSpan[i] = _span[i].GetData();
             }
 
-            return data;
+            return _dataSpan;
         }
 
         /// <summary>
         /// Sorts all tags in this group by their name.
         /// </summary>
         public void SortTagsByName() {
-            Array.Sort(Tags, (a, b) => {
+            Tags.Sort((a, b) => {
                 return a.GetData().CompareNameTo(b.GetData());
             });
         }

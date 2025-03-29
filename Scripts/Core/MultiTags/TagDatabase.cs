@@ -103,7 +103,6 @@ namespace EnhancedEditor {
         private void OnEnable() {
             // Default holder.
             if (defaultHolder == null) {
-
                 defaultHolder = CreateInstance<TagHolder>();
                 defaultHolder.Name = "<Default>";
             }
@@ -111,8 +110,8 @@ namespace EnhancedEditor {
             #if UNITY_EDITOR
             // On object creation, get all existing Unity tags.
             if ((counter == 0) && (defaultHolder.Tags.Length == 0)) {
-                string[] _tags = InternalEditorUtility.tags;
 
+                string[] _tags = InternalEditorUtility.tags;
                 foreach (string _tag in _tags) {
                     CreateTag(_tag);
                 }
@@ -121,6 +120,7 @@ namespace EnhancedEditor {
 
             // Holder init.
             if (tags.Length != 0) {
+                defaultHolder.Name = "<Default>";
                 defaultHolder.Tags = tags;
                 SaveChanges();
             }
@@ -366,8 +366,13 @@ namespace EnhancedEditor {
                 return _tag;
 
             RecordChanges();
-            
+
             // Increase counter first, so all tags id will be above 0 (used to determine non-null default tags).
+            long _highestId = GetHighestTagId();
+            if (_highestId > counter) {
+                counter = _highestId;
+            }
+
             counter++;
 
             TagData _data = new TagData(counter, _name, _color);
@@ -424,8 +429,7 @@ namespace EnhancedEditor {
         // Internal
         // -------------------------------------------
 
-        private void UpdateDefaultTags() {
-        }
+        private void UpdateDefaultTags() { }
         #endregion
 
         // ===== Utility ===== \\
@@ -476,6 +480,26 @@ namespace EnhancedEditor {
             for (int i = HolderCount; i-- > 0;) {
                 GetHolderAt(i).SortTagsByName();
             }
+        }
+
+        /// <summary>
+        /// Get the highest id assigned to a tag in the database.
+        /// </summary>
+        public long GetHighestTagId() {
+            long _id = -1;
+            for (int i = 0; i < HolderCount; i++) {
+
+                TagHolder _holder = GetHolderAt(i);
+                for (int j = 0; j < _holder.Count; j++) {
+
+                    long _tagId = _holder.Tags[j].ID;
+                    if (_tagId > _id) {
+                        _id = _tagId;
+                    }
+                }
+            }
+
+            return _id;
         }
         #endregion
 

@@ -151,8 +151,8 @@ namespace EnhancedEditor {
         /// <param name="_gameObject">This <see cref="GameObject"/> instance.</param>
         /// <param name="_searchComponent">Found matching component (null if none).</param>
         /// <returns>True if the component could successfully be found, false otherwise.</returns>
-        public static bool TryGetComponentInParent<T>(this GameObject _gameObject, out T _searchComponent) {
-            _searchComponent = _gameObject.GetComponentInParent<T>();
+        public static bool TryGetComponentInParent<T>(this GameObject _gameObject, out T _searchComponent, bool _includeInactive = false) {
+            _searchComponent = _gameObject.GetComponentInParent<T>(_includeInactive);
             return _searchComponent is not null;
         }
 
@@ -163,8 +163,8 @@ namespace EnhancedEditor {
         /// <param name="_gameObject">This <see cref="GameObject"/> instance.</param>
         /// <param name="_searchComponent">Found matching component (null if none).</param>
         /// <returns>True if the component could successfully be found, false otherwise.</returns>
-        public static bool TryGetComponentInChildren<T>(this GameObject _gameObject, out T _searchComponent) {
-            _searchComponent = _gameObject.GetComponentInChildren<T>();
+        public static bool TryGetComponentInChildren<T>(this GameObject _gameObject, out T _searchComponent, bool _includeInactive = false) {
+            _searchComponent = _gameObject.GetComponentInChildren<T>(_includeInactive);
             return _searchComponent is not null;
         }
 
@@ -199,11 +199,17 @@ namespace EnhancedEditor {
         /// <param name="_gameObject"><see cref="GameObject"/> instance to set layer.</param>
         /// <param name="_layer">Layer to assign.</param>
         public static void SetLayer(this GameObject _gameObject, int _layer) {
+            SetLayer(_gameObject.transform, _gameObject, _layer);
 
-            _gameObject.layer = _layer;
+            // ----- Local Method ----- \\
 
-            foreach (Transform _child in _gameObject.transform) {
-                SetLayer(_child.gameObject, _layer);
+            void SetLayer(Transform _transform, GameObject _gameObject, int _layer) {
+                _gameObject.layer = _layer;
+
+                for (int i = _transform.childCount; i-- > 0;) {
+                    Transform _child = _transform.GetChild(i);
+                    SetLayer(_child, _child.gameObject, _layer);
+                }
             }
         }
         #endregion

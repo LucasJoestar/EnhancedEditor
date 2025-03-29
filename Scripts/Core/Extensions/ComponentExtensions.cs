@@ -56,15 +56,15 @@ namespace EnhancedEditor {
         /// <param name="_component">This <see cref="Component"/> instance.</param>
         /// <inheritdoc cref="GameObjectExtensions.TryGetComponentInParent"/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool TryGetComponentInParent<T>(this Component _component, out T _searchComponent) {
-            return _component.gameObject.TryGetComponentInParent(out _searchComponent);
+        public static bool TryGetComponentInParent<T>(this Component _component, out T _searchComponent, bool _includeInactive = false) {
+            return _component.gameObject.TryGetComponentInParent(out _searchComponent, _includeInactive);
         }
 
         /// <param name="_component">This <see cref="Component"/> instance.</param>
         /// <inheritdoc cref="GameObjectExtensions.TryGetComponentInChildren"/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool TryGetComponentInChildren<T>(this Component _component, out T _searchComponent) {
-            return _component.gameObject.TryGetComponentInChildren(out _searchComponent);
+        public static bool TryGetComponentInChildren<T>(this Component _component, out T _searchComponent, bool _includeInactive = false) {
+            return _component.gameObject.TryGetComponentInChildren(out _searchComponent, _includeInactive);
         }
 
         #if !UNITY_2019_2_OR_NEWER
