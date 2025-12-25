@@ -10,8 +10,7 @@ using UnityEngine;
 
 namespace EnhancedEditor.Editor {
     /// <summary>
-    /// Allows you to draw your own extension controls on the main editor toolbar.
-    /// <br/>Extensions can be drawn whether on the left or on the right side of the play mode buttons.
+    /// Allows you to add your own command when performing a context click on the scene view window.
     /// <para/>
     /// The methods must be static, with a <see cref="SceneView"/>, a <see cref="GenericMenu"/> and a <see cref="RaycastHit"/> as arguments.
     /// </summary>

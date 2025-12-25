@@ -421,7 +421,7 @@ namespace EnhancedEditor.Editor {
         }
 
         private void DrawSceneBackground(Rect _position, SceneWrapper _scene, int _index) {
-            EnhancedEditorGUI.BackgroundLine(_position, _scene.IsSelected, _index, selectedColor, peerColor);
+            EnhancedEditorGUI.BackgroundLine(_position, _index, _scene.IsSelected, selectedColor, peerColor);
         }
 
         private void DrawBuildScene(Rect _position, int _index) {
@@ -1035,7 +1035,7 @@ namespace EnhancedEditor.Editor {
 
                 // Background color.
                 bool _isSelected = _build == _selectedBuild;
-                EnhancedEditorGUI.BackgroundLine(_position, _isSelected, _index, selectedColor, peerColor);
+                EnhancedEditorGUI.BackgroundLine(_position, _index, _isSelected, selectedColor, peerColor);
 
                 _index++;
 
@@ -1381,7 +1381,7 @@ namespace EnhancedEditor.Editor {
                 Rect _position = GetSectionElementPosition();
 
                 // Background color.
-                EnhancedEditorGUI.BackgroundLine(_position, _symbol.IsSelected, _index, selectedColor, peerColor);
+                EnhancedEditorGUI.BackgroundLine(_position, _index, _symbol.IsSelected, selectedColor, peerColor);
                 _index++;
 
                 // Symbol activation.

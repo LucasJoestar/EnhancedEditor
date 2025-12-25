@@ -465,7 +465,8 @@ namespace EnhancedEditor {
             }
 
             int _count = _content.Count;
-            int _listLength = Math.Min(_count, _list.Count);
+            int _currentCount = _list.Count;
+            int _listLength = Math.Min(_count, _currentCount);
 
             int i;
             for (i = 0; i < _listLength; i++) {
@@ -476,7 +477,7 @@ namespace EnhancedEditor {
                 _list.Add(_content[i]);
             }
 
-            int _difference = _listLength - _count;
+            int _difference = _currentCount - _count;
             if (_difference > 0) {
                 _list.RemoveRange(_count, _difference);
             }

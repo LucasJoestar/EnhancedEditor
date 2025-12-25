@@ -164,7 +164,7 @@ namespace EnhancedEditor.Editor {
         #endregion
 
         #region Toolbar GUI
-        #if EDITOR_TOOLBAR
+#if EDITOR_TOOLBAR
         private const float Space = 8f;
 
         private const float StandardButtonWidth = 32f;
@@ -228,16 +228,16 @@ namespace EnhancedEditor.Editor {
                 }
             }
         }
-        #endif
+#endif
         #endregion
 
         #region Scene View GUI
         #if SCENEVIEW_TOOLBAR
-        private const float ToolbarFoldoutSpeed = 2000000f;
-        private const float ToolbarHeight       = 25f;
-        private const float ToolbarFoldoutWidth = 25f;
-        private const float ToolbarHeaderWidth  = 97f;
-        private const float ToolbarRightSpace   = 60f;
+        public const float ToolbarFoldoutSpeed = 2000000f;
+        public const float ToolbarHeight       = 25f;
+        public const float ToolbarFoldoutWidth = 25f;
+        public const float ToolbarHeaderWidth  = 97f;
+        public const float ToolbarRightSpace   = 0f;
 
         private static readonly GUIContent unfolddGUI = new GUIContent(string.Empty, "Shows the Enhanced Editor toolbar.");
         private static readonly GUIContent headerGUI  = new GUIContent("Enhanced Toolbar");
@@ -402,6 +402,15 @@ namespace EnhancedEditor.Editor {
             #endif
 
             return _result;
+        }
+
+        /// <summary>
+        /// Draws a toggle.
+        /// </summary>
+        /// <returns>New toggle value.</returns>
+        /// <inheritdoc cref="DropdownToggle"/>
+        public static bool Toggle(bool toggle, GUIContent _label, params GUILayoutOption[] _options) {
+            return GUILayout.Toggle(toggle, _label, EditorStyles.toolbarButton, _options);
         }
 
         /// <summary>

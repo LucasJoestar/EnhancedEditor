@@ -72,7 +72,7 @@ namespace EnhancedEditor.Editor {
             GUILayout.Space(15f);
 
             // Core scene system.
-            EnhancedEditorGUILayout.UnderlinedLabel(coreSceneHeaderGUI);
+            EnhancedEditorGUILayout.UnderlinedLabel(coreSceneHeaderGUI, EditorStyles.boldLabel);
             GUILayout.Space(2f);
 
             EnhancedEditorGUILayout.SceneAssetField(coreSceneGUI, _setting.CoreScene);

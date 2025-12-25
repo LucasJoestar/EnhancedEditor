@@ -307,6 +307,14 @@ namespace EnhancedEditor {
             guid       = _guid;
             buildIndex = -2;
         }
+
+        /// <summary>
+        /// Get this scene unique and stable identifier.
+        /// </summary>
+        /// <returns>This scene identifier.</returns>
+        public int GetIdentifier() {
+            return BuildSceneDatabase.GetSceneIdentifier(BuildIndex);
+        }
         #endregion
     }
 }

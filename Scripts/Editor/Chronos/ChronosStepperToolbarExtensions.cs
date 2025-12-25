@@ -43,6 +43,8 @@ namespace EnhancedEditor.Editor {
             GUILayout.Space(25f);
             #endif
 
+            GUILayout.Space(5f);
+
             float _chronos = Time.timeScale;
             Styles.ButtonsGUI[1].text = (_chronos == 1f)
                                       ? string.Empty

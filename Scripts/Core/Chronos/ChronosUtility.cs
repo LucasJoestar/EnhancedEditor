@@ -79,7 +79,7 @@ namespace EnhancedEditor {
                 lastUpdateTime  = EditorApplication.timeSinceStartup;
             }
         }
-#endif
+        #endif
         #endregion
 
         #region Utility

@@ -384,7 +384,7 @@ namespace EnhancedEditor.Editor {
 
                 // Flag field.
                 using (var _scope = new EditorGUI.DisabledGroupScope(!_flag.IsSelectable)) {
-                    EnhancedEditorGUI.BackgroundLine(_position, _flag.IsSelected, _peerIndex++, selectedColor, peerColor);
+                    EnhancedEditorGUI.BackgroundLine(_position, _peerIndex++, _flag.IsSelected, selectedColor, peerColor);
                     EditorGUI.LabelField(_position, _flag.Flag.Name);
                 }
 
@@ -460,7 +460,7 @@ namespace EnhancedEditor.Editor {
                     Rect _position = GetFlagPosition();
 
                     // Flag field.
-                    EnhancedEditorGUI.BackgroundLine(_position, IsGroupFlagSelected(i), _peerIndex++, selectedColor, peerColor);
+                    EnhancedEditorGUI.BackgroundLine(_position, _peerIndex++, IsGroupFlagSelected(i), selectedColor, peerColor);
 
                     Rect _temp = new Rect(_position){
                         x = _position.x + 2f,

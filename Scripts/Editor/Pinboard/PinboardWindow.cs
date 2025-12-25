@@ -361,7 +361,7 @@ namespace EnhancedEditor.Editor {
                 if (_isHover) {
                     EditorGUI.DrawRect(_temp, highlightColor);
                 } else {
-                    EnhancedEditorGUI.BackgroundLine(_temp, _object.IsSelected, _index);
+                    EnhancedEditorGUI.BackgroundLine(_temp, _index, _object.IsSelected);
                 }
 
                 _index++;

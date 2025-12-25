@@ -84,6 +84,7 @@ namespace EnhancedEditor {
         // Database Content
         // -------------------------------------------
 
+        [SerializeField] internal Pair<int, int>[] sceneIdentifiers = new Pair<int, int>[0];
         [SerializeField] internal SceneBundle[] sceneBundles        = new SceneBundle[0];
         [SerializeField] internal string[] buildSceneGUIDs          = new string[0];
 
@@ -267,6 +268,34 @@ namespace EnhancedEditor {
 
         #region Utility
         /// <summary>
+        /// Get a stable identifier for a given <see cref="Scene"/>.
+        /// </summary>
+        /// <param name="_scene"><see cref="Scene"/> to get the associated identifier.</param>
+        /// <returns>Identifier for the given scene.</returns>
+        public static int GetSceneIdentifier(Scene _scene) {
+            int _buildIndex = _scene.buildIndex;
+            return GetSceneIdentifier(_buildIndex);
+        }
+
+        /// <summary>
+        /// Get a stable identifier for a given scene build index.
+        /// </summary>
+        /// <param name="_sceneBuildIndex">Scene build index to get the associated identifier.</param>
+        /// <returns>Identifier for the given scene build index.</returns>
+        public static int GetSceneIdentifier(int _sceneBuildIndex) {
+            ref var _ids = ref Database.sceneIdentifiers;
+
+            for (int i = _ids.Length; i-- > 0;) {
+                var _pair = _ids[i];
+
+                if (_pair.First == _sceneBuildIndex)
+                    return _pair.Second;
+            }
+
+            return 0;
+        }
+
+        /// <summary>
         /// Get the build index of a specific scene from its GUID.
         /// </summary>
         /// <param name="_sceneGUID">GUID of the scene to get associated build index.</param>
@@ -319,6 +348,11 @@ namespace EnhancedEditor {
                         _bundle.RegenerateGUID();
                     }
                 }
+            }
+
+            Array.Resize(ref sceneIdentifiers, _sceneGUIDS.Length);
+            for (int i = _sceneGUIDS.Length; i-- > 0;) {
+                sceneIdentifiers[i] = new Pair<int, int>(i, _sceneGUIDS[i].GetStableHashCode());
             }
 
             sceneBundles    = _sceneBundles;

@@ -352,15 +352,15 @@ namespace EnhancedEditor.Editor {
             // Display the objects as a list if the slider value is at its minimum, and as a grid otherwise.
             if (sizeSlider == SizeSliderMinValue) {
                 using (var _scope = new EditorGUI.IndentLevelScope()) {
-                    for (int _i = 0; _i < _objects.Length; _i++) {
-                        if (!_objects[_i].IsVisible)
+                    for (int i = 0; i < _objects.Length; i++) {
+                        if (!_objects[i].IsVisible)
                             continue;
 
-                        GameObject _object = _objects[_i].Object;
+                        GameObject _object = _objects[i].Object;
                         bool _isSelected = selectedObject == _object;
 
                         if (_isSelected)
-                            _selectedIndex = _i;
+                            _selectedIndex = i;
 
                         // Background color.
                         Rect _position = EditorGUILayout.GetControlRect(true, ListObjectSize, GUILayout.MaxWidth(position.width - 10f));
@@ -370,12 +370,12 @@ namespace EnhancedEditor.Editor {
                             width = position.width
                         };
 
-                        EnhancedEditorGUI.BackgroundLine(_temp, _isSelected, _i);
+                        EnhancedEditorGUI.BackgroundLine(_temp, i, _isSelected);
 
                         // Draw null object (first index) without any Icon.
-                        if (_i == 0) {
+                        if (i == 0) {
                             _position.xMin = 18f;
-                            EditorGUI.LabelField(_position, _objects[_i].Name);
+                            EditorGUI.LabelField(_position, _objects[i].Name);
                         } else {
                             // Don't store the object content as it can need multiple calls for Unity to properly load it, and is already cached internally.
                             EditorGUI.LabelField(_position, EditorGUIUtility.ObjectContent(_object, typeof(GameObject)));
@@ -385,8 +385,9 @@ namespace EnhancedEditor.Editor {
                         ObjectSelection(_temp, _object);
 
                         // Scroll focus.
-                        if (_focusSelection && _isSelected)
+                        if (_focusSelection && _isSelected) {
                             Focus(_temp);
+                        }
                     }
                 }
 

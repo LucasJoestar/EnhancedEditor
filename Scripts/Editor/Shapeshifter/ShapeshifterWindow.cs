@@ -221,7 +221,7 @@ namespace EnhancedEditor.Editor {
                     };
 
                     // Background line.
-                    EnhancedEditorGUI.BackgroundLine(_fullPosition, _type.IsSelected, _index, EnhancedEditorGUIUtility.GUISelectedColor, peerLineColor);
+                    EnhancedEditorGUI.BackgroundLine(_fullPosition, _index, _type.IsSelected, EnhancedEditorGUIUtility.GUISelectedColor, peerLineColor);
                     _index++;
 
                     _position.width -= EnhancedEditorGUIUtility.IconWidth + 10f;

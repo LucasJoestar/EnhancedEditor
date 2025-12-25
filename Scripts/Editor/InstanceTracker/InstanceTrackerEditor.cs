@@ -219,7 +219,7 @@ namespace EnhancedEditor.Editor {
 
                             bool _isSelected = selectedUnloadedTrack == _track;
 
-                            EnhancedEditorGUI.BackgroundLine(_position, _isSelected, _index, selectedColor, peerColor);
+                            EnhancedEditorGUI.BackgroundLine(_position, _index, _isSelected, selectedColor, peerColor);
                             Rect _temp = new Rect(_position)
                             {
                                 xMin = _position.x + 10f
@@ -333,8 +333,8 @@ namespace EnhancedEditor.Editor {
             // Selected track preview.
             if (isInstancePreview && _enabled) {
                 using (var _indentScope = new EditorGUI.IndentLevelScope()) {
-                    for (int _i = 0; _i < selectedUnloadedTrack.Instances.Length; _i++) {
-                        string _instance = selectedUnloadedTrack.Instances[_i];
+                    for (int i = 0; i < selectedUnloadedTrack.Instances.Length; i++) {
+                        string _instance = selectedUnloadedTrack.Instances[i];
                         _position = EditorGUILayout.GetControlRect();
 
                         Rect _temp = new Rect(_position)
@@ -343,7 +343,7 @@ namespace EnhancedEditor.Editor {
                             width = EditorGUIUtility.currentViewWidth
                         };
 
-                        EnhancedEditorGUI.BackgroundLine(_temp, false, _i);
+                        EnhancedEditorGUI.BackgroundLine(_temp, i, false);
                         EditorGUI.LabelField(_position, _instance);
                     }
                 }
@@ -391,7 +391,7 @@ namespace EnhancedEditor.Editor {
                 _position.x = 0f;
                 _position.width = EditorGUIUtility.currentViewWidth;
 
-                EnhancedEditorGUI.BackgroundLine(_position, _isSelected, _index);
+                EnhancedEditorGUI.BackgroundLine(_position, _index, _isSelected);
                 EditorGUI.LabelField(_temp, _instance.name);
 
                 _index++;

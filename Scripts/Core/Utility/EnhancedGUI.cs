@@ -73,6 +73,12 @@ namespace EnhancedEditor {
         /// </summary>
         public static readonly GUIBuffer<GUIStyle, TextAnchor> GUIStyleAlignment = new GUIBuffer<GUIStyle, TextAnchor>((s)    => s.alignment,
                                                                                                                        (s, a) => s.alignment = a, "Style Alignment");
+
+        /// <summary>
+        /// <see cref="GUIStyle.richText"/> buffer system. Use this to dynamically push / pop rich text for various <see cref="GUIStyle"/>.
+        /// </summary>
+        public static readonly GUIBuffer<GUIStyle, bool> GUIStyleRichText = new GUIBuffer<GUIStyle, bool>((s)    => s.richText,
+                                                                                                          (s, a) => s.richText = a, "Style Rich Text");
         #endregion
     }
 }

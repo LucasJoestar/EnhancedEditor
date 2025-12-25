@@ -356,7 +356,7 @@ namespace EnhancedEditor.Editor {
         private void DrawAnimatorClipEvents() {
             // Draw each events on an indented level.
             using (var _scope = new EditorGUI.IndentLevelScope()) {
-                for (int _i = 0; _i < events.Length; _i++) {
+                for (int i = 0; i < events.Length; i++) {
                     Rect _position = new Rect(EditorGUILayout.GetControlRect(false, EventHeight))
                     {
                         x = 0f,
@@ -364,19 +364,19 @@ namespace EnhancedEditor.Editor {
                     };
 
                     // Background color.
-                    bool _isSelected = selectedEvent == _i;
-                    EnhancedEditorGUI.BackgroundLine(_position, _isSelected, _i);
+                    bool _isSelected = selectedEvent == i;
+                    EnhancedEditorGUI.BackgroundLine(_position, i, _isSelected);
 
                     _position.y += 2f;
                     _position.height -= 2f;
 
                     // Draw event.
-                    AnimationEvent _animationEvent = events[_i];
+                    AnimationEvent _animationEvent = events[i];
                     DrawEventEditor(_position, _animationEvent);
 
                     // Select event on click.
                     if (EnhancedEditorGUIUtility.MouseDown(_position)) {
-                        selectedEvent = _i;
+                        selectedEvent = i;
                     }
                 }
 

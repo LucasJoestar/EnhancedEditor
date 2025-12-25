@@ -338,7 +338,7 @@ namespace EnhancedEditor.Editor {
 
                         // Background color.
                         bool _isSelected = _i == selectedIcon;
-                        EnhancedEditorGUI.BackgroundLine(_position, _isSelected, _index);
+                        EnhancedEditorGUI.BackgroundLine(_position, _index, _isSelected);
 
                         _index++;
                         Rect _temp = new Rect(_position)
@@ -354,8 +354,9 @@ namespace EnhancedEditor.Editor {
                         }
 
                         // Scroll focus.
-                        if (_focusIcon && _isSelected)
+                        if (_focusIcon && _isSelected) {
                             FocusIcon(_position);
+                        }
                     }
 
                     // Selection keys.

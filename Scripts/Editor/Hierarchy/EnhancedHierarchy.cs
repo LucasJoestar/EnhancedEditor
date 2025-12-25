@@ -237,7 +237,7 @@ namespace EnhancedEditor.Editor {
 
         private static readonly Color dragPreviewColor      = new Color(1f, 1f, 1f, .1f);
         private static readonly Color selectionColor        = new Color(1f, 1f, 1f, .15f);
-        private static readonly Color hoverColor            = new Color(1f, 1f, 1f, .07f);
+        private static readonly Color hoverColor            = EnhancedEditorGUIUtility.GUIHoverColor;
 
         private static readonly Color labelDefaultColor     = new Color(.8f, .8f, .8f, 1f);
         private static readonly Color labelPrefabColor      = new Color(.48f, .67f, .94f, 1f);

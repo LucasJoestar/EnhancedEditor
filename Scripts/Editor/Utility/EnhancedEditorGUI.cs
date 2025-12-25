@@ -5028,12 +5028,20 @@ namespace EnhancedEditor.Editor {
         // --- Various GUI Controls --- \\
 
         #region Background Line
-        /// <inheritdoc cref="BackgroundLine(Rect, bool, int, Color, Color)"/>
-        public static void BackgroundLine(Rect _position, bool _isSelected, int _index) {
+        /// <inheritdoc cref="BackgroundLine(Rect, int, bool, bool, Color, Color, Color)"/>
+        public static void BackgroundLine(Rect _position, int _index, bool _isSelected, bool canBeHover = false) {
             Color _selectedColor = EnhancedEditorGUIUtility.GUISelectedColor;
-            Color _peerColor = EnhancedEditorGUIUtility.GUIPeerLineColor;
+            Color _peerColor     = EnhancedEditorGUIUtility.GUIPeerLineColor;
+            Color _hoverColor    = EnhancedEditorGUIUtility.GUIHoverColor;
 
-            BackgroundLine(_position, _isSelected, _index, _selectedColor, _peerColor);
+            BackgroundLine(_position, _index, _isSelected, canBeHover, _selectedColor, _peerColor, _hoverColor);
+        }
+
+        /// <inheritdoc cref="BackgroundLine(Rect, int, bool, bool, Color, Color, Color)"/>
+        public static void BackgroundLine(Rect _position, int _index, bool _isSelected, Color _selectedColor, Color _peerColor) {
+            Color _hoverColor    = EnhancedEditorGUIUtility.GUIHoverColor;
+
+            BackgroundLine(_position, _index, _isSelected, false, _selectedColor, _peerColor, _hoverColor);
         }
 
         /// <summary>
@@ -5044,17 +5052,21 @@ namespace EnhancedEditor.Editor {
         /// </list>
         /// </summary>
         /// <param name="_position"><inheritdoc cref="DocumentationMethod(Rect, GUIContent)" path="/param[@name='_position']"/></param>
-        /// <param name="_isSelected">Is this line selected?</param>
         /// <param name="_index">Index of this line.</param>
+        /// <param name="_isSelected">Is this line selected?</param>
+        /// <param name="_canBeHover">Should mouse hover feedback be draw?</param>
         /// <param name="_selectedColor">Color used to draw selected lines.</param>
         /// <param name="_peerColor">Color used to draw peer lines.</param>
-        public static void BackgroundLine(Rect _position, bool _isSelected, int _index, Color _selectedColor, Color _peerColor) {
+        /// <param name="_hoverColor">Color used to draw mouse hover feedback.</param>
+        public static void BackgroundLine(Rect _position, int _index, bool _isSelected, bool _canBeHover, Color _selectedColor, Color _peerColor, Color _hoverColor) {
             if ((_index % 2) == 0) {
                 EditorGUI.DrawRect(_position, _peerColor);
             }
 
             if (_isSelected) {
                 EditorGUI.DrawRect(_position, _selectedColor);
+            } else if (_canBeHover && _position.Contains(Event.current.mousePosition)) {
+                EditorGUI.DrawRect(_position, _hoverColor);
             }
         }
         #endregion

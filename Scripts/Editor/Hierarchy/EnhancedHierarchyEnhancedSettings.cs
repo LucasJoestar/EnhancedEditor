@@ -11,7 +11,7 @@ using UnityEngine;
 
 namespace EnhancedEditor.Editor {
     /// <summary>
-    /// <see cref="EnhancedProjectBrowser"/>-related user settings.
+    /// <see cref="EnhancedHierarchy"/>-related user settings.
     /// </summary>
     [Serializable]
     public sealed class EnhancedHierarchyEnhancedSettings : EnhancedSettings {
@@ -24,8 +24,6 @@ namespace EnhancedEditor.Editor {
         }
 
         #region Global Members
-        [Space(5f)]
-
         [SerializeField, Enhanced, Tooltip("Toggles the Enhanced Hierarchy activation")]
         private bool enabled = false;
 
@@ -330,7 +328,7 @@ namespace EnhancedEditor.Editor {
 
         #region Editor Settings
         private static readonly GUIContent headerGUI = new GUIContent("Enhanced Hierarchy", "Enhanced hierarchy related settings.");
-        private static readonly GUIContent editGUI   = new GUIContent("Edit Hierarchy", "Opens the enhanced hierarchy specific settings panel.");
+        private static readonly GUIContent editGUI   = new GUIContent("Edit Hierarchy", "Opens the enhanced hierarchy specific settings panel");
 
         // -----------------------
 
@@ -340,7 +338,7 @@ namespace EnhancedEditor.Editor {
 
             GUILayout.Space(10f);
 
-            EnhancedEditorGUILayout.UnderlinedLabel(headerGUI);
+            EnhancedEditorGUILayout.UnderlinedLabel(headerGUI, EditorStyles.boldLabel);
             GUILayout.Space(5f);
 
             using (var _changeCheck = new EditorGUI.ChangeCheckScope()) {

@@ -93,6 +93,12 @@ namespace EnhancedEditor.Editor {
                                                                               new Color(.1f, .6f, 1f, .4f));
 
         /// <summary>
+        /// Color used to draw mouse hover feedback.
+        /// </summary>
+        public static readonly EditorColor GUIHoverColor = new EditorColor(new Color(1f, 1f, 1f, .07f),
+                                                                           new Color(1f, 1f, 1f, .07f));
+
+        /// <summary>
         /// Color used for various GUI feedback controls.
         /// </summary>
         public static readonly EditorColor GUIFeedbackColor = new EditorColor(new Color(.2f, .341f, .85f),

@@ -56,7 +56,7 @@ namespace EnhancedEditor.Editor {
         private static void DrawSettings() {
             GUILayout.Space(10f);
 
-            EnhancedEditorGUILayout.UnderlinedLabel(defaultModeGUI);
+            EnhancedEditorGUILayout.UnderlinedLabel(defaultModeGUI, EditorStyles.boldLabel);
             GUILayout.Space(5f);
 
             Settings.DefaultMode = (ScriptableObjectDrawerMode)EditorGUILayout.EnumFlagsField(Settings.DefaultMode);

@@ -152,7 +152,7 @@ namespace EnhancedEditor.Editor {
 
             GUILayout.Space(10f);
 
-            EnhancedEditorGUILayout.UnderlinedLabel(headerGUI);
+            EnhancedEditorGUILayout.UnderlinedLabel(headerGUI, EditorStyles.boldLabel);
             GUILayout.Space(5f);
 
             EnhancedEditorGUILayout.BlockField(settingsProperty, false);

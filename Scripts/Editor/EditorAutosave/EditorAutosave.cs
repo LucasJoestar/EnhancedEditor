@@ -126,7 +126,7 @@ namespace EnhancedEditor.Editor {
         #endregion
 
         #region Toolbar Extension
-        [EditorToolbarLeftExtension(Order = -25)]
+        [EditorToolbarRightExtension(Order = 50)]
         private static void OnGUI() {
             #if SCENEVIEW_TOOLBAR
             GUILayout.Space(10f);

@@ -564,12 +564,12 @@ namespace EnhancedEditor.Editor {
             bool _twoColumns = position.width > 500f;
 
             // Draw each element in group.
-            for (int _i = 0; _i < _length; _i++) {
-                if (!_isElementVisible(_index, _i))
+            for (int i = 0; i < _length; i++) {
+                if (!_isElementVisible(_index, i))
                     continue;
 
-                bool _isLoaded = _isElementLoaded(_index, _i);
-                _position = (_twoColumns && (_i % 2 == 1))
+                bool _isLoaded = _isElementLoaded(_index, i);
+                _position = (_twoColumns && (i % 2 == 1))
                           ? new Rect(_position) {
                               x = _position.xMax + 10f
                           }
@@ -580,7 +580,7 @@ namespace EnhancedEditor.Editor {
                 if (_twoColumns)
                     _position.width = (_groupPosition.width / 2f) - 5f;
 
-                EnhancedEditorGUI.BackgroundLine(_position, false, _twoColumns ? (_i / 2) : _i);
+                EnhancedEditorGUI.BackgroundLine(_position, _twoColumns ? (i / 2) : i, false);
 
                 // Element buttons and content.
                 Rect _temp = new Rect(_position)
@@ -598,7 +598,7 @@ namespace EnhancedEditor.Editor {
                 // Open button.
                 using (var _scope = EnhancedGUI.GUIColor.Scope(SuperColor.Cyan.Get(.9f))) {
                     if (GUI.Button(_temp, openGUI))
-                        _onOpen(_index, _i);
+                        _onOpen(_index, i);
                 }
 
                 _temp.x += _temp.width + 2f;
@@ -608,16 +608,16 @@ namespace EnhancedEditor.Editor {
                 using (var _scope = EnhancedGUI.GUIColor.Scope(_color)) {
                     if (_isLoaded) {
                         if (GUI.Button(_temp, closeGUI))
-                            _onClose(_index, _i);
+                            _onClose(_index, i);
                     } else if (GUI.Button(_temp, addGUI))
-                        _onAdd(_index, _i);
+                        _onAdd(_index, i);
                 }
 
                 _temp.x += _temp.width + 5f;
                 _temp.xMax = _position.xMax - (PlayButtonWidth + EnhancedEditorGUIUtility.IconWidth + 10f);
 
                 // Element name.
-                GUIContent _elementName = _getElementName(_index, _i);
+                GUIContent _elementName = _getElementName(_index, i);
                 EditorGUI.LabelField(_temp, _elementName);
 
                 _temp.x += _temp.width + EnhancedEditorGUIUtility.IconWidth + 5f;
@@ -625,7 +625,7 @@ namespace EnhancedEditor.Editor {
 
                 // Play button.
                 if (EnhancedEditorGUI.IconButton(_temp, playGUI))
-                    _onPlay(_index, _i);
+                    _onPlay(_index, i);
 
                 _temp.x -= 17f;
                 _temp.y += 2f;
@@ -634,7 +634,7 @@ namespace EnhancedEditor.Editor {
                 // Menu button.
                 if (EditorGUI.DropdownButton(_temp, GUIContent.none, FocusType.Passive, EnhancedEditorStyles.PaneOptions)) {
                     GenericMenu _menu = new GenericMenu();
-                    _onOptionsMenu(_index, _i, _menu);
+                    _onOptionsMenu(_index, i, _menu);
 
                     _menu.DropDown(_temp);
                 }

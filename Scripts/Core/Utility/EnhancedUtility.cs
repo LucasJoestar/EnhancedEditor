@@ -80,8 +80,8 @@ namespace EnhancedEditor {
             PropertyInfo[] _sourceProperties = _source.GetType().GetProperties(CopyObjectFlags);
             PropertyInfo[] _properties = _target.GetType().GetProperties(CopyObjectFlags);
 
-            for (int _i = 0; _i < _properties.Length; _i++) {
-                PropertyInfo _to = _properties[_i];
+            for (int i = 0; i < _properties.Length; i++) {
+                PropertyInfo _to = _properties[i];
 
                 if (!_to.CanWrite || !_to.CanRead || (!_doFullCopy && _to.IsDefined(typeof(PreventCopyAttribute), true))) {
                     continue;
@@ -91,8 +91,8 @@ namespace EnhancedEditor {
                     continue;
                 }
 
-                for (int _j = 0; _j < _sourceProperties.Length; _j++) {
-                    PropertyInfo _from = _sourceProperties[_i];
+                for (int j = 0; j < _sourceProperties.Length; j++) {
+                    PropertyInfo _from = _sourceProperties[j];
 
                     if (_from.CanRead && (_from.Name.Equals(_to.Name, StringComparison.Ordinal)) && _to.PropertyType.IsAssignableFrom(_from.PropertyType)) {
                         try {

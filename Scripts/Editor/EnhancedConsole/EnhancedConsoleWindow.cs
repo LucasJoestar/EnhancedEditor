@@ -1722,7 +1722,7 @@ namespace EnhancedEditor.Editor {
                 return true;
             }
 
-            EnhancedEditorGUI.BackgroundLine(_position, _log.IsSelected, _count);
+            EnhancedEditorGUI.BackgroundLine(_position, _count, _log.IsSelected);
 
             if (!_log.IsSelected && _filter.UseColor) {
                 EditorGUI.DrawRect(_position, _filter.Color);
@@ -1935,7 +1935,7 @@ namespace EnhancedEditor.Editor {
                             width = position.width
                         };
 
-                        EnhancedEditorGUI.BackgroundLine(_full, false, i + 1);
+                        EnhancedEditorGUI.BackgroundLine(_full, i + 1, false);
 
                         if (_call.Lines.Count != 0) {
                             GUIStyle _style = Styles.StackPreviewStyle;
@@ -1954,7 +1954,7 @@ namespace EnhancedEditor.Editor {
                                         width = position.width
                                     };
 
-                                    EnhancedEditorGUI.BackgroundLine(_full, true, 0);
+                                    EnhancedEditorGUI.BackgroundLine(_full, 0, true);
                                 }
 
                                 EditorGUI.LabelField(_position, _line.Line, _style);

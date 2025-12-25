@@ -50,6 +50,8 @@ namespace EnhancedEditor.Editor {
         private const BindingFlags ColorPickerFlags = BindingFlags.InvokeMethod | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
         private static readonly object[] colorPickerArgs = new object[] { null, null, null, true, false };
 
+        private static readonly Type colorPickerType = typeof(EditorWindow).Assembly.GetType("UnityEditor.ColorPicker");
+
         // -----------------------
 
         /// <summary>
@@ -61,8 +63,7 @@ namespace EnhancedEditor.Editor {
             colorPickerArgs[1] = _callback;
             colorPickerArgs[2] = _color;
 
-            EditorWindow _colorPicker = ScriptableObject.CreateInstance("ColorPicker") as EditorWindow;
-            _colorPicker.GetType().InvokeMember("Show", ColorPickerFlags, null, _colorPicker, colorPickerArgs);
+            colorPickerType.InvokeMember("Show", ColorPickerFlags, null, null, colorPickerArgs);
         }
         #endregion
 
