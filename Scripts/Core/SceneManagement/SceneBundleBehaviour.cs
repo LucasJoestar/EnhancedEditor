@@ -1,8 +1,8 @@
-// ===== Enhanced Editor - https://github.com/LucasJoestar/EnhancedEditor ===== //
+// ===== Enhanced Editor - https://github.com/TetsuoYoshima/EnhancedEditor ===== //
 // 
 // Notes:
 //
-// ============================================================================ //
+// ============================================================================= //
 
 using System;
 using UnityEngine.SceneManagement;

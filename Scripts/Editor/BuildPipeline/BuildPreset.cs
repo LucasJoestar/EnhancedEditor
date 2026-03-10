@@ -1,8 +1,8 @@
-// ===== Enhanced Editor - https://github.com/LucasJoestar/EnhancedEditor ===== //
+// ===== Enhanced Editor - https://github.com/TetsuoYoshima/EnhancedEditor ===== //
 // 
 // Notes:
 //
-// ============================================================================ //
+// ============================================================================= //
 
 using System;
 using UnityEditor;
@@ -64,7 +64,7 @@ namespace EnhancedEditor.Editor {
             if ((_other == null) || (_other is not BuildPreset _preset))
                 return 1;
 
-            return string.Compare(name, _preset.name, StringComparison.Ordinal);
+            return name.CompareOrdinal(_preset.name);
         }
         #endregion
     }

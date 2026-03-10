@@ -1,4 +1,4 @@
-// ===== Enhanced Editor - https://github.com/LucasJoestar/EnhancedEditor ===== //
+// ===== Enhanced Editor - https://github.com/TetsuoYoshima/EnhancedEditor ===== //
 // 
 // Notes:
 //
@@ -7,7 +7,7 @@
 //  https://github.com/Unity-Technologies/UnityCsReference/blob/master/Editor/Mono/ObjectListLocalGroup.cs
 //  https://github.com/Unity-Technologies/UnityCsReference/blob/master/Editor/Mono/GUI/EditorCache.cs
 //
-// ============================================================================ //
+// ============================================================================= //
 
 using System;
 using System.Collections.Generic;

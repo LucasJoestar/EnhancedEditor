@@ -1,8 +1,8 @@
-﻿// ===== Enhanced Editor - https://github.com/LucasJoestar/EnhancedEditor ===== //
+﻿// ===== Enhanced Editor - https://github.com/TetsuoYoshima/EnhancedEditor ===== //
 // 
 // Notes:
 //
-// ============================================================================ //
+// ============================================================================= //
 
 using System;
 using System.Collections.Generic;
@@ -19,7 +19,7 @@ namespace EnhancedEditor {
     /// <see cref="ScriptableObject"/> database containing all <see cref="TagData"/> in the project.
     /// </summary>
     [NonEditable("Please use the Multi-Tags window to edit the project tags.")]
-    public sealed class TagDatabase : ScriptableSettings {
+    public sealed class TagDatabase : ScriptableSettings, IPreprocessCallback {
         #region Global Members
         private static TagDatabase database = null;
 
@@ -73,7 +73,7 @@ namespace EnhancedEditor {
         [SerializeField, SerializeReference] internal TagHolder defaultHolder = null;
         [SerializeField] private TagData[] tags = new TagData[0];
 
-        [SerializeField] internal TagHolder[] holders = new TagHolder[0];
+        [SerializeField] internal List<TagHolder> holders = new List<TagHolder>();
         [SerializeField] internal long counter        = 0;
 
         // -----------------------
@@ -82,7 +82,7 @@ namespace EnhancedEditor {
         /// Total amount of <see cref="TagHolder"/> in the project.
         /// </summary>
         public int HolderCount {
-            get { return holders.Length + 1; }
+            get { return holders.Count + 1; }
         }
 
         /// <summary>
@@ -432,6 +432,26 @@ namespace EnhancedEditor {
         #endregion
 
         // ===== Utility ===== \\
+
+        #region Database
+        /// <summary>
+        /// Set all <see cref="TagHolder"/> of this database.
+        /// </summary>
+        /// <param name="_holders">All <see cref="TagHolder"/> to include in this database.</param>
+        internal void SetDatabase(IList<TagHolder> _holders) {
+            holders.ReplaceBy(_holders);
+            holders.Sort((a, b) => a.Name.CompareOrdinal(b.Name));
+        }
+
+        // -------------------------------------------
+        // Preprocess
+        // -------------------------------------------
+
+        bool IPreprocessCallback.OnPreprocess() {
+            SetDatabase(PreprocessManager.Load<TagHolder>());
+            return true;
+        }
+        #endregion        
 
         #region Utility
         /// <summary>

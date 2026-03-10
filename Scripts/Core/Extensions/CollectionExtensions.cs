@@ -1,8 +1,8 @@
-// ===== Enhanced Editor - https://github.com/LucasJoestar/EnhancedEditor ===== //
+// ===== Enhanced Editor - https://github.com/TetsuoYoshima/EnhancedEditor ===== //
 // 
 // Notes:
 //
-// ============================================================================ //
+// ============================================================================= //
 
 using System;
 using System.Collections.Generic;
@@ -453,10 +453,10 @@ namespace EnhancedEditor {
         }
 
         /// <summary>
-        /// Replaces the content of a list by another collection.
+        /// Replaces the content of this collection by another collection.
         /// </summary>
-        /// <param name="_list">List to replace content.</param>
-        /// <param name="_content">New content of this list.</param>
+        /// <param name="_list">Collection to replace content.</param>
+        /// <param name="_content">New content of this collection.</param>
         public static void ReplaceBy<T>(this List<T> _list, IList<T> _content) {
 
             if (_content == null) {
@@ -484,10 +484,10 @@ namespace EnhancedEditor {
         }
 
         /// <summary>
-        /// Replaces the content of a list by a single element.
+        /// Replaces the content of this collection by a single element.
         /// </summary>
-        /// <param name="_list">List to replace content.</param>
-        /// <param name="_content">New single element of this list.</param>
+        /// <param name="_list">Collection to replace content.</param>
+        /// <param name="_content">New single element of this collection.</param>
         public static void ReplaceBy<T>(this List<T> _list, T _content) {
 
             int _count = _list.Count;
@@ -501,6 +501,51 @@ namespace EnhancedEditor {
 
             if (_count != 1) {
                 _list.RemoveRange(1, _count - 1);
+            }
+        }
+
+        /// <summary>
+        /// Replaces the content of this collection by another collection of a base type.
+        /// </summary>
+        /// <inheritdoc cref="ReplaceBy"/>
+        public static void ReplaceByGeneric<T, U>(this List<T> _list, IList<U> _content) where T : class, U {
+
+            if (_content == null) {
+                _list.Clear();
+                return;
+            }
+
+            int _count = _content.Count;
+            int _currentCount = _list.Count;
+            int _listLength = Math.Min(_count, _currentCount);
+
+            int i;
+            for (i = 0; i < _listLength; i++) {
+                _list[i] = _content[i] as T;
+            }
+
+            for (i = _listLength; i < _count; i++) {
+                _list.Add(_content[i] as T);
+            }
+
+            int _difference = _currentCount - _count;
+            if (_difference > 0) {
+                _list.RemoveRange(_count, _difference);
+            }
+        }
+
+        /// <summary>
+        /// Adds the content of a given collection of a base type to this collection.
+        /// </summary>
+        /// <param name="_list">Collection to add content to.</param>
+        /// <param name="_content">Content to add to this collection.</param>
+        public static void AddRangeGeneric<T, U>(this List<T> _list, IList<U> _content) where T : class, U {
+
+            if (_content == null)
+                return;
+
+            for (int i = _content.Count; i-- > 0;) {
+                _list.Add(_content[i] as T);
             }
         }
 
@@ -573,6 +618,42 @@ namespace EnhancedEditor {
         #endregion
 
         #region Utility
+        /// <summary>
+        /// Get if the content of a given collection strictly matches the content of another collection.
+        /// </summary>
+        /// <typeparam name="T">Collection element type.</typeparam>
+        /// <param name="_array">The array to compare content.</param>
+        /// <param name="_other">The other collection to compare content.</param>
+        /// <returns>True if both collection content are equal, false otherwise.</returns>
+        public static bool Equals<T>(this T[] _array, IList<T> _other) {
+
+            int _count = _array.Length;
+            if (_count != _other.Count)
+                return false;
+
+            for (int i = 0; i < _count; i++) {
+                if (!EqualityUtility.Equals(_array[i], _other[i], true))
+                    return false;
+            }
+
+            return true;
+        }
+
+        /// <inheritdoc cref="Equals{T}(T[], IList{T})"/>
+        public static bool Equals<T>(this List<T> _list, IList<T> _other) {
+
+            int _count = _list.Count;
+            if (_count != _other.Count)
+                return false;
+
+            for (int i = 0; i < _count; i++) {
+                if (!EqualityUtility.Equals(_list[i], _other[i], true))
+                    return false;
+            }
+
+            return true;
+        }
+
         /// <summary>
         /// Finds a specific element within this array.
         /// </summary>

@@ -1,10 +1,11 @@
-// ===== Enhanced Editor - https://github.com/LucasJoestar/EnhancedEditor ===== //
+// ===== Enhanced Editor - https://github.com/TetsuoYoshima/EnhancedEditor ===== //
 // 
 // Notes:
 //
-// ============================================================================ //
+// ============================================================================= //
 
 using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 
@@ -14,7 +15,7 @@ namespace EnhancedEditor {
     /// <see cref="ScriptableObject"/> database containing all <see cref="TagData"/> in the project.
     /// </summary>
     [NonEditable("This data is sensitive and should not be manipulated manually.")]
-    public sealed class FlagDatabase : ScriptableSettings {
+    public sealed class FlagDatabase : ScriptableSettings, IPreprocessCallback {
         #region Global Members
         private static FlagDatabase database = null;
 
@@ -63,12 +64,12 @@ namespace EnhancedEditor {
         // Database Content
         // -------------------------------------------
 
-        [SerializeField] internal FlagHolder[] holders = new FlagHolder[0];
+        [SerializeField] internal List<FlagHolder> holders = new List<FlagHolder>();
 
         /// <summary>
         /// All <see cref="FlagHolder"/> defined in the project.
         /// </summary>
-        public FlagHolder[] Holders {
+        public List<FlagHolder> Holders {
             get { return holders; }
         }
 
@@ -77,7 +78,7 @@ namespace EnhancedEditor {
         /// </summary>
         public int Count {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get { return holders.Length; }
+            get { return holders.Count; }
         }
         #endregion
 
@@ -93,12 +94,31 @@ namespace EnhancedEditor {
         /// </summary>
         /// <param name="_resetPersistent">If true, also resets game flags marked as 'persistent'.</param>
         public void ResetFlags(bool _resetPersistent = false) {
-            ref FlagHolder[] _holders = ref holders;
-            for (int i = _holders.Length; i-- > 0;) {
+            ref List<FlagHolder>  _holders = ref holders;
+            for (int i = _holders.Count; i-- > 0;) {
                 _holders[i].ResetFlags(_resetPersistent);
             }
         }
         #endregion
+
+        #region Database
+        /// <summary>
+        /// Set all <see cref="FlagHolder"/> of this database.
+        /// </summary>
+        /// <param name="_holders">All <see cref="FlagHolder"/> to include in this database.</param>
+        internal void SetDatabase(IList<FlagHolder> _holders) {
+            holders.ReplaceBy(_holders);
+        }
+
+        // -------------------------------------------
+        // Preprocess
+        // -------------------------------------------
+
+        bool IPreprocessCallback.OnPreprocess() {
+            SetDatabase(PreprocessManager.Load<FlagHolder>());
+            return true;
+        }
+        #endregion        
 
         #region Utility
         /// <param name="_name"><inheritdoc cref="SetFlag(string, string, bool" path="/param[@name='_flagName']"/></param>
@@ -132,8 +152,8 @@ namespace EnhancedEditor {
         /// <inheritdoc cref="FindFlag(string, string, out Flag)"/>
         public bool FindFlag(string _name, out Flag _flag) {
 
-            ref FlagHolder[] _holders = ref holders;
-            int _length = _holders.Length;
+            ref List<FlagHolder> _holders = ref holders;
+            int _length = _holders.Count;
 
             for (int i = 0; i < _length; i++) {
                 if (_holders[i].FindFlag(_name, out _flag)) {
@@ -170,13 +190,13 @@ namespace EnhancedEditor {
         /// <returns>True if a <see cref="FlagHolder"/> with the given name could be successfully found, false otherwise.</returns>
         public bool FindHolder(string _name, out FlagHolder _holder) {
 
-            ref FlagHolder[] _holders = ref holders;
-            int _length = _holders.Length;
+            ref List<FlagHolder>  _holders = ref holders;
+            int _length = _holders.Count;
 
             for (int i = 0; i < _length; i++) {
                 FlagHolder _temp = _holders[i];
 
-                if (_temp.name.Equals(_name, StringComparison.Ordinal)) {
+                if (_temp.name.EqualOrdinal(_name)) {
                     _holder = _temp;
                     return true;
                 }

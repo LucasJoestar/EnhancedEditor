@@ -1,8 +1,8 @@
-﻿// ===== Enhanced Editor - https://github.com/LucasJoestar/EnhancedEditor ===== //
+﻿// ===== Enhanced Editor - https://github.com/TetsuoYoshima/EnhancedEditor ===== //
 // 
 // Notes:
 //
-// ============================================================================ //
+// ============================================================================= //
 
 using System.Diagnostics;
 using System.IO;
@@ -16,11 +16,11 @@ namespace EnhancedEditor.Editor {
     [InitializeOnLoad]
     public static partial class ScriptGenerator {
         #region Global Members
-        private const string ScriptGeneratorMenuContent1 = "// ===== Enhanced Editor - https://github.com/LucasJoestar/EnhancedEditor ===== //\n" +
+        private const string ScriptGeneratorMenuContent1 = "// ===== Enhanced Editor - https://github.com/TetsuoYoshima/EnhancedEditor ===== //\n" +
                                                            "//\n" +
                                                            "// Notes:\n" +
                                                            "//\n" +
-                                                           "// ============================================================================ //\n\n" +
+                                                           "// ============================================================================= //\n\n" +
                                                            "using UnityEditor;\n\n" +
                                                            "namespace EnhancedEditor.Editor\n{\n" +
                                                            "    public static partial class ScriptGenerator\n    {\n";

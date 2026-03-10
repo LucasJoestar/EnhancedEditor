@@ -1,8 +1,8 @@
-// ===== Enhanced Editor - https://github.com/LucasJoestar/EnhancedEditor ===== //
+// ===== Enhanced Editor - https://github.com/TetsuoYoshima/EnhancedEditor ===== //
 // 
 // Notes:
 //
-// ============================================================================ //
+// ============================================================================= //
 
 using System;
 using System.Runtime.CompilerServices;
@@ -118,7 +118,7 @@ namespace EnhancedEditor {
             for (int i = 0; i < _length; i++) {
                 Flag _temp = _flagSpan[i];
 
-                if (_temp.Name.Equals(_name, StringComparison.Ordinal)) {
+                if (_temp.Name.EqualOrdinal(_name)) {
                     _flag = _temp;
                     return true;
                 }
@@ -163,7 +163,7 @@ namespace EnhancedEditor {
 
         [ContextMenu("Sort by Name", false, 10)]
         private void Sort() {
-            Array.Sort(Flags, (a, b) => string.Compare(a.Name, b.Name, StringComparison.Ordinal));
+            Array.Sort(Flags, (a, b) => a.Name.CompareOrdinal(b.Name));
             EditorUtility.SetDirty(this);
         }
         #endif

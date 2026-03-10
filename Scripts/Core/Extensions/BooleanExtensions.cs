@@ -1,8 +1,8 @@
-// ===== Enhanced Editor - https://github.com/LucasJoestar/EnhancedEditor ===== //
+// ===== Enhanced Editor - https://github.com/TetsuoYoshima/EnhancedEditor ===== //
 // 
 // Notes:
 //
-// ============================================================================ //
+// ============================================================================= //
 
 using System.Runtime.CompilerServices;
 
@@ -23,10 +23,10 @@ namespace EnhancedEditor {
     public static class BooleanExtensions {
         #region Content
         /// <summary>
-        /// Get a boolean as a sign.
+        /// Get this <see cref="bool"/> as a sign.
         /// <br/> 1 if true, -1 otherwise.
         /// </summary>
-        /// <param name="boolean">Boolean to get sign from.</param>
+        /// <param name="_boolean">Boolean to get sign from.</param>
         /// <returns>Returns this boolean sign as 1 or -1.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int Sign(this bool _boolean) {
@@ -34,7 +34,7 @@ namespace EnhancedEditor {
         }
 
         /// <summary>
-        /// Get a boolean as a sign.
+        /// Get this <see cref="bool"/> as a sign.
         /// <br/> 1 if true, -1 otherwise.
         /// </summary>
         /// <param name="_boolean">Boolean to get sign from.</param>
@@ -42,6 +42,17 @@ namespace EnhancedEditor {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float Signf(this bool _boolean) {
             return _boolean ? 1f : -1f;
+        }
+
+        /// <summary>
+        /// Get this <see cref="bool"/> as an <see cref="int"/>.
+        /// <br/> 1 if true, 0 if false.
+        /// </summary>
+        /// <param name="_boolean">Value to convert.</param>
+        /// <returns>1 if the given value is True, 0 if False.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int ToInt(this bool _boolean) {
+            return _boolean ? 1 : 0;
         }
 
         /// <summary>

@@ -1,8 +1,8 @@
-// ===== Enhanced Editor - https://github.com/LucasJoestar/EnhancedEditor ===== //
+// ===== Enhanced Editor - https://github.com/TetsuoYoshima/EnhancedEditor ===== //
 // 
 // Notes:
 //
-// ============================================================================ //
+// ============================================================================= //
 
 using System;
 using System.IO;
@@ -13,6 +13,7 @@ using System.Text;
 using UnityEngine;
 
 using Object = UnityEngine.Object;
+using Random = UnityEngine.Random;
 
 namespace EnhancedEditor {
     /// <summary>
@@ -94,7 +95,7 @@ namespace EnhancedEditor {
                 for (int j = 0; j < _sourceProperties.Length; j++) {
                     PropertyInfo _from = _sourceProperties[j];
 
-                    if (_from.CanRead && (_from.Name.Equals(_to.Name, StringComparison.Ordinal)) && _to.PropertyType.IsAssignableFrom(_from.PropertyType)) {
+                    if (_from.CanRead && _from.Name.EqualOrdinal(_to.Name) && _to.PropertyType.IsAssignableFrom(_from.PropertyType)) {
                         try {
                             _to.SetValue(_target, _from.GetValue(_source));
                         } catch (Exception) { }
@@ -135,6 +136,15 @@ namespace EnhancedEditor {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int GenerateGUID() {
             return Guid.NewGuid().GetHashCode();
+        }
+
+        /// <summary>
+        /// Generates a new int GUID using the <see cref="Random"/> class.
+        /// </summary>
+        /// <returns>The generated random GUID.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int GenerateRandomGUID() {
+            return Random.Range(int.MinValue, int.MaxValue);
         }
 
         /// <summary>

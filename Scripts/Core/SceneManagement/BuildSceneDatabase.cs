@@ -1,8 +1,8 @@
-// ===== Enhanced Editor - https://github.com/LucasJoestar/EnhancedEditor ===== //
+// ===== Enhanced Editor - https://github.com/TetsuoYoshima/EnhancedEditor ===== //
 // 
 // Notes:
 //
-// ============================================================================ //
+// ============================================================================= //
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
 #define NON_BUILD_SCENES
@@ -140,7 +140,7 @@ namespace EnhancedEditor {
             for (int i = 0; i < _count; i++) {
                 _bundle = _span[i];
 
-                if (_bundle.name.Replace(SceneBundle.Prefix, string.Empty).Equals(_name, StringComparison.Ordinal)) {
+                if (_bundle.name.Replace(SceneBundle.Prefix, string.Empty).ContainsOrdinal(_name)) {
                     return true;
                 }
             }
@@ -268,6 +268,43 @@ namespace EnhancedEditor {
 
         #region Utility
         /// <summary>
+        /// Get the <see cref="Scene"/> build index associated with a given identifier.
+        /// </summary>
+        /// <param name="_identifier">Identifier to get the associated <see cref="Scene"/>.</param>
+        /// <param name="_sceneBuildIndex">Build index of the <see cref="Scene"/> associated with the given identifier (-1 if none).</param>
+        /// <returns>True if an associated <see cref="Scene"/> could be found, false otherwise.</returns>
+        public static bool GetSceneFromIdentifier(int _identifier, out int _sceneBuildIndex) {
+            ref var _ids = ref Database.sceneIdentifiers;
+
+            for (int i = _ids.Length; i-- > 0;) {
+                var _pair = _ids[i];
+
+                if (_pair.Second == _identifier) {
+                    _sceneBuildIndex = _pair.First;
+                    return true;
+                }
+            }
+
+            _sceneBuildIndex = -1;
+            return true;
+        }
+
+        /// <summary>
+        /// Get the <see cref="Scene"/> associated with a given identifier.
+        /// </summary>
+        /// <param name="_scene"><see cref="Scene"/> associated with the given identifier (default if none).</param>
+        /// <inheritdoc cref="GetSceneFromIdentifier(int, out int)"/>
+        public static bool GetSceneFromIdentifier(int _identifier, out Scene _scene) {
+            if (GetSceneFromIdentifier(_identifier, out int _buildIndex)) {
+                _scene = SceneManager.GetSceneByBuildIndex(_buildIndex);
+                return true;
+            }
+
+            _scene = default;
+            return false;
+        }
+
+        /// <summary>
         /// Get a stable identifier for a given <see cref="Scene"/>.
         /// </summary>
         /// <param name="_scene"><see cref="Scene"/> to get the associated identifier.</param>
@@ -315,7 +352,7 @@ namespace EnhancedEditor {
             for (int i = _span.Length; i-- > 0;) {
 
                 NonBuildScene _scene = _span[i];
-                if (string.Equals(_scene.GUID, _sceneGUID, StringComparison.Ordinal)) {
+                if (_scene.GUID.EqualOrdinal(_sceneGUID)) {
                     return _scene.Name;
                 }
             }
@@ -324,7 +361,9 @@ namespace EnhancedEditor {
             return string.Empty;
         }
 
-        // -----------------------
+        // -------------------------------------------
+        // Internal
+        // -------------------------------------------
 
         /// <summary>
         /// Is this scene the core game scene?

@@ -1,4 +1,4 @@
-// ===== Enhanced Editor - https://github.com/LucasJoestar/EnhancedEditor ===== //
+// ===== Enhanced Editor - https://github.com/TetsuoYoshima/EnhancedEditor ===== //
 // 
 // Notes:
 //
@@ -14,7 +14,7 @@
 //  https://github.com/Unity-Technologies/UnityCsReference/blob/master/External/MirroredPackageSources/com.unity.ui/Core/IMGUIContainer.cs
 //  https://github.com/Unity-Technologies/UnityCsReference/blob/master/External/MirroredPackageSources/com.unity.ui/Core/VisualElement.cs
 //
-// ============================================================================ //
+// ============================================================================= //
 
 #if UNITY_2021_1_OR_NEWER
 #define SCENEVIEW_TOOLBAR

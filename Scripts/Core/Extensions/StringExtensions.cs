@@ -1,9 +1,10 @@
-// ===== Enhanced Editor - https://github.com/LucasJoestar/EnhancedEditor ===== //
+// ===== Enhanced Editor - https://github.com/TetsuoYoshima/EnhancedEditor ===== //
 // 
 // Notes:
 //
-// ============================================================================ //
+// ============================================================================= //
 
+using System;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 
@@ -59,6 +60,43 @@ namespace EnhancedEditor {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string Unescape(this string _value) {
             return Regex.Unescape(_value);
+        }
+
+        // -------------------------------------------
+        // Ordinal
+        // -------------------------------------------
+
+        /// <summary>
+        /// Checks if this <see cref="string"/> value is similar to another one using an <see cref="StringComparison.Ordinal"/> comparison.
+        /// </summary>
+        /// <param name="_value">String value to check.</param>
+        /// <param name="_compare">Other string value to comapre to.</param>
+        /// <returns>True if both <see cref="string"/> are similar, false otehrwise.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool EqualOrdinal(this string _value, string _compare) {
+            return _value.Equals(_compare, StringComparison.Ordinal);
+        }
+
+        /// <summary>
+        /// Comapres two <see cref="string"/> values using an <see cref="StringComparison.Ordinal"/> comparison.
+        /// </summary>
+        /// <param name="_value">This string value to compare.</param>
+        /// <param name="_value">Other string value to compare.</param>
+        /// <returns>Comparison result.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int CompareOrdinal(this string _value, string _other) {
+            return string.Compare(_value, _other, StringComparison.Ordinal);
+        }
+
+        /// <summary>
+        /// Checks if this <see cref="string"/> value contains a given value using an <see cref="StringComparison.Ordinal"/> comparison.
+        /// </summary>
+        /// <param name="_value">String value to check.</param>
+        /// <param name="_other">Other string value to check if it is contained.</param>
+        /// <returns>True if the other <see cref="string"/> value is contained, false otehrwise.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool ContainsOrdinal(this string _value, string _other) {
+            return _value.Contains(_other, StringComparison.Ordinal);
         }
 
         // -------------------------------------------

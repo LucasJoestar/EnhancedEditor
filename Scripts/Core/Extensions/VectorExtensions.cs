@@ -1,8 +1,8 @@
-﻿// ===== Enhanced Editor - https://github.com/LucasJoestar/EnhancedEditor ===== //
+﻿// ===== Enhanced Editor - https://github.com/TetsuoYoshima/EnhancedEditor ===== //
 // 
 // Notes:
 //
-// ============================================================================ //
+// ============================================================================= //
 
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -15,14 +15,20 @@ namespace EnhancedEditor {
 	public static class VectorExtensions {
         #region Random
         /// <summary>
-        /// Get a random value between this vector X & Y components.
+        /// Get a random value between this vector X and Y components.
         /// </summary>
         /// <param name="_value">Vector to get random value from.</param>
-        /// <returns>Random value between this vector X & Y components.</returns>
+        /// <returns>Random value between this vector X and Y components.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float Random(this Vector2 _value) {
 			return UnityEngine.Random.Range(_value.x, _value.y);
 		}
+
+        /// <inheritdoc cref="Random(Vector2)"/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int Random(this Vector2Int _value) {
+            return UnityEngine.Random.Range(_value.x, _value.y + 1);
+        }
         #endregion
 
         #region Null Check

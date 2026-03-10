@@ -1,8 +1,8 @@
-// ===== Enhanced Editor - https://github.com/LucasJoestar/EnhancedEditor ===== //
+// ===== Enhanced Editor - https://github.com/TetsuoYoshima/EnhancedEditor ===== //
 // 
 // Notes:
 //
-// ============================================================================ //
+// ============================================================================= //
 
 using System;
 using System.Collections.Generic;
@@ -649,7 +649,7 @@ namespace EnhancedEditor.Editor {
                     int _logTypeIndex = i + 1;
 
                     while ((_logTypeIndex < _lines.Length) && !string.IsNullOrWhiteSpace(_lines[_logTypeIndex])) {
-                        if (_lines[_logTypeIndex].StartsWith(NativeLogTypeIndicator, StringComparison.Ordinal)) {
+                        if (_lines[_logTypeIndex].StartsWith(NativeLogTypeIndicator, Comparison)) {
                             int _typeIndex = _lines[_logTypeIndex].IndexOf(' ', NativeLogTypeIndicator.Length);
                             if (_typeIndex != -1) {
                                 string typeIndicator = _lines[_logTypeIndex].Substring(NativeLogTypeIndicator.Length,  _typeIndex - NativeLogTypeIndicator.Length);

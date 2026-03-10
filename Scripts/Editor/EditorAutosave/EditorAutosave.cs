@@ -1,8 +1,8 @@
-﻿// ===== Enhanced Editor - https://github.com/LucasJoestar/EnhancedEditor ===== //
+﻿// ===== Enhanced Editor - https://github.com/TetsuoYoshima/EnhancedEditor ===== //
 // 
 // Notes:
 //
-// ============================================================================ //
+// ============================================================================= //
 
 #if UNITY_2021_1_OR_NEWER
 #define SCENEVIEW_TOOLBAR

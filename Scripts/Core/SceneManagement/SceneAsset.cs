@@ -1,8 +1,8 @@
-// ===== Enhanced Editor - https://github.com/LucasJoestar/EnhancedEditor ===== //
+// ===== Enhanced Editor - https://github.com/TetsuoYoshima/EnhancedEditor ===== //
 // 
 // Notes:
 //
-// ============================================================================ //
+// ============================================================================= //
 
 using System;
 using System.IO;
@@ -287,7 +287,7 @@ namespace EnhancedEditor {
         /// <param name="_scene">The <see cref="SceneAsset"/> to check.</param>
         /// <returns>True if this <see cref="SceneAsset"/> matches the given scene, false otherwise.</returns>
         public bool Equals(SceneAsset _scene) {
-            return (_scene is not null) && guid.Equals(_scene.guid, StringComparison.Ordinal);
+            return (_scene is not null) && guid.EqualOrdinal(_scene.guid);
         }
 
         /// <summary>

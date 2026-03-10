@@ -1,8 +1,8 @@
-// ===== Enhanced Editor - https://github.com/LucasJoestar/EnhancedEditor ===== //
+// ===== Enhanced Editor - https://github.com/TetsuoYoshima/EnhancedEditor ===== //
 // 
 // Notes:
 //
-// ============================================================================ //
+// ============================================================================= //
 
 using System;
 using System.Collections.Generic;
@@ -10,8 +10,6 @@ using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.Scripting.APIUpdating;
-
-using Random = UnityEngine.Random;
 
 namespace EnhancedEditor.Editor {
     /// <summary>
@@ -82,7 +80,7 @@ namespace EnhancedEditor.Editor {
                     return 1f;
                 }
 
-                return Random.Range(scaleRange.x, scaleRange.y);
+                return scaleRange.Random();
             }
         }
 
@@ -95,7 +93,7 @@ namespace EnhancedEditor.Editor {
                     return Quaternion.identity;
                 }
 
-                return Quaternion.AngleAxis(Random.Range(rotationRange.x, rotationRange.y), Vector3.up);
+                return Quaternion.AngleAxis(rotationRange.Random(), Vector3.up);
             }
         }
 

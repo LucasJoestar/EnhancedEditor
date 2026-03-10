@@ -1,8 +1,8 @@
-// ===== Enhanced Editor - https://github.com/LucasJoestar/EnhancedEditor ===== //
+// ===== Enhanced Editor - https://github.com/TetsuoYoshima/EnhancedEditor ===== //
 // 
 // Notes:
 //
-// ============================================================================ //
+// ============================================================================= //
 
 using UnityEditor;
 using UnityEngine;
@@ -108,6 +108,12 @@ namespace EnhancedEditor.Editor {
         /// </summary>
         public static GUIStyle DropShadowCenteredLabel => GetStyle(dropShadowCenteredLabel);
         private static GUIStyle dropShadowCenteredLabel = null;
+
+        /// <summary>
+        /// Drop shadow label style with upper-left alignment.
+        /// </summary>
+        public static GUIStyle DropShadowLeftAlignedLabel => GetStyle(dropShadowLeftAlignedLabel);
+        private static GUIStyle dropShadowLeftAlignedLabel = null;
 
         /// <summary>
         /// Link label style.
@@ -280,9 +286,14 @@ namespace EnhancedEditor.Editor {
                 // Drop shadow label.
                 dropShadowLabel = new GUIStyle("PreOverlayLabel");
 
-                // Drop shaow centered label.
+                // Drop shadow centered label.
                 dropShadowCenteredLabel = new GUIStyle(dropShadowLabel) {
                     alignment = TextAnchor.MiddleCenter
+                };
+
+                // Drop shadow left aligned label.
+                dropShadowLeftAlignedLabel = new GUIStyle(dropShadowLabel) {
+                    alignment = TextAnchor.UpperLeft
                 };
 
                 // Link label.

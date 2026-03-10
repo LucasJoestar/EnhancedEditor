@@ -1,8 +1,8 @@
-// ===== Enhanced Editor - https://github.com/LucasJoestar/EnhancedEditor ===== //
+// ===== Enhanced Editor - https://github.com/TetsuoYoshima/EnhancedEditor ===== //
 // 
 // Notes:
 //
-// ============================================================================ //
+// ============================================================================= //
 
 using System;
 using System.Collections.Generic;
@@ -143,7 +143,7 @@ namespace EnhancedEditor {
 
         #region Comparer
         int IComparer<SerializedType<T>>.Compare(SerializedType<T> a, SerializedType<T> b) {
-			return string.Compare(a.typeName, b.typeName, StringComparison.Ordinal);
+			return a.typeName.CompareOrdinal(b.typeName);
 		}
 		#endregion
 

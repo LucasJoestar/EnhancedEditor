@@ -1,8 +1,8 @@
-// ===== Enhanced Editor - https://github.com/LucasJoestar/EnhancedEditor ===== //
+// ===== Enhanced Editor - https://github.com/TetsuoYoshima/EnhancedEditor ===== //
 // 
 // Notes:
 //
-// ============================================================================ //
+// ============================================================================= //
 
 #if UNITY_2021_1_OR_NEWER
 #define SCENEVIEW_TOOLBAR
@@ -63,7 +63,7 @@ namespace EnhancedEditor.Editor {
 
                     // Register new asset.
                     foreach (Asset _asset in Assets) {
-                        if (_asset.Path.Equals(_fullPath, StringComparison.Ordinal))
+                        if (_asset.Path.EqualOrdinal(_fullPath))
                             return;
                     }
 
@@ -75,7 +75,7 @@ namespace EnhancedEditor.Editor {
                 string _directory = _directories[_index];
                 foreach (Folder _folder in Folders) {
 
-                    if (_folder.Name.Equals(_directory, StringComparison.Ordinal)) {
+                    if (_folder.Name.EqualOrdinal(_directory)) {
                         _folder.RegisterAsset(_directories, _fullPath, _index + 1, _openFolders);
                         return;
                     }
@@ -152,7 +152,7 @@ namespace EnhancedEditor.Editor {
 
         #region Save Data
         [Serializable]
-        private class SavableData {
+        private class SaveableData {
             [Serializable]
             public class HistoryAsset {
                 public string AssetPath = string.Empty;
@@ -251,7 +251,7 @@ namespace EnhancedEditor.Editor {
         private const int HistoryMaxCount = 25;
         private const string SaveDataKey  = "SceneDesignerData";
 
-        private static readonly SavableData saveData = new SavableData();
+        private static readonly SaveableData saveData = new SaveableData();
         private static readonly List<Folder> roots   = new List<Folder>();
 
         private static GameObject selectedAsset = null;
@@ -1011,7 +1011,7 @@ namespace EnhancedEditor.Editor {
 
             // ----- Local Method ----- \\
 
-            void RegisterInHistory(List<SavableData.HistoryAsset> _history, int _maxCount) {
+            void RegisterInHistory(List<SaveableData.HistoryAsset> _history, int _maxCount) {
                 int _index = -1;
 
                 // Find index.
@@ -1026,7 +1026,7 @@ namespace EnhancedEditor.Editor {
                 // Register.
                 switch (_index) {
                     case -1:
-                        _history.Add(new SavableData.HistoryAsset(_assetPath, _category, _asset));
+                        _history.Add(new SaveableData.HistoryAsset(_assetPath, _category, _asset));
                         break;
 
                     default:
@@ -1304,7 +1304,7 @@ namespace EnhancedEditor.Editor {
             private int category = -1;
             int historyMax = 0;
 
-            private List<SavableData.HistoryAsset> History {
+            private List<SaveableData.HistoryAsset> History {
                 get { return saveData.Categories[category].History; }
             }
 

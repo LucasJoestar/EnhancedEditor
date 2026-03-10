@@ -1,10 +1,9 @@
-// ===== Enhanced Editor - https://github.com/LucasJoestar/EnhancedEditor ===== //
+// ===== Enhanced Editor - https://github.com/TetsuoYoshima/EnhancedEditor ===== //
 // 
 // Notes:
 //
-// ============================================================================ //
+// ============================================================================= //
 
-using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
@@ -31,9 +30,9 @@ namespace EnhancedEditor.Editor {
             for (int i = 0; i < _span.Count; i++) {
 
                 SerializedProperty _property = _span[i];
-                if (_property.displayName.Equals(triggerPropertyName, StringComparison.Ordinal)) {
+                if (_property.displayName.EqualOrdinal(triggerPropertyName)) {
                     _span.Move(i, 0);
-                } else if (_property.displayName.Equals(centerPropertyName, StringComparison.Ordinal)) {
+                } else if (_property.displayName.EqualOrdinal(centerPropertyName)) {
                     _span.Move(i, 2);
                 }
             }

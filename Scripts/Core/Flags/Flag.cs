@@ -1,8 +1,8 @@
-// ===== Enhanced Editor - https://github.com/LucasJoestar/EnhancedEditor ===== //
+// ===== Enhanced Editor - https://github.com/TetsuoYoshima/EnhancedEditor ===== //
 // 
 // Notes:
 //
-// ============================================================================ //
+// ============================================================================= //
 
 using System;
 using System.Runtime.CompilerServices;
@@ -21,11 +21,13 @@ namespace EnhancedEditor {
     [Serializable]
     public sealed class Flag {
         #region Global Members
-        [SerializeField] internal string name   = "\'New Flag\'";
-        [SerializeField] internal int guid      = EnhancedUtility.GenerateGUID();
+        [SerializeField] internal string name = "\'New Flag\'";
+        [SerializeField] internal int guid    = EnhancedUtility.GenerateGUID();
 
         [SerializeField] internal FlagHolder holder = null;
         [SerializeField] internal bool value        = false;
+
+        // -----------------------
 
         /// <summary>
         /// Unique GUID of this flag.
@@ -61,7 +63,7 @@ namespace EnhancedEditor {
                 #endif
 
                 #if DEVELOPMENT
-                Debug.Log($"Flag \'{Name.Bold().Color(SuperColor.Turquoise)}\' set to {value.ToString().ToUpper().Bold()}");
+                this.LogMessage($"Flag \'{Name.Bold().Color(SuperColor.Turquoise)}\' set to {value.ToString().ToUpper().Bold()}");
                 #endif
             }
         }
@@ -117,6 +119,19 @@ namespace EnhancedEditor {
         /// </summary>
         public void Invert() {
             Value = !value;
+        }
+        #endregion
+
+        #region Utility
+        public static readonly Comparison<Flag> GuidComparer = SortByGuid;
+
+        // -----------------------
+
+        /// <summary>
+        /// Sorts two <see cref="Flag"/> by their guid.
+        /// </summary>
+        public static int SortByGuid(Flag a, Flag b) {
+            return a.guid.CompareTo(b.guid);
         }
         #endregion
     }

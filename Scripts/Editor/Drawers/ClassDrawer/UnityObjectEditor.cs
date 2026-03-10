@@ -1,8 +1,8 @@
-// ===== Enhanced Editor - https://github.com/LucasJoestar/EnhancedEditor ===== //
+// ===== Enhanced Editor - https://github.com/TetsuoYoshima/EnhancedEditor ===== //
 // 
 // Notes:
 //
-// ============================================================================ //
+// ============================================================================= //
 
 using System;
 using System.Collections.Generic;
@@ -248,7 +248,7 @@ namespace EnhancedEditor.Editor {
 
                         // First property is script type, so display it as readonly.
                         SerializedProperty _property = _propertySpan[0];
-                        if (_property.propertyPath.Equals(ScriptPropertyName, StringComparison.Ordinal)) {
+                        if (_property.propertyPath.EqualOrdinal(ScriptPropertyName)) {
 
                             _startIndex++;
                             EnhancedEditorGUILayout.ReadonlyField(_property, true);
@@ -257,7 +257,7 @@ namespace EnhancedEditor.Editor {
                         if (_propertyCount > 2) {
                             _property = _propertySpan[1];
 
-                            if (_property.propertyPath.Equals(ChronosPropertyName, StringComparison.Ordinal)) {
+                            if (_property.propertyPath.EqualOrdinal(ChronosPropertyName)) {
                                 _startIndex++;
                                 EnhancedEditorGUILayout.ReadonlyField(_property, true);
                             }

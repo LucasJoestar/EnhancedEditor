@@ -1,4 +1,4 @@
-// ===== Enhanced Editor - https://github.com/LucasJoestar/EnhancedEditor ===== //
+// ===== Enhanced Editor - https://github.com/TetsuoYoshima/EnhancedEditor ===== //
 // 
 // Notes:
 //
@@ -19,7 +19,7 @@
 //
 //      https://docs.unity3d.com/Manual/script-Serialization-Custom.html
 //
-// ============================================================================ //
+// ============================================================================= //
 
 using System;
 using UnityEngine;

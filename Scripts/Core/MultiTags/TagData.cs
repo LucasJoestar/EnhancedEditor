@@ -1,8 +1,8 @@
-// ===== Enhanced Editor - https://github.com/LucasJoestar/EnhancedEditor ===== //
+// ===== Enhanced Editor - https://github.com/TetsuoYoshima/EnhancedEditor ===== //
 // 
 // Notes:
 //
-// ============================================================================ //
+// ============================================================================= //
 
 using System;
 using UnityEngine;
@@ -82,7 +82,7 @@ namespace EnhancedEditor {
         /// <param name="_tag">Tag to compare to this one.</param>
         /// <returns>Comparison value between the two names.</returns>
         public int CompareNameTo(TagData _tag) {
-            return string.Compare(name, _tag.name, StringComparison.Ordinal);
+            return name.CompareOrdinal(_tag.name);
         }
         #endregion
     }

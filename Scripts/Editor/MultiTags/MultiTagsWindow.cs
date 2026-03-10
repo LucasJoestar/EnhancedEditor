@@ -1,14 +1,11 @@
-// ===== Enhanced Editor - https://github.com/LucasJoestar/EnhancedEditor ===== //
+// ===== Enhanced Editor - https://github.com/TetsuoYoshima/EnhancedEditor ===== //
 // 
 // Notes:
 //
-// ============================================================================ //
+// ============================================================================= //
 
-using System;
 using System.Collections.Generic;
 using UnityEditor;
-using UnityEditor.Build;
-using UnityEditor.Build.Reporting;
 using UnityEditorInternal;
 using UnityEngine;
 
@@ -18,7 +15,7 @@ namespace EnhancedEditor.Editor
     /// Multi-Tags system editor window, used to manage all tags in the project.
     /// </summary>
     [InitializeOnLoad]
-    public sealed class MultiTagsWindow : EditorWindow, IPreprocessBuildWithReport {
+    public sealed class MultiTagsWindow : EditorWindow {
         #region Editor Database
         /// <summary>
         /// Auto-managed <see cref="ScriptableObject"/> resource for this project Multi-Tags database.
@@ -30,8 +27,6 @@ namespace EnhancedEditor.Editor
         /// </summary>
         public static TagDatabase Database => resource.GetResource();
 
-        int IOrderedCallback.callbackOrder => 999;
-
         // -------------------------------------------
         // Constructor(s)
         // -------------------------------------------
@@ -39,34 +34,14 @@ namespace EnhancedEditor.Editor
         static MultiTagsWindow() {
             TagDatabase.EditorTagDatabaseGetter = () => Database;
             TagDatabase.OnOpenMultiTagsWindow   = () => GetWindow();
-
-            EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
-            EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
         }
 
         // -------------------------------------------
-        // Internal
+        // Utility
         // -------------------------------------------
 
-        void IPreprocessBuildWithReport.OnPreprocessBuild(BuildReport _report) {
-            // Called just before a build is started.
-            UpdateDatabase();
-            AssetDatabase.SaveAssets();
-        }
-
-        private static void OnPlayModeStateChanged(PlayModeStateChange _state) {
-            if (_state == PlayModeStateChange.EnteredPlayMode) {
-                UpdateDatabase();
-            }
-        }
-
-        internal static void UpdateDatabase() {
-            // Register all holders in the database.
-            TagHolder[] _holders = EnhancedEditorUtility.LoadAssets<TagHolder>();
-            Array.Sort(_holders, (a, b) => a.Name.CompareTo(b.Name));
-
-            Database.holders = _holders;
-            EditorUtility.SetDirty(Database);
+        public static void UpdateDatabase() {
+            Database.SetDatabase(EnhancedEditorUtility.LoadAssets<TagHolder>());
         }
         #endregion
 

@@ -1,11 +1,11 @@
-﻿// ===== Enhanced Editor - https://github.com/LucasJoestar/EnhancedEditor ===== //
+﻿// ===== Enhanced Editor - https://github.com/TetsuoYoshima/EnhancedEditor ===== //
 // 
 // Notes:
 //
 //  https://github.com/Unity-Technologies/UnityCsReference/blob/master/Editor/Mono/EditorGUIUtility.cs
 //  https://github.com/Unity-Technologies/UnityCsReference/blob/master/Editor/Mono/EditorGUIUtility.bindings.cs
 //
-// ============================================================================ //
+// ============================================================================= //
 
 using System;
 using System.Collections.Generic;
@@ -598,7 +598,7 @@ namespace EnhancedEditor.Editor {
             // ----- Local Methods ----- \\
 
             int CompareByName(Icon a, Icon b) {
-                return string.Compare(a.Name, b.Name, StringComparison.Ordinal);
+                return a.Name.CompareOrdinal(b.Name);
             }
 
             int CompareBySize(Icon a, Icon b) {

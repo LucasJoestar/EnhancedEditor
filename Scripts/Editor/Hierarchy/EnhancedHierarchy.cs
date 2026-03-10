@@ -1,4 +1,4 @@
-// ===== Enhanced Editor - https://github.com/LucasJoestar/EnhancedEditor ===== //
+// ===== Enhanced Editor - https://github.com/TetsuoYoshima/EnhancedEditor ===== //
 // 
 // Notes:
 //
@@ -7,7 +7,7 @@
 //
 //  https://github.com/Unity-Technologies/UnityCsReference/blob/master/Editor/Mono/GUI/TreeView/TreeViewController.cs
 //
-// ============================================================================ //
+// ============================================================================= //
 
 #if UNITY_2021_1_OR_NEWER
 #define UNITY_2021

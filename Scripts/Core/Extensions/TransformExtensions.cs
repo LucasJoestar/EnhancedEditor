@@ -1,10 +1,9 @@
-// ===== Enhanced Editor - https://github.com/LucasJoestar/EnhancedEditor ===== //
+// ===== Enhanced Editor - https://github.com/TetsuoYoshima/EnhancedEditor ===== //
 // 
 // Notes:
 //
-// ============================================================================ //
+// ============================================================================= //
 
-using System;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 
@@ -79,15 +78,16 @@ namespace EnhancedEditor {
         /// <param name="_childName">Name of the child to find.</param>
         /// <param name="_child">Found matchinf child object.</param>
         /// <param name="_exactName">If true, checks for a child object with exactly the given name. Otherwise, checks if the given string is contained in the child name.</param>
+        /// <param name="_exactName">Recursively checks in all sub child transforms.</param>
         /// <returns>True if a matching child could be successfully found, false otherwise.</returns>
-        public static bool FindChildResursive(this Transform _transform, string _childName, out Transform _child, bool _exactName = true) {
+        public static bool FindChildResursive(this Transform _transform, string _childName, out Transform _child, bool _exactName = true, bool _recursive = true) {
 
             foreach (Transform _temp in _transform) {
 
                 // Exact name.
                 if (_exactName) {
 
-                    if (_temp.name.Equals(_childName, StringComparison.Ordinal)) {
+                    if (_temp.name.EqualOrdinal(_childName)) {
                         _child = _temp;
                         return true;
                     }
@@ -95,12 +95,12 @@ namespace EnhancedEditor {
                     continue;
                 }
 
-                if (_temp.name.ToLower().Contains(_childName.ToLower(), StringComparison.Ordinal)) {
+                if (_temp.name.ToLower().ContainsOrdinal(_childName.ToLower())) {
                     _child = _temp;
                     return true;
                 }
 
-                if (FindChildResursive(_temp, _childName, out _child, _exactName)) {
+                if (_recursive && FindChildResursive(_temp, _childName, out _child, _exactName)) {
                     return true;
                 }
             }

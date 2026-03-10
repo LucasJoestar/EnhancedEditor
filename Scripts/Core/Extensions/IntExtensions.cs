@@ -1,8 +1,8 @@
-// ===== Enhanced Editor - https://github.com/LucasJoestar/EnhancedEditor ===== //
+// ===== Enhanced Editor - https://github.com/TetsuoYoshima/EnhancedEditor ===== //
 // 
 // Notes:
 //
-// ============================================================================ //
+// ============================================================================= //
 
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -52,6 +52,16 @@ namespace EnhancedEditor {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector3Int ToVector3Int(this int _int) {
             return new Vector3Int(_int, _int, _int);
+        }
+
+        /// <summary>
+        /// Get this <see cref="int"/> as a <see cref="bool"/> value - True if superior to 0, False otherwise.
+        /// </summary>
+        /// <param name="_int">Value to convert.</param>
+        /// <returns>True if the given value is superior to 0, False otherwise</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool ToBool(this int _int) {
+            return _int > 0;
         }
 
         /// <summary>

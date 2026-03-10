@@ -1,8 +1,8 @@
-// ===== Enhanced Editor - https://github.com/LucasJoestar/EnhancedEditor ===== //
+// ===== Enhanced Editor - https://github.com/TetsuoYoshima/EnhancedEditor ===== //
 // 
 // Notes:
 //
-// ============================================================================ //
+// ============================================================================= //
 
 using System;
 using System.Collections.Generic;
@@ -26,6 +26,7 @@ namespace EnhancedEditor.Editor {
         private const string HeaderLabelFormat  = "{0} - [{1}]";
 
         private static readonly Dictionary<string, ReorderableList> lists = new Dictionary<string, ReorderableList>();
+        private static readonly Dictionary<string, List<float>> listElementHeight = new Dictionary<string, List<float>>();
         private static readonly GUIContent labelGUI = new GUIContent();
 
         // -----------------------
@@ -58,7 +59,19 @@ namespace EnhancedEditor.Editor {
 
                             // By default, the list does not draw property children, so force it.
                             elementHeightCallback = (int _index) => {
-                                float _height = EnhancedEditorGUI.GetEnhancedPropertyHeight(_array.GetArrayElementAtIndex(_index), _label, true) + ContentOffset;
+
+                                SerializedProperty _elementProperty = _array.GetArrayElementAtIndex(_index);
+
+                                string _propertyKey = EnhancedEditorUtility.GetSerializedPropertyID(_array);
+                                float _height;
+
+                                // Get cached height or default.
+                                if (listElementHeight.TryGetValue(_propertyKey, out List<float> _values) && (_values.Count > _index)) {
+                                    _height = _values[_index];
+                                } else {
+                                    _height = EnhancedEditorGUI.GetEnhancedPropertyHeight(_elementProperty, _label, true) + ContentOffset;
+                                }
+
                                 if (_index != (_array.arraySize - 1)) {
                                     _height += LineSpacing * 2f;
                                 }
@@ -72,9 +85,30 @@ namespace EnhancedEditor.Editor {
                                 using (var _scope = new EditorGUI.DisabledGroupScope(_isReadonly)) {
 
                                     SerializedProperty _elementProperty = _array.GetArrayElementAtIndex(_index);
-                                    labelGUI.text = _elementProperty.displayName;
+                                    var _infos = EnhancedEditorGUI.GetPropertyEditor(_elementProperty);
 
-                                    EnhancedEditorGUI.EnhancedPropertyField(_position, _elementProperty, labelGUI, true);
+                                    // If there is a custom drawer assigned, use it. Otherwise, display as a Block field and cache height.
+                                    if (_infos.State != 0) {
+
+                                        EnhancedEditorGUI.EnhancedPropertyField(_position, _elementProperty, labelGUI, true);
+
+                                    } else {
+
+                                        EnhancedEditorGUI.BlockField(_position, _elementProperty, GUIContent.none, out float _totalHeight, false);
+
+                                        string _propertyKey = EnhancedEditorUtility.GetSerializedPropertyID(_array);
+                                        if (!listElementHeight.TryGetValue(_propertyKey, out List<float> _values)) {
+
+                                            _values = new List<float>();
+                                            listElementHeight.Add(_propertyKey, _values);
+                                        }
+
+                                        while (_values.Count <= _index) {
+                                            _values.Add(0f);
+                                        }
+
+                                        _values[_index] = _totalHeight;
+                                    }
                                 }
 
                                 if (_index != (_array.arraySize - 1)) {

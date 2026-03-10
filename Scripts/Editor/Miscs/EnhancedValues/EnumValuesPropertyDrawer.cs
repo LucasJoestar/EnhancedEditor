@@ -1,8 +1,8 @@
-// ===== Enhanced Editor - https://github.com/LucasJoestar/EnhancedEditor ===== //
+// ===== Enhanced Editor - https://github.com/TetsuoYoshima/EnhancedEditor ===== //
 // 
 // Notes:
 //
-// ============================================================================ //
+// ============================================================================= //
 
 using System;
 using System.Collections.Generic;
@@ -70,6 +70,13 @@ namespace EnhancedEditor.Editor {
                         SerializedProperty _elementProperty = _arrayProperty.GetArrayElementAtIndex(i);
                         SerializedProperty _enumProperty    = _elementProperty.FindPropertyRelative("First");
                         SerializedProperty _valueProperty   = _elementProperty.FindPropertyRelative("Second");
+
+                        SerializedProperty _copy = _valueProperty.Copy();
+                        if (_copy.hasChildren) {
+                            if (_copy.CountInProperty() == 2) {
+                                _valueProperty.NextVisible(true);
+                            }
+                        }
 
                         string _name = EnumUtility.GetName(_enumType, _enumProperty.intValue);
 

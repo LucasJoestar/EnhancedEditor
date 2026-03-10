@@ -1,8 +1,8 @@
-// ===== Enhanced Editor - https://github.com/LucasJoestar/EnhancedEditor ===== //
+// ===== Enhanced Editor - https://github.com/TetsuoYoshima/EnhancedEditor ===== //
 // 
 // Notes:
 //
-// ============================================================================ //
+// ============================================================================= //
 
 using System;
 using UnityEngine;
@@ -165,7 +165,7 @@ namespace EnhancedEditor {
             for (int i = _tagSpan.Length; i-- > 0;) {
                 TagData _temp = _tagSpan[i];
 
-                if (_temp.Name.Equals(_name, StringComparison.Ordinal)) {
+                if (_temp.Name.EqualOrdinal(_name)) {
                     _data = _temp;
                     return true;
                 }

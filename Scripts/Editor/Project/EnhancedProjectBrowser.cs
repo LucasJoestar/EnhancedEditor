@@ -1,8 +1,8 @@
-// ===== Enhanced Editor - https://github.com/LucasJoestar/EnhancedEditor ===== //
+// ===== Enhanced Editor - https://github.com/TetsuoYoshima/EnhancedEditor ===== //
 // 
 // Notes:
 //
-// ============================================================================ //
+// ============================================================================= //
 
 using System.Collections.Generic;
 using UnityEditor;
@@ -98,7 +98,7 @@ namespace EnhancedEditor.Editor {
             // Behaviour
             // -------------------------------------------
 
-            public void OnDraw() {
+            public void OnDraw(int _instanceId) {
                 if (IsFolder) {
                     return;
                 }
@@ -106,8 +106,8 @@ namespace EnhancedEditor.Editor {
                 switch (Event.current.type) {
                     // Get children property.
                     case EventType.Repaint:
-                        if (drawCount != 0) {
-                            Property.Next(expandedProjectWindowItems);
+                        if (Property.instanceID != _instanceId) {
+                            Property.Find(_instanceId, expandedProjectWindowItems);
                         }
 
                         drawCount++;
@@ -198,16 +198,16 @@ namespace EnhancedEditor.Editor {
         private static readonly PackageItemInfos packageFolderItemInfo  = new PackageItemInfos();
 
         private static int[] expandedProjectWindowItems = null;
-        private static string[] selectedObjects         = null;
+        private static int[] selectedObjects            = null;
 
         // -------------------------------------------
         // Constructor(s)
         // -------------------------------------------
 
         static EnhancedProjectBrowser() {
-            EditorApplication.projectWindowItemOnGUI += OnProjectItemGUI;
-            EditorApplication.projectChanged         += OnProjectChanged;
-            EditorApplication.update                 += RefreshProjectState;
+            EditorApplication.projectWindowItemInstanceOnGUI += OnProjectItemInstanceGUI;
+            EditorApplication.projectChanged                 += OnProjectChanged;
+            EditorApplication.update                         += RefreshProjectState;
             
             RefreshProjectState();
         }
@@ -216,15 +216,20 @@ namespace EnhancedEditor.Editor {
         #region Editor GUI
         private static readonly HashSet<string> selectedTreeViewItems = new HashSet<string>();
 
-        private static readonly List<Rect> indentPositions  = new List<Rect>() { Rect.zero };
-        private static readonly Color dragPreviewColor      = new Color(1f, 1f, 1f, .1f);
-        private static readonly Color selectionColor        = new Color(1f, 1f, 1f, .12f);
+        private static readonly List<Rect> indentPositions = new List<Rect>() { Rect.zero };
+        private static readonly Color dragPreviewColor     = new Color(1f, 1f, 1f, .1f);
+        private static readonly Color selectionColor       = new Color(1f, 1f, 1f, .12f);
 
         private static Rect assetsPosition = Rect.zero;
 
         // -----------------------
 
-        private static void OnProjectItemGUI(string _guid, Rect _position) {
+        private static void OnProjectItemInstanceGUI(int _instanceId, Rect _position) {
+            string _guid = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(_instanceId));
+            OnProjectItemGUI(_guid, _instanceId, _position);
+        }
+
+        private static void OnProjectItemGUI(string _guid, int _instanceId, Rect _position) {
             // Activation.
             EnhancedProjectBrowserEnhancedSettings _settings = EnhancedProjectBrowserEnhancedSettings.Settings;
             if (!_settings.Enabled) {
@@ -252,7 +257,7 @@ namespace EnhancedEditor.Editor {
             }
 
             // Item callback.
-            _item.OnDraw();
+            _item.OnDraw(_instanceId);
 
             // Position.
             var _positionInfos = GetItemPosition(ref _position);
@@ -270,8 +275,8 @@ namespace EnhancedEditor.Editor {
             if (!_isTreeView) {
                 selectedTreeViewItems.Add(_item.ParentFolderGUID);
             }
-            
-            if (_isSmall && (!EditorGUIUtility.editingTextField || !IsSelected(_guid))) {
+
+            if (_isSmall && (!EditorGUIUtility.editingTextField || !IsSelected(_instanceId))) {
                 Rect _full = new Rect(0f, _position.y, Screen.width, _position.height);
 
                 // Line background.
@@ -281,7 +286,7 @@ namespace EnhancedEditor.Editor {
                 EditorGUI.DrawRect(_full, _backgroundColor);
 
                 // Feedback background.
-                if (IsSelected(_guid) && (!_isTreeView || selectedTreeViewItems.Contains(_item.GUID))) {
+                if (IsSelected(_instanceId) && (!_isTreeView || selectedTreeViewItems.Contains(_item.GUID))) {
                     _backgroundColor = EnhancedEditorGUIUtility.GUISelectedColor;
                     EditorGUI.DrawRect(_full, _backgroundColor);
                 } else if ((DragAndDrop.visualMode == DragAndDropVisualMode.Move) && _full.Contains(Event.current.mousePosition)) {
@@ -358,9 +363,13 @@ namespace EnhancedEditor.Editor {
 
                     indentPositions.Add(_position);
                 }
-            } else {
-                // Draw over base large icons.
+            } else if (_isSmall || _item.IsFolder) {
+
+                // Draw over base large folder icons.
                 EditorGUI.DrawRect(_position, EnhancedEditorGUIUtility.GUIPeerLineColor);
+            } else {
+                // Do not draw over asset icons - not properly displayed.
+                return;
             }
 
             // Get icon informations.
@@ -376,8 +385,8 @@ namespace EnhancedEditor.Editor {
             }
 
             // Draw icon.
-            using (var _scope = EnhancedGUI.GUIColor.Scope(_color)) {
-                GUI.DrawTexture(_position, _icon);
+            using (var _scope = EnhancedGUI.GUIColor.Scope(_color)) {              
+                GUI.DrawTexture(_position, _icon, ScaleMode.ScaleToFit);
             }
         }
         #endregion
@@ -402,8 +411,8 @@ namespace EnhancedEditor.Editor {
             return (_isSmall, _isTreeView);
         }
 
-        private static bool IsSelected(string _guid) {
-            return ArrayUtility.Contains(selectedObjects, _guid);
+        private static bool IsSelected(int _instanceId) {
+            return ArrayUtility.Contains(selectedObjects, _instanceId);
         }
 
         // -----------------------
@@ -418,7 +427,7 @@ namespace EnhancedEditor.Editor {
 
         private static void RefreshProjectState() {
             expandedProjectWindowItems = InternalEditorUtility.expandedProjectWindowItems;
-            selectedObjects = Selection.assetGUIDs;
+            selectedObjects = Selection.instanceIDs;
 
             // Tree view selection folder update.
             selectedTreeViewItems.Clear();
