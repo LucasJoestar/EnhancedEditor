@@ -4,6 +4,10 @@
 //
 // ============================================================================= //
 
+#if UNITY_6000_3_OR_NEWER
+#define ENTITY_ID
+#endif
+
 using System;
 using System.IO;
 using System.Reflection;
@@ -35,7 +39,11 @@ namespace EnhancedEditor {
         /// <param name="_object">The object with the given instance id.</param>
         /// <returns>True if the object with this instance id could be found, false otherwise.</returns>
         public static bool FindObjectFromInstanceID(int _instanceID, out Object _object) {
-            findObjectFromInstanceIDParameters[0] = _instanceID;
+            findObjectFromInstanceIDParameters[0] =
+                                                    #if ENTITY_ID
+                                                    (EntityId)
+                                                    #endif
+                                                    _instanceID;
 
             _object = findObjectFromInstanceIDMethod.Invoke(null, findObjectFromInstanceIDParameters) as Object;
             return _object != null;
