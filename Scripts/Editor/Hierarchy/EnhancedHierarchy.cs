@@ -87,9 +87,11 @@ namespace EnhancedEditor.Editor {
                     EnhancedHierarchyEnhancedSettings.Settings.ReplaceGameObjectIcon(ref icon);
                 }
 
-                /*if (!property.Find(_id, treeView.expandedIDs.ToArray())) {
-                    Debug.Log("Not Found => " + _id);
-                }*/
+                #if !ENTITY_ID
+                if (!property.Find(_id, treeView.expandedIDs.ToArray())) {
+                    //Debug.Log("Not Found => " + _id);
+                }
+                #endif
             }
             #endregion
 
