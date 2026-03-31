@@ -87,11 +87,9 @@ namespace EnhancedEditor.Editor {
                     EnhancedHierarchyEnhancedSettings.Settings.ReplaceGameObjectIcon(ref icon);
                 }
 
-                #if !ENTITY_ID
                 if (!property.Find(_id, treeView.expandedIDs.ToArray())) {
                     //Debug.Log("Not Found => " + _id);
                 }
-                #endif
             }
             #endregion
 
@@ -102,30 +100,21 @@ namespace EnhancedEditor.Editor {
 
             public string Name {
                 get {
-                    if (hasGameObject) {
-                        return gameObject.name;
-                    }
-
-                    #if ENTITY_ID
-                    return property.name;
-                    #else
                     if (property.isValid) {
                         return property.name;
                     }
 
+                    if (hasGameObject) {
+                        return gameObject.name;
+                    }
+
                     return "Unknown";
-                    #endif
                 }
             }
 
             public bool IsSceneHeader {
                 get {
-                    #if !ENTITY_ID
-                    if (!property.isValid)
-                        return false;
-                    #endif
-
-                    return property.isSceneHeader && !hasGameObject;
+                    return property.isValid && property.isSceneHeader && !hasGameObject;
                 }
             }
 
@@ -155,19 +144,15 @@ namespace EnhancedEditor.Editor {
 
             public bool HasChildren {
                 get {
-                    if (hasGameObject) {
-                        return gameObject.transform.childCount != 0;
-                    }
-
-                    #if ENTITY_ID
-                    return property.hasChildren;
-                    #else
                     if (property.isValid) {
                         return property.hasChildren;
                     }
 
+                    if (hasGameObject) {
+                        return gameObject.transform.childCount != 0;
+                    }
+
                     return false;
-                    #endif
                 }
             }
 
@@ -200,19 +185,14 @@ namespace EnhancedEditor.Editor {
             }
 
             public bool GetScene(out Scene _scene) {
-                #if !ENTITY_ID
-                if (!property.isValid) {
-                    _scene = default;
-                    return false;
-                }
-                #endif
-
                 // GetScene might throw an exception (e.g. in prefab mode).
-                try {
-                    _scene = property.GetScene();
-                    return true;
-                } catch (NullReferenceException) { }
-
+                if (property.isValid) {
+                    try {
+                        _scene = property.GetScene();
+                        return true;
+                    } catch (NullReferenceException) { }
+                }
+                
                 _scene = default;
                 return false;
             }

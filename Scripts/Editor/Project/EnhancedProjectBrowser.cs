@@ -243,7 +243,9 @@ namespace EnhancedEditor.Editor {
         // -----------------------
 
         private static void OnProjectItemInstanceGUI(int _instanceId, Rect _position) {
+            #pragma warning disable CS0618
             string _guid = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(_instanceId));
+            #pragma warning restore
             OnProjectItemGUI(_guid, _instanceId, _position);
         }
 
