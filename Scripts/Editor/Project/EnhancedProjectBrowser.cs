@@ -4,10 +4,22 @@
 //
 // ============================================================================= //
 
+#if UNITY_6000_3_OR_NEWER
+#define ENTITY_ID
+#endif
+
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine;
+
+#if ENTITY_ID
+using HierarchyProperty = UnityEditor.HierarchyIterator;
+using InstanceIdType    = UnityEngine.EntityId;
+#else
+using HierarchyProperty = UnityEditor.HierarchyProperty;
+using InstanceIdType    = System.Int32;
+#endif
 
 namespace EnhancedEditor.Editor {
     /// <summary>
@@ -44,7 +56,13 @@ namespace EnhancedEditor.Editor {
             }
 
             public virtual int InstanceID {
-                get { return Property.instanceID; }
+                get {
+                    #if ENTITY_ID
+                    return Property.entityId;
+                    #else
+                    return Property.instanceID;
+                    #endif
+                }
             }
 
             public virtual bool HasChildren {
@@ -106,7 +124,7 @@ namespace EnhancedEditor.Editor {
                 switch (Event.current.type) {
                     // Get children property.
                     case EventType.Repaint:
-                        if (Property.instanceID != _instanceId) {
+                        if (InstanceID != _instanceId) {
                             Property.Find(_instanceId, expandedProjectWindowItems);
                         }
 
@@ -145,7 +163,7 @@ namespace EnhancedEditor.Editor {
             }
 
             public virtual bool IsExpanded(bool _isTreeView) {
-                return (count > 1) || (_isTreeView && HasChildren && ArrayUtility.Contains(expandedProjectWindowItems, Property.instanceID));
+                return (count > 1) || (_isTreeView && HasChildren && ArrayUtility.Contains(expandedProjectWindowItems, InstanceID));
             }
         }
 
@@ -197,8 +215,8 @@ namespace EnhancedEditor.Editor {
         private static readonly Dictionary<string, ItemInfos> itemInfos = new Dictionary<string, ItemInfos>();
         private static readonly PackageItemInfos packageFolderItemInfo  = new PackageItemInfos();
 
-        private static int[] expandedProjectWindowItems = null;
-        private static int[] selectedObjects            = null;
+        private static InstanceIdType[] expandedProjectWindowItems = null;
+        private static InstanceIdType[] selectedObjects            = null;
 
         // -------------------------------------------
         // Constructor(s)
@@ -426,8 +444,13 @@ namespace EnhancedEditor.Editor {
         }
 
         private static void RefreshProjectState() {
+            #if ENTITY_ID
+            expandedProjectWindowItems = InternalEditorUtility.expandedProjectWindowItemIds;
+            selectedObjects = Selection.entityIds;
+            #else
             expandedProjectWindowItems = InternalEditorUtility.expandedProjectWindowItems;
             selectedObjects = Selection.instanceIDs;
+            #endif
 
             // Tree view selection folder update.
             selectedTreeViewItems.Clear();

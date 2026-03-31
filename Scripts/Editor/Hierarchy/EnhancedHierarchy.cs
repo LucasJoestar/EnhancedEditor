@@ -13,6 +13,10 @@
 #define UNITY_2021
 #endif
 
+#if UNITY_6000_3_OR_NEWER
+#define ENTITY_ID
+#endif
+
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -25,6 +29,14 @@ using UnityEngine.SceneManagement;
 using UnityEditor.SceneManagement;
 #else
 using UnityEditor.Experimental.SceneManagement;
+#endif
+
+#if ENTITY_ID
+using HierarchyProperty = UnityEditor.HierarchyIterator;
+using InstanceIdType    = UnityEngine.EntityId;
+#else
+using HierarchyProperty = UnityEditor.HierarchyProperty;
+using InstanceIdType    = System.Int32;
 #endif
 
 namespace EnhancedEditor.Editor {
@@ -57,8 +69,12 @@ namespace EnhancedEditor.Editor {
             public HierarchyObject(int _id) {
                 ID = _id;
 
-                property   = new HierarchyProperty(HierarchyType.GameObjects);
+                property = new HierarchyProperty(HierarchyType.GameObjects);
+                #if ENTITY_ID
+                gameObject = EditorUtility.EntityIdToObject(_id) as GameObject;
+                #else
                 gameObject = EditorUtility.InstanceIDToObject(_id) as GameObject;
+                #endif
 
                 hasGameObject = gameObject != null;
 
@@ -71,9 +87,9 @@ namespace EnhancedEditor.Editor {
                     EnhancedHierarchyEnhancedSettings.Settings.ReplaceGameObjectIcon(ref icon);
                 }
 
-                if (!property.Find(_id, treeView.expandedIDs.ToArray())) {
-                    //Debug.Log("Not Found => " + _id);
-                }
+                /*if (!property.Find(_id, treeView.expandedIDs.ToArray())) {
+                    Debug.Log("Not Found => " + _id);
+                }*/
             }
             #endregion
 
@@ -84,21 +100,30 @@ namespace EnhancedEditor.Editor {
 
             public string Name {
                 get {
-                    if (property.isValid) {
-                        return property.name;
-                    }
-
                     if (hasGameObject) {
                         return gameObject.name;
                     }
 
+                    #if ENTITY_ID
+                    return property.name;
+                    #else
+                    if (property.isValid) {
+                        return property.name;
+                    }
+
                     return "Unknown";
+                    #endif
                 }
             }
 
             public bool IsSceneHeader {
                 get {
-                    return property.isValid && property.isSceneHeader;
+                    #if !ENTITY_ID
+                    if (!property.isValid)
+                        return false;
+                    #endif
+
+                    return property.isSceneHeader && !hasGameObject;
                 }
             }
 
@@ -128,15 +153,19 @@ namespace EnhancedEditor.Editor {
 
             public bool HasChildren {
                 get {
-                    if (property.isValid) {
-                        return property.hasChildren;
-                    }
-
                     if (hasGameObject) {
                         return gameObject.transform.childCount != 0;
                     }
 
+                    #if ENTITY_ID
+                    return property.hasChildren;
+                    #else
+                    if (property.isValid) {
+                        return property.hasChildren;
+                    }
+
                     return false;
+                    #endif
                 }
             }
 
@@ -169,13 +198,18 @@ namespace EnhancedEditor.Editor {
             }
 
             public bool GetScene(out Scene _scene) {
-                if (property.isValid) {
-                    // GetScene might throw an exception (e.g. in prefab mode).
-                    try {
-                        _scene = property.GetScene();
-                        return true;
-                    } catch (NullReferenceException) { }
+                #if !ENTITY_ID
+                if (!property.isValid) {
+                    _scene = default;
+                    return false;
                 }
+                #endif
+
+                // GetScene might throw an exception (e.g. in prefab mode).
+                try {
+                    _scene = property.GetScene();
+                    return true;
+                } catch (NullReferenceException) { }
 
                 _scene = default;
                 return false;
@@ -187,7 +221,7 @@ namespace EnhancedEditor.Editor {
             }
 
             public bool IsRootObject(Rect _position) {
-                return hasGameObject && (_position.x == (LeftMargin + IndentWidth));
+                return hasGameObject && ((_position.x == (LeftMargin + IndentWidth) || (_position.x == RootPositionX)));
             }
             #endregion
         }
@@ -244,9 +278,9 @@ namespace EnhancedEditor.Editor {
 
         private static bool isHierarchyFocused      = false;
 
-        private static TreeViewState<int> treeView  = null;
+        private static TreeViewState<InstanceIdType> treeView  = null;
         private static object treeViewController    = null;
-        private static List<int> dragSelection      = null;
+        private static List<InstanceIdType> dragSelection = null;
 
         private static bool isSearchFilter = false;
         private static bool enabled = true;
@@ -560,8 +594,8 @@ namespace EnhancedEditor.Editor {
         private static readonly Type hierarchyType                  = typeof(EditorWindow).Assembly.GetType("UnityEditor.SceneHierarchy");
         private static readonly Type hierarchyWindowType            = typeof(EditorWindow).Assembly.GetType("UnityEditor.SceneHierarchyWindow");
         private static readonly Type treeViewControllerType         = typeof(EditorWindow).Assembly.GetType("UnityEditor.IMGUI.Controls.TreeViewController`1")
-                                                                        #if UNITY_6000_2
-                                                                        .MakeGenericType(typeof(int))
+                                                                        #if UNITY_6000_2_OR_NEWER
+                                                                        .MakeGenericType(typeof(InstanceIdType))
                                                                         #endif
                                                                         ;
 
@@ -577,8 +611,8 @@ namespace EnhancedEditor.Editor {
         #if UNITY_2021
         private static readonly Type integerCacheType               = treeViewControllerType.GetNestedType("IntegerCache", Flags);
         private static readonly FieldInfo dragListField             = integerCacheType
-                                                                        #if UNITY_6000_2
-                                                                        .MakeGenericType(typeof(int))
+                                                                        #if UNITY_6000_2_OR_NEWER
+                                                                        .MakeGenericType(typeof(InstanceIdType))
                                                                         #endif
                                                                         .GetField("m_List", BindingFlags.Instance | Flags);
         #endif
@@ -591,7 +625,7 @@ namespace EnhancedEditor.Editor {
             try {
                 if (GetHierarchy(out var _hierarchy)) {
 
-                    treeView = treeViewField.GetValue(_hierarchy) as TreeViewState<int>;
+                    treeView = treeViewField.GetValue(_hierarchy) as TreeViewState<InstanceIdType>;
                     treeViewController = treeViewControllerField.GetValue(_hierarchy);
                 }
             } catch (Exception e) {
@@ -599,7 +633,7 @@ namespace EnhancedEditor.Editor {
             }
         }
 
-        private static List<int> GetDragSelection() {
+        private static List<InstanceIdType> GetDragSelection() {
             if (treeViewController == null) {
                 return null;
             }
@@ -607,9 +641,9 @@ namespace EnhancedEditor.Editor {
             var _dragSelection = dragSelectionField.GetValue(treeViewController);
 
             #if UNITY_2021
-            return dragListField.GetValue(_dragSelection) as List<int>;
+            return dragListField.GetValue(_dragSelection) as List<InstanceIdType>;
             #else
-            return _dragSelection as List<int>;
+            return _dragSelection as TreeViewType;
             #endif
         }
 
